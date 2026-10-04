@@ -1,8 +1,9 @@
-<p align="center"><img src="client/public/chrysalis_logo.png" width="128" alt="Molfar Vertep" /></p>
+<div align="center"><img src="client/public/vertep-logo.svg" width="128" alt="Molfar Vertep logo" /></div>
 
 # Molfar Vertep
 
-**A local engine where an AI agent builds and reshapes your apps by asking.**
+**A local engine where an AI agent builds and reshapes your apps by asking —
+and its built-in agent, Molfar, is half the personality of the project.**
 
 Molfar Vertep runs on your own computer or phone and opens in your browser. Pick
 the apps you want from the built-in Store (Roleplay comes first), and every one
@@ -10,11 +11,21 @@ of them is plain files that the built-in agent can change while you watch. Ask
 for a feature and it builds it. Your chats, characters and keys are stored on
 your device.
 
+**What is inside?** The engine: a local server with apps, permissions and
+updates. The agent: Molfar, an old Carpathian molfar who looks at your project,
+your notes and your apps, asks before large work, and rebuilds any screen while
+you watch. Roleplay: the first official app — characters, personas, lorebooks,
+chats. Nearly everything visible was rebuilt from a bare Chrysalis Engine
+fork: a stronger agent, themes, Ukrainian and 13 more languages, the one-file
+launcher, the app bridge — see [CHANGELOG.md](CHANGELOG.md).
+
 Molfar Vertep is a modified version of
 [Chrysalis Engine](https://github.com/ProjectChrysalis/Chrysalis-Engine) by
 ProjectChrysalis, licensed under the GNU Affero General Public License v3.0 only
 (AGPL-3.0-only). See [LICENSE](LICENSE) for the full text and
 [CHANGELOG.md](CHANGELOG.md) for what changed.
+
+<div align="center"><img src=".github/assets/divider.svg" width="480" alt="" aria-hidden="true" /></div>
 
 ## Install
 
