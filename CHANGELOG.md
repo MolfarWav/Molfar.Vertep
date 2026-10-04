@@ -7,6 +7,13 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.7.0 (2026-10-04)
+
+- Roleplay 4.22.0 through app updates: the relationship dashboard (sensor, attitudes, constellations, scene clock, threads, notebooks, a words-only prompt insert), the Soul tab on cards, the scene strip, wide view and phone sheet, and UI work made with Molfar (rail labels collapse, persona filter, preset-bound regex, grouped regex list and Tools tabs).
+- Agent page: an app's draft for Molfar is no longer lost when a chat is already open.
+- Launcher: `dev` mode takes the branch's commit when a git worktree holds the branch; `dev NAME` follows `claude/NAME`.
+- README: the Molfar Vertep logo and a short tour of what is inside.
+
 - App plugins: a route's model request can carry `turn` labels (op, chatId, speakerId, speakerName, targetId, swipe). The model never sees them; sibling `llmRequest` hooks get them as `ctx.turn`, so a hook knows who speaks and whether it is a new reply, a swipe, a continue or an impersonation.
 - Models that cannot switch thinking off and say so in NanoGPT's words ("Invalid value for reasoning.effort ... none") get the lowest level they list, so plugins that name no thinking level (the dashboard sensor, Litopys) work with them.
 
