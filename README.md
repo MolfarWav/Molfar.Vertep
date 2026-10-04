@@ -24,7 +24,7 @@ You open the browser. Your chats, characters and worlds are there. Everything li
 
 **Molfar** — the built-in agent, an old Carpathian molfar: kind, wise, knows today's code. He looks at your project, asks before large work, and rebuilds any screen while you watch.
 
-**Roleplay** — the first official app: characters, personas, lorebooks, chats. The Store will bring more apps next.
+**Roleplay** — the first official app: characters, personas, lorebooks, chats.
 
 ## ✨ Things people feel first
 
@@ -56,7 +56,10 @@ Grab your system from the [releases page](https://github.com/MolfarWav/Molfar.Ve
 
 ## 🌱 What grows next
 
-The Store's list comes from [MolfarWav/Molfar.Vertep-Store](https://github.com/MolfarWav/Molfar.Vertep-Store). Official apps live under MolfarWav; community apps pass permission review. Export any app as a backup file and carry it to another device.
+**Memory that stays yours.** Litopys already keeps story facts beside the chat; next it becomes the quiet background worker of one Memory — it fills the Facts, its curator cleans them with proposals you see in the Memory panel, and nothing rides the prompt twice. Your facts migrate, your recap stays readable, your device keeps it all.
+<!-- SCREENSHOT: Memory panel with Facts + proposals (pending live session) -->
+
+To move an app to another device, or keep a copy before uninstalling, use **Export app** in its info pane, then **Import app > Backup file** on the other side. The backup carries the app's data and keeps updating from where it came from.
 
 ---
 
