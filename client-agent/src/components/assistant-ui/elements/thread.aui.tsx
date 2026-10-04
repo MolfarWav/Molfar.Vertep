@@ -389,6 +389,8 @@ const ComposerSpend: FC = () => {
 
 /** Unsent composer text lives under a per-thread key so a reload — the app's
  *  own reload after a rebuild included — never eats a half-written message. */
+/** The external-store runtime's id for a chat with no session yet. */
+const DEFAULT_THREAD_ID = "DEFAULT_THREAD_ID";
 const draftKey = (sessionId: string | null) =>
   `chrysalis.agent.draft.${sessionId ?? "new"}`;
 const readDraft = (key: string): string => {
@@ -406,8 +408,14 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
   // bumped when a draft is placed in the new chat from outside (a skill's "Improve with the agent")
   const draftSeed = useAgentStore((s) => s.draftSeed);
   const booting = useRef(true);
+  // The runtime swaps its thread, and with it the composer, in an effect of
+  // App, which runs AFTER this one: a draft set before the swap went into the
+  // old composer and the new empty one then erased it. Load only once the
+  // runtime is on this chat's thread (an unsaved chat is its default thread).
+  const onThread = useAuiState((s) => s.threads.mainThreadId) === (sessionId ?? DEFAULT_THREAD_ID);
   // biome-ignore lint/correctness/useExhaustiveDependencies: draftSeed only re-runs the load for an unchanged thread
   useEffect(() => {
+    if (!onThread) return;
     const key = draftKey(sessionId);
     const stored = readDraft(key);
     // The thread the tab was on is reopened a beat after boot, so text typed
@@ -428,7 +436,7 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
         else localStorage.removeItem(key);
       } catch { /* storage unavailable */ }
     });
-  }, [aui, sessionId, draftSeed]);
+  }, [aui, sessionId, draftSeed, onThread]);
   return (
     <ComposerPrimitive.Unstable_TriggerPopoverRoot>
       <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
