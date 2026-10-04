@@ -47,6 +47,20 @@ Sources: the user's own skills, `E:\Hermes\profiles\rp-platforms\skills\` on the
 - Work: a cheap model drafts the adaptation from a precise spec, the orchestrator reviews; then a real
   card the user picks, created and adapted by Molfar on a free small model, and the user judges it.
 
+## Part C (agent page): see which skills Molfar uses (user, 2026-10-04)
+
+Today a `skill_load` is one generic tool row among the others ("skill_load <name>", the `name`
+argument as preview, `client-agent/src/components/assistant-ui/elements/tool-fallback.aui.tsx`);
+nothing counts loads, and nothing shows a skill that should have been loaded and was not.
+
+1. A render of its own for `skill_load` in `client-agent/src/tools.tsx` (like `edit_file`): a visible
+   chip "Skill: <name>" with its scope (built-in / workspace / app), the body one click away.
+2. Usage counts: the engine records each load (skill, scope, chat, time) in a small file under the
+   agent folder; the Skills tab of "Memory and skills" (`client-agent/src/MemoryPanel.tsx`) shows per
+   skill "loaded N times, last on <date>", and marks skills not loaded for 30 days as candidates to
+   trim (this feeds Part A: a smaller index).
+3. Maybe: one line under a finished run, "Skills used: a, b".
+
 ## First step next time
 Ask the user (AskUserQuestion): which skills, Part A first or together, and copy the chosen skill
 folders into the session's folders (the laptop has no E: drive).
