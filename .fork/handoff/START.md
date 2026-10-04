@@ -23,6 +23,7 @@ Phrase to open the session: "Read .fork/handoff/START.md and start with item 1."
    - Full rename of internal names (`chrysalis` command, `CHRYSALIS_*`, data paths, archive names) with data migration: needs its own handoff and release.
    - Presets per chat with choices (user, 2026-10-04): `.fork/handoff/chat-presets/HANDOFF.md`.
 4. **Additional fixes (user, 2026-10-04; small, between bigger items):**
+   - Android APK right after the dashboard: Start does nothing (seen on upstream Chrysalis 1.0.2, Android 11; test our own APK first), visible names, logo, package id. `.fork/handoff/android-apk/HANDOFF.md`.
    - Retry a malformed tool call. Seen on GLM 5.3 Thinking via NanoGPT: Molfar started `ask_user`, the provider answered "Partial response received, but the final tool call was malformed and was not executed." (the text is from the provider, not in our code or pi-ai), the run ended with the half sentence before the questions. Fix in the agent run (`src/agent/agent.ts`, where `stopReason === "error"` is read): when the error says a tool call was malformed or unparsable, retry the step once with a short nudge ("your last tool call had invalid arguments; call it again with valid JSON"); if that fails too, tell Molfar to ask the questions as plain text. Keep the partial text. Test with a mock provider that returns that error once.
 
 ## How to work here (learned 2026-10-02)
