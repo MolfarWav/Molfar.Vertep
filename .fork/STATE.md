@@ -70,6 +70,7 @@ The full log of everything before this date, with commit hashes, is `.fork/archi
 - Workspace work (apps, plugins, skills, memory) belongs to the built-in agent; for it write a copy-pasteable prompt (example: `.fork/archive/2026-10-batch-1/workspace-agent-task.md`).
 
 ## Open, known, not fixed
+- User 2026-10-04 (Roleplay, not yet looked at): opening a character from a chat does not open its card, and the card is hard to reach from the chat at all. Wanted: one obvious way from the chat (header avatar / avatar popover / dashboard tabs) to the card editor, including its Soul tab.
 - 2026-10-02 desktop: the Roleplay 4.18.2 -> 4.19.2 update (strategy "agent") froze the engine at the staging delete after all writes; restarted, the built-in agent resolved the one conflict (memory-summary-section.tsx) from inside the app. The 4.19.2 onAppUpdate step (summary prompt cleanup) did not run there; harmless (the UI treats the old default as default). Root cause not proven (no stack): a synchronous `fs.rmSync` of a fresh clone on Windows. Fixed in 0.3.1 by not deleting synchronously.
 - Roleplay typecheck fails on one line, `src/components/extensions/plugin-panel.tsx:88` (Base UI Select `v` may be null; workspace code). Fix it only after both machines took 4.19.1, or the first update conflicts.
 - Workspace `data/_debug/` still exists on the desktop.
