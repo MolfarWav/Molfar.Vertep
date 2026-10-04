@@ -4,6 +4,8 @@ rem engine and opens it in your browser. Works from wherever the app folder is.
 rem
 rem   Molfar-Vertep.bat            update to the latest release (asks first), then start
 rem   Molfar-Vertep.bat dev        update to the newest work branch (claude/*) instead
+rem   Molfar-Vertep.bat dev NAME   update to the work branch claude/NAME (another
+rem                                session's newer branch does not take its place)
 rem   Molfar-Vertep.bat nopull     start without checking for updates
 rem   Molfar-Vertep.bat yes        do not ask: take the update
 rem   Molfar-Vertep.bat rebuild    reinstall packages and rebuild, then start
@@ -61,8 +63,13 @@ set "MV_YES="
 set "MV_FULL="
 set "MV_TOOLS="
 set "MV_SHORTCUT="
+set "MV_PICK="
 :args_loop
 if "%~1"=="" goto args_done
+rem a word that is no option names the work branch
+set "MV_KNOWN="
+for %%o in (dev nopull yes -y rebuild tools shortcut) do if /i "%~1"=="%%o" set "MV_KNOWN=1"
+if not defined MV_KNOWN set "MV_PICK=%~1"
 if /i "%~1"=="dev" set "MV_DEV=1"
 if /i "%~1"=="nopull" set "MV_NOPULL=1"
 if /i "%~1"=="yes" set "MV_YES=1"
@@ -73,6 +80,7 @@ if /i "%~1"=="shortcut" set "MV_SHORTCUT=1"
 shift
 goto args_loop
 :args_done
+if defined MV_PICK set "MV_DEV=1"
 
 rem UTF-8 output, so folder names in any language print correctly
 chcp 65001 >nul
@@ -211,6 +219,7 @@ set "MV_LABEL=release %MV_TARGET%"
 goto compare
 
 :pick_branch
+if defined MV_PICK goto pick_named
 rem the newest work branch (each Claude session makes its own), not upstream ones
 for /f "delims=" %%b in ('git for-each-ref "--sort=-committerdate" "--format=%%(refname:lstrip=3)" refs/remotes/origin/claude/') do (
   if not defined MV_BRANCH (
@@ -221,6 +230,19 @@ if not defined MV_BRANCH (
   echo No work branch found on GitHub: starting the version you have.
   goto deps
 )
+goto branch_target
+
+:pick_named
+set "MV_BRANCH=%MV_PICK%"
+if /i not "%MV_BRANCH:~0,7%"=="claude/" set "MV_BRANCH=claude/%MV_BRANCH%"
+git rev-parse --verify --quiet "origin/%MV_BRANCH%" >nul
+if errorlevel 1 goto pick_missing
+goto branch_target
+:pick_missing
+echo No branch %MV_BRANCH% on GitHub: starting the version you have.
+goto deps
+
+:branch_target
 set "MV_TARGET=origin/%MV_BRANCH%"
 set "MV_LABEL=branch %MV_BRANCH%"
 
