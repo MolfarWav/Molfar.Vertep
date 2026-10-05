@@ -77,6 +77,19 @@ for (const t of targets) {
 const step = (label: string) => console.log(`\n== ${label}`);
 const run = (cmd: string, argv: string[], cwd = repo) => execFileSync(cmd, argv, { cwd, stdio: "inherit" });
 
+/** The Android NDK: the env vars GitHub's runners and Android Studio set, else the newest one in the SDK. */
+function androidNdk(): string {
+  for (const v of ["ANDROID_NDK_LATEST_HOME", "ANDROID_NDK_HOME", "ANDROID_NDK_ROOT"]) {
+    const dir = process.env[v];
+    if (dir && fs.existsSync(dir)) return dir;
+  }
+  const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
+  const ndks = sdk && fs.existsSync(path.join(sdk, "ndk")) ? fs.readdirSync(path.join(sdk, "ndk")).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })) : [];
+  const newest = ndks.at(-1);
+  if (sdk && newest) return path.join(sdk, "ndk", newest);
+  throw new Error("the APK needs the Android NDK (for android/shim/sigsys.c): set ANDROID_NDK_HOME or install one into the SDK");
+}
+
 // ---------- resources (shared by every target) ----------
 
 const resources = path.join(outRoot, ".resources");
@@ -217,6 +230,15 @@ if (wantApk) {
   fs.mkdirSync(path.join(main, "jniLibs", "arm64-v8a"), { recursive: true });
   fs.mkdirSync(path.join(main, "assets"), { recursive: true });
   fs.copyFileSync(path.join(payload, "libchrysalis.so"), path.join(main, "jniLibs", "arm64-v8a", "libchrysalis.so"));
+  // Bun calls system calls Android before 14 traps (close_range at startup):
+  // the shim turns those traps into ENOSYS. Without it the server dies at once
+  // on such phones, so a missing NDK fails the build.
+  const ndk = androidNdk();
+  const clang = path.join(ndk, "toolchains", "llvm", "prebuilt", process.platform === "win32" ? "windows-x86_64" : process.platform === "darwin" ? "darwin-x86_64" : "linux-x86_64", "bin", `aarch64-linux-android28-clang${process.platform === "win32" ? ".cmd" : ""}`);
+  const shimArgs = ["-shared", "-fPIC", "-O2", "-Wall", "-Werror", "-o", path.join(main, "jniLibs", "arm64-v8a", "libsigsys.so"), path.join(project, "shim", "sigsys.c")];
+  // the NDK's Windows compiler is a .cmd script, which only a shell runs
+  if (process.platform === "win32") run("cmd", ["/c", clang, ...shimArgs]);
+  else run(clang, shimArgs);
   // one zip the launcher unpacks on first start; formats that are already
   // compressed are stored as they are
   const entries: Record<string, [Uint8Array, { level: 0 | 6 }]> = {};

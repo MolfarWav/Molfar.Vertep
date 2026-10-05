@@ -242,6 +242,14 @@ public final class EngineService extends Service {
         env.put("CHRYSALIS_SETUP_TOKEN", setupToken(this));
         env.put("CHRYSALIS_OPEN_BROWSER", "false");
         env.put("CHRYSALIS_EXIT_ON_STDIN_CLOSE", "1");
+        // Android before 14 kills a process on system calls it does not allow
+        // apps (Bun 1.4 makes several): the shim turns them into ENOSYS, and
+        // these two flags keep Bun off pidfd_open and copy_file_range at all
+        File shim = new File(getApplicationInfo().nativeLibraryDir, "libsigsys.so");
+        if (shim.isFile()) env.put("LD_PRELOAD", shim.getAbsolutePath());
+        env.put("BUN_FEATURE_FLAG_FORCE_WAITER_THREAD", "1");
+        env.put("BUN_CONFIG_DISABLE_COPY_FILE_RANGE", "1");
+        launcherLog(this, false, "Seccomp shim " + (shim.isFile() ? "loaded from " + shim.getAbsolutePath() : "missing"));
         process = pb.start();
         Process proc = process;
         launcherLog(this, false, "Engine process started");
@@ -264,6 +272,7 @@ public final class EngineService extends Service {
             pump.join(1000);
             String exit = describeExit(proc.exitValue());
             launcherLog(this, true, "The engine stopped at start: " + exit);
+            logCrashLines();
             fail(outputOr("The engine stopped at start with " + exit + ". See Logs."));
             return;
         }
@@ -275,8 +284,38 @@ public final class EngineService extends Service {
         pump.join(1000);
         if (stopping) return;
         launcherLog(this, code != 0, "Engine process exited: " + describeExit(code));
+        if (code > 128) logCrashLines();
         if (code == 0) stopEngine();
         else fail(outputOr("The engine stopped with " + describeExit(code) + ". See Logs."));
+    }
+
+    /** A signal death leaves no output of its own; the system log of this app's
+     *  uid can say why (a seccomp kill names the blocked system call there).
+     *  Copies the matching lines into launcher.log. */
+    private void logCrashLines() {
+        try {
+            // crash_dump writes its report a moment after the death
+            Thread.sleep(1500);
+            Process logcat = new ProcessBuilder("logcat", "-d", "-v", "time", "-t", "1500").redirectErrorStream(true).start();
+            List<String> hits = new ArrayList<>();
+            try (java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(logcat.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    if (line.contains("SIGSYS") || line.contains("seccomp") || line.contains("Fatal signal") || line.contains("Cause:")
+                        || line.contains("libchrysalis") || line.contains("Abort message") || line.contains("/DEBUG")) {
+                        hits.add(line);
+                    }
+                }
+            }
+            logcat.waitFor(3, TimeUnit.SECONDS);
+            if (hits.isEmpty()) {
+                launcherLog(this, false, "System log: nothing about the crash is visible to the app");
+                return;
+            }
+            for (String hit : hits.subList(Math.max(0, hits.size() - 40), hits.size())) launcherLog(this, false, "System log: " + hit);
+        } catch (Throwable e) {
+            launcherLog(this, false, "System log not readable: " + e);
+        }
     }
 
     /** "exit code 159 (killed by signal 31)": Java reports a signal death as 128 plus the signal. */
