@@ -13,7 +13,7 @@ Phrase to open the session: "Read .fork/handoff/START.md and start with item 1."
 - 0.4.0: the agent is **Molfar** (Мольфар): name in prompts and UI, avatar (`client/public/molfar-128.webp`, `-512.webp`), character and report emoji markers in the default instructions.
 
 ## Queue
-0. **Relationship dashboard v2 (PRIORITY, user 2026-10-03).** Stages 1-5 built; stage 5 waits for the user's live test, then the 4.23.0 / 0.8.0 release (STATE item 0). Goes before everything below; the items below stay unfinished until it is done or the user says otherwise. Read STATE "Active handoffs" item 0, then `data/users/molfarwav2/notes/dashboard/PLAN.md` (desktop workspace only). One stage at a time; wait for the user's ok between stages.
+0. **Relationship dashboard v2: DONE 2026-10-05** (released in 0.8.0 / Roleplay 4.23.0). Next is 0a.
 0a. **0.8.1, right after 0.8.0 (user, 2026-10-04)**, together with the small fixes of item 4 (APK, malformed tool call retry):
    - From the chat to the card: opening a character from a chat does not open its card, and the card is hard to reach. One obvious path: the chat avatar (header and message avatar popover) offers Card / Soul / Dashboard.
    - "Story, move" button by the composer: a one-time nudge for the next reply, built from the dashboard's open threads, so something happens without the user (the old complaint that the story only reacts). Off the record: the nudge rides the request only, never the chat file.
