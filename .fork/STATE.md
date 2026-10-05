@@ -98,3 +98,8 @@ The full log of everything before this date, with commit hashes, is `.fork/archi
 - Release 0.1.0 title on GitHub reads "Molfar.Vertep 0.1.0"; update checks read `tag_name`.
 - Delegation rule (Opus/Fable orchestrate, other models execute) is in `CLAUDE.md` and `~/.claude/CLAUDE.md`. `ask-model` is on the desktop only; `adaptive-agent` is a Claude Code skill pair, not for Hermes.
 - Launcher: one `.bat`, source mode, update channel = latest release tag, `dev` = newest `claude/*`. Versions: significant = minor, patch = patch.
+
+## 2026-10-04 readme-story (branch claude/readme-story, PR pending)
+- README top rewritten as a user-facing story (EN): tagline, shields, Imagine / Ask+Molfar quote / Three heroes with molfar-512.webp / Things-people-feel-first incl. dashboard bullet (NEW in Roleplay 4.22.0, Soul on ALL cards per Sergey's stage-4 review, live dashboard lands 0.8.0) / Trust / divider / Start-in-5-min / What-grows-next / Support. All technique (Install, First start/Store/Updating/Languages/Phone, Workspace/settings/release builds, Built on, License, Inspiration) preserved under 4 `<details>`, no facts dropped (verified against origin/main 269 lines).
+- Screenshots 1-5 + rebuild gif stay as HTML comments; real files come from a live session in a follow-up. Emojis in headings/prose only, no model names.
+- Docs-only: typecheck/test/build skipped (no code touched). User merges the PR.
