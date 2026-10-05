@@ -115,6 +115,13 @@ grid `40px` gap 12px, user max-width 86%, scene place 16px. `prefers-reduced-mot
   `--stitch-a-url` / `--stitch-b-url`. The arch keeps the rail divider (6px is too small for stitches).
 - Paragraph gap: `paragraphSpacing` is in px and always set, so the `.8em` default needs a migration too: 10 → 14.
 
+## Queued by the user here (move into START.md's queue when this branch is merged into claude/v081)
+- "Reply ready" notification (user, 2026-10-05): a Settings option, off by default, that shows a popup when a reply
+  is ready while the app is in the background (another tab or window, the phone app minimised). Likely the browser
+  Notifications API (asks for permission when switched on; fires only when `document.hidden`), click focuses the
+  chat; the Android APK needs a look at whether its WebView/engine service can post the notification instead.
+  Not part of the chat look; plan and spec it separately.
+
 ## Log
 - 2026-10-05: worktrees made; spec checked by an Explore agent; user answered the open points above.
 - Drafts (message-actions, test, avatar-menu, chat-details, scene-heading, CSS block, en/uk keys) by an external
