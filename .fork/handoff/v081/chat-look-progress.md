@@ -192,3 +192,18 @@ grid `40px` gap 12px, user max-width 86%, scene place 16px. `prefers-reduced-mot
   Roleplay `86f7e49`: prose 15px (phone 15), the "comfortable" width is 72rem in the stage look and the column has a
   gutter (12/24/32px), arch 68x88 (phone 46x60), user turns 54% (phone 80%). Copied (2 files, hashes checked before
   and after) with the user's "yes".
+
+## Handoff to the 0.8.1 session (2026-10-06, user's decision: that session merges and releases)
+- Accepted live on the desktop by the user ("чат виглядає добре"); the user is checking the mobile app now.
+  Merge and release only after the user confirms mobile.
+- Roleplay: merge `chatlook` (`f7f4736`, `17c8c12`, `86f7e49`) into `v081`: `v081` is still `f014826`, so it is a
+  fast-forward. The desktop workspace already has every file of `f014826..86f7e49` except CHANGELOG.md.
+  The app's own `package.json` + `bun.lock` gain `@fontsource/noto-serif` (commit them with the release).
+  CHANGELOG Unreleased has three chat-look entries (new chat look, from the chat to the card, echoed name).
+- Engine: merge `claude/v081-chatlook` into `claude/v081` (checked clean against `a8d291f`). It carries only this
+  file. Move the three "Queued by the user here" items into START.md's queue (reply-ready notification; 0d
+  Molfar's token use, after 0c; prompt inspector with sources, next to 0d) and add a STATE line for items 3+3a.
+- Release notes, user-facing: the chat look (book-page serif text, arch portraits, user turns offset, scene
+  headings with an embroidered band from the dashboard, hover actions and grouped More, model/cost/tokens in the
+  "i" popover), the avatar menu Card / Soul / Dashboard, the echoed "Name:" gone; the display mode, avatar shape
+  and tint settings removed (one look).
