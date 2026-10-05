@@ -38,6 +38,12 @@ import { readLock, releaseLock, runningEngine, writeLock } from "./lock.js";
 import { cleanUpAfterUpdate, dropEngineFiles, runReplacement, updateState } from "./self-update.js";
 import { dataFormatProblem, recordDataFormat } from "./data-format.js";
 import { pruneUnchangedSkillCopies } from "./agent/memory.js";
+import { registerBunOAuthFlows } from "@earendil-works/pi-ai/bun-oauth";
+
+// pi-ai loads its OAuth sign-in flows through a variable import() that a
+// compiled binary cannot follow ("Cannot find module './github-copilot.js'"
+// in every release build); static loaders embed them, and work from source too
+registerBunOAuthFlows();
 
 // The engine runs unsupervised — an unhandled socket error must not take the
 // user's app dark. Network-grade errors (a client vanished mid-read, a

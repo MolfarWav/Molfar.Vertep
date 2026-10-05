@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Subscription sign-ins (Claude Pro/Max, ChatGPT Plus/Pro, GitHub Copilot, OpenRouter, Kimi, SuperGrok, Radius) work in the release builds and the Android app: they failed with "Cannot find module" because the compiled engine did not carry the sign-in code; running from source was not affected.
+
 - Apps' prompt hooks work again for imported apps: the grant step leaves out "hooks" (it needs no grant), but the hook collector asked for exactly that grant, so after an app update or a fresh install the Roleplay dashboard's insert into replies (and with it "Story, move" and the dashboard's fast mode) silently stopped reaching the model. A plugin that declares hooks now runs on its granted model access.
 
 - Molfar no longer stops mid-sentence when the provider drops a tool call it could not parse: the half-written reply stays, Molfar is asked once to repeat the call with valid arguments, and if that fails too, to answer or ask its questions as plain text.
