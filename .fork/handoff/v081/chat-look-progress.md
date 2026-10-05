@@ -140,4 +140,32 @@ grid `40px` gap 12px, user max-width 86%, scene place 16px. `prefers-reduced-mot
   back to snapshot clocks); engine plugin `stripEchoedName(text, name)` on send/next/swipe/cancelled, literal
   case-insensitive match of the forms in the spec, no longer tied to names riding the prompt; `src/lib/echo-name.ts`
   `hideEchoedName` (same rule); docs. 542 Roleplay tests. Built by a subagent, reviewed here.
-- UI subagent running (settings + migration, message row, avatar menu, header, scenes, live line, browser check).
+- Roleplay `17c8c12` (pushed to `chatlook`): the UI. Built by a Sonnet subagent from the drafts (resumed once after
+  a rate limit), reviewed here. `migrate-look.ts` (`migrateLook(settings, from)`: the engine copy's own
+  `lookVersion` decides, since its `ui` overwrites local values), store `dashOpen`/`openDashboard`,
+  `useDashOpenRequest` in dash-mount (media query per mount; an empty dashboard unfolds the strip), message-row
+  rewritten (`.ls-row`, arch, `.ls-head` + hover `.ls-meta`, `.ls-tools` = swipes always + `.ls-acts` hover/pinned,
+  More from `messageActions`), header (AvatarMenu, ChatDetailsButton, no badges, quick switch labels from `xl`),
+  phone header avatar, `SceneBefore` per message, `.ls-live`, Display mode / avatar shape / style / tint controls
+  removed, ~60 en+uk keys, CHANGELOG Unreleased. 557 Roleplay tests, typecheck only plugin-panel.tsx:88, biome
+  (2.5.13, HEAD vs new) no new rule kinds.
+  Browser check (throwaway engine from the `v081` worktree, mock model, made-up solo + group chats, ports
+  18896/18897): 1280 dark uk, 1280 light en, 390 light uk with touch; scenes, arch, offset user turns, no echoed
+  name, hover actions + meta, More menu groups, avatar menu from message (group: the member) and header (group
+  card: Card + Dashboard), Card → core tab, Soul → soul tab, Dashboard → wide sheet / bottom sheet, "i" popover,
+  header at 800/900/1024 not cut off, no sideways scroll at 390, settings without Display mode, migration read
+  back from disk (old defaults moved, own values kept, second load no change). Screens in the session scratchpad
+  `bc/shots/` (not kept). Not seen: the group chat at 1280 light en by eye, a real model with names in the prompt,
+  a real phone.
+  External review (review alias, GLM 5.3; the whole diff hung for 30 min with no answer, so it ran in two halves):
+  9 findings. Fixed: English toasts in summarize/undo/bookmark (now `t()`), the Stop-TTS button rode a swipe
+  slide, "Unhide" lost its Eye icon, Dashboard item was a dead tap on a phone with an empty dashboard (now shown
+  only when ready, or empty on a wide screen). Rejected: model/spend rows ignore showModelIcons/showCost (the
+  popover is on demand; those settings still govern the message meta), message tint dropped (spec: one look),
+  unnamed trigger for a deleted card (the message trigger has its own aria-label; the header always has a card),
+  write-back retried when the engine PUT fails (harmless, self-healing), "file missing" (the review saw half).
+- Open for the user: the empty space a hidden actions row keeps under each turn (mock A keeps it so text does not
+  jump on hover; alternative: take space only on hover). Decide after the live test.
+- Live test needs: the user's "yes" to copy; engine `Molfar-Vertep.bat dev v081`; the app's pending update checked
+  first; hashes of every workspace file vs the base `f014826`. `package.json` gains `@fontsource/noto-serif`: the
+  engine's `healPackages` installs missing packages in the background before a build (`src/apps/packages.ts`).
