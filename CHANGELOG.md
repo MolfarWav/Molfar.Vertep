@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Molfar no longer stops mid-sentence when the provider drops a tool call it could not parse: the half-written reply stays, Molfar is asked once to repeat the call with valid arguments, and if that fails too, to answer or ask its questions as plain text.
+
 ## 0.8.0 (2026-10-05)
 
 - Roleplay 4.23.0 through app updates: the dashboard updates right after each reply (edits and Continue re-read, a live line under the newest message), its own settings (sensor, event vocabulary, what the model sees, Tune with Molfar, the sensor prompt in blocks), the user's own notes with pinned/important/everyday tags, managed story threads with periodic checks, forms of address, start values from souls saved later, and fixes for cheap sensor models.

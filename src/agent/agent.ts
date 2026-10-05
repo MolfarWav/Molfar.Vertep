@@ -688,6 +688,20 @@ export class UserAgent {
           this.budget.force = false;
         }
       }
+      // The provider dropped a tool call it could not parse. Keep the partial
+      // text, ask once for the call again, then once more for plain text.
+      if (this.settleMalformedToolCall(MALFORMED_RETRY_NUDGE)) {
+        await this.agent.continue();
+        if (this.settleMalformedToolCall(MALFORMED_PLAIN_NUDGE)) {
+          const tools = this.agent.state.tools;
+          this.agent.state.tools = [];
+          try {
+            await this.agent.continue();
+          } finally {
+            this.agent.state.tools = tools;
+          }
+        }
+      }
     } finally {
       unsub();
     }
@@ -803,6 +817,24 @@ export class UserAgent {
     } catch (e) {
       log.warn(`[agent:${this.sessionId}] session open failed: ${(e as Error).message}`);
     }
+  }
+
+  /** When the run ended on a malformed tool call: keep its text as a normal
+   *  reply (pi-ai drops errored messages from context), drop the broken call,
+   *  queue the nudge and report true so the caller continues. */
+  private settleMalformedToolCall(nudge: string): boolean {
+    const messages = this.agent.state.messages;
+    const last = messages.at(-1) as AssistantMessage | undefined;
+    if (last?.role !== "assistant" || last.stopReason !== "error" || !isMalformedToolCall(last.errorMessage)) return false;
+    log.warn(`[agent:${this.sessionId}] malformed tool call, asking again: ${last.errorMessage}`);
+    const text = last.content.filter((b) => b.type === "text" && b.text.trim());
+    const kept: AgentMessage[] = text.length ? [{ ...last, content: text, stopReason: "stop", errorMessage: undefined }] : [];
+    this.agent.state.messages = [
+      ...messages.slice(0, -1),
+      ...kept,
+      { role: "user", content: [{ type: "text", text: nudge }], timestamp: Date.now() },
+    ];
+    return true;
   }
 
   /** What every model call in a run used, summed, and priced on the
@@ -1014,6 +1046,17 @@ function loadSessionDialogue(sFile: string, model: { api: string; provider: stri
   } catch {
     return [];
   }
+}
+
+const MALFORMED_RETRY_NUDGE =
+  "Your last tool call had invalid arguments and was not executed. Call it again with valid JSON arguments.";
+const MALFORMED_PLAIN_NUDGE =
+  "Your tool call failed again. Do not call tools now: write your answer, or the questions you wanted to ask, as plain text.";
+
+/** A provider's note that it dropped a tool call it could not parse (seen
+ *  from NanoGPT: "...the final tool call was malformed and was not executed"). */
+export function isMalformedToolCall(message: string | undefined): boolean {
+  return /(tool|function)[ _-]?call\b[^.]{0,60}\b(malformed|invalid|unparsable|could not be parsed|failed to parse)|\b(malformed|invalid|unparsable)\s+(tool|function)[ _-]?call/i.test(message ?? "");
 }
 
 /** pi-ai's overflow patterns (minus the bodiless-status guess), plus wordings

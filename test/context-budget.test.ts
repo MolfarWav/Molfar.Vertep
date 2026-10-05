@@ -8,7 +8,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import { fauxProvider, fauxAssistantMessage } from "@earendil-works/pi-ai/providers/faux";
+import { fauxProvider, fauxAssistantMessage, fauxText } from "@earendil-works/pi-ai/providers/faux";
 import {
   TRIM_NOTICE,
   clampMaxTokens,
@@ -20,7 +20,7 @@ import {
   outputCap,
 } from "../src/agent/context-budget.js";
 import { compactionInput, summarizeSession } from "../src/agent/compact.js";
-import { UserAgent, windowFromError } from "../src/agent/agent.js";
+import { UserAgent, isMalformedToolCall, windowFromError } from "../src/agent/agent.js";
 import { UserModelService } from "../src/models.js";
 import { defaultInstanceConfig } from "../src/config.js";
 import { bootstrapUserDir, userPaths } from "../src/paths.js";
@@ -277,6 +277,68 @@ describe("agent loop under a tight window (faux provider)", () => {
     // the retry learned the 20k window from the refusal and budgeted for it
     expect(r.contextWindow).toBe(20_000);
     expect(maxSeen[1]!).toBeLessThanOrEqual(20_000);
+  }, 30_000);
+
+  const MALFORMED = "Partial response received, but the final tool call was malformed and was not executed.";
+
+  it("spots a provider's malformed tool call note", () => {
+    expect(isMalformedToolCall(MALFORMED)).toBe(true);
+    expect(isMalformedToolCall("Invalid tool call arguments: Unexpected token")).toBe(true);
+    expect(isMalformedToolCall("function call could not be parsed")).toBe(true);
+    expect(isMalformedToolCall("429 rate limited")).toBe(false);
+    expect(isMalformedToolCall(undefined)).toBe(false);
+  });
+
+  it("a malformed tool call is asked again once, keeping the partial text", async () => {
+    const { users, svc, handle, p } = setup(524_288);
+    const seen: AgentMessage[][] = [];
+    handle.setResponses([
+      () => fauxAssistantMessage([fauxText("Let me ask a few things.")], { stopReason: "error", errorMessage: MALFORMED }),
+      (ctx) => {
+        seen.push(ctx.messages as AgentMessage[]);
+        return fauxAssistantMessage("Here are my questions.");
+      },
+    ]);
+    const agent = await UserAgent.create("dana", svc, p, users, defaultInstanceConfig());
+    const r = await agent.run("make me a card");
+    expect(r.error).toBeUndefined();
+    expect(r.finalText).toBe("Here are my questions.");
+    expect(r.turns.map((t) => t.text)).toEqual(["Let me ask a few things.", "Here are my questions."]);
+    // the retry sees the partial reply as a normal one, then the nudge
+    const tail = seen[0]!.slice(-2) as { role: string; content: { text?: string }[] }[];
+    expect(tail[0]!.role).toBe("assistant");
+    expect(tail[0]!.content[0]!.text).toBe("Let me ask a few things.");
+    expect(tail[1]!.role).toBe("user");
+    expect(tail[1]!.content[0]!.text).toContain("invalid arguments");
+  }, 30_000);
+
+  it("a second malformed call falls back to plain text with no tools", async () => {
+    const { users, svc, handle, p } = setup(524_288);
+    const toolCounts: number[] = [];
+    handle.setResponses([
+      () => fauxAssistantMessage([], { stopReason: "error", errorMessage: MALFORMED }),
+      (ctx) => {
+        toolCounts.push(ctx.tools?.length ?? 0);
+        return fauxAssistantMessage([], { stopReason: "error", errorMessage: MALFORMED });
+      },
+      (ctx) => {
+        toolCounts.push(ctx.tools?.length ?? 0);
+        return fauxAssistantMessage("1. Who is she? 2. Where?");
+      },
+      (ctx) => {
+        toolCounts.push(ctx.tools?.length ?? 0);
+        return fauxAssistantMessage("next run");
+      },
+    ]);
+    const agent = await UserAgent.create("dana", svc, p, users, defaultInstanceConfig());
+    const r = await agent.run("make me a card");
+    expect(r.error).toBeUndefined();
+    expect(r.finalText).toBe("1. Who is she? 2. Where?");
+    expect(toolCounts[0]).toBeGreaterThan(0);
+    expect(toolCounts[1]).toBe(0);
+    // tools are back for the next run
+    await agent.run("thanks");
+    expect(toolCounts[2]).toBe(toolCounts[0]);
   }, 30_000);
 
   it("a bodiless 400 is not taken for an overflow", async () => {
