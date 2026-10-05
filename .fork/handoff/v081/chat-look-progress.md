@@ -138,6 +138,11 @@ grid `40px` gap 12px, user max-width 86%, scene place 16px. `prefers-reduced-mot
   Roleplay assembly (`plugins/engine` `assemble()`) and each llmRequest hook tag what they add with a source label
   that the engine keeps for the inspector and strips before the provider call; the Roleplay "Prompt peek" dialog
   could show the same labels. Pairs with 0d (token use): the same labels give a per-source token count.
+  User (2026-10-06): build on the INSPECTOR, not on Roleplay's "Prompt peek": the user rates the inspector higher
+  because it already splits a request into its messages (token estimate each) and tells requests apart by origin
+  (`InspectorEntry.source`, e.g. `app:roleplay/engine` for a story reply vs the dashboard's own calls). What is
+  missing is the origin INSIDE one request: which lines of the system prompt and which inserted messages came
+  from the card, the lorebook, Memory, the dashboard hook and so on.
 
 ## Log
 - 2026-10-05: worktrees made; spec checked by an Explore agent; user answered the open points above.
