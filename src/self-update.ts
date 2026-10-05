@@ -51,7 +51,8 @@ export function pickAsset(assets: unknown, target: string = platformTarget()): R
   for (const a of assets as { name?: unknown; browser_download_url?: unknown; size?: unknown; state?: unknown; digest?: unknown }[]) {
     if (typeof a?.name !== "string" || typeof a.browser_download_url !== "string" || typeof a.size !== "number") continue;
     if (a.state !== undefined && a.state !== "uploaded") continue;
-    if (!/^Chrysalis-.+\.(?:zip|tar\.gz)$/.test(a.name) || !a.name.replace(/\.(?:zip|tar\.gz)$/, "").endsWith(`-${target}`)) continue;
+    // archives are named Chrysalis-* up to 0.8.x; Molfar-Vertep-* is accepted for the rename
+    if (!/^(?:Chrysalis|Molfar-Vertep)-.+\.(?:zip|tar\.gz)$/.test(a.name) || !a.name.replace(/\.(?:zip|tar\.gz)$/, "").endsWith(`-${target}`)) continue;
     if (!a.browser_download_url.startsWith("https://github.com/")) continue;
     const sha256 = typeof a.digest === "string" ? /^sha256:([0-9a-f]{64})$/i.exec(a.digest)?.[1]?.toLowerCase() : undefined;
     return { name: a.name, url: a.browser_download_url, size: a.size, ...(sha256 ? { sha256 } : {}) };

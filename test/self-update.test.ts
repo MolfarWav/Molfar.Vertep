@@ -31,6 +31,12 @@ describe("self-update", () => {
     expect(pickAsset([asset("Chrysalis-1.1.0-linux-x64.tar.gz", "https://evil.example/x.tar.gz")], "linux-x64")).toBeNull();
   });
 
+  it("accepts the Molfar-Vertep archive names", () => {
+    const assets = [asset("Molfar-Vertep-0.9.0-linux-x64.tar.gz"), asset("Molfar-Vertep-0.9.0-windows-x64.zip"), asset("Other-0.9.0-macos-arm64.tar.gz")];
+    expect(pickAsset(assets, "windows-x64")?.name).toBe("Molfar-Vertep-0.9.0-windows-x64.zip");
+    expect(pickAsset(assets, "macos-arm64")).toBeNull();
+  });
+
   it("swaps the program and resources, leaving config and data alone", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "chrysalis-swap-"));
     const fresh = path.join(dir, ".update", "unpacked", "Chrysalis-1.1.0-linux-x64");

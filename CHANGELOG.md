@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Self-update also recognises release archives named `Molfar-Vertep-*`, so a later release can drop the old `Chrysalis-*` names without stranding this version.
+
 ## 0.7.0 (2026-10-04)
 
 - Roleplay 4.22.0 through app updates: the relationship dashboard (sensor, attitudes, constellations, scene clock, threads, notebooks, a words-only prompt insert), the Soul tab on cards, the scene strip, wide view and phone sheet, and UI work made with Molfar (rail labels collapse, persona filter, preset-bound regex, grouped regex list and Tools tabs).

@@ -50,7 +50,7 @@ export function stagingVersionOf(release: { name?: unknown; assets?: unknown }):
   const assets = Array.isArray(release.assets) ? release.assets : [];
   for (const asset of assets) {
     const name = (asset as { name?: unknown })?.name;
-    const m = typeof name === "string" ? /^Chrysalis-(.+-staging\.[^-]+)-[a-z0-9]+-[a-z0-9]+\.(?:zip|tar\.gz|apk)$/.exec(name) : null;
+    const m = typeof name === "string" ? /^(?:Chrysalis|Molfar-Vertep)-(.+-staging\.[^-]+)-[a-z0-9]+-[a-z0-9]+\.(?:zip|tar\.gz|apk)$/.exec(name) : null;
     if (m?.[1]) return m[1];
   }
   return null;
