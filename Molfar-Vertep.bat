@@ -328,7 +328,7 @@ if "%MV_NO_SC%"=="2" goto run
 rem the shortcut opens the launcher inside the app folder, never a stray copy
 set "MV_LNK=%MV_SELF%"
 if exist "%APP%\Molfar-Vertep.bat" set "MV_LNK=%APP%\Molfar-Vertep.bat"
-set "MV_PNG=%APP%\client\public\chrysalis_logo.png"
+set "MV_PNG=%APP%\client\public\icon-512.png"
 set "MV_ICO=%MV_STATE%\molfar-vertep.ico"
 rem the icon: the logo as a 256 px PNG inside a one-image .ico
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^

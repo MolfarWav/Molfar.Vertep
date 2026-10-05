@@ -35,11 +35,10 @@ const SESSION_TABS_KEY = "chrysalis-session-tabs"
 function Logo(props: { size?: number }) {
   return (
     <img
-      src="/client/chrysalis_logo.png"
+      src="/client/vertep-logo.svg"
       alt="Molfar Vertep"
       width={props.size ?? 20}
       height={props.size ?? 20}
-      className="rounded-[4px]"
       style={{ width: `${props.size ?? 20}px`, height: `${props.size ?? 20}px` }}
     />
   )
@@ -638,7 +637,7 @@ function Shell(props: { theme: ThemeControl }) {
 function SplashScreen() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-4 bg-deep">
-      <img src="/client/chrysalis_logo.png" alt="Molfar Vertep" width={56} height={56} className="rounded-[10px]" style={{ width: "56px", height: "56px" }} />
+      <img src="/client/vertep-logo.svg" alt="Molfar Vertep" width={56} height={56} style={{ width: "56px", height: "56px" }} />
       <TextShimmer text="Loading…" />
     </div>
   )
