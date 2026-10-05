@@ -4500,7 +4500,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         display: "standalone",
         background_color: "#111217",
         theme_color: "#111217",
-        icons: [{ src: "/client/chrysalis_logo.png", sizes: "512x512", type: "image/png" }],
+        icons: [{ src: "/client/icon-512.png", sizes: "512x512", type: "image/png" }],
       });
     }
     if (rel === "") {
@@ -4698,9 +4698,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (typeof out === "string") return c.json({ error: out }, 400);
     const rev = typeof body.rev === "string" && body.rev.length < 100 ? body.rev : sourceRev(a.dir);
     const builder = typeof body.builder === "string" && body.builder.length <= 100 ? body.builder : undefined;
+    // which step a phone build dies at is otherwise invisible: no access log
+    log.info(`[build] ${u.username}/${a.id} output ${Math.round(capped.bytes.length / 1024)} KB, ${out.ok ? "ok" : "failed"}`);
     try {
       writeOutput(c.get("paths").apps, a.id, out, rev, builder);
     } catch (e) {
+      log.warn(`[build] ${u.username}/${a.id} writing the output failed: ${(e as Error).message}`);
       return c.json({ error: `writing the build failed: ${(e as Error).message}` }, 500);
     }
     if (!out.ok) log.warn(`[build] ${u.username}/${a.id} failed: ${out.errors[0]?.text ?? "unknown error"}`);
@@ -4723,7 +4726,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const dir = path.join(p.apps, id);
     if (!hasPackages(dir)) return c.json({ error: "this app has no package.json; nothing to install" }, 400);
     if (!config.apps.packageDownloads) return c.json({ error: "package downloads are off (apps.packageDownloads in config.yaml)" }, 403);
+    const user = c.get("user").username;
+    log.info(`[apps] installing packages for ${user}/${id}`);
+    const started = Date.now();
     const res = await installApp(dir);
+    if (res.ok) log.info(`[apps] installed packages for ${user}/${id} (${Date.now() - started}ms)`);
+    else log.warn(`[apps] package install failed for ${user}/${id}: ${res.log.split("\n").slice(-3).join(" ")}`);
     // node_modules changes are invisible to the app watcher; tell open pages
     // to rebuild so an unresolved-import error clears once the dep lands
     if (res.ok) bus.emit(c.get("user").username, "build_needed", { app: id, paths: ["package.json"] });
@@ -4752,7 +4760,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       display: "standalone",
       background_color: "#111217",
       theme_color: "#111217",
-      icons: [{ src: "/client/chrysalis_logo.png", sizes: "512x512", type: "image/png" }],
+      icons: [{ src: "/client/icon-512.png", sizes: "512x512", type: "image/png" }],
     });
   });
 
@@ -5239,6 +5247,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
     // full detail to the engine log; clients get a generic message (raw
     // err.message can leak paths and internals)
     console.error("[route error]", c.req.method, c.req.path, err);
+    log.error(`[route error] ${c.req.method} ${c.req.path}: ${err instanceof Error ? err.message : String(err)}`);
     return c.json({ error: "internal error (see the engine log)" }, 500);
   });
 
