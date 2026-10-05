@@ -18,9 +18,9 @@ android {
     compileSdk 36
 
     defaultConfig {
-        applicationId "org.projectchrysalis.chrysalis"
+        applicationId "io.github.molfarwav.vertep"
         if (staging) applicationIdSuffix ".staging"
-        resValue "string", "app_name", staging ? "Chrysalis Staging" : "Chrysalis"
+        resValue "string", "app_name", staging ? "Molfar Vertep Staging" : "Molfar Vertep"
         // the compiled Bun server targets Android 9 (API 28) on ARM64
         minSdk 28
         targetSdk 35

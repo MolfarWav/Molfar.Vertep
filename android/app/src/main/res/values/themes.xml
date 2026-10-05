@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- the same dark palette as the Chrysalis shell -->
+    <!-- the same dark palette as the Molfar Vertep shell (icon_background is the Vertep theme base, behind the launcher icon) -->
+    <color name="icon_background">#0B0C11</color>
     <color name="deep">#0B0B0D</color>
     <color name="base">#121214</color>
     <color name="panel">#17171A</color>

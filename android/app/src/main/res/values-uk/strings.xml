@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tagline">Інтерфейс для ШІ, який змінюється просто на ваше прохання.</string>
+
+    <string name="status_stopped">Зупинено</string>
+    <string name="status_unpacking">Розпаковування, %1$d%%</string>
+    <string name="status_starting">Запуск…</string>
+    <string name="status_running">Працює</string>
+    <string name="status_failed">Зупинено через помилку</string>
+
+    <string name="action_start">Запустити</string>
+    <string name="action_stop">Зупинити</string>
+    <string name="action_open">Відкрити Molfar Vertep</string>
+    <string name="action_logs">Журнали</string>
+    <string name="action_battery">Працювати у фоні</string>
+    <string name="action_update">Отримати версію %1$s</string>
+    <string name="action_update_staging">Отримати найновішу тестову збірку</string>
+
+    <string name="battery_hint">Android може призупиняти Molfar Vertep, поки ви в браузері. Дозвольте йому працювати у фоні.</string>
+    <string name="data_hint">Ваші чати й налаштування лишаються на цьому телефоні. Якщо видалити застосунок, вони зникнуть, тож спершу експортуйте резервну копію.</string>
+    <string name="logs_title">Журнали Molfar Vertep</string>
+    <string name="logs_empty">Поки нічого не записано.</string>
+    <string name="logs_copy">Копіювати</string>
+    <string name="logs_close">Закрити</string>
+    <string name="log_copied">Журнал скопійовано</string>
+    <string name="no_browser">Не знайдено браузер, щоб відкрити %1$s</string>
+
+    <string name="notification_channel">Сервер</string>
+    <string name="notification_running">Molfar Vertep працює</string>
+    <string name="notification_starting">Molfar Vertep запускається</string>
+    <string name="notification_tap">Торкніться, щоб відкрити</string>
+</resources>

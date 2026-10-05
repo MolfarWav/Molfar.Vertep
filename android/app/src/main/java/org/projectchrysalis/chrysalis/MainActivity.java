@@ -16,6 +16,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -94,7 +95,14 @@ public final class MainActivity extends Activity implements EngineService.Listen
     }
 
     private void start() {
-        startForegroundService(new Intent(this, EngineService.class).setAction(EngineService.ACTION_START));
+        try {
+            startForegroundService(new Intent(this, EngineService.class).setAction(EngineService.ACTION_START));
+        } catch (RuntimeException e) {
+            // the system refused to start the service: say so on screen
+            Log.e("MolfarVertep", "Could not start the engine service", e);
+            openWhenReady = false;
+            EngineService.reportFailure(e.getMessage() == null ? e.toString() : e.getMessage());
+        }
     }
 
     @Override
@@ -160,17 +168,23 @@ public final class MainActivity extends Activity implements EngineService.Listen
         }, "chrysalis-open").start();
     }
 
-    /** The end of the engine log, or the service output when the engine never
-     *  got far enough to write one. */
+    /** What the launcher did on the last Start, then the end of the engine
+     *  log, or the service output when the engine never got far enough to
+     *  write one. */
     private String logText() {
         File engineLog = new File(EngineService.homeDir(this), "data/logs/chrysalis.log");
         String text = EngineService.lastLines(engineLog, 400);
         String output = EngineService.lastLines(EngineService.outputFile(this), 60);
-        return "Chrysalis " + BuildConfig.VERSION_NAME + " (Android " + Build.VERSION.RELEASE + ")\n\n" + (text.isEmpty() ? output : text);
+        String launcher = EngineService.lastLines(EngineService.launcherLogFile(this), 80);
+        StringBuilder sb = new StringBuilder("Molfar Vertep " + BuildConfig.VERSION_NAME + " (Android " + Build.VERSION.RELEASE + ")\n\n");
+        sb.append("Launcher\n").append(launcher.isEmpty() ? "(nothing yet)" : launcher).append("\n\n");
+        String engine = text.isEmpty() ? output : text;
+        if (!engine.isEmpty()) sb.append("Engine\n").append(engine);
+        return sb.toString().trim();
     }
 
     private void copyLog() {
-        getSystemService(ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("Chrysalis log", logText()));
+        getSystemService(ClipboardManager.class).setPrimaryClip(ClipData.newPlainText("Molfar Vertep log", logText()));
         Toast.makeText(this, R.string.log_copied, Toast.LENGTH_SHORT).show();
     }
 

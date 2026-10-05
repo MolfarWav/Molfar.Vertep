@@ -8,6 +8,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 ## Unreleased
 
 - Molfar no longer stops mid-sentence when the provider drops a tool call it could not parse: the half-written reply stays, Molfar is asked once to repeat the call with valid arguments, and if that fails too, to answer or ask its questions as plain text.
+- Android app: a failed start now stays on screen with its reason instead of falling back to "Stopped", and the Logs dialog shows a launcher log (device ABIs, the engine binary, exit code or signal). The app is named Molfar Vertep, has Molfar's icon and Ukrainian texts, and its package id is now `io.github.molfarwav.vertep`: it installs as a new app beside an old Chrysalis one, so export a backup from the old app and import it in the new one.
 
 ## 0.8.0 (2026-10-05)
 

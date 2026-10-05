@@ -18,7 +18,7 @@ final class Http {
         conn.setConnectTimeout(timeoutMs);
         conn.setReadTimeout(timeoutMs);
         conn.setRequestProperty("Accept", "application/json");
-        conn.setRequestProperty("User-Agent", "Chrysalis-Android/" + BuildConfig.VERSION_NAME);
+        conn.setRequestProperty("User-Agent", "MolfarVertep-Android/" + BuildConfig.VERSION_NAME);
         try {
             int code = conn.getResponseCode();
             if (code < 200 || code >= 300) throw new IOException("HTTP " + code);

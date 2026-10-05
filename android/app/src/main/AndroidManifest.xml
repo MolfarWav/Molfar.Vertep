@@ -35,7 +35,7 @@
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Runs the Chrysalis server on this device so the browser can use it" />
+                android:value="Runs the Molfar Vertep server on this device so the browser can use it" />
         </service>
     </application>
 </manifest>

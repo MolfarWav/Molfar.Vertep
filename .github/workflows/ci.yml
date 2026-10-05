@@ -95,7 +95,7 @@ jobs:
             --title "Staging $VERSION" \
             --notes "Bleeding-edge build of \`staging\` at $GITHUB_SHA. Expect rough edges; stable downloads are on the [latest release](https://github.com/${{ github.repository }}/releases/latest).
 
-          The Android app installs as **Chrysalis Staging**, next to the stable app, with its own data." \
+          The Android app installs as **Molfar Vertep Staging**, next to the stable app, with its own data." \
             assets/*.zip assets/*.tar.gz assets/*.apk
           # published only once every file is up, so no install sees it half uploaded
           gh release edit staging-latest --draft=false --prerelease

@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -24,8 +25,12 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -63,8 +68,16 @@ public final class EngineService extends Service {
     private static final List<Listener> listeners = new ArrayList<>();
     private static final Handler main = new Handler(Looper.getMainLooper());
 
+    private static final String TAG = "MolfarVertep";
+    private static final int READY_TIMEOUT_SECONDS = 90;
+    private static final Object logLock = new Object();
+
     private Process process;
     private volatile boolean stopping;
+    /** Set by fail(), read by onDestroy: the service going away after a failure
+     *  must not replace the failure on screen with "Stopped". (The static
+     *  state cannot say this: it is updated on the main thread, later.) */
+    private volatile boolean failed;
     private Thread worker;
 
     static State state() {
@@ -103,6 +116,46 @@ public final class EngineService extends Service {
         return new File(context.getFilesDir(), "engine-output.log");
     }
 
+    /** What the launcher itself did on the last Start: one line per phase and
+     *  every failure. Shown first in the Logs dialog. */
+    static File launcherLogFile(Context context) {
+        return new File(context.getFilesDir(), "launcher.log");
+    }
+
+    private static void resetLauncherLog(Context context) {
+        synchronized (logLock) {
+            try (FileOutputStream out = new FileOutputStream(launcherLogFile(context), false)) {
+                out.flush();
+            } catch (Throwable ignored) {
+                // the log is a convenience, never a reason to fail
+            }
+        }
+    }
+
+    /** One timestamped line in launcher.log and in logcat. Never throws. */
+    private static void launcherLog(Context context, boolean error, String message) {
+        try {
+            if (error) Log.e(TAG, message);
+            else Log.i(TAG, message);
+        } catch (Throwable ignored) {
+            // logcat unavailable
+        }
+        synchronized (logLock) {
+            try (FileOutputStream out = new FileOutputStream(launcherLogFile(context), true)) {
+                String stamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).format(new Date());
+                String line = stamp + (error ? " ERROR " : " ") + message + "\n";
+                out.write(line.getBytes(StandardCharsets.UTF_8));
+            } catch (Throwable ignored) {
+                // the log is a convenience, never a reason to fail
+            }
+        }
+    }
+
+    /** Show a failure on the launcher screen (for failures that happen in the activity). */
+    static void reportFailure(String message) {
+        publish(Phase.FAILED, 0, null, message);
+    }
+
     /** A token that lets the first visitor create the admin account. Kept for
      *  the life of the install, so the Open button can always build the link. */
     static String setupToken(Context context) {
@@ -134,6 +187,7 @@ public final class EngineService extends Service {
         goForeground(getString(R.string.notification_starting));
         if (worker == null || !worker.isAlive()) {
             stopping = false;
+            failed = false;
             worker = new Thread(this::run, "chrysalis-engine");
             worker.start();
         }
@@ -142,17 +196,24 @@ public final class EngineService extends Service {
 
     @Override
     public void onDestroy() {
-        stopEngine();
+        // after a failure the error stays on screen; any other end (a system
+        // kill, say) reads as stopped
+        killProcess();
+        if (!failed) publish(Phase.STOPPED, 0, null, null);
         super.onDestroy();
     }
 
     private void run() {
         try {
+            resetLauncherLog(this);
+            launcherLog(this, false, "Start: " + BuildConfig.VERSION_NAME + ", Android API " + Build.VERSION.SDK_INT
+                + " (" + Build.VERSION.RELEASE + "), ABIs " + Arrays.toString(Build.SUPPORTED_ABIS));
             publish(Phase.UNPACKING, 0, null, null);
             Payload.ensure(this, percent -> publish(Phase.UNPACKING, percent, null, null));
+            launcherLog(this, false, "Resources ready in " + Payload.resourcesDir(this));
             publish(Phase.STARTING, 0, null, null);
             launch();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             if (!stopping) fail(e.getMessage() == null ? e.toString() : e.getMessage());
         }
     }
@@ -166,8 +227,10 @@ public final class EngineService extends Service {
         //noinspection ResultOfMethodCallIgnored
         status.delete();
 
-        String server = getApplicationInfo().nativeLibraryDir + "/libchrysalis.so";
-        ProcessBuilder pb = new ProcessBuilder(server);
+        File binary = new File(getApplicationInfo().nativeLibraryDir, "libchrysalis.so");
+        launcherLog(this, false, "Engine binary " + binary.getAbsolutePath() + ": exists=" + binary.exists()
+            + ", canExecute=" + binary.canExecute() + ", length=" + binary.length());
+        ProcessBuilder pb = new ProcessBuilder(binary.getAbsolutePath());
         pb.directory(home);
         pb.redirectErrorStream(true);
         Map<String, String> env = pb.environment();
@@ -181,6 +244,7 @@ public final class EngineService extends Service {
         env.put("CHRYSALIS_EXIT_ON_STDIN_CLOSE", "1");
         process = pb.start();
         Process proc = process;
+        launcherLog(this, false, "Engine process started");
 
         Thread pump = new Thread(() -> copyOutput(proc.getInputStream()), "chrysalis-output");
         pump.start();
@@ -188,28 +252,50 @@ public final class EngineService extends Service {
         String url = waitForReady(proc, status);
         if (url == null) {
             if (stopping) return;
-            proc.destroy();
-            proc.waitFor(3, TimeUnit.SECONDS);
+            if (proc.isAlive()) {
+                String timeout = "The engine did not become ready in " + READY_TIMEOUT_SECONDS + " seconds";
+                launcherLog(this, true, timeout);
+                proc.destroy();
+                proc.waitFor(3, TimeUnit.SECONDS);
+                pump.join(1000);
+                fail(outputOr(timeout + ". See Logs."));
+                return;
+            }
             pump.join(1000);
-            fail(lastLines(outputFile(this), 12));
+            String exit = describeExit(proc.exitValue());
+            launcherLog(this, true, "The engine stopped at start: " + exit);
+            fail(outputOr("The engine stopped at start with " + exit + ". See Logs."));
             return;
         }
+        launcherLog(this, false, "Engine ready at " + url);
         publish(Phase.RUNNING, 100, url, null);
         goForeground(getString(R.string.notification_running));
 
         int code = proc.waitFor();
         pump.join(1000);
         if (stopping) return;
+        launcherLog(this, code != 0, "Engine process exited: " + describeExit(code));
         if (code == 0) stopEngine();
-        else fail(lastLines(outputFile(this), 12));
+        else fail(outputOr("The engine stopped with " + describeExit(code) + ". See Logs."));
+    }
+
+    /** "exit code 159 (killed by signal 31)": Java reports a signal death as 128 plus the signal. */
+    private static String describeExit(int code) {
+        return "exit code " + code + (code > 128 ? " (killed by signal " + (code - 128) + ")" : "");
+    }
+
+    /** The end of the engine's output, or the given message when it said nothing. */
+    private String outputOr(String fallback) {
+        String output = lastLines(outputFile(this), 12);
+        return output.isEmpty() ? fallback : output;
     }
 
     /** Wait for the server's status file and a health check that names the
      *  same instance: a stale file or another program on the port never
-     *  counts as ready. Returns null if the process exits first or never
-     *  becomes healthy. */
+     *  counts as ready. Returns null if the process exits first (the caller
+     *  tells that from a timeout with isAlive) or never becomes healthy. */
     private String waitForReady(Process proc, File status) throws InterruptedException {
-        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(90);
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(READY_TIMEOUT_SECONDS);
         while (System.nanoTime() < deadline && !stopping) {
             if (!proc.isAlive()) return null;
             try {
@@ -250,12 +336,16 @@ public final class EngineService extends Service {
     }
 
     private void fail(String message) {
+        failed = true;
+        launcherLog(this, true, "Failed: " + message);
         publish(Phase.FAILED, 0, null, message);
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
     }
 
-    private void stopEngine() {
+    /** Ask the engine to shut down: closing its stdin is a clean stop, then
+     *  the process is destroyed if it lingers. */
+    private void killProcess() {
         stopping = true;
         Process proc = process;
         process = null;
@@ -273,6 +363,11 @@ public final class EngineService extends Service {
                 }
             }, "chrysalis-stop").start();
         }
+    }
+
+    /** A requested stop, or a clean exit of the engine. */
+    private void stopEngine() {
+        killProcess();
         publish(Phase.STOPPED, 0, null, null);
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
