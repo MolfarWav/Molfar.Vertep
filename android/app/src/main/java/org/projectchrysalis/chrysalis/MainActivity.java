@@ -274,7 +274,7 @@ public final class MainActivity extends Activity implements EngineService.Listen
                     "https://api.github.com/repos/" + slug + (staging ? "/releases/tags/staging-latest" : "/releases/latest"),
                     8000);
                 String tag = release.optString("tag_name", "").replaceFirst("^v", "");
-                String apkName = "Chrysalis-" + BuildConfig.VERSION_NAME + "-android-arm64.apk";
+                String apkName = "Molfar-Vertep-" + BuildConfig.VERSION_NAME + "-android-arm64.apk";
                 // straight at the APK so the browser downloads it; the release
                 // page carries every platform's file and invites mis-taps
                 String page = release.getString("html_url");

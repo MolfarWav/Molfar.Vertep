@@ -17,7 +17,7 @@
  *   Chrysalis-<version>-<target>.tar.gz  (.zip for Windows)
  *   npm/                                 package for `bun install -g`
  *   android/                             server + resources for the Android launcher
- *   Chrysalis-<version>-android-arm64.apk (target android-apk; needs JAVA_HOME
+ *   Molfar-Vertep-<version>-android-arm64.apk (target android-apk; needs JAVA_HOME
  *                                        with JDK 17+ and ANDROID_HOME)
  *
  * resources/ holds what the engine serves but cannot compile in:
@@ -256,8 +256,9 @@ if (wantApk) {
   }
   const gradlew = process.platform === "win32" ? "gradlew.bat" : "./gradlew";
   run(gradlew, ["--no-daemon", "-q", "assembleRelease"], project);
-  fs.copyFileSync(path.join(project, "app", "build", "outputs", "apk", "release", "app-release.apk"), path.join(outRoot, `Chrysalis-${version}-android-arm64.apk`));
-  console.log(`built Chrysalis-${version}-android-arm64.apk`);
+  // the APK is a new app since 0.8.1 (own package id), so no old install looks for the Chrysalis- name
+  fs.copyFileSync(path.join(project, "app", "build", "outputs", "apk", "release", "app-release.apk"), path.join(outRoot, `Molfar-Vertep-${version}-android-arm64.apk`));
+  console.log(`built Molfar-Vertep-${version}-android-arm64.apk`);
 }
 
 if (wantNpm) {

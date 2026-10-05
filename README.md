@@ -71,7 +71,7 @@ To move an app to another device, or keep a copy before uninstalling, use **Expo
 || macOS (Apple silicon) | `Chrysalis-<version>-macos-arm64.tar.gz` | Unpack, double-click `start.command` |
 || macOS (Intel) | `Chrysalis-<version>-macos-x64.tar.gz` | Unpack, double-click `start.command` |
 || Linux | `Chrysalis-<version>-linux-x64.tar.gz` (or `-arm64`) | Unpack, run `./chrysalis` |
-|| Android 9+ | `Chrysalis-<version>-android-arm64.apk` | Install, open the app |
+|| Android 9+ | `Molfar-Vertep-<version>-android-arm64.apk` | Install, open the app |
 || Docker (from 0.3.0) | `ghcr.io/molfarwav/molfar-vertep` | See README section below |
 
 Archive names stay `Chrysalis-<version>-<system>` on purpose: self-update looks for them. Internal names stay too (`chrysalis` command, `CHRYSALIS_*`, data folders) so installs keep working.
