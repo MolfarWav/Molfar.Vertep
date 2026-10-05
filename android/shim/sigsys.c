@@ -109,7 +109,8 @@ int sigaction(int sig, const struct sigaction *act, struct sigaction *old) {
 
 sighandler_t signal(int sig, sighandler_t handler) {
     if (!real_signal) resolve();
-    if (sig == SIGSYS) return SIG_DFL;
+    // bionic declares the result non-null: report the handler that stays
+    if (sig == SIGSYS) return sigsys_action.sa_handler;
     return real_signal(sig, handler);
 }
 
