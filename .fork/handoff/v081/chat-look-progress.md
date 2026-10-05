@@ -121,6 +121,14 @@ grid `40px` gap 12px, user max-width 86%, scene place 16px. `prefers-reduced-mot
   Notifications API (asks for permission when switched on; fires only when `document.hidden`), click focuses the
   chat; the Android APK needs a look at whether its WebView/engine service can post the notification instead.
   Not part of the chat look; plan and spec it separately.
+- 0d. Molfar's token use (user, 2026-10-06), right after 0c: Molfar burns tokens very fast; even simple tasks make
+  many model calls, and on longer chats a task can cost several million tokens. Must be solved. Start by
+  MEASURING, not guessing: per run, the number of model calls, input/output tokens per call, what makes up the input
+  (system prompt, AGENTS.md and docs, skills index, history, tool results), and how much repeats between calls
+  (the prompt inspector on the agent page and `estimateTextTokens` in `src/agent/context-budget.ts`). Likely
+  suspects to check (guesses): the whole history and every tool result resent on each step, large file reads kept
+  in context, the skills index riding every chat (overlaps 0c), provider prompt caching not used, too many small
+  tool steps. Then fix by measured share, with the user choosing the trade-offs.
 
 ## Log
 - 2026-10-05: worktrees made; spec checked by an Explore agent; user answered the open points above.
