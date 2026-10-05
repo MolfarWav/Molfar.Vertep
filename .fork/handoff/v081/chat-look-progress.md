@@ -169,3 +169,8 @@ grid `40px` gap 12px, user max-width 86%, scene place 16px. `prefers-reduced-mot
 - Live test needs: the user's "yes" to copy; engine `Molfar-Vertep.bat dev v081`; the app's pending update checked
   first; hashes of every workspace file vs the base `f014826`. `package.json` gains `@fontsource/noto-serif`: the
   engine's `healPackages` installs missing packages in the background before a build (`src/apps/packages.ts`).
+- 2026-10-06: COPIED to the desktop workspace with the user's "yes": 33 files of `f014826..17c8c12` (22 changed,
+  11 new; CHANGELOG.md not copied). Before: desktop engine on `claude/v081` (detached `67fb906`), workspace Roleplay
+  4.23.0 = fork main `25d8d85` (no pending update), every changed file identical to `f014826` by hash, the new
+  ones absent; hashes checked again right before the copy and after it (all equal to `17c8c12`). Waiting for the
+  user's live look (Rebuild; the font package installs in the background).
