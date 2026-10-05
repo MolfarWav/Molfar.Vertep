@@ -374,6 +374,20 @@ export function uiPanel(ctx) {
     expect(seen[0]!.source).toBe("app:asker");
   }, 30_000);
 
+  it("an imported plugin's llmRequest hook runs on its llm grant: hooks is declared, never granted", () => {
+    writePlugin("asker", { name: "A", version: "1", permissions: ["routes", "llm"], origin: "imported" }, "export function handleRoute() { return null; }");
+    writePlugin("patcher", { name: "P", version: "1", permissions: ["hooks", "llm"], origin: "imported" }, "export function llmRequest() { return null; }");
+    writePlugin("undeclared", { name: "U", version: "1", permissions: ["llm"], origin: "imported" }, "export function llmRequest() { return null; }");
+    const plugins = discoverPlugins(path.join(dir, "plugins"));
+    const asker = plugins.find((p) => p.id === "asker")!;
+    const ids = async (grants: string[]) => (await collectSiblingLlmHooks(plugins, asker, deps(grants))).map((h) => h.plugin.id);
+    // the grant flows store what a plugin declares minus "hooks": llm is enough
+    return Promise.all([ids(["routes", "llm", "fs"]), ids(["routes", "fs"])]).then(([withLlm, withoutLlm]) => {
+      expect(withLlm).toEqual(["patcher"]);
+      expect(withoutLlm).toEqual([]);
+    });
+  });
+
   it("llmRequest hooks see the request's turn labels, sanitized; the model never sees them", async () => {
     writePlugin(
       "asker",

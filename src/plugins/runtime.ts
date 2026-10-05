@@ -358,9 +358,11 @@ export function sanitizeTurn(raw: unknown): Record<string, string | number> | nu
 }
 
 /** Sibling plugins that can patch this plugin's llm requests: llmRequest
- *  hooks, gated on BOTH "hooks" and "llm" (an imported plugin needs both
- *  grants — seeing another plugin's prompts is only for plugins the user has
- *  already trusted with model access). Manifest priority orders them: lower
+ *  hooks, gated on BOTH a declared "hooks" and "llm" (an imported plugin
+ *  needs the llm GRANT — seeing another plugin's prompts is only for plugins
+ *  the user has already trusted with model access; "hooks" itself is never
+ *  granted, the grant flows drop it, so asking for a hooks grant here left
+ *  every imported app's hooks off). Manifest priority orders them: lower
  *  runs first, higher runs later so its patch wins on conflicts; ties break
  *  by plugin id for determinism. */
 export async function collectSiblingLlmHooks(
@@ -371,7 +373,7 @@ export async function collectSiblingLlmHooks(
   const hooks: LlmRequestHook[] = [];
   for (const sibling of appPlugins) {
     if (sibling.id === self.id) continue;
-    if (!hasCapAny(sibling, "hooks", deps) || !hasCapAny(sibling, "llm", deps)) continue;
+    if (!sibling.manifest.permissions.includes("hooks") || !hasCapAny(sibling, "llm", deps)) continue;
     // cheap pre-check before paying for a sandbox eval: no name, no export
     if (!sibling.source.includes("llmRequest")) continue;
     hooks.push({
