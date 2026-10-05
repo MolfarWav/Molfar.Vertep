@@ -129,6 +129,15 @@ grid `40px` gap 12px, user max-width 86%, scene place 16px. `prefers-reduced-mot
   suspects to check (guesses): the whole history and every tool result resent on each step, large file reads kept
   in context, the skills index riding every chat (overlaps 0c), provider prompt caching not used, too many small
   tool steps. Then fix by measured share, with the user choosing the trade-offs.
+- Prompt inspector with sources (user, 2026-10-06): the prompt inspector on Molfar's agent page (`src/inspector.ts`,
+  last requests per user) shows the text but not where each piece came from. Label every part of a request by its
+  source: the card (description, personality, scenario, examples, the group's members), persona, preset blocks,
+  lorebook entries (which book, which entry, why it fired), Memory (summary, recalled facts), the dashboard insert,
+  the "Story, move" nudge, Litopys, regex changes, history (which messages, what was cut for the context budget).
+  The user's reason: it makes the prompt understandable and errors easy to find. Likely shape (to check): the
+  Roleplay assembly (`plugins/engine` `assemble()`) and each llmRequest hook tag what they add with a source label
+  that the engine keeps for the inspector and strips before the provider call; the Roleplay "Prompt peek" dialog
+  could show the same labels. Pairs with 0d (token use): the same labels give a per-source token count.
 
 ## Log
 - 2026-10-05: worktrees made; spec checked by an Explore agent; user answered the open points above.
@@ -174,3 +183,7 @@ grid `40px` gap 12px, user max-width 86%, scene place 16px. `prefers-reduced-mot
   4.23.0 = fork main `25d8d85` (no pending update), every changed file identical to `f014826` by hash, the new
   ones absent; hashes checked again right before the copy and after it (all equal to `17c8c12`). Waiting for the
   user's live look (Rebuild; the font package installs in the background).
+- 2026-10-06 live look 1 (user): text too big, column too narrow, portrait small, user turns not offset enough.
+  Roleplay `86f7e49`: prose 15px (phone 15), the "comfortable" width is 72rem in the stage look and the column has a
+  gutter (12/24/32px), arch 68x88 (phone 46x60), user turns 54% (phone 80%). Copied (2 files, hashes checked before
+  and after) with the user's "yes".
