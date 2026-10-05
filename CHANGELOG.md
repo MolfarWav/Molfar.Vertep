@@ -7,13 +7,16 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.8.1 (2026-10-06)
+
+- Roleplay 4.24.0 through app updates: "Story, move" (a one-time nudge that makes the next reply move the story, from the dashboard's open threads), the dashboard's fast mode (the story reply carries the state report, no separate sensor call), the new chat look (book-page text, arched portraits, your turns offset right, scene headings, hover actions with a grouped More menu), the portrait menu Card / Soul / Dashboard, and no more echoed "Name:" at the start of replies.
+- The Vertep logo replaces the old one everywhere: login and start screens, browser tabs, the launcher's desktop shortcut and the Android app icon.
+- App builds and package installs are written to the engine log (output size, write failures, the install result, route errors), so a failing build on a phone can be traced.
 - Subscription sign-ins (Claude Pro/Max, ChatGPT Plus/Pro, GitHub Copilot, OpenRouter, Kimi, SuperGrok, Radius) work in the release builds and the Android app: they failed with "Cannot find module" because the compiled engine did not carry the sign-in code; running from source was not affected.
-
 - Apps' prompt hooks work again for imported apps: the grant step leaves out "hooks" (it needs no grant), but the hook collector asked for exactly that grant, so after an app update or a fresh install the Roleplay dashboard's insert into replies (and with it "Story, move" and the dashboard's fast mode) silently stopped reaching the model. A plugin that declares hooks now runs on its granted model access.
-
 - Molfar no longer stops mid-sentence when the provider drops a tool call it could not parse: the half-written reply stays, Molfar is asked once to repeat the call with valid arguments, and if that fails too, to answer or ask its questions as plain text.
-- Android app: a failed start now stays on screen with its reason instead of falling back to "Stopped", and the Logs dialog shows a launcher log (device ABIs, the engine binary, exit code or signal). The app is named Molfar Vertep, has Molfar's icon and Ukrainian texts, and its package id is now `io.github.molfarwav.vertep`: it installs as a new app beside an old Chrysalis one, so export a backup from the old app and import it in the new one. The APK file is now `Molfar-Vertep-<version>-android-arm64.apk`.
-- Android app starts on Android 11 to 13: Bun's server made system calls these versions do not allow apps (close_range at startup), and Android killed it at once ("Start does nothing"). A small preloaded library now turns such calls into "not supported", so Bun uses its fallbacks.
+- Android app: a failed start now stays on screen with its reason instead of falling back to "Stopped", and the Logs dialog shows a launcher log (device ABIs, the engine binary, exit code or signal). The app is named Molfar Vertep, has the Vertep logo and Ukrainian texts, and its package id is now `io.github.molfarwav.vertep`: it installs as a new app beside an old Chrysalis one, so export a backup from the old app and import it in the new one. The APK file is now `Molfar-Vertep-<version>-android-arm64.apk`.
+- Android app starts on Android 11 to 13: Bun's server made system calls these versions do not allow apps (close_range at startup), and Android killed it at once ("Start does nothing"). A small preloaded library now turns such calls into "not supported", so Bun uses its fallbacks. This also keeps the engine alive while it installs an app's packages (the trap in Bun's child process used to take the engine down with it).
 
 ## 0.8.0 (2026-10-05)
 
