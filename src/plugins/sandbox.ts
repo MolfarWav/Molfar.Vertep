@@ -31,6 +31,8 @@ export interface SandboxRequest {
   netAllowed?: boolean;
   netResults?: Record<string, unknown>;
   embedResults?: Record<string, unknown>;
+  /** { model, via } of the embedding that made embedResults[key]. */
+  embedInfo?: Record<string, unknown>;
   maxStoreBytes?: number;
   fsAllowed?: boolean;
   fsRoot?: string | null;

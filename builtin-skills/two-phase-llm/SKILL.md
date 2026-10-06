@@ -34,7 +34,7 @@ host.llm.request("reply", {
 host.llm.embed("vec", { texts: ["a", "b"] });      // next pass: host.llm.embedResults.vec = number[][] | null
 host.net.request("page", { url, method: "GET" });  // next pass: host.net.results.page = { ok, status, json? | text? | base64? }
 ```
-Needs `llm` in the manifest's permissions (`network` for host.net).
+Needs `llm` in the manifest's permissions (`network` for host.net). Vectors of different models never compare: store `host.llm.embedInfo.vec.model` with every vector and compare only vectors with the same model.
 
 ## Route (`handleRoute`): carry state in `stash`
 `ctx` is the request again on every pass. To pass something you computed on pass A, return it as `stash`; pass B reads `req.stash`. Return `null` when the path is not yours, so the next plugin can answer. Paths start with `/`; prefix them with your own namespace.

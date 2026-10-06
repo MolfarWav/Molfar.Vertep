@@ -496,6 +496,31 @@ export function uiPanel(ctx) {
     expect(out).toEqual({ dims: 3 });
   }, 30_000);
 
+  it("embedInfo tells the plugin which model made each vector", async () => {
+    writePlugin(
+      "embedder2",
+      { name: "E2", version: "1", permissions: ["hooks", "llm"], origin: "local" },
+      `export function onTick(ctx, host) {
+        const v = host.llm.embedResults.v;
+        if (v) return { dims: v[0].length, info: host.llm.embedInfo.v, shape: Array.isArray(host.llm.embedResults.v) };
+        host.llm.embed("v", { texts: ["hello"] });
+        return ctx;
+      }`,
+    );
+    const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+    const fakeModels = {
+      embedVia: null as string | null,
+      embedModelUsed: null as string | null,
+      embed: async function (this: { embedVia: string | null; embedModelUsed: string | null }, texts: string[]) {
+        this.embedVia = "OpenRouter";
+        this.embedModelUsed = "qwen/qwen3-embedding-4b";
+        return texts.map(() => [0.1, 0.2, 0.3]);
+      },
+    };
+    const out = await runPluginHook(plugin, "onTick", {}, { ...deps(), models: fakeModels as never });
+    expect(out).toEqual({ dims: 3, info: { model: "qwen/qwen3-embedding-4b", via: "OpenRouter" }, shape: true });
+  }, 30_000);
+
   it("console output from routes and tools reaches the server log", async () => {
     writePlugin(
       "chatty",

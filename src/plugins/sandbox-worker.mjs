@@ -14,7 +14,8 @@
  *   host.llm.request(key, req)          → collected for two-phase execution
  *   host.llm.results                    → map injected from previous pass
  *   host.llm.embed(key, {texts, model}) → two-phase embeddings; results in
- *                                         host.llm.embedResults next pass
+ *                                         host.llm.embedResults next pass;
+ *                                         host.llm.embedInfo[key] = {model, via}
  *   host.siblingTools                   → tool DEFS a wantsTools llm request
  *                                         would carry, when the dispatch asked
  *                                         (?siblingtools=1); absent otherwise
@@ -122,7 +123,7 @@ if (typeof fn === "function") { out = fn(env.ctx, env.host); }`);
 }
 
 port.on("message", async (msg) => {
-  const { id, source, hook, ctx, storeSnapshot = {}, llmResults = {}, netResults = {}, netAllowed = false, maxStoreBytes = 1024 * 1024, storeAllowed = true, llmAllowed = true, fsAllowed = false, fsRoot = null, zipAllowed = false, zipBase64 = null, siblingToolDefs = null, embedResults = {}, executionTimeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = msg;
+  const { id, source, hook, ctx, storeSnapshot = {}, llmResults = {}, netResults = {}, netAllowed = false, maxStoreBytes = 1024 * 1024, storeAllowed = true, llmAllowed = true, fsAllowed = false, fsRoot = null, zipAllowed = false, zipBase64 = null, siblingToolDefs = null, embedResults = {}, embedInfo = {}, executionTimeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = msg;
   const logs = [];
   const llmRequests = [];
   const netRequests = [];
@@ -167,6 +168,8 @@ port.on("message", async (msg) => {
               embedRequests.push({ key, req });
             },
             embedResults,
+            // embedInfo[key] = { model, via }: the model that made embedResults[key]
+            embedInfo,
           }
         : {
             request: () => { throw new Error("permission \"llm\" not granted — approve via /v1/plugins/:id/approve"); },

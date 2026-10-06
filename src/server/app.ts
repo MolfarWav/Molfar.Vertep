@@ -1337,31 +1337,47 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     return c.json({ ok: true, pricing: table });
   });
 
-  // embeddings model config: the name sent to whatever connection serves
-  // /embeddings (default text-embedding-3-small; other providers differ)
+  // embeddings config (settings.json): which provider serves /embeddings
+  // ("auto" = the keyed custom connections, then OpenRouter; "openrouter";
+  // or a custom connection id) and the model name sent to it. Keys are not
+  // handled here: they are saved through the connections routes.
   app.get("/v1/embeddings/config", (c) => {
-    const p = c.get("paths");
-    let model = "text-embedding-3-small";
-    try {
-      const st = JSON.parse(fs.readFileSync(p.settings, "utf8")) as { embedModel?: unknown };
-      if (typeof st.embedModel === "string" && st.embedModel.trim()) model = st.embedModel.trim();
-    } catch { /* default */ }
-    return c.json({ model });
+    const models = c.get("models");
+    const st = models.readEmbedSettings();
+    return c.json({
+      model: models.embedModelName({ settings: st, openrouter: st.provider === "openrouter" }),
+      modelSet: st.model !== null,
+      provider: st.provider,
+      providers: models.embedProviders(),
+    });
   });
   app.put("/v1/embeddings/config", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const body = await c.req.json<{ model?: unknown }>().catch(() => ({}) as { model?: unknown });
-    if (typeof body.model !== "string" || !body.model.trim() || body.model.length > 200) {
-      return c.json({ error: "model must be a non-empty string" }, 400);
+    const body = await c.req.json<{ model?: unknown; provider?: unknown }>().catch(() => ({}) as { model?: unknown; provider?: unknown });
+    if (body.model === undefined && body.provider === undefined) {
+      return c.json({ error: "model or provider required" }, 400);
+    }
+    // null clears the setting: the provider's default model applies again
+    if (body.model !== undefined && body.model !== null && (typeof body.model !== "string" || !body.model.trim() || body.model.length > 200)) {
+      return c.json({ error: "model must be a non-empty string, or null for the default" }, 400);
+    }
+    if (body.provider !== undefined) {
+      const ok = typeof body.provider === "string" &&
+        (body.provider === "auto" || body.provider === "openrouter" || c.get("models").embedProviders().some((x) => x.kind === "custom" && x.id === body.provider));
+      if (!ok) return c.json({ error: "provider must be auto, openrouter or the id of a custom connection" }, 400);
     }
     const settings = fs.existsSync(p.settings)
-      ? (JSON.parse(fs.readFileSync(p.settings, "utf8")) as { embedModel?: string })
+      ? (JSON.parse(fs.readFileSync(p.settings, "utf8")) as { embedModel?: string; embedProvider?: string })
       : {};
-    settings.embedModel = body.model.trim();
+    if (typeof body.model === "string") settings.embedModel = body.model.trim();
+    else if (body.model === null) delete settings.embedModel;
+    if (typeof body.provider === "string") settings.embedProvider = body.provider;
     fs.writeFileSync(p.settings, JSON.stringify(settings, null, 2) + "\n", "utf8");
-    await git.commitAll(p.root, u.username, "settings: embeddings model set").catch(() => undefined);
-    return c.json({ ok: true, model: settings.embedModel });
+    await git.commitAll(p.root, u.username, "settings: embeddings config set").catch(() => undefined);
+    const models = c.get("models");
+    const st = models.readEmbedSettings();
+    return c.json({ ok: true, model: models.embedModelName({ settings: st, openrouter: st.provider === "openrouter" }), modelSet: st.model !== null, provider: st.provider });
   });
 
   // live embeddings capability probe — one tiny call through the user's

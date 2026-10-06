@@ -10,7 +10,7 @@ import type { AuthOperationOptions, CredentialStore } from "@earendil-works/pi-a
 import { builtinProviders, builtinImagesModels } from "@earendil-works/pi-ai/providers/all";
 import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
 import { loadCustomProviders, curatedProviders, buildProvider, reservedProviderIds, isLocalEndpoint, abortLocalGeneration, type CredentialWithBinding } from "./providers/custom.js";
-import { readConnections, authTarget, connectionKeyUsable, readAuth } from "./connections.js";
+import { readConnections, authTarget, connectionKeyUsable, readAuth, type ConnectionDef } from "./connections.js";
 import { formatFromModelName, formatFromTemplate, parsePromptFormat, promptFormatById, renderPrompt, stopStrings, type PromptFormat } from "./providers/prompt-formats.js";
 import { log } from "./logger.js";
 import { llmLogRequest, llmLogResult, llmLogError, llmLogTool } from "./llm-logger.js";
@@ -80,6 +80,13 @@ export interface ImageModelInfo {
   api: string;
   connectionName: string | null;
 }
+
+/** Embeddings through OpenRouter: the endpoint is fixed in code, the key is the
+ *  OpenRouter builtin connection's. Nothing from user data picks the URL. */
+const OPENROUTER_PROVIDER_ID = "openrouter";
+const OPENROUTER_EMBED_URL = "https://openrouter.ai/api/v1/embeddings";
+export const DEFAULT_EMBED_MODEL = "text-embedding-3-small";
+export const DEFAULT_OPENROUTER_EMBED_MODEL = "qwen/qwen3-embedding-4b";
 
 /** Hosts whose chat endpoint serves a builtin image catalog. */
 const IMAGE_CATALOG_HOSTS: readonly { host: string; catalog: string }[] = [{ host: "openrouter.ai", catalog: "openrouter" }];
@@ -479,64 +486,141 @@ export class UserModelService {
     return this.refreshOnce;
   }
 
-  /** Text embeddings through the user's OpenAI-compatible connections
-   *  (POST <baseUrl>/embeddings). Tries each keyed custom connection until
-   *  one answers; null when none can — callers fall back to lexical. */
   /** Name of the connection that last answered an embed call (for the
    *  honest status line; null until one does). */
   embedVia: string | null = null;
+  /** The model that made the vectors of the last successful embed call.
+   *  Vectors of different models never compare, so callers store it. */
+  embedModelUsed: string | null = null;
 
-  /** Embeddings model name: explicit arg > the user's engine setting
-   *  (settings.json embedModel, e.g. for non-OpenAI compatible providers)
-   *  > the OpenAI default. */
-  private embedModelName(model?: string): string {
-    if (model && model.trim()) return model;
+  /** Engine embeddings settings (settings.json): `embedModel` (null = the
+   *  endpoint's default) and `embedProvider` ("auto" | "openrouter" | a
+   *  custom connection id). Missing or invalid values read as the default. */
+  readEmbedSettings(): { model: string | null; provider: string } {
+    let model: string | null = null;
+    let provider = "auto";
     try {
-      const st = JSON.parse(fs.readFileSync(path.join(this.paths.root, "settings.json"), "utf8")) as { embedModel?: unknown };
-      if (typeof st.embedModel === "string" && st.embedModel.trim()) return st.embedModel.trim();
-    } catch { /* default */ }
-    return "text-embedding-3-small";
+      const st = JSON.parse(fs.readFileSync(path.join(this.paths.root, "settings.json"), "utf8")) as { embedModel?: unknown; embedProvider?: unknown };
+      if (typeof st.embedModel === "string" && st.embedModel.trim()) model = st.embedModel.trim();
+      if (typeof st.embedProvider === "string" && st.embedProvider.trim()) provider = st.embedProvider.trim();
+    } catch { /* defaults */ }
+    return { model, provider };
   }
 
+  /** The model sent to an endpoint: explicit arg > the user's setting > the
+   *  default of that endpoint (OpenRouter needs its own model ids). */
+  embedModelName(opts: { model?: string; openrouter?: boolean; settings?: { model: string | null } } = {}): string {
+    if (opts.model && opts.model.trim()) return opts.model;
+    const set = (opts.settings ?? this.readEmbedSettings()).model;
+    if (set) return set;
+    return opts.openrouter ? DEFAULT_OPENROUTER_EMBED_MODEL : DEFAULT_EMBED_MODEL;
+  }
+
+  /** The OpenRouter builtin connection's key, or null. The endpoint is a
+   *  constant: nothing from user data decides where this key is sent. */
+  private async openRouterKey(conns: ReturnType<typeof readConnections>, auth: FileCredentialStore): Promise<string | null> {
+    const def = Object.values(conns.connections).find((d) => d.providerId === OPENROUTER_PROVIDER_ID && !d.proxyOf);
+    if (!def) return null;
+    const cred = await auth.read(OPENROUTER_PROVIDER_ID);
+    return cred && cred.type === "api_key" && cred.key ? cred.key : null;
+  }
+
+  /** One OpenAI-style embeddings request: the vectors, or null (never throws). */
+  private async embedRequest(url: string, key: string, model: string, input: string[]): Promise<number[][] | null> {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+        body: JSON.stringify({ model, input }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) return null;
+      const body = (await res.json()) as { data?: { embedding?: number[] }[] };
+      const out = (body.data ?? []).map((d) => d.embedding).filter((v): v is number[] => Array.isArray(v));
+      return out.length === input.length ? out : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Text embeddings (OpenAI-style POST .../embeddings). The engine setting
+   *  `embedProvider` picks the endpoint: "openrouter" = the OpenRouter builtin
+   *  connection only (fixed URL); a custom connection id = that connection
+   *  only; "auto" = each keyed custom connection in turn, then OpenRouter if
+   *  it has a key. null when none can answer: callers fall back to lexical.
+   *  The model that made the vectors is left in embedModelUsed. */
   async embed(texts: string[], model?: string): Promise<number[][] | null> {
     const clean = texts.map((t) => String(t).slice(0, 8000)).filter((t) => t.trim());
     if (!clean.length) return null;
-    const embedModel = this.embedModelName(model);
+    const settings = this.readEmbedSettings();
     const conns = readConnections(this.paths);
     const auth = new FileCredentialStore(this.paths.auth);
-    for (const [id, def] of Object.entries(conns.connections)) {
-      if (def.providerId || !def.baseUrl || !def.api) continue;
+    const done = (out: number[][], via: string, used: string) => {
+      this.embedVia = via;
+      this.embedModelUsed = used;
+      return out;
+    };
+    const viaOpenRouter = async (): Promise<number[][] | null> => {
+      const key = await this.openRouterKey(conns, auth);
+      if (!key) return null;
+      const used = this.embedModelName({ model, openrouter: true, settings });
+      const out = await this.embedRequest(OPENROUTER_EMBED_URL, key, used, clean);
+      return out ? done(out, "OpenRouter", used) : null;
+    };
+    const viaCustom = async (id: string, def: ConnectionDef): Promise<number[][] | null> => {
+      if (def.providerId || !def.baseUrl || !def.api) return null;
       // https for public endpoints; plain http only for local model stacks
       try {
-        if (new URL(def.baseUrl).protocol !== "https:" && !isLocalEndpoint(def.baseUrl)) continue;
-      } catch { continue; }
-      const target = authTarget(def, id);
-      const cred = await auth.read(target);
-      if (!cred || cred.type !== "api_key" || !cred.key) continue;
-      if (!connectionKeyUsable(def, id, cred)) continue;
-      try {
-        const res = await fetch(def.baseUrl.replace(/\/$/, "") + "/embeddings", {
-          method: "POST",
-          headers: { "content-type": "application/json", authorization: `Bearer ${cred.key}` },
-          body: JSON.stringify({ model: embedModel, input: clean }),
-          signal: AbortSignal.timeout(20_000),
-        });
-        if (!res.ok) continue;
-        const body = (await res.json()) as { data?: { embedding?: number[] }[] };
-        const out = (body.data ?? []).map((d) => d.embedding).filter((v): v is number[] => Array.isArray(v));
-        if (out.length === clean.length) {
-          this.embedVia = def.name ?? id;
-          return out;
-        }
-      } catch { /* try the next connection */ }
+        if (new URL(def.baseUrl).protocol !== "https:" && !isLocalEndpoint(def.baseUrl)) return null;
+      } catch { return null; }
+      const cred = await auth.read(authTarget(def, id));
+      if (!cred || cred.type !== "api_key" || !cred.key) return null;
+      if (!connectionKeyUsable(def, id, cred)) return null;
+      const used = this.embedModelName({ model, settings });
+      const out = await this.embedRequest(def.baseUrl.replace(/\/$/, "") + "/embeddings", cred.key, used, clean);
+      return out ? done(out, def.name ?? id, used) : null;
+    };
+    if (settings.provider === "openrouter") return viaOpenRouter();
+    if (settings.provider !== "auto") {
+      const def = conns.connections[settings.provider];
+      return def ? viaCustom(settings.provider, def) : null;
     }
-    return null;
+    for (const [id, def] of Object.entries(conns.connections)) {
+      const out = await viaCustom(id, def);
+      if (out) return out;
+    }
+    return viaOpenRouter();
   }
 
-  /** One tiny live call: can any connection embed? Powers the status line. */
-  async embedProbe(): Promise<{ ok: boolean; via: string | null }> {
+  /** The places embeddings can come from, for the Settings choice. OpenRouter
+   *  is always listed (ready once its builtin connection has a key); custom
+   *  connections are the OpenAI-style ones. ready = a usable key exists. */
+  embedProviders(): { id: string; name: string; kind: "builtin" | "custom"; ready: boolean }[] {
+    const conns = readConnections(this.paths).connections;
+    const auth = readAuth(this.paths);
+    const orConn = Object.values(conns).some((d) => d.providerId === OPENROUTER_PROVIDER_ID && !d.proxyOf);
+    const orCred = auth[OPENROUTER_PROVIDER_ID];
+    const out: { id: string; name: string; kind: "builtin" | "custom"; ready: boolean }[] = [
+      { id: "openrouter", name: "OpenRouter", kind: "builtin", ready: orConn && orCred?.type === "api_key" && !!orCred.key },
+    ];
+    for (const [id, def] of Object.entries(conns)) {
+      if (def.providerId || !def.baseUrl || !def.api) continue;
+      if (def.api !== "openai-completions") continue;
+      const cred = auth[authTarget(def, id)];
+      let ready = !!cred && cred.type === "api_key" && !!cred.key && connectionKeyUsable(def, id, cred);
+      try {
+        if (new URL(def.baseUrl).protocol !== "https:" && !isLocalEndpoint(def.baseUrl)) ready = false;
+      } catch { ready = false; }
+      out.push({ id, name: def.name ?? id, kind: "custom", ready });
+    }
+    return out;
+  }
+
+  /** One tiny live call: can the chosen provider embed? Powers the status line. */
+  async embedProbe(): Promise<{ ok: boolean; via: string | null; model: string | null }> {
     const out = await this.embed(["connection check"]);
-    return { ok: Array.isArray(out) && out.length === 1, via: out ? this.embedVia : null };
+    const ok = Array.isArray(out) && out.length === 1;
+    return { ok, via: ok ? this.embedVia : null, model: ok ? this.embedModelUsed : null };
   }
 
   async available(): Promise<ModelInfo[]> {

@@ -81,7 +81,7 @@ export interface LlmRequestHook {
 
 export interface PluginRuntimeDeps {
   store: PluginStoreService;
-  models: Pick<UserModelService, "generate" | "embed">;
+  models: Pick<UserModelService, "generate" | "embed"> & Partial<Pick<UserModelService, "embedVia" | "embedModelUsed">>;
   /** settings.json pluginGrants — required for imported plugins. */
   grantsFor: (pluginId: string) => string[];
   /** When set, plugin llm requests tagged with a `stream` descriptor get
@@ -226,6 +226,7 @@ export async function runPluginTool(
       llmAllowed: caps.llm,
       llmResults: results.llm,
       embedResults: results.embed,
+      embedInfo: results.embedInfo,
       fsAllowed: hasCapAny(plugin, "fs", deps) && !!plugin.fsRoot,
       fsRoot: plugin.fsRoot ?? null,
       netAllowed: caps.net,
@@ -633,9 +634,11 @@ interface PassResults {
   llm: Record<string, unknown>;
   net: Record<string, unknown>;
   embed: Record<string, unknown>;
+  /** Which model (and connection) made each embed result's vectors. */
+  embedInfo: Record<string, { model: string | null; via: string | null }>;
 }
 
-const noResults = (): PassResults => ({ llm: {}, net: {}, embed: {} });
+const noResults = (): PassResults => ({ llm: {}, net: {}, embed: {}, embedInfo: {} });
 
 /** Did this pass ask for anything it is allowed to get? */
 function passWants(r: SandboxResponse, caps: PassCaps): boolean {
@@ -677,7 +680,10 @@ async function runPassRequests(
     for (const { key, req } of r.embedRequests ?? []) {
       const texts = Array.isArray(req.texts) ? req.texts.map(String) : [];
       try {
-        results.embed[key] = texts.length ? await deps.models.embed(texts, typeof req.model === "string" ? req.model : undefined) : null;
+        const vectors = texts.length ? await deps.models.embed(texts, typeof req.model === "string" ? req.model : undefined) : null;
+        results.embed[key] = vectors;
+        // vectors of different models never compare: tell the plugin which made these
+        if (vectors) results.embedInfo[key] = { model: deps.models.embedModelUsed ?? null, via: deps.models.embedVia ?? null };
       } catch (e) {
         log.warn(`[plugin:${plugin.id}] embed "${key}" failed: ${(e as Error).message}`);
         results.embed[key] = null;
@@ -773,6 +779,7 @@ export async function runPluginRoute(
         netAllowed: caps.net,
         netResults: results.net,
         embedResults: results.embed,
+        embedInfo: results.embedInfo,
         ...(siblingToolDefs ? { siblingToolDefs } : {}),
         retryOnPoison: req.method === "GET" || req.method === "HEAD",
       });
@@ -925,6 +932,7 @@ async function hookPasses(
       llmAllowed: caps.llm,
       llmResults: results.llm,
       embedResults: results.embed,
+      embedInfo: results.embedInfo,
       netAllowed: caps.net,
       netResults: results.net,
       fsAllowed: hasCapAny(plugin, "fs", deps) && !!plugin.fsRoot,

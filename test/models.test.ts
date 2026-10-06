@@ -487,7 +487,7 @@ describe("image models served on a dedicated images endpoint", () => {
       expect(out.model).toBe("openrouter/openai/gpt-image-2");
       expect(out.mimeType).toBe("image/webp");
       expect(out.data.toString()).toBe("fake-png");
-      expect(stub.calls[0]!.url).toBe("https://openrouter.ai/api/v1/chat/completions");
+      expect(stub.calls[0]?.url).toBe("https://openrouter.ai/api/v1/chat/completions");
       expect(stub.calls.at(-1)!.url).toBe("https://openrouter.ai/api/v1/images");
       expect(stub.calls.at(-1)!.auth).toBe("Bearer sk-or-test");
     } finally {
@@ -546,5 +546,122 @@ describe("reasoningOffRefusal", () => {
   it("ignores other errors, also about an unsupported level other than none", () => {
     expect(reasoningOffRefusal("429: rate limit")).toBeNull();
     expect(reasoningOffRefusal('Invalid value for reasoning.effort: "xhigh". Supported values are: low, medium')).toBeNull();
+  });
+});
+
+describe("embeddings through OpenRouter and provider choice", () => {
+  const realFetch = globalThis.fetch;
+  let dir: string;
+  let calls: { url: string; auth: string; model: string; input: string[] }[];
+  let failUrls: string[];
+
+  const fakeFetch = (async (url: unknown, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body ?? "{}")) as { model?: string; input?: string[] };
+    const headers = init?.headers as Record<string, string>;
+    calls.push({ url: String(url), auth: headers.authorization ?? "", model: body.model ?? "", input: body.input ?? [] });
+    if (failUrls.some((f) => String(url).startsWith(f))) return new Response("nope", { status: 500 });
+    return new Response(JSON.stringify({ data: (body.input ?? []).map(() => ({ embedding: [0.5, 0.25] })) }), { status: 200, headers: { "content-type": "application/json" } });
+  }) as unknown as typeof fetch;
+
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), "embed-or-"));
+    calls = [];
+    failUrls = [];
+    globalThis.fetch = fakeFetch;
+  });
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+    try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* races */ }
+  });
+
+  /** A workspace with the given connections, credentials and settings. */
+  function setup(opts: { openrouter?: boolean; orKey?: string; custom?: boolean; settings?: Record<string, unknown> }): UserModelService {
+    const p = userPaths(dir, "u");
+    fs.mkdirSync(p.root, { recursive: true });
+    const connections: Record<string, unknown> = {};
+    const auth: Record<string, unknown> = {};
+    if (opts.openrouter) connections.or = { name: "My OpenRouter", providerId: "openrouter" };
+    if (opts.orKey) auth.openrouter = { type: "api_key", key: opts.orKey };
+    if (opts.custom) {
+      connections.hub = { name: "Embed Hub", api: "openai-completions", baseUrl: "https://hub.example/v1", models: [] };
+      auth.hub = { type: "api_key", key: "hub-key", boundBaseUrl: "https://hub.example/v1" };
+    }
+    fs.mkdirSync(path.dirname(p.connections), { recursive: true });
+    fs.writeFileSync(p.connections, JSON.stringify({ connections }));
+    fs.mkdirSync(path.dirname(p.auth), { recursive: true });
+    fs.writeFileSync(p.auth, JSON.stringify(auth));
+    if (opts.settings) fs.writeFileSync(p.settings, JSON.stringify(opts.settings));
+    return new UserModelService("u", p, defaultInstanceConfig());
+  }
+
+  it("provider openrouter: the fixed URL, the openrouter key, the default long-context model", async () => {
+    const svc = setup({ openrouter: true, orKey: "or-key", custom: true, settings: { embedProvider: "openrouter" } });
+    expect(await svc.embed(["hello"])).toEqual([[0.5, 0.25]]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ url: "https://openrouter.ai/api/v1/embeddings", auth: "Bearer or-key", model: "qwen/qwen3-embedding-4b" });
+    expect(svc.embedVia).toBe("OpenRouter");
+    expect(svc.embedModelUsed).toBe("qwen/qwen3-embedding-4b");
+    const probe = await svc.embedProbe();
+    expect(probe).toEqual({ ok: true, via: "OpenRouter", model: "qwen/qwen3-embedding-4b" });
+  });
+
+  it("provider openrouter without a key or connection: null, and no request goes anywhere", async () => {
+    expect(await setup({ openrouter: true, custom: true, settings: { embedProvider: "openrouter" } }).embed(["x"])).toBeNull();
+    expect(await setup({ orKey: "stray", custom: true, settings: { embedProvider: "openrouter" } }).embed(["x"])).toBeNull();
+    expect(calls).toHaveLength(0);
+  });
+
+  it("an explicit model setting is used for OpenRouter as written", async () => {
+    const svc = setup({ openrouter: true, orKey: "k", settings: { embedProvider: "openrouter", embedModel: "openai/text-embedding-3-small" } });
+    await svc.embed(["x"]);
+    expect(calls[0]?.model).toBe("openai/text-embedding-3-small");
+  });
+
+  it("a custom connection id uses only that connection, and never falls through", async () => {
+    const svc = setup({ openrouter: true, orKey: "or-key", custom: true, settings: { embedProvider: "hub" } });
+    expect(await svc.embed(["x"])).toEqual([[0.5, 0.25]]);
+    expect(calls.map((c) => c.url)).toEqual(["https://hub.example/v1/embeddings"]);
+    expect(calls[0]?.auth).toBe("Bearer hub-key");
+    expect(calls[0]?.model).toBe("text-embedding-3-small");
+    expect(svc.embedVia).toBe("Embed Hub");
+    calls = [];
+    failUrls = ["https://hub.example"];
+    expect(await svc.embed(["x"])).toBeNull();
+    expect(calls.map((c) => c.url)).toEqual(["https://hub.example/v1/embeddings"]);
+    // an id that is no connection embeds nothing
+    expect(await setup({ openrouter: true, orKey: "or-key", settings: { embedProvider: "gone" } }).embed(["x"])).toBeNull();
+  });
+
+  it("auto: keyed custom connections first, OpenRouter last", async () => {
+    const svc = setup({ openrouter: true, orKey: "or-key", custom: true });
+    await svc.embed(["x"]);
+    expect(calls.map((c) => c.url)).toEqual(["https://hub.example/v1/embeddings"]);
+    calls = [];
+    failUrls = ["https://hub.example"];
+    expect(await svc.embed(["x"])).toEqual([[0.5, 0.25]]);
+    expect(calls.map((c) => c.url)).toEqual(["https://hub.example/v1/embeddings", "https://openrouter.ai/api/v1/embeddings"]);
+    // OpenRouter gets a model id it knows, not the OpenAI-style default
+    expect(calls[1]?.model).toBe("qwen/qwen3-embedding-4b");
+    expect(svc.embedModelUsed).toBe("qwen/qwen3-embedding-4b");
+  });
+
+  it("auto with only an OpenRouter key works in one step", async () => {
+    const svc = setup({ openrouter: true, orKey: "or-key" });
+    expect(await svc.embed(["x"])).toEqual([[0.5, 0.25]]);
+    expect(svc.embedVia).toBe("OpenRouter");
+  });
+
+  it("cuts texts at 8000 characters", async () => {
+    const svc = setup({ openrouter: true, orKey: "k", settings: { embedProvider: "openrouter" } });
+    await svc.embed(["a".repeat(9000)]);
+    expect(calls[0]?.input[0]?.length).toBe(8000);
+  });
+
+  it("embedProviders lists OpenRouter always and custom connections with readiness", () => {
+    expect(setup({}).embedProviders()).toEqual([{ id: "openrouter", name: "OpenRouter", kind: "builtin", ready: false }]);
+    expect(setup({ openrouter: true, orKey: "k", custom: true }).embedProviders()).toEqual([
+      { id: "openrouter", name: "OpenRouter", kind: "builtin", ready: true },
+      { id: "hub", name: "Embed Hub", kind: "custom", ready: true },
+    ]);
   });
 });
