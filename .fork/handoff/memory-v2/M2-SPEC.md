@@ -104,8 +104,18 @@ proposals, and the worker line (last run, scene, ok or error, time). Routes
 `GET /litopys/chats` (id, title, counts, worker) and `GET /litopys/chat?chatId=`. No editing.
 Strings en+uk in `src/lib/i18n.ts`. Browser check (skill `browser-check`): 1280 dark uk, light en, 390.
 
-## 9. M2c: engine embeddings through built-in providers
-`src/models.ts` `embed()` skips any connection with `providerId`. Find out (live call with the
-user's keys is NOT allowed; read provider docs) whether NanoGPT and OpenRouter serve an
-OpenAI-style `/embeddings`; if yes, allow those curated providers' base URLs. Tests in
-`test/models.test.ts`. Engine branch `claude/memory-v2`.
+## 9. M2c: embeddings for memory, a Settings section in the shell (user, 2026-10-06)
+Goal: a user with no custom connection gets matching by meaning with one step: paste an
+OpenRouter key (a ~$5 top-up lasts a very long time for embeddings). Engine-wide, not Roleplay.
+- Verify first (provider docs, no live calls with the user's keys) that OpenRouter serves an
+  OpenAI-style `/embeddings` and which models (e.g. `openai/text-embedding-3-small`); same check
+  for NanoGPT. Only providers that do get offered.
+- `src/models.ts` `embed()`: besides custom connections, use the chosen provider's builtin
+  connection when it exists (an OpenRouter connection already set up = no second key).
+- Shell Settings section "Memory: matching by meaning" (all 14 locales; `en.ts` empty value per
+  the i18n rule): status line (works via X / words only), provider choice (OpenRouter default,
+  any custom connection), model, a key field when no connection exists (stored like any
+  connection key), and a short note: what it is for (memory and lorebooks find things by meaning,
+  not only by words), that it is optional, and the rough cost. The Roleplay Settings field becomes
+  a status line with a link to this section.
+- Tests in `test/models.test.ts`; shell-only routes go into the security test lists.
