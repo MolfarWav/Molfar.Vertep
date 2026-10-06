@@ -124,6 +124,9 @@ M3 Switch the prompt: Litopys insert + cut, the budgets, notes aging from the da
 M4 Library by the chosen mockup: rail section next to Lorebooks (all chats: chapters timeline,
   facts with edit / pin / retire, proposals, activity), in-chat panel = same view for one chat,
   pin limit dialog.
+Shell Settings has its own "Memory" tab (2026-10-06, holds matching by meaning): the general
+  memory settings go there (window sizes, budgets, a test/diagnostic tool, etc.). Later idea: an
+  optional model-assisted search over the records, opt-in.
 Later (own items): bridge between chats (drawn thread, picked facts), "remember this" from a
   message menu, notes about other characters and traits from the sensor, archive search over
   raw old messages, Molfar's memory and tokens.
