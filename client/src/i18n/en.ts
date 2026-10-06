@@ -506,6 +506,23 @@ const en = {
   "Dark": "",
   "Light": "",
   "VERTEP": "",
+  "Memory: matching by meaning": "",
+  "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "",
+  "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "",
+  "Works via {name} · {model}": "",
+  "Matching by words only": "",
+  "The test call failed. Check the key, the model name and the credit.": "",
+  "Check again": "",
+  "Provider": "",
+  "Automatic": "",
+  "{name} (no key)": "",
+  "Automatic tries your API connections that have a key, then OpenRouter.": "",
+  "Embedding model": "",
+  "Default: {model}": "",
+  "Use the default model": "",
+  "OpenRouter API key": "",
+  "Save key": "",
+  "OpenRouter has no key yet. Paste one to turn this on.": "",
 } as const
 
 export default en

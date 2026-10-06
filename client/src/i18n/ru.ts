@@ -504,6 +504,23 @@ const dict = {
   "Dark": "Тёмная",
   "Light": "Светлая",
   "VERTEP": "ВЕРТЕП",
+  "Memory: matching by meaning": "Память: сопоставление по смыслу",
+  "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "Память и лорбуки могут находить нужное по смыслу, а не только по точным словам. Это необязательно: без этого они сопоставляют только по словам.",
+  "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "Используется одна недорогая модель эмбеддингов, около $0.02 за миллион токенов. Нескольких долларов на балансе OpenRouter хватит надолго.",
+  "Works via {name} · {model}": "Работает через {name} · {model}",
+  "Matching by words only": "Сопоставление только по словам",
+  "The test call failed. Check the key, the model name and the credit.": "Тестовый вызов не удался. Проверьте ключ, название модели и баланс.",
+  "Check again": "Проверить снова",
+  "Provider": "Провайдер",
+  "Automatic": "Автоматически",
+  "{name} (no key)": "{name} (без ключа)",
+  "Automatic tries your API connections that have a key, then OpenRouter.": "Автоматически: сначала ваши API-подключения с ключом, затем OpenRouter.",
+  "Embedding model": "Модель эмбеддингов",
+  "Default: {model}": "По умолчанию: {model}",
+  "Use the default model": "Использовать модель по умолчанию",
+  "OpenRouter API key": "API-ключ OpenRouter",
+  "Save key": "Сохранить ключ",
+  "OpenRouter has no key yet. Paste one to turn this on.": "У OpenRouter ещё нет ключа. Вставьте его, чтобы включить это.",
 }
 
 export default dict

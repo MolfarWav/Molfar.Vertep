@@ -504,6 +504,23 @@ const dict = {
   "Dark": "深色",
   "Light": "浅色",
   "VERTEP": "VERTEP",
+  "Memory: matching by meaning": "记忆：按含义匹配",
+  "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "记忆和 Lorebook 可以按含义查找内容，而不只是按精确词语。这是可选的：关闭后它们只按词语匹配。",
+  "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "它使用一个便宜的嵌入模型，约每百万 token $0.02。几美元的 OpenRouter 余额能用很久。",
+  "Works via {name} · {model}": "通过 {name} · {model} 工作",
+  "Matching by words only": "仅按词语匹配",
+  "The test call failed. Check the key, the model name and the credit.": "测试调用失败。请检查密钥、模型名称和余额。",
+  "Check again": "重新检查",
+  "Provider": "提供方",
+  "Automatic": "自动",
+  "{name} (no key)": "{name}（无密钥）",
+  "Automatic tries your API connections that have a key, then OpenRouter.": "自动模式会先尝试你有密钥的 API 连接，然后尝试 OpenRouter。",
+  "Embedding model": "嵌入模型",
+  "Default: {model}": "默认：{model}",
+  "Use the default model": "使用默认模型",
+  "OpenRouter API key": "OpenRouter API 密钥",
+  "Save key": "保存密钥",
+  "OpenRouter has no key yet. Paste one to turn this on.": "OpenRouter 还没有密钥。粘贴一个即可开启此功能。",
 }
 
 export default dict

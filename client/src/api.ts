@@ -156,6 +156,34 @@ export const connectionsApi = {
   remove: (id: string) => api("DELETE", `/v1/settings/connections/${encodeURIComponent(id)}`),
 }
 
+export interface EmbeddingProvider {
+  id: string
+  name: string
+  kind: "builtin" | "custom"
+  /** a usable key exists */
+  ready: boolean
+}
+
+export interface EmbeddingsConfig {
+  /** the model that applies now (the setting, or the chosen provider's default) */
+  model: string
+  /** false = no model was ever chosen, the default applies */
+  modelSet: boolean
+  /** "auto" | "openrouter" | a custom connection id */
+  provider: string
+  providers: EmbeddingProvider[]
+}
+
+/** Matching by meaning: which provider and model make text embeddings. The
+ *  key itself is saved through connectionsApi, like any connection's. */
+export const embeddingsApi = {
+  config: () => api<EmbeddingsConfig>("GET", "/v1/embeddings/config"),
+  /** model: null goes back to the default */
+  save: (body: { model?: string | null; provider?: string }) => api<{ ok: boolean } & Omit<EmbeddingsConfig, "providers">>("PUT", "/v1/embeddings/config", body),
+  /** one tiny live call; ok = vectors came back */
+  probe: () => api<{ ok: boolean; via: string | null; model: string | null; error?: string }>("POST", "/v1/embeddings/probe"),
+}
+
 export interface SpeechEndpoint {
   id: string
   name: string

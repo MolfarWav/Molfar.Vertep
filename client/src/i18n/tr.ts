@@ -504,6 +504,23 @@ const dict = {
   "Dark": "Koyu",
   "Light": "Açık",
   "VERTEP": "VERTEP",
+  "Memory: matching by meaning": "Bellek: anlama göre eşleştirme",
+  "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "Bellek ve lorebook’lar şeyleri yalnızca tam kelimelerle değil, anlamlarına göre de bulabilir. Bu isteğe bağlıdır: kapalıyken yalnızca kelimelere göre eşleştirirler.",
+  "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "Ucuz bir embedding modeli kullanır, milyon token başına yaklaşık $0.02. Birkaç dolarlık OpenRouter bakiyesi çok uzun süre yeter.",
+  "Works via {name} · {model}": "{name} · {model} üzerinden çalışır",
+  "Matching by words only": "Yalnızca kelimelere göre eşleştirme",
+  "The test call failed. Check the key, the model name and the credit.": "Test çağrısı başarısız oldu. Anahtarı, model adını ve bakiyeyi kontrol et.",
+  "Check again": "Tekrar kontrol et",
+  "Provider": "Sağlayıcı",
+  "Automatic": "Otomatik",
+  "{name} (no key)": "{name} (anahtar yok)",
+  "Automatic tries your API connections that have a key, then OpenRouter.": "Otomatik, önce anahtarı olan API bağlantılarını dener, sonra OpenRouter’ı.",
+  "Embedding model": "Embedding modeli",
+  "Default: {model}": "Varsayılan: {model}",
+  "Use the default model": "Varsayılan modeli kullan",
+  "OpenRouter API key": "OpenRouter API anahtarı",
+  "Save key": "Anahtarı kaydet",
+  "OpenRouter has no key yet. Paste one to turn this on.": "OpenRouter’da henüz anahtar yok. Bunu açmak için bir anahtar yapıştır.",
 }
 
 export default dict

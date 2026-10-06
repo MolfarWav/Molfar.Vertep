@@ -504,6 +504,23 @@ const dict = {
   "Dark": "다크",
   "Light": "라이트",
   "VERTEP": "VERTEP",
+  "Memory: matching by meaning": "메모리: 의미로 매칭",
+  "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "메모리와 로어북은 정확한 단어뿐 아니라 의미로도 찾을 수 있습니다. 선택 사항이며, 끄면 단어로만 매칭합니다.",
+  "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "저렴한 임베딩 모델 하나를 사용하며, 100만 토큰당 약 $0.02입니다. 몇 달러의 OpenRouter 크레딧이면 아주 오래 쓸 수 있습니다.",
+  "Works via {name} · {model}": "{name} · {model}을 통해 작동",
+  "Matching by words only": "단어로만 매칭",
+  "The test call failed. Check the key, the model name and the credit.": "테스트 호출에 실패했습니다. 키, 모델 이름, 크레딧을 확인하세요.",
+  "Check again": "다시 확인",
+  "Provider": "제공자",
+  "Automatic": "자동",
+  "{name} (no key)": "{name} (키 없음)",
+  "Automatic tries your API connections that have a key, then OpenRouter.": "자동은 키가 있는 API 연결을 먼저 시도한 다음 OpenRouter를 시도합니다.",
+  "Embedding model": "임베딩 모델",
+  "Default: {model}": "기본값: {model}",
+  "Use the default model": "기본 모델 사용",
+  "OpenRouter API key": "OpenRouter API 키",
+  "Save key": "키 저장",
+  "OpenRouter has no key yet. Paste one to turn this on.": "OpenRouter 키가 아직 없습니다. 키를 붙여넣으면 이 기능을 켤 수 있습니다.",
 }
 
 export default dict

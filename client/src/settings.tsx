@@ -21,6 +21,8 @@ import {
   personaApi,
   agentsMdApi,
   type AgentsMdStatus,
+  embeddingsApi,
+  type EmbeddingsConfig,
   prefs,
   authApi,
   adminUsersApi,
@@ -745,6 +747,7 @@ function AgentTab() {
         <InternetSection />
         <AutoCompactSection />
         <SmallModelSection />
+        <MemoryMeaningSection />
         <div className="flex flex-col gap-2">
           <h3 className="text-13 font-medium text-ink">{tr("Molfar's instructions")}</h3>
           <p className="text-12 text-ink-muted">
@@ -888,6 +891,243 @@ function SmallModelSection() {
         </select>
         {saved ? <span className="text-12 text-success">{tr("Saved")}</span> : null}
       </div>
+      {err ? <div className="text-12 text-danger">{err}</div> : null}
+    </div>
+  )
+}
+
+/** Is there a key to try the chosen provider with? Automatic: any provider. */
+const canCheckEmbeddings = (cfg: EmbeddingsConfig) =>
+  cfg.provider === "auto" ? cfg.providers.some((p) => p.ready) : !!cfg.providers.find((p) => p.id === cfg.provider)?.ready
+
+/** Matching by meaning for memory and lorebooks: which provider and model make
+ *  the embeddings, whether they work, and the one-step OpenRouter key. The key
+ *  goes through the connections routes, like any connection's. */
+function MemoryMeaningSection() {
+  const [config, setConfig] = useState<EmbeddingsConfig | null>(null)
+  const [draft, setDraft] = useState("")
+  const [keyDraft, setKeyDraft] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [err, setErr] = useState("")
+  const [probeState, setProbeState] = useState<"checking" | "ok" | "not-ok" | null>(null)
+  const [probeInfo, setProbeInfo] = useState<{ via: string | null; model: string | null }>({ via: null, model: null })
+
+  const probeThen = (cfg: EmbeddingsConfig | null) => {
+    if (!cfg || !canCheckEmbeddings(cfg)) {
+      setProbeState(null)
+      return
+    }
+    setProbeState("checking")
+    setErr("")
+    void embeddingsApi
+      .probe()
+      .then((r) => {
+        setProbeInfo({ via: r.via, model: r.model })
+        setProbeState(r.ok ? "ok" : "not-ok")
+      })
+      .catch((e) => {
+        setProbeInfo({ via: null, model: null })
+        setProbeState("not-ok")
+        setErr(e instanceof Error ? e.message : String(e))
+      })
+  }
+  const runProbe = (cfg?: EmbeddingsConfig) => probeThen(cfg ?? config)
+
+  // first load: the config, then one check when there is a key to try
+  useEffect(() => {
+    let live = true
+    embeddingsApi
+      .config()
+      .then((cfg) => {
+        if (!live) return
+        setConfig(cfg)
+        setDraft(cfg.model)
+        if (canCheckEmbeddings(cfg)) {
+          setProbeState("checking")
+          void embeddingsApi
+            .probe()
+            .then((r) => {
+              if (!live) return
+              setProbeInfo({ via: r.via, model: r.model })
+              setProbeState(r.ok ? "ok" : "not-ok")
+            })
+            .catch(() => live && setProbeState("not-ok"))
+        }
+      })
+      .catch((e) => live && setErr(e instanceof Error ? e.message : String(e)))
+    return () => {
+      live = false
+    }
+  }, [])
+
+  const flashSaved = () => {
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
+  }
+
+  /** Apply a save answer (it carries no provider list) and re-check. */
+  const applySaved = (result: Omit<EmbeddingsConfig, "providers">) => {
+    if (!config) return
+    const next: EmbeddingsConfig = { ...config, ...result, providers: config.providers }
+    setConfig(next)
+    setDraft(result.model)
+    flashSaved()
+    void runProbe(next)
+  }
+
+  const save = async (body: { provider?: string; model?: string | null }) => {
+    setBusy(true)
+    setErr("")
+    try {
+      applySaved(await embeddingsApi.save(body))
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const saveKey = async () => {
+    if (!keyDraft.trim()) return
+    setBusy(true)
+    setErr("")
+    try {
+      const list = await connectionsApi.list()
+      const existing = list.find((c) => c.providerId === "openrouter" && !c.proxyOf)
+      if (existing) {
+        await connectionsApi.update(existing.id, { key: keyDraft.trim() })
+      } else {
+        await connectionsApi.create({ name: "OpenRouter", providerId: "openrouter", key: keyDraft.trim() })
+      }
+      setKeyDraft("")
+      const cfg = await embeddingsApi.config()
+      setConfig(cfg)
+      setDraft(cfg.model)
+      flashSaved()
+      void runProbe(cfg)
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!config) return null
+
+  const anyReady = config.providers.some((p) => p.ready)
+  const checkable = canCheckEmbeddings(config)
+  const openRouterReady = config.providers.find((p) => p.id === "openrouter")?.ready ?? false
+  const showKeyField = !openRouterReady && (config.provider === "openrouter" || (config.provider === "auto" && !anyReady))
+  const modelDirty = draft.trim() !== config.model && draft.trim() !== ""
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-13 font-medium text-ink">{tr("Memory: matching by meaning")}</h3>
+      <p className="text-12 leading-4 text-ink-muted">
+        {tr("Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.")}
+      </p>
+      <p className="text-12 leading-4 text-ink-muted">
+        {tr("It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.")}
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2" aria-live="polite">
+        {probeState === "checking" ? (
+          <span className="text-12 text-ink-muted">{tr("Checking…")}</span>
+        ) : probeState === "ok" && checkable ? (
+          <>
+            <span className={cn("size-1.5 shrink-0 rounded-full", "bg-success")} />
+            <span className="text-12 text-ink-muted">{tr("Works via {name} · {model}", { name: probeInfo.via ?? "", model: probeInfo.model ?? "" })}</span>
+          </>
+        ) : (
+          <>
+            <span className={cn("size-1.5 shrink-0 rounded-full", "bg-ink-faint")} />
+            <span className="text-12 text-ink-muted">{tr("Matching by words only")}</span>
+          </>
+        )}
+        {checkable && probeState !== "checking" ? (
+          <Button variant="ghost" size="small" disabled={busy} onClick={() => void runProbe()}>
+            {tr("Check again")}
+          </Button>
+        ) : null}
+      </div>
+      {checkable && probeState === "not-ok" ? (
+        <p className="text-12 leading-4 text-ink-faint">{tr("The test call failed. Check the key, the model name and the credit.")}</p>
+      ) : null}
+
+      <div className="flex flex-col gap-1">
+        <label className="text-12 text-ink-muted">{tr("Provider")}</label>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            className={`${inputClass} max-w-[360px] flex-none`}
+            aria-label={tr("Provider")}
+            value={config.provider}
+            disabled={busy}
+            onChange={(e) => void save({ provider: e.currentTarget.value })}
+          >
+            <option value="auto">{tr("Automatic")}</option>
+            {config.providers.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.kind === "builtin" ? p.name : p.ready ? p.name : tr("{name} (no key)", { name: p.name })}
+              </option>
+            ))}
+          </select>
+        </div>
+        {config.provider === "auto" && (
+          <p className="text-11 leading-4 text-ink-faint">{tr("Automatic tries your API connections that have a key, then OpenRouter.")}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-12 text-ink-muted">{tr("Embedding model")}</label>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            className={`${inputClass} w-[360px] max-w-full flex-none`}
+            aria-label={tr("Embedding model")}
+            value={draft}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            maxLength={200}
+            disabled={busy}
+            onChange={(e) => setDraft(e.currentTarget.value)}
+          />
+          <Button variant="neutral" size="normal" disabled={busy || !modelDirty} onClick={() => void save({ model: draft.trim() })}>
+            {tr("Save")}
+          </Button>
+          {config.modelSet && (
+            <Button variant="ghost" size="normal" disabled={busy} onClick={() => void save({ model: null })}>
+              {tr("Use the default model")}
+            </Button>
+          )}
+        </div>
+        {!config.modelSet && <span className="text-11 text-ink-faint">{tr("Default: {model}", { model: config.model })}</span>}
+      </div>
+
+      {showKeyField && (
+        <div className="flex flex-col gap-1">
+          <label className="flex flex-col gap-1 text-12 text-ink-muted">
+            {tr("OpenRouter API key")}
+            <input
+              className={inputClass}
+              type="password"
+              autoComplete="off"
+              placeholder={tr("paste key")}
+              value={keyDraft}
+              disabled={busy}
+              onChange={(e) => setKeyDraft(e.currentTarget.value)}
+            />
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="neutral" size="normal" disabled={busy || !keyDraft.trim()} onClick={() => void saveKey()}>
+              {tr("Save key")}
+            </Button>
+          </div>
+          <p className="text-12 leading-4 text-ink-faint">{tr("OpenRouter has no key yet. Paste one to turn this on.")}</p>
+        </div>
+      )}
+
+      {saved ? <span className="text-12 text-success">{tr("Saved")}</span> : null}
       {err ? <div className="text-12 text-danger">{err}</div> : null}
     </div>
   )

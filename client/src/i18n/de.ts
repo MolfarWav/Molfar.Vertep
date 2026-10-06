@@ -504,6 +504,23 @@ const dict = {
   "Dark": "Dunkel",
   "Light": "Hell",
   "VERTEP": "VERTEP",
+  "Memory: matching by meaning": "Gedächtnis: Übereinstimmung nach Bedeutung",
+  "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "Gedächtnis und Lorebooks können Dinge nach ihrer Bedeutung finden, nicht nur nach exakten Wörtern. Es ist optional: ohne diese Funktion wird nur nach Wörtern abgeglichen.",
+  "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "Es nutzt ein günstiges Embedding-Modell, etwa $0.02 pro Million Token. Ein paar Dollar OpenRouter-Guthaben halten sehr lange.",
+  "Works via {name} · {model}": "Läuft über {name} · {model}",
+  "Matching by words only": "Abgleich nur nach Wörtern",
+  "The test call failed. Check the key, the model name and the credit.": "Der Testaufruf ist fehlgeschlagen. Prüfe den Schlüssel, den Modellnamen und das Guthaben.",
+  "Check again": "Erneut prüfen",
+  "Provider": "Anbieter",
+  "Automatic": "Automatisch",
+  "{name} (no key)": "{name} (kein Schlüssel)",
+  "Automatic tries your API connections that have a key, then OpenRouter.": "Automatisch versucht zuerst deine API-Verbindungen mit Schlüssel, dann OpenRouter.",
+  "Embedding model": "Embedding-Modell",
+  "Default: {model}": "Standard: {model}",
+  "Use the default model": "Standardmodell verwenden",
+  "OpenRouter API key": "OpenRouter-API-Schlüssel",
+  "Save key": "Schlüssel speichern",
+  "OpenRouter has no key yet. Paste one to turn this on.": "OpenRouter hat noch keinen Schlüssel. Füge einen ein, um dies zu aktivieren.",
 }
 
 export default dict

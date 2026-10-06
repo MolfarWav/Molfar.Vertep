@@ -504,6 +504,23 @@ const dict = {
   "Dark": "Donker",
   "Light": "Licht",
   "VERTEP": "VERTEP",
+  "Memory: matching by meaning": "Geheugen: matchen op betekenis",
+  "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "Geheugen en lorebooks kunnen dingen vinden op betekenis, niet alleen op exacte woorden. Het is optioneel: zonder dit matchen ze alleen op woorden.",
+  "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "Het gebruikt één goedkoop embeddingmodel, ongeveer $0.02 per miljoen tokens. Een paar dollar OpenRouter-tegoed gaat heel lang mee.",
+  "Works via {name} · {model}": "Werkt via {name} · {model}",
+  "Matching by words only": "Alleen matchen op woorden",
+  "The test call failed. Check the key, the model name and the credit.": "De testaanroep is mislukt. Controleer de sleutel, de modelnaam en het tegoed.",
+  "Check again": "Opnieuw controleren",
+  "Provider": "Provider",
+  "Automatic": "Automatisch",
+  "{name} (no key)": "{name} (geen sleutel)",
+  "Automatic tries your API connections that have a key, then OpenRouter.": "Automatisch probeert eerst je API-verbindingen met een sleutel en daarna OpenRouter.",
+  "Embedding model": "Embeddingmodel",
+  "Default: {model}": "Standaard: {model}",
+  "Use the default model": "Het standaardmodel gebruiken",
+  "OpenRouter API key": "OpenRouter API-sleutel",
+  "Save key": "Sleutel opslaan",
+  "OpenRouter has no key yet. Paste one to turn this on.": "OpenRouter heeft nog geen sleutel. Plak er een om dit in te schakelen.",
 }
 
 export default dict

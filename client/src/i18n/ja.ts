@@ -504,6 +504,23 @@ const dict = {
   "Dark": "ダーク",
   "Light": "ライト",
   "VERTEP": "VERTEP",
+  "Memory: matching by meaning": "メモリ: 意味によるマッチング",
+  "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "メモリとロアブックは、完全一致の単語だけでなく意味でも検索できます。これは任意です。オフにすると単語のみでマッチングします。",
+  "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "安価な埋め込みモデルを1つ使用し、100万トークンあたり約$0.02です。数ドルのOpenRouterクレジットで非常に長持ちします。",
+  "Works via {name} · {model}": "{name} · {model} 経由で動作",
+  "Matching by words only": "単語のみでマッチング",
+  "The test call failed. Check the key, the model name and the credit.": "テスト呼び出しに失敗しました。キー、モデル名、クレジットを確認してください。",
+  "Check again": "再確認",
+  "Provider": "プロバイダー",
+  "Automatic": "自動",
+  "{name} (no key)": "{name}（キーなし）",
+  "Automatic tries your API connections that have a key, then OpenRouter.": "自動では、キーがあるAPI接続を先に試し、その後OpenRouterを試します。",
+  "Embedding model": "埋め込みモデル",
+  "Default: {model}": "デフォルト: {model}",
+  "Use the default model": "デフォルトモデルを使用",
+  "OpenRouter API key": "OpenRouter APIキー",
+  "Save key": "キーを保存",
+  "OpenRouter has no key yet. Paste one to turn this on.": "OpenRouterのキーがまだありません。貼り付けるとこれをオンにできます。",
 }
 
 export default dict
