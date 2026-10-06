@@ -141,3 +141,11 @@ Later (own items): bridge between chats (drawn thread, picked facts), "remember 
   examples only, never workspace data or chat text.
 - Every model-facing prompt names the story's language and says "use only what the text says".
 - Measure prompt sizes with the prompt inspector before arguing about them.
+
+## Library look (user, 2026-10-06, from the mockups in `.fork/ui-assets/library/`)
+Two modes over the same data, switched by a tab inside the Library:
+- "Overview" (visual; small chats or when beauty is wanted): A's chapter timeline with facts
+  under each chapter and the cast rail; B's character cards (pinned, traits, lasting changes,
+  knows about others) and the proposals column; D's graph of chats and bridges.
+- "Ledger" (C): chat list, tabs Chapters / Facts / Proposals / Activity, filters, search, inline
+  actions; for digging into many facts.
