@@ -118,4 +118,14 @@ OpenRouter key (a ~$5 top-up lasts a very long time for embeddings). Engine-wide
   connection key), and a short note: what it is for (memory and lorebooks find things by meaning,
   not only by words), that it is optional, and the rough cost. The Roleplay Settings field becomes
   a status line with a link to this section.
+- Confirmed by the user 2026-10-06: OpenRouter serves `POST /embeddings` (OpenAI style) and lists
+  ~37 embedding models, some free (e.g. `liquid/lfm2.5-embedding-350m:free`, 512 context; its page
+  says requests and embeddings may be retained and used for training).
+- Model choice: free first, then a cheap paid fallback (e.g. `openai/text-embedding-3-small`).
+  A model that may train on inputs is NEVER picked silently: the user opts in after a plain
+  warning (chats can be private), otherwise the list starts at the paid model.
+- Vectors from different models do not compare (different spaces, often different sizes). Every
+  stored vector keeps its `model`; a query is compared only with vectors of the same model. When
+  the active model changes (fallback or the user's choice), old vectors are re-embedded lazily in
+  the background, and until then those items match by words only. No mixing within one search.
 - Tests in `test/models.test.ts`; shell-only routes go into the security test lists.
