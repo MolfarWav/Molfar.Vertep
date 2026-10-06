@@ -149,3 +149,7 @@ Two modes over the same data, switched by a tab inside the Library:
   knows about others) and the proposals column; D's graph of chats and bridges.
 - "Ledger" (C): chat list, tabs Chapters / Facts / Proposals / Activity, filters, search, inline
   actions; for digging into many facts.
+Parts the user circled in red (2026-10-06): A = the chapter timeline with its facts and the cast
+rail; B = the character cards and the proposals column; C = the tabbed ledger with filters; D = the
+graph with "Draw a bridge". Editing works in BOTH modes (edit, pin, retire, delete on every fact and
+chapter); the Ledger is simply the faster place to find and change things.
