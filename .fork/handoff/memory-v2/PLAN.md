@@ -115,6 +115,12 @@ M3 Switch the prompt: Litopys insert + cut, the budgets, notes aging from the da
   section; Litopys 1.x scribe, recap and insert. A test asserts one reply request carries exactly
   one Litopys block and one dashboard block, nothing else from memory. In parallel: Library mockups
   in 2-4 variants (like `.fork/ui-assets/chat-looks.html`) for the user to choose.
+  From the first live look at M2 (2026-10-06, only migrated data, the worker had no closed
+  scene yet): migrated facts all read "important / world / all" (1.x had no such fields) and
+  repeat the card and lorebook; the migrated summary chapter is a retelling. For M3: migrated
+  facts get weight everyday; a per-chat "Rebuild from scratch" (drop the migrated summary
+  chapter, re-chapter the history by scenes); facts that repeat the card or a fired lorebook
+  entry are skipped by code (trigram against that text, no model call).
 M4 Library by the chosen mockup: rail section next to Lorebooks (all chats: chapters timeline,
   facts with edit / pin / retire, proposals, activity), in-chat panel = same view for one chat,
   pin limit dialog.
