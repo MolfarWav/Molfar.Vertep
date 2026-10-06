@@ -105,12 +105,19 @@ M2 Litopys 2.0 in shadow mode (builds memory, does not change the prompt yet):
   format above; sensor `scene` field and note weight/type/about; worker (one call per closed
   scene: chapter + fact ops); migration (old Litopys store, `.memories.json`, `meta.summary` as
   chapter 0 up to the old cutoff); proposals; vectors; fork/delete. The user compares it live
-  with the old Memory before anything switches.
+  with the old Memory before anything switches. UI: a plain READ-ONLY "Litopys" rail section
+  (pick a chat, see its chapters, facts, proposals and what the worker did last), no design, no
+  editing: the user must see what runs (user, 2026-10-06). It may become the Library's skeleton.
 M3 Switch the prompt: Litopys insert + cut, the budgets, notes aging from the dashboard into
-  Litopys, "change"/"trait" by presence, old summary and facts vault retired (engine plugin
-  code removed after migration), Litopys 1.x recap and insert gone.
-M4 Library: rail section next to Lorebooks (all chats: chapters timeline, facts with edit / pin /
-  retire, proposals, activity), in-chat panel = same view for one chat, pin limit dialog.
+  Litopys, "change"/"trait" by presence. CLEANUP of the old memory in Roleplay so nothing
+  conflicts or injects twice (user, 2026-10-06): the engine plugin's summary/cutoff, auto
+  compaction, facts vault, extraction and its recall, the old Memory panel and the Settings memory
+  section; Litopys 1.x scribe, recap and insert. A test asserts one reply request carries exactly
+  one Litopys block and one dashboard block, nothing else from memory. In parallel: Library mockups
+  in 2-4 variants (like `.fork/ui-assets/chat-looks.html`) for the user to choose.
+M4 Library by the chosen mockup: rail section next to Lorebooks (all chats: chapters timeline,
+  facts with edit / pin / retire, proposals, activity), in-chat panel = same view for one chat,
+  pin limit dialog.
 Later (own items): bridge between chats (drawn thread, picked facts), "remember this" from a
   message menu, notes about other characters and traits from the sensor, archive search over
   raw old messages, Molfar's memory and tokens.
