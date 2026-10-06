@@ -504,6 +504,8 @@ const dict = {
   "Dark": "다크",
   "Light": "라이트",
   "VERTEP": "VERTEP",
+  "Memory": "메모리",
+  "How apps remember and find things across chats.": "앱이 채팅 전반에서 내용을 기억하고 찾는 방법.",
   "Memory: matching by meaning": "메모리: 의미로 매칭",
   "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "메모리와 로어북은 정확한 단어뿐 아니라 의미로도 찾을 수 있습니다. 선택 사항이며, 끄면 단어로만 매칭합니다.",
   "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "저렴한 임베딩 모델 하나를 사용하며, 100만 토큰당 약 $0.02입니다. 몇 달러의 OpenRouter 크레딧이면 아주 오래 쓸 수 있습니다.",

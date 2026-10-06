@@ -504,6 +504,8 @@ const dict = {
   "Dark": "Темна",
   "Light": "Світла",
   "VERTEP": "ВЕРТЕП",
+  "Memory": "Пам’ять",
+  "How apps remember and find things across chats.": "Як застосунки запам’ятовують і знаходять потрібне між чатами.",
   "Memory: matching by meaning": "Пам’ять: зіставлення за змістом",
   "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "Пам’ять і лорбуки можуть знаходити потрібне за змістом, а не лише за точними словами. Це необов’язково: без цього вони зіставляють лише за словами.",
   "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "Використовується одна недорога модель ембедингів, близько $0.02 за мільйон токенів. Кількох доларів на балансі OpenRouter вистачить надовго.",

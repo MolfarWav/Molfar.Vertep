@@ -504,6 +504,8 @@ const dict = {
   "Dark": "Koyu",
   "Light": "Açık",
   "VERTEP": "VERTEP",
+  "Memory": "Bellek",
+  "How apps remember and find things across chats.": "Uygulamaların sohbetler arasında şeyleri nasıl hatırlayıp bulduğu.",
   "Memory: matching by meaning": "Bellek: anlama göre eşleştirme",
   "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "Bellek ve lorebook’lar şeyleri yalnızca tam kelimelerle değil, anlamlarına göre de bulabilir. Bu isteğe bağlıdır: kapalıyken yalnızca kelimelere göre eşleştirirler.",
   "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "Ucuz bir embedding modeli kullanır, milyon token başına yaklaşık $0.02. Birkaç dolarlık OpenRouter bakiyesi çok uzun süre yeter.",

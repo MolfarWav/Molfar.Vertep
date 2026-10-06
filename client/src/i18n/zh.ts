@@ -504,6 +504,8 @@ const dict = {
   "Dark": "深色",
   "Light": "浅色",
   "VERTEP": "VERTEP",
+  "Memory": "记忆",
+  "How apps remember and find things across chats.": "应用如何在各个聊天之间记住和找到内容。",
   "Memory: matching by meaning": "记忆：按含义匹配",
   "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "记忆和 Lorebook 可以按含义查找内容，而不只是按精确词语。这是可选的：关闭后它们只按词语匹配。",
   "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "它使用一个便宜的嵌入模型，约每百万 token $0.02。几美元的 OpenRouter 余额能用很久。",

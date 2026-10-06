@@ -506,6 +506,8 @@ const en = {
   "Dark": "",
   "Light": "",
   "VERTEP": "",
+  "Memory": "",
+  "How apps remember and find things across chats.": "",
   "Memory: matching by meaning": "",
   "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "",
   "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "",

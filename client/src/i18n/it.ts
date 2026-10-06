@@ -504,6 +504,8 @@ const dict = {
   "Dark": "Scuro",
   "Light": "Chiaro",
   "VERTEP": "VERTEP",
+  "Memory": "Memoria",
+  "How apps remember and find things across chats.": "Come le app ricordano e ritrovano le cose tra le chat.",
   "Memory: matching by meaning": "Memoria: corrispondenza per significato",
   "Memory and lorebooks can find things by meaning, not only by exact words. It is optional: without it they match by words only.": "La memoria e i lorebook possono trovare le cose per significato, non solo per parole esatte. È opzionale: senza questa funzione corrispondono solo per parole.",
   "It uses one cheap embedding model, about $0.02 per million tokens. A few dollars of OpenRouter credit lasts a very long time.": "Usa un modello di embedding economico, circa $0.02 per milione di token. Pochi dollari di credito OpenRouter durano moltissimo.",

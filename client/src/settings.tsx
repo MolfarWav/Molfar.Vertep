@@ -83,7 +83,7 @@ const LOCAL_SERVERS: LocalPick[] = [
 type OAuthPick = { id: string; providerId: string; label: string; kind: "builtin"; baseUrl: null; apiKeyAuth: false; hasKey: false; authKind: "oauth" | "credentials"; needsGateway?: boolean }
 type ProviderPick = EngineProvider | CustomPick | OAuthPick | LocalPick
 
-export type TabValue = "general" | "backup" | "api" | "models" | "speech" | "agent" | "mcp" | "developer" | "server" | "users"
+export type TabValue = "general" | "backup" | "api" | "models" | "speech" | "agent" | "memory" | "mcp" | "developer" | "server" | "users"
 
 export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; onLogout: () => void }) {
   const [tab, setTab] = useState<TabValue>(props.initialTab ?? "api")
@@ -94,6 +94,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
     { value: "models", label: tr("Models"), icon: <Icon name="providers" /> },
     { value: "speech", label: tr("Speech"), icon: <Icon name="speaker" /> },
     { value: "agent", label: tr("Molfar"), icon: <Icon name="brain" /> },
+    { value: "memory", label: tr("Memory"), icon: <Icon name="books" /> },
     { value: "mcp", label: tr("MCP servers"), icon: <Icon name="terminal-active" /> },
     { value: "developer", label: tr("Developer"), icon: <Icon name="code" /> },
     ...(props.me.role === "admin"
@@ -123,6 +124,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
       {v === "models" && <ModelsTab />}
       {v === "speech" && <SpeechTab />}
       {v === "agent" && <AgentTab />}
+      {v === "memory" && <MemoryTab />}
       {v === "mcp" && <McpTab />}
       {v === "developer" && <DeveloperTab />}
       {v === "server" && <ServerTab />}
@@ -171,6 +173,9 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
           </Tabs.Content>
           <Tabs.Content value="agent" className="no-scrollbar">
             <AgentTab />
+          </Tabs.Content>
+          <Tabs.Content value="memory" className="no-scrollbar">
+            <MemoryTab />
           </Tabs.Content>
           <Tabs.Content value="mcp" className="no-scrollbar">
             <McpTab />
@@ -704,6 +709,17 @@ function BackupTab() {
   )
 }
 
+/** Memory shared by every app: matching by meaning for now. */
+function MemoryTab() {
+  return (
+    <Pane title={tr("Memory")} description={tr("How apps remember and find things across chats.")}>
+      <div className="flex flex-col gap-6 pb-4">
+        <MemoryMeaningSection />
+      </div>
+    </Pane>
+  )
+}
+
 /** Agent behavior: instructions + context management. */
 function AgentTab() {
   const persona = useResource(() => personaApi.get())
@@ -747,7 +763,6 @@ function AgentTab() {
         <InternetSection />
         <AutoCompactSection />
         <SmallModelSection />
-        <MemoryMeaningSection />
         <div className="flex flex-col gap-2">
           <h3 className="text-13 font-medium text-ink">{tr("Molfar's instructions")}</h3>
           <p className="text-12 text-ink-muted">
