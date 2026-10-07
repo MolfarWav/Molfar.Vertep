@@ -102,6 +102,16 @@ background work was moving, waiting for the model, or dead.
   `st.arcs: [{ id, chapterIds, from, to, label, text, sig, at }]`. The insert takes the newest
   chapters whole and older stretches as arcs; a stale chapter makes its arc stale (rebuilt).
   Design the exact trigger with token numbers before building (measure real chats first).
+  MEASURED 2026-10-07 on the desktop workspace (read locally, estimateTokens): the longest chat has 55 messages
+  (~24k tokens), 3 chapters before the cut = ~840 tokens (~280 per chapter, one per ~10 messages), 11 active
+  facts = ~510 tokens; budget 800, so the insert already drops by rank. A 300-message chat would hold ~30
+  chapters = ~8.4k tokens. PROPOSED trigger (confirm with the user): keep the newest 4 chapters before the cut
+  whole; when the older ones total more than 2 x budget (1600 tokens), merge the oldest run of 5-8 neighbouring
+  chapters (not stale; an edited chapter may join, its text is input only) into one arc of at most 150 words,
+  one model call per tick, the worker's queue first. sig = fnv of the member chapter sigs; a member changing
+  makes the arc stale (rebuilt on the next tick). The insert ranks arcs like chapters and never inserts a
+  chapter and the arc that holds it together. UI: arcs in the timeline as a band over their chapters, in the
+  Ledger as rows of the Chapters tab with their member range; actions: rewrite, delete (the chapters stay).
 - Originals: `GET /litopys/messages?chatId&from&to` (the messages behind a chapter or a fact's
   src, read-only) and `GET /litopys/search?chatId&q&before` (plain case-insensitive search over
   the ORIGINAL messages, never the summaries; 20 hits newest first: id, number, date, snippet,
@@ -109,6 +119,9 @@ background work was moving, waiting for the model, or dead.
   box searches facts and, with a toggle, the originals.
 - Size check: a chapter whose text is longer than the text of the messages it replaces is
   rejected and the call retried once with "at most N words" (N = a third of the source words).
+
+## Status 2026-10-07
+M4a, M4b, M4c, M4e DONE; M4d size check `22ce324` and originals `873e484` DONE; arcs NEXT (design above).
 
 ## M4e Leftovers from M3
 - 390 px: the record's third tab clipped (fixed by M4b), "Про: world" untranslated, English
