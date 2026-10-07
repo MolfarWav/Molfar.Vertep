@@ -124,6 +124,17 @@ M3 Switch the prompt: Litopys insert + cut, the budgets, notes aging from the da
 M4 Library by the chosen mockup: rail section next to Lorebooks (all chats: chapters timeline,
   facts with edit / pin / retire, proposals, activity), in-chat panel = same view for one chat,
   pin limit dialog.
+  From pi-optchat (Victor Taelin's OptChat recipe, looked at 2026-10-07; user chose these for M4):
+  - Arcs: when the chapters before the cut no longer fit the insert budget, neighbouring
+    chapters merge into an "arc" summary (a tree over chapters, one model call per merge), so
+    a very long chat compresses step by step instead of the insert picking 6 chapters by
+    relevance. The insert then takes the newest chapters whole and older ones as arcs.
+  - Originals, not summaries: the Library opens the messages behind a chapter or a fact
+    (src from/to), and its search runs over the original messages (a summary can be wrong, and
+    one fact repeats at every level). This is also the base of the later archive search.
+  - Size check by code: a chapter longer than the text it replaces is rejected and retried
+    once with a shorter limit.
+  Taken already in M3: a rebuild writes a new generation and swaps it in when done.
 Shell Settings has its own "Memory" tab (2026-10-06, holds matching by meaning): the general
   memory settings go there (window sizes, budgets, a test/diagnostic tool, etc.). Later idea: an
   optional model-assisted search over the records, opt-in.

@@ -20,14 +20,14 @@ Parts: M3a engine plugin, M3b Litopys, M3c dashboard, M3d UI. Order of work: M3b
   prompt; their content reaches the model only through the Litopys insert.
 
 ## M3b Litopys (`plugins/litopys/plugin.js`, manifest)
-1. Config (`DEFAULT_CONFIG`, `loadConfig`, `patchConfig`, `uiPanel`): add `inject: true` and
+1. Config (`DEFAULT_CONFIG`, `loadConfig`, `patchConfig`, `uiPanel`): add `insert: true` (not `inject`: a 1.x key that was off by default) and
    `budget: 800` (tokens, clamp 200..4000). Keep the other keys. Manifest `schedule.intervalMs`
    30000 (rebuilds go one scene per tick). Plugin version stays (release later).
 2. Cut record: after every tick that touched a chat, store `st.cut = { upTo: <id of line[cut-1]>
    | null, count: cut, at }` in the chat file. Export `coveredCount(st, line)` and
    `cutCount(st, line, cfg)` (pure) and test them: gaps, stale, orphan, merged, recent window.
 3. Insert: export `llmRequest(ctx, host)`. Only `ctx.key === "reply"` with `ctx.turn.chatId`, and
-   only when `cfg.enabled !== false && cfg.inject !== false`; never for `op: "impersonate"`.
+   only when `cfg.enabled !== false && cfg.insert !== false`; never for `op: "impersonate"`.
    Read the chat (line), the Litopys file and the dashboard state; compute `cut` itself (do not
    trust `st.cut`, it may be a tick old). Nothing to insert (no chapters and no facts) = null.
    Block text (English), built by code, within `budget` tokens (`estimateTokens` as in the engine
@@ -102,11 +102,11 @@ Parts: M3a engine plugin, M3b Litopys, M3c dashboard, M3d UI. Order of work: M3b
    insert in `assemble`, `memories` in the backup export, and the scan-vector work that existed
    only for memories (keep what lorebooks/databank use). `{{summary}}` macro returns "".
 2. Cut in `assemble`: replace the `memoryCutoffMessageId` slice with the Litopys cut: read
-   `litopys/config.json` (enabled/inject) and `litopys/chats/<chatId>.json`, compute
+   `litopys/config.json` (enabled/insert) and `litopys/chats/<chatId>.json`, compute
    `coveredCount` / `cutCount` with a COPY of the M3b functions (same tests run against both;
    plugins cannot import each other), and drop history messages before the cut (by id). When
    Litopys is off, missing or its file is missing: no cut. Token trimming stays after it.
-3. `hookInsertReserve`: Litopys adds `budget + 100` when enabled and inject is on (instead of
+3. `hookInsertReserve`: Litopys adds `budget + 100` when enabled and insert is on (instead of
    `inject === true ? 1200`).
 4. Strip the old meta keys: `saveChat` (or the one place meta is written) deletes `summary`,
    `memoryCutoffMessageId`, `compactions`, `memoryExtractedAt` when
@@ -141,7 +141,7 @@ browser check; strings en + uk in `src/lib/i18n.ts` (keys `lit.*`), uk without g
 3. Message rows before `litopysCut.count` get the existing dimmed "summarized" look with the
    tooltip "In the story record (Litopys)"; the divider above the first kept message reads "Older
    messages are in the story record" (replacing the summary wording).
-4. Roleplay Settings, memory section becomes "Story record (Litopys)": inject on/off, budget
+4. Roleplay Settings, memory section becomes "Story record (Litopys)": insert on/off, budget
    (tokens), recent messages, model (the existing model picker), min/max messages per scene,
    pin limit, the chapter prompt with Reset; reads/writes `GET/PUT /litopys/config`
    (`DELETE /litopys/config/prompts` for Reset). The embeddings block stays below it.
