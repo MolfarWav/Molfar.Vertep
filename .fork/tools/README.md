@@ -12,3 +12,5 @@ one of these formats, save its answer to a file, dry-run, apply, then read `git 
 - `drop-tests.mjs <file> <title>...`: removes `it(...)` / `describe(...)` blocks by title.
 
 The model's answer is data: never run it, only apply text edits, and review the diff.
+
+- `merge-i18n.js` (run from the Roleplay clone): reads `.ledger-i18n/merged.txt` lines `key | English | Ukrainian` and inserts them into both dictionaries of `src/lib/i18n.ts` after `lit.worker.factsSkipped`.

@@ -1,0 +1,14 @@
+const fs = require("fs");
+const p = "src/lib/i18n.ts";
+let s = fs.readFileSync(p, "utf8");
+const rows = fs.readFileSync(".ledger-i18n/merged.txt", "utf8").split("\n").filter(Boolean).map((l) => l.split(" | "));
+const q = (x) => "'" + x.replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'";
+const en = rows.map(([k, e]) => "  " + q(k) + ": " + q(e) + ",").join("\n");
+const uk = rows.map(([k, , u]) => "  " + q(k) + ": " + q(u) + ",").join("\n");
+const lines = [...s.matchAll(/^  'lit\.worker\.factsSkipped': .*$/gm)];
+if (lines.length !== 2) throw new Error("anchors: " + lines.length);
+const [a, b] = lines;
+s = s.slice(0, b.index + b[0].length) + "\n" + uk + s.slice(b.index + b[0].length);
+s = s.slice(0, a.index + a[0].length) + "\n" + en + s.slice(a.index + a[0].length);
+fs.writeFileSync(p, s);
+console.log("added", rows.length);
