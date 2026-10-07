@@ -112,6 +112,14 @@ background work was moving, waiting for the model, or dead.
   makes the arc stale (rebuilt on the next tick). The insert ranks arcs like chapters and never inserts a
   chapter and the arc that holds it together. UI: arcs in the timeline as a band over their chapters, in the
   Ledger as rows of the Chapters tab with their member range; actions: rewrite, delete (the chapters stay).
+  USER DECISION 2026-10-07: merging is NOT automatic by default. When the threshold is crossed the plugin only
+  marks it (view: `arcs.suggested: [{fromChapter, toChapter, chapters, tokens}]`), and the Library shows a
+  notice ("the older chapters take N tokens, more than the budget allows: merge chapters a-b into an arc?") with
+  Merge / Not now (snoozed until the older part grows by another threshold) / Always merge automatically. A
+  config switch `arcs: "ask" | "auto" | "off"` (default "ask"). Every number is the user's to change, in the
+  Roleplay Settings Litopys section and the plugin panel: `arcKeep` newest chapters kept whole (default 4),
+  `arcThreshold` tokens of the older chapters before a merge is offered (default 2 x budget = 1600; 0 = follow
+  the budget), `arcSize` chapters per arc (default 5-8 as min/max), `arcWords` the arc's length (default 150).
 - Originals: `GET /litopys/messages?chatId&from&to` (the messages behind a chapter or a fact's
   src, read-only) and `GET /litopys/search?chatId&q&before` (plain case-insensitive search over
   the ORIGINAL messages, never the summaries; 20 hits newest first: id, number, date, snippet,
