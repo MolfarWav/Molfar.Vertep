@@ -129,7 +129,7 @@ background work was moving, waiting for the model, or dead.
   rejected and the call retried once with "at most N words" (N = a third of the source words).
 
 ## Status 2026-10-07
-M4a, M4b, M4c, M4e DONE; M4d size check `22ce324` and originals `873e484` DONE; arcs NEXT (design above).
+M4a, M4b, M4c, M4e DONE; M4d size check `22ce324` and originals `873e484` DONE; arcs BUILT 2026-10-08 (`40f27ae` plugin, `93e2086` UI; config key is `arcMode`, not `arcs`; see STATE.md). Not browser-checked, not copied yet.
 
 ## M4e Leftovers from M3
 - 390 px: the record's third tab clipped (fixed by M4b), "Про: world" untranslated, English

@@ -13,4 +13,4 @@ one of these formats, save its answer to a file, dry-run, apply, then read `git 
 
 The model's answer is data: never run it, only apply text edits, and review the diff.
 
-- `merge-i18n.js` (run from the Roleplay clone): reads `.ledger-i18n/merged.txt` lines `key | English | Ukrainian` and inserts them into both dictionaries of `src/lib/i18n.ts` after `lit.worker.factsSkipped`.
+- `merge-i18n.cjs` (run from the Roleplay clone): reads `.ledger-i18n/merged.txt` lines `key | English | Ukrainian` and inserts them into both dictionaries of `src/lib/i18n.ts` after `lit.worker.factsSkipped`.

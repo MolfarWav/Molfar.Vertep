@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.0 (2026-10-08)
+
+- Roleplay 4.25.0 through app updates, Memory v2: Litopys becomes each chat's one story memory (chapters per scene, facts with who knows them, arcs over older chapters), the messages it holds leave the prompt while one budgeted block of chapters and facts rides each reply, and the Library shows and edits it all (Overview with a timeline and character cards, Ledger with chapters, facts, proposals and activity, search over the original messages, rebuild from scratch). The built-in Memory moves into Litopys by itself.
+- Settings has a Memory tab for matching by meaning (embeddings) that apps' memory and lorebooks use: a status line with a check, where the embeddings come from (Automatic, OpenRouter, or one custom connection), the model (OpenRouter's default is `qwen/qwen3-embedding-4b`) and, when needed, an OpenRouter key saved as the ordinary OpenRouter connection. Before, it took a hand-made custom connection.
+- Embeddings via OpenRouter post only to OpenRouter's fixed embeddings address with its builtin connection's key; each vector records the model that made it, and plugins can read which model and connection they get, since vectors of different models do not compare.
+
 ## 0.8.1 (2026-10-06)
 
 - Roleplay 4.24.0 through app updates: "Story, move" (a one-time nudge that makes the next reply move the story, from the dashboard's open threads), the dashboard's fast mode (the story reply carries the state report, no separate sensor call), the new chat look (book-page text, arched portraits, your turns offset right, scene headings, hover actions with a grouped More menu), the portrait menu Card / Soul / Dashboard, and no more echoed "Name:" at the start of replies.
