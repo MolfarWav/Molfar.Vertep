@@ -56,6 +56,22 @@ notes move and rebuild write their entries too (Activity tab).
   `await`.
 - Tests for every op, the pin limit, worker vs edited facts, proposals, activity.
 
+## M4a+ The worker is visibly alive (user, 2026-10-07, from the live test of M3)
+Seen live: during "Rebuild from scratch" the record showed "Rebuilding: 2 chapters so far" while the
+worker line said "The worker has not run for this chat yet": the rebuild generation keeps its own
+`st.rebuild.worker`, and the view only shows `st.worker`. Nothing told the user whether the
+background work was moving, waiting for the model, or dead.
+- Data (plugin): when the tick sends a worker request, record `worker.inFlight = { key, from, to,
+  since }` on the generation it works for (cleared when the result is applied or fails);
+  `chatView` returns the worker of the generation in progress (the rebuild one while rebuilding)
+  plus `inFlight`, `lastProgressAt` (last chapter written) and `next` (closed scenes left).
+- UI, everywhere the worker line shows (Ledger, Overview, the chat sheet, the chat list dot): a
+  spinning ring while a request is in flight ("writing the chapter for messages 41-60, 25 s"), a
+  steady dot when idle with nothing to do, an amber "waiting to retry at 12:40" after a failure,
+  and a red "no progress for N minutes" when work is left but nothing moved for 3 ticks or more
+  (the model or the engine may be down); the rebuild line shows "chapter 3 of about 9". Poll every
+  5 s while something is in flight, 15 s otherwise.
+
 ## M4b Ledger (UI; components drafted by an external model from this spec + C.html)
 - The rail section becomes "Library" (uk "Бібліотека"); keep the `litopys` section id or
   migrate it so the rail position stays next to Lorebooks. A mode switch Overview | Ledger.
