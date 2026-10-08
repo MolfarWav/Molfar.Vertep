@@ -62,3 +62,12 @@ User 2026-10-08, base and calls: (a) the app/plugin authoring and app UI section
 prompt move into the built-in skill app-authoring; (b) the app tools show only when needed, in the
 full prompt too (like small-window groups); (c) json_get / json_set from the agent-tools handoff join
 0.9.1 (the other three tools stay queued); edit-large-card then builds on them.
+
+## Same task, another model (2026-10-08 evening, session `2026-10-08-y4cyri`)
+With all 0.9.1 fixes (json tools, skill with the format reference, sandbox fixes, folds) and a
+different model chosen by the user: 9 model calls, 165k input (31k plain + 134k cached), 7.5k output,
+1.6 minutes, several tool calls per step. It followed the skill as written: json_get, write_file the
+book + json_set on the card in one step, json_set the entries, finish-change, one json_get check.
+The same task: 49 calls / 1.5M (0.9.0), 84 / 2.2M, 37 / 0.68M, 32 / 0.67M and 31 minutes on the
+first model as the fixes landed. The first model dominates what is left: it makes one small step per
+call and is slow; the engine side of item 3 is done.
