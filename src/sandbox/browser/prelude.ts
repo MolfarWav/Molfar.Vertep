@@ -4,7 +4,10 @@
  * cd: the shell keeps a relative $PWD after `cd some/dir`, and every later
  * relative path then resolves against it twice (apps/x/apps/x/file). It also
  * "enters" folders that do not exist. The wrapper hands it absolute, existing
- * paths only.
+ * paths only. python3 keeps a working directory of its own that never follows
+ * the shell (one interpreter for the whole chat), so cd moves it too, about
+ * 2 ms a call; without it `cd apps/x && python3 ...` opened files from
+ * /workspace (seen live: 16 calls lost to it).
  *
  * git: the workspace repository lives with the engine, so `git` is a shell
  * function that sends its arguments over the sandbox's HTTP path to a
@@ -27,7 +30,12 @@ const CD_FUNCTION = `cd() {
     *) target="$PWD/$target" ;;
   esac
   # no early return: the shell keeps going after a return inside if
-  if [ -d "$target" ]; then builtin cd "$target"; else echo "cd: $1: No such file or directory" >&2; false; fi
+  if [ -d "$target" ]; then builtin cd "$target"; __pycwd; else echo "cd: $1: No such file or directory" >&2; false; fi
+}
+__pycwd() {
+  local b
+  b=$(printf '%s' "$PWD" | base64 | tr -d '\\n')
+  python3 -c "import os,base64; os.chdir(base64.b64decode('$b').decode())"
 }`;
 
 const GIT_FUNCTION = `git() {

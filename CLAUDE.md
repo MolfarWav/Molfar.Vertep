@@ -33,6 +33,7 @@ holds the rules that do not change between tasks; the handoff holds the task.
 - Never commit `bun.lock` or `client-agent/bun.lock`: `bun install` rewrites them; `git checkout` them back.
 - A new string in `client/` goes into all 14 `client/src/i18n/*.ts` files (`en.ts` with an empty value) or `test/i18n.test.ts` fails.
 - A new shell-only route: add its path to the lists in `test/security.test.ts` and `test/malicious-plugin.test.ts`.
+- A change to the Roleplay card or lorebook format (fields of `data/characters/<id>/card.json` or `data/lorebooks/<id>.json`, how a book is linked) updates Molfar's card skill in the same change: `.fork/app-skills/roleplay/edit-large-card/SKILL.md` and its copies in the workspaces (later: the format reference in the Roleplay fork, `.fork/handoff/v091/PLAN.md` item 4). An outdated skill sends Molfar exploring the app's code: dozens of calls.
 - The agent's system prompt is built once per agent instance: anything that changes what goes into it must `evictAgents` or change the docs/project stamp.
 - Agent write limits live in code, not in the prompt: `AGENT_WRITE_DENYLIST` (never) and `protect.ts` (ask the user first). Memory and skills change only through the confirmed tools.
 - Never a model name in a commit, file or PR. Commit style: `area: what changed, in plain words`, a body saying why, then the attribution lines the harness gives.

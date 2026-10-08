@@ -78,6 +78,12 @@ describe("sandbox shell prelude", () => {
     expect(missing.err).toContain("No such file or directory");
   }, 60_000);
 
+  it("python3 follows cd, so relative paths open what the shell sees", async () => {
+    expect(await sh(`cd apps/demo && python3 -c "print(open('.gitignore').read().strip())"`)).toEqual({ out: "hi\n", err: "" });
+    // the next command starts at /workspace again, python included
+    expect((await sh(`python3 -c "import os; print(os.getcwd())"`)).out).toBe("/workspace\n");
+  }, 60_000);
+
   it("a set -x or set -e left by one command does not reach the next", async () => {
     expect((await sh("set -x; set -e; echo one")).out).toBe("one\n");
     expect(await sh("false; echo two")).toEqual({ out: "two\n", err: "" });
