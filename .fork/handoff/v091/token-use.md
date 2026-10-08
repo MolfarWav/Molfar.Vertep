@@ -43,3 +43,18 @@ Fixes chosen for 0.9.1:
 4. Batched steps: a prompt rule (independent reads, greps and checks in one step, several tool calls
    in one reply) and read_file with several paths.
 Not in 0.9.1 but the strongest fix for card edits: json_get / json_set (`.fork/handoff/agent-tools/`).
+
+## Fresh run on the desktop (2026-10-08, session `2026-10-08-hf0g0u`, GLM 5.3 Flash via NanoGPT)
+A card task (dialogue examples, a lorebook, a deeper card): 49 model calls, one tool per call, 1.5M
+input (88% read from the provider cache; NanoGPT counts cached tokens against the weekly quota of
+60M all the same, so caching saves the user nothing). Start context ~15k per call (48% of the
+input); the run's own bash commands (heredocs with card text) and their output 52%.
+11 of the 49 calls fought the browser sandbox: python3 there gets no argv and no exported variables
+(wasmsh-pyodide 0.8.0 runs scripts through a fixed launcher, `compile(..., "<string>")`, in its wasm
+binary; not fixable in the engine), and a `set -x` from one command traced every later one.
+Fixed: the bash tool description says so; every command starts with `RUN_RESET` (prelude.ts).
+In-run age fold added (older than 6 steps: long results and long arguments cut): simulated on the
+recorded runs, -19% for this run, -17..27% for other long runs.
+Base per call on the desktop: the active app's AGENTS.md (Roleplay) ~4.0k tokens, static prompt
+~2.4k + shell part ~0.6k, tool schemas ~2.5k+, workspace AGENTS.md ~1.6k, memory and skills ~1.3k,
+persona ~0.3k. Open: what to cut there (the user decides).

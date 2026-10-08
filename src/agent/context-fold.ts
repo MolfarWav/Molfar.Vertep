@@ -9,13 +9,15 @@
  *   reloaded from its file gets anyway (loadSessionDialogue), so a chat costs
  *   the same with or without an engine restart in between.
  * - This run: an older copy of a file that was read again in full or
- *   rewritten becomes a stub.
+ *   rewritten becomes a stub, and steps older than the last few lose the
+ *   bulk of long results and long arguments (a heredoc script that already
+ *   ran). In a measured card edit (49 calls) bash commands and their output
+ *   were half of all input.
+ * - Every task: long tool-call arguments of earlier tasks are cut the same way.
  *
- * Both change a message once and then keep it the same for every later call,
- * so the prefix stays stable for provider prompt caching (88% of the input
- * came from the cache in a measured run). Cutting by a sliding budget would
- * shift the prefix on every call, so it is left to fitContext at the window's
- * edge.
+ * Each message changes once, when it ages past the line, and then stays the
+ * same. Provider caching does not help here: subscriptions such as NanoGPT
+ * count cached input tokens against the quota like any others.
  */
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 
@@ -23,6 +25,44 @@ import type { AgentMessage } from "@earendil-works/pi-agent-core";
 export const PAST_RESULT_CHARS = 300;
 
 const PAST_NOTE = "[result from an earlier task, cut to save tokens. Read a file again if you need it; do not repeat actions that change things]";
+
+/** Steps of this run (model replies with tool calls) that stay whole. */
+export const KEEP_STEPS = 6;
+/** In older steps, a result longer than this keeps its head only. */
+const OLD_RESULT_CHARS = 2000;
+const OLD_RESULT_HEAD = 800;
+/** In older steps and earlier tasks, a string argument longer than this keeps its head only. */
+const OLD_ARG_CHARS = 1500;
+const OLD_ARG_HEAD = 400;
+
+/** A tool call's arguments with long strings cut; the same object when nothing is long. */
+function clipArgs(args: unknown): { args: unknown; cut: boolean } {
+  if (!args || typeof args !== "object" || Array.isArray(args)) return { args, cut: false };
+  let cut = false;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(args as Record<string, unknown>)) {
+    if (typeof v === "string" && v.length > OLD_ARG_CHARS) {
+      out[k] = `${v.slice(0, OLD_ARG_HEAD)}\n[${v.length - OLD_ARG_HEAD} more characters left out to save tokens; this call already ran]`;
+      cut = true;
+    } else out[k] = v;
+  }
+  return { args: cut ? out : args, cut };
+}
+
+/** An assistant message with its tool calls' long arguments cut; undefined when none are long. */
+function clipCalls(m: AgentMessage): AgentMessage | undefined {
+  const r = m as Msg;
+  if (r.role !== "assistant" || !Array.isArray(r.content)) return undefined;
+  let any = false;
+  const content = (r.content as { type: string; arguments?: unknown }[]).map((b) => {
+    if (b.type !== "toolCall") return b;
+    const c = clipArgs(b.arguments);
+    if (!c.cut) return b;
+    any = true;
+    return { ...b, arguments: c.args };
+  });
+  return any ? ({ ...(m as object), content } as unknown as AgentMessage) : undefined;
+}
 
 type Block = { type: string; text?: string };
 type Msg = { role?: string; timestamp?: number; toolCallId?: string; content?: unknown };
@@ -61,6 +101,26 @@ export function foldToolResults(msgs: AgentMessage[], runStart: number): FoldRes
   }
   const out = msgs.slice();
   let folded = 0;
+  const inRun = (r: Msg) => typeof r.timestamp === "number" && r.timestamp >= runStart;
+  // this run's steps; all but the newest KEEP_STEPS are old
+  const steps = out.flatMap((m, i) => {
+    const r = m as Msg;
+    return r.role === "assistant" && inRun(r) && Array.isArray(r.content) && (r.content as Block[]).some((b) => b.type === "toolCall") ? [i] : [];
+  });
+  const oldSteps = new Set(steps.slice(0, Math.max(0, steps.length - KEEP_STEPS)));
+  const oldCalls = new Set<string>();
+  for (const i of oldSteps) {
+    for (const b of (out[i] as Msg).content as { type: string; id?: string }[]) if (b.type === "toolCall" && b.id) oldCalls.add(b.id);
+  }
+  // long arguments: earlier tasks and old steps of this one
+  out.forEach((m, i) => {
+    const r = m as Msg;
+    if (r.role !== "assistant" || (inRun(r) && !oldSteps.has(i))) return;
+    const clipped = clipCalls(m);
+    if (!clipped) return;
+    out[i] = clipped;
+    folded++;
+  });
   const current: number[] = [];
   out.forEach((m, i) => {
     const r = m as Msg;
@@ -89,6 +149,14 @@ export function foldToolResults(msgs: AgentMessage[], runStart: number): FoldRes
       continue;
     }
     if (target) laterFull.add(target);
+    const text = textOf(r);
+    if (r.toolCallId && oldCalls.has(r.toolCallId) && text.length > OLD_RESULT_CHARS) {
+      out[i] = withText(
+        out[i]!,
+        `${text.slice(0, OLD_RESULT_HEAD)}\n[${text.length - OLD_RESULT_HEAD} more characters of this older result left out to save tokens; run the tool again (read_file with offset/limit) if you need them]`,
+      );
+      folded++;
+    }
   }
   return { messages: folded ? out : msgs, folded };
 }

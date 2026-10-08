@@ -13,7 +13,7 @@
 import { createBrowserWorkerSession, type WasmshSession } from "@mayflowergmbh/wasmsh-pyodide/browser";
 import { TOP_LEVEL_DOMAINS } from "./tlds";
 import { workerLockdown } from "./lockdown";
-import { SANDBOX_GIT_HOST, SHELL_PRELUDE } from "./prelude";
+import { RUN_RESET, SANDBOX_GIT_HOST, SHELL_PRELUDE } from "./prelude";
 
 declare const __SANDBOX_VERSION__: string;
 
@@ -185,7 +185,7 @@ async function handle(req: Request): Promise<void> {
     return;
   }
   if (req.t === "run") {
-    const out = await s.run(`cd /workspace\n${req.command}`);
+    const out = await s.run(`${RUN_RESET}\ncd /workspace\n${req.command}`);
     post({ t: "run-result", id: req.id, exitCode: out.exitCode, stdout: out.stdout, stderr: out.stderr, timedOut: false, truncated: false });
     return;
   }

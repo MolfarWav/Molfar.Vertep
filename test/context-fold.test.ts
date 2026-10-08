@@ -8,7 +8,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import { PAST_RESULT_CHARS, foldToolResults } from "../src/agent/context-fold.js";
+import { KEEP_STEPS, PAST_RESULT_CHARS, foldToolResults } from "../src/agent/context-fold.js";
 import { appTouched } from "../src/agent/memory.js";
 import { buildUserTools } from "../src/agent/tools.js";
 import { bootstrapUserDir } from "../src/paths.js";
@@ -60,12 +60,34 @@ describe("folding tool results", () => {
     expect(text(messages[6])).toStartWith("v2");
   });
 
-  it("keeps this run's results whole however many there are (a stable prefix for caching)", () => {
+  it("keeps the newest steps whole and cuts long results and arguments of older ones", () => {
     const msgs: AgentMessage[] = [user("t", RUN)];
-    for (let i = 0; i < 8; i++) {
-      msgs.push(call(`c${i}`, "grep", { pattern: String(i) }, RUN), result(`c${i}`, `${i}`.repeat(40_000), RUN));
+    for (let i = 0; i < KEEP_STEPS + 2; i++) {
+      msgs.push(call(`c${i}`, "bash", { command: `cat > /tmp/s.py <<'PY'\n${"x".repeat(5000)}\nPY` }, RUN), result(`c${i}`, `${i}`.repeat(40_000), RUN));
     }
-    expect(foldToolResults(msgs, RUN).messages).toBe(msgs);
+    const { messages } = foldToolResults(msgs, RUN);
+    const results = messages.filter((m) => (m as { role: string }).role === "toolResult").map(text);
+    const args = messages.filter((m) => (m as { role: string }).role === "assistant").map((m) => (m as unknown as { content: { arguments: { command: string } }[] }).content[0]!.arguments.command);
+    for (const k of [0, 1]) {
+      expect(results[k]!.length).toBeLessThan(1000);
+      expect(results[k]).toContain("left out to save tokens");
+      expect(args[k]!.length).toBeLessThan(600);
+      expect(args[k]).toContain("this call already ran");
+    }
+    for (const k of [2, 3, 4, 5, 6, 7]) {
+      expect(results[k]!.length).toBe(40_000);
+      expect(args[k]!.length).toBeGreaterThan(5000);
+    }
+    // the original messages are untouched
+    expect((msgs[1] as unknown as { content: { arguments: { command: string } }[] }).content[0]!.arguments.command.length).toBeGreaterThan(5000);
+  });
+
+  it("cuts long arguments of earlier tasks too", () => {
+    const msgs = [user("old", 1), call("c1", "write_file", { path: "a.md", content: "y".repeat(9000) }, 2), result("c1", "ok", 3), user("new", RUN)];
+    const { messages } = foldToolResults(msgs, RUN);
+    const args = (messages[1] as unknown as { content: { arguments: { path: string; content: string } }[] }).content[0]!.arguments;
+    expect(args.path).toBe("a.md");
+    expect(args.content.length).toBeLessThan(600);
   });
 });
 

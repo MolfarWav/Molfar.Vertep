@@ -9,7 +9,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createNodeSession, type WasmshSession } from "@mayflowergmbh/wasmsh-pyodide";
-import { SANDBOX_GIT_HOST, SHELL_PRELUDE } from "../src/sandbox/browser/prelude.js";
+import { RUN_RESET, SANDBOX_GIT_HOST, SHELL_PRELUDE } from "../src/sandbox/browser/prelude.js";
 import { buildApp } from "../src/server/app.js";
 import { EventBus } from "../src/server/ws.js";
 import { SessionService } from "../src/sessions.js";
@@ -65,7 +65,8 @@ afterAll(async () => {
 });
 
 const sh = async (command: string) => {
-  const r = await session.run(`cd /workspace\n${command}`);
+  // as frame.ts runs it
+  const r = await session.run(`${RUN_RESET}\ncd /workspace\n${command}`);
   return { out: r.stdout, err: r.stderr };
 };
 
@@ -75,6 +76,11 @@ describe("sandbox shell prelude", () => {
     const missing = await sh(`cd nope; echo "rc=$?"; pwd`);
     expect(missing.out).toBe("rc=1\n/workspace\n");
     expect(missing.err).toContain("No such file or directory");
+  }, 60_000);
+
+  it("a set -x or set -e left by one command does not reach the next", async () => {
+    expect((await sh("set -x; set -e; echo one")).out).toBe("one\n");
+    expect(await sh("false; echo two")).toEqual({ out: "two\n", err: "" });
   }, 60_000);
 
   it("git runs against the workspace repository with pipes, redirects, quoting and cwd", async () => {

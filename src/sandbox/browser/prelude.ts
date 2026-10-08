@@ -51,3 +51,8 @@ const GIT_FUNCTION = `git() {
 }`;
 
 export const SHELL_PRELUDE = `${CD_FUNCTION}\n${GIT_FUNCTION}`;
+
+/** Runs before every command: one shell serves the whole chat, and a
+ *  `set -x` or `set -e` an earlier command left on would trace or silently
+ *  stop every later one (seen live: one `set -x` traced every later command). */
+export const RUN_RESET = "{ set +eux; set +o pipefail; } 2>/dev/null";
