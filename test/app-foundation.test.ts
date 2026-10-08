@@ -432,6 +432,34 @@ afterEach(() => {
     }
   });
 
+  it("installMissingPackages installs only apps that lack a listed package (a restored backup has no node_modules)", async () => {
+    const { installMissingPackages, missingPackages } = await import("../src/apps/packages.js");
+    const apps = fs.mkdtempSync(path.join(os.tmpdir(), "apps-"));
+    try {
+      // restored: lists a package, has no node_modules (a local one, so no network)
+      const restored = path.join(apps, "restored");
+      fs.mkdirSync(path.join(restored, "vendor", "lantern"), { recursive: true });
+      fs.writeFileSync(path.join(restored, "vendor", "lantern", "package.json"), JSON.stringify({ name: "lantern", version: "1.0.0" }));
+      fs.writeFileSync(path.join(restored, "package.json"), JSON.stringify({ name: "restored", private: true, dependencies: { lantern: "file:./vendor/lantern" } }));
+      // nothing to install: no package.json at all, or nothing listed
+      fs.mkdirSync(path.join(apps, "plain"));
+      fs.mkdirSync(path.join(apps, "empty"));
+      fs.writeFileSync(path.join(apps, "empty", "package.json"), JSON.stringify({ name: "empty", private: true }));
+      const seen: Array<[string, boolean]> = [];
+      await installMissingPackages(apps, (id, r) => seen.push([id, r.ok]));
+      expect(seen).toEqual([["restored", true]]);
+      expect(missingPackages(restored)).toEqual([]);
+      // a second pass finds nothing left to do
+      await installMissingPackages(apps, (id) => seen.push([id, false]));
+      expect(seen).toHaveLength(1);
+      // a missing apps folder is not an error
+      await installMissingPackages(path.join(apps, "nope"), () => seen.push(["x", false]));
+      expect(seen).toHaveLength(1);
+    } finally {
+      fs.rmSync(apps, { recursive: true, force: true });
+    }
+  });
+
   it("app tier: createAppSkeleton kind web writes the standard app shape", async () => {
     const { createAppSkeleton, readApp } = await import("../src/apps/manager.js");
     const r = createAppSkeleton(path.join(dataDir, "users", "alice", "apps"), { id: "demo", name: "Demo", kind: "web" });

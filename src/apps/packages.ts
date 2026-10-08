@@ -134,3 +134,21 @@ export function uninstallApp(appDir: string, packages: string[]): Promise<Instal
   if (!packages.length) return Promise.resolve({ ok: false, log: "no package names given", ms: 0 });
   return exclusive(appDir, () => runBun(appDir, ["remove", ...LINK_BACKEND, ...packages]));
 }
+
+/** Install, one app after another, the packages each app in `appsDir` lists
+ *  but does not have: at boot, and after a profile is restored from a backup
+ *  (backups never carry node_modules, and a build only heals an app that was
+ *  installed once). `report` hears each app's result. */
+export async function installMissingPackages(appsDir: string, report: (id: string, r: InstallResult) => void): Promise<void> {
+  let ids: string[] = [];
+  try {
+    ids = fs.readdirSync(appsDir);
+  } catch {
+    return;
+  }
+  for (const id of ids) {
+    const dir = path.join(appsDir, id);
+    if (!hasPackages(dir) || !missingPackages(dir).length || packagesBusy(dir)) continue;
+    report(id, await installApp(dir));
+  }
+}

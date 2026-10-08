@@ -14,7 +14,7 @@ import crypto from "node:crypto";
 import os from "node:os";
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
-import { hasPackages, installApp, missingPackages } from "./apps/packages.js";
+import { installMissingPackages } from "./apps/packages.js";
 import { ConfigError, dataDirOf, envNameOf, flagNameOf, loadConfig, parseFlags, sandboxConfigOf, SETTINGS, type LoadedConfig } from "./config.js";
 import { ENGINE_VERSION, INSTALL_KIND, IN_CONTAINER, resolveHomeDir } from "./install.js";
 import { UserService } from "./users.js";
@@ -726,16 +726,10 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
   void (async () => {
     if (!config.apps.packageDownloads) return;
     for (const name of users.list().map((u) => u.username)) {
-      const appsDir = userPaths(dataDir, name).apps;
-      let ids: string[] = [];
-      try { ids = fs.readdirSync(appsDir); } catch { continue; }
-      for (const id of ids) {
-        const dir = path.join(appsDir, id);
-        if (!hasPackages(dir) || !missingPackages(dir).length) continue;
-        const r = await installApp(dir);
+      await installMissingPackages(userPaths(dataDir, name).apps, (id, r) => {
         if (r.ok) log.info(`[apps] installed packages for ${name}/${id} (${r.ms}ms)`);
         else log.warn(`[apps] package install failed for ${name}/${id}: ${r.log.split("\n").slice(-3).join(" ")}`);
-      }
+      });
     }
   })();
 

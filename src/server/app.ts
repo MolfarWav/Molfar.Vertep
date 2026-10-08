@@ -62,7 +62,7 @@ import type { EventBus } from "./ws.js";
 import { ensureLookWatcher, stopLookWatcher } from "./look-watch.js";
 import { assertPublicHost } from "../net-guard.js";
 import { listShellThemes } from "../themes.js";
-import { installApp, hasPackages, healPackages, packagesBusy } from "../apps/packages.js";
+import { installApp, hasPackages, healPackages, installMissingPackages, packagesBusy } from "../apps/packages.js";
 import { appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, readBuildStatus, readDevMeta, sourceRev, takeLease, writeClientErrors, writeClientLogs, writeOutput } from "../builder/server.js";
 import { builderAsset, builderFrameCsp, builderVersion } from "../builder/assets.js";
 import type { FsOp } from "../builder/fs.js";
@@ -2781,6 +2781,16 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       bus.emit(u.username, "profile_replaced", {});
       bus.emit(u.username, "connections_changed", { id: "profile-import" });
       log.info(`[profile] ${u.username}: replaced from a backup (previous profile at ${r.safetyBackup})`);
+      // a backup carries no node_modules: install the apps' packages now, not
+      // at the next restart, and let open pages rebuild once each lands
+      if (config.apps.packageDownloads) {
+        void installMissingPackages(c.get("paths").apps, (id, res) => {
+          if (res.ok) {
+            log.info(`[apps] installed packages for ${u.username}/${id} after the restore (${res.ms}ms)`);
+            bus.emit(u.username, "build_needed", { app: id, paths: ["package.json"] });
+          } else log.warn(`[apps] package install failed for ${u.username}/${id} after the restore: ${res.log.split("\n").slice(-3).join(" ")}`);
+        });
+      }
       return c.json({ ok: true, safetyBackup: r.safetyBackup, secrets: r.secrets });
     } catch (e) {
       return profileError(c, e);
