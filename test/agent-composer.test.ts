@@ -55,22 +55,23 @@ describe("the @ file picker", () => {
  * before the turn saves the model going to find out what they meant.
  */
 describe("files named with @ reach the model", () => {
-  const src = fs.readFileSync(new URL("../src/server/app.ts", import.meta.url), "utf8");
+  // the reading lives in mentions.ts; app.ts only calls it (its behaviour: test/mentions.test.ts)
+  const src = fs.readFileSync(new URL("../src/agent/mentions.ts", import.meta.url), "utf8");
 
   it("reads them through the same guard the file tools use", () => {
-    const fn = src.slice(src.indexOf("const readMentionedFiles"), src.indexOf("const readMentionedFiles") + 1400);
+    const fn = src.slice(src.indexOf("export function mentionedFiles"), src.indexOf("export function mentionedFiles") + 2000);
     expect(fn).toContain("agentReadDenied");
     expect(fn).toContain("safeResolve");
   });
 
   it("caps how much one message can drag in", () => {
-    const fn = src.slice(src.indexOf("const readMentionedFiles"), src.indexOf("const readMentionedFiles") + 1400);
+    const fn = src.slice(src.indexOf("export function mentionedFiles"), src.indexOf("export function mentionedFiles") + 2000);
     expect(src).toContain("MENTION_BYTES = 64 * 1024");
     expect(fn).toContain("out.length >= 10");
   });
 
   it("skips binaries, which are noise rather than context", () => {
-    const fn = src.slice(src.indexOf("const readMentionedFiles"), src.indexOf("const readMentionedFiles") + 1400);
+    const fn = src.slice(src.indexOf("export function mentionedFiles"), src.indexOf("export function mentionedFiles") + 2000);
     expect(fn).toContain("includes(0)");
   });
 
