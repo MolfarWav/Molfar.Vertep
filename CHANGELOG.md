@@ -7,6 +7,15 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.1 (2026-10-09)
+
+- Roleplay 4.26.0 through app updates: four skills for Molfar (card-craft, card-import, lorebook-craft, preset-craft) built on one reference for card, lorebook and preset files (`docs/DATA-FORMATS.md`, kept current by a test), and the card's id with a copy button in the character editor.
+- Molfar spends far fewer tokens and calls: the same card task went from 49 model calls and 1.5M input tokens (0.9.0) to 6–9 calls and 0.1–0.2M. How: `json_get` / `json_set` read and change single fields of a card or lorebook (missing objects are created, the file keeps its format, a JSON file is never left broken); `read_file` and an @-mention show a big JSON file (a card with its portrait) as its fields and sizes; `read_file` takes up to 8 paths and cuts files over 40k characters with a note; older steps and earlier tasks are folded to short notes before each call; the skills index lists app skills by name; app authoring moved into its skill and app tools appear when an app's code is touched; a busy provider (429, 5xx) is retried; sandbox traps that cost calls are gone (python3 follows `cd`, a `set -x` no longer leaks into later commands).
+- Molfar's page: the "/" menu scrolls and groups commands and skills, searching their descriptions too; "@" finds characters, lorebooks and presets by name; quick-action chips above the composer start a card, lorebook, preset or import job with its skill; the chat column is wider (56rem); a new chat keeps the composer at the bottom; on a phone the model name has a row of its own; reasoning and tool calls start folded to one line that names the live step.
+- Android: the APK is signed with the project's own key, so updates install over the app with its data kept (installs from 0.9.0 and earlier need one reinstall: back up, uninstall, install, restore). "Get update" downloads the APK itself, checks its size, hash, package and key, and hands it to Android's installer; a different key gets a plain explanation instead of "App not installed".
+- Android: bash and the file tools work: the workspace guard compared real paths with a root reached through `/data/user/0`, so every file looked outside the workspace and the sandbox stayed empty.
+- A profile restored from a backup installs its apps' packages at once (a backup carries no node_modules; Roleplay failed to build until a restart).
+- An app update no longer fails with ENOENT on `dist.discard-…`: the old build is moved out of the app before it is deleted, and leftover aside folders are skipped by updates, backups and git.
 - Release archives are named `Molfar-Vertep-<version>-<system>` (they were `Chrysalis-*` up to 0.9.0); self-update finds both, so older copies still update.
 - README rewritten for people new to the project, with screenshots, GIFs of Molfar rebuilding the app, a pixel Molfar, a work-in-progress and vibe-coding note, what Molfar's skills, projects and memory are for, and Ukrainian and Russian translations (`README.uk.md`, `README.ru.md`); a social preview banner in `.github/assets/`.
 
