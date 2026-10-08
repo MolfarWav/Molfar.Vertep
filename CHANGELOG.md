@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Release archives are named `Molfar-Vertep-<version>-<system>` (they were `Chrysalis-*` up to 0.9.0); self-update finds both, so older copies still update.
+
 ## 0.9.0 (2026-10-08)
 
 - Roleplay 4.25.0 through app updates, Memory v2: Litopys becomes each chat's one story memory (chapters per scene, facts with who knows them, arcs over older chapters), the messages it holds leave the prompt while one budgeted block of chapters and facts rides each reply, and the Library shows and edits it all (Overview with a timeline and character cards, Ledger with chapters, facts, proposals and activity, search over the original messages, rebuild from scratch). The built-in Memory moves into Litopys by itself.

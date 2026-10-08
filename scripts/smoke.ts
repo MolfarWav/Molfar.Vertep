@@ -3,7 +3,7 @@
  * health, both frontends, account setup, and installing Roleplay from the
  * Store (this needs the network: the Store list and the app are on GitHub).
  *
- *   bun run scripts/smoke.ts out/dist/Chrysalis-1.0.0-linux-x64/chrysalis
+ *   bun run scripts/smoke.ts out/dist/Molfar-Vertep-1.0.0-linux-x64/chrysalis
  *   bun run scripts/smoke.ts bun out/dist/npm/chrysalis.js
  *
  * The expected version is CHRYSALIS_VERSION when set, else package.json's.

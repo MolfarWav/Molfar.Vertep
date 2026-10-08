@@ -13,8 +13,8 @@
  * "Chrysalis Staging" app beside the stable one).
  *
  * Output in out/dist/:
- *   Chrysalis-<version>-<target>/        chrysalis[.exe] + resources/
- *   Chrysalis-<version>-<target>.tar.gz  (.zip for Windows)
+ *   Molfar-Vertep-<version>-<target>/        chrysalis[.exe] + resources/
+ *   Molfar-Vertep-<version>-<target>.tar.gz  (.zip for Windows; Chrysalis-* up to 0.9.0)
  *   npm/                                 package for `bun install -g`
  *   android/                             server + resources for the Android launcher
  *   Molfar-Vertep-<version>-android-arm64.apk (target android-apk; needs JAVA_HOME
@@ -184,7 +184,7 @@ Undo that with "chrysalis uninstall-cli".
 for (const name of targets) {
   const t = TARGETS[name]!;
   step(name);
-  const folder = t.kind === "android" ? path.join(outRoot, "android") : path.join(outRoot, `Chrysalis-${version}-${name}`);
+  const folder = t.kind === "android" ? path.join(outRoot, "android") : path.join(outRoot, `Molfar-Vertep-${version}-${name}`);
   fs.rmSync(folder, { recursive: true, force: true });
   fs.mkdirSync(folder, { recursive: true });
   run(process.execPath, [

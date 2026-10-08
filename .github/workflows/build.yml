@@ -150,8 +150,8 @@ jobs:
           mkdir app && cd app
           case "${{ matrix.target }}" in
             npm) tar -xzf ../downloads/npm-pack/*.tgz && echo "CMD=bun $PWD/package/chrysalis.js" >> "$GITHUB_ENV" ;;
-            windows-x64) 7z x -bso0 ../downloads/*-windows-x64.zip && echo "CMD=$(cygpath -w "$(ls -d "$PWD"/Chrysalis-*)")\\chrysalis.exe" >> "$GITHUB_ENV" ;;
-            *) tar -xzf ../downloads/*-${{ matrix.target }}.tar.gz && echo "CMD=$(ls -d "$PWD"/Chrysalis-*)/chrysalis" >> "$GITHUB_ENV" ;;
+            windows-x64) 7z x -bso0 ../downloads/*-windows-x64.zip && echo "CMD=$(cygpath -w "$(ls -d "$PWD"/Molfar-Vertep-*)")\\chrysalis.exe" >> "$GITHUB_ENV" ;;
+            *) tar -xzf ../downloads/*-${{ matrix.target }}.tar.gz && echo "CMD=$(ls -d "$PWD"/Molfar-Vertep-*)/chrysalis" >> "$GITHUB_ENV" ;;
           esac
       - name: Smoke test
         shell: bash

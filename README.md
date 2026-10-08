@@ -67,14 +67,14 @@ To move an app to another device, or keep a copy before uninstalling, use **Expo
 
 || System | Download | Start it |
 || --- | --- | --- |
-|| Windows | `Chrysalis-<version>-windows-x64.zip` | Unzip, double-click `chrysalis.exe` |
-|| macOS (Apple silicon) | `Chrysalis-<version>-macos-arm64.tar.gz` | Unpack, double-click `start.command` |
-|| macOS (Intel) | `Chrysalis-<version>-macos-x64.tar.gz` | Unpack, double-click `start.command` |
-|| Linux | `Chrysalis-<version>-linux-x64.tar.gz` (or `-arm64`) | Unpack, run `./chrysalis` |
+|| Windows | `Molfar-Vertep-<version>-windows-x64.zip` | Unzip, double-click `chrysalis.exe` |
+|| macOS (Apple silicon) | `Molfar-Vertep-<version>-macos-arm64.tar.gz` | Unpack, double-click `start.command` |
+|| macOS (Intel) | `Molfar-Vertep-<version>-macos-x64.tar.gz` | Unpack, double-click `start.command` |
+|| Linux | `Molfar-Vertep-<version>-linux-x64.tar.gz` (or `-arm64`) | Unpack, run `./chrysalis` |
 || Android 9+ | `Molfar-Vertep-<version>-android-arm64.apk` | Install, open the app |
 || Docker (from 0.3.0) | `ghcr.io/molfarwav/molfar-vertep` | See README section below |
 
-Archive names stay `Chrysalis-<version>-<system>` on purpose: self-update looks for them. Internal names stay too (`chrysalis` command, `CHRYSALIS_*`, data folders) so installs keep working.
+Releases up to 0.9.0 named their archives `Chrysalis-<version>-<system>`; self-update accepts both names since 0.8.0. Internal names stay (`chrysalis` command, `CHRYSALIS_*`, data folders) so installs keep working.
 
 On Windows you can also run from source with one file: put `Molfar-Vertep.bat` (in the repository root) in any folder and double-click it. It installs Git and Bun if they are missing, downloads Molfar Vertep next to itself, offers each new release before installing it, builds what changed, offers a desktop shortcut and opens Molfar Vertep in your browser. `Molfar-Vertep.bat dev` follows the newest work in progress instead of releases. Folder names with spaces or in any language are fine.
 
