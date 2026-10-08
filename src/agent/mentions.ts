@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { agentReadDenied, safeResolve } from "../paths.js";
-import { viewValue } from "./json-edit.js";
+import { BIG_JSON_CHARS, bigJsonView } from "./json-edit.js";
 
 /**
  * Things the composer's "@" can name besides files: the characters, lorebooks
@@ -107,14 +107,6 @@ export interface MentionedFile {
  *  a huge file does not become the whole context. Anything that is not a
  *  readable text file in the workspace is left as the plain text it is. */
 const MENTION_BYTES = 64 * 1024;
-const MENTION_JSON_BYTES = 16 * 1024;
-const jsonShape = (buf: Buffer): string | null => {
-  try {
-    return viewValue(JSON.parse(buf.toString("utf8")), "/", 0);
-  } catch {
-    return null;
-  }
-};
 export function mentionedFiles(root: string, message: string): MentionedFile[] {
   const out: MentionedFile[] = [];
   const seen = new Set<string>();
@@ -139,9 +131,9 @@ export function mentionedFiles(root: string, message: string): MentionedFile[] {
       // lorebook) is mostly not what the message is about: its first 64 KB
       // would cost a whole context for a cut-off avatar. Its shape names the
       // fields and their sizes, which is what the next json_get needs.
-      const shape = buf.length > MENTION_JSON_BYTES && /\.json$/i.test(rel) ? jsonShape(buf) : null;
+      const shape = buf.length > BIG_JSON_CHARS && /\.json$/i.test(rel) ? bigJsonView(buf.toString("utf8")) : null;
       if (shape) {
-        out.push({ path: rel, text: `${shape}\n(${Math.round(buf.length / 1024)} KB of JSON: only its shape is shown. Read the fields you need with json_get, several pointers in one call.)`, truncated: false });
+        out.push({ path: rel, text: shape, truncated: false });
         continue;
       }
       const truncated = buf.length > MENTION_BYTES;

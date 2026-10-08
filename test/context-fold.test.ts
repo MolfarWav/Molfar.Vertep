@@ -122,10 +122,26 @@ describe("read_file", () => {
     expect(await run({ path: "notes/big.txt", offset: 4999, limit: 2 })).toContain("4999| line 4999");
   });
 
+  it("shows a big JSON file as its shape; a slice still reads the text", async () => {
+    const { p, run } = setup();
+    const card = { spec: "chara_card_v2", name: "Ember", avatar: `data:image/png;base64,${"A".repeat(30_000)}`, description: "A fox." };
+    fs.writeFileSync(path.join(p.root, "notes", "card.json"), JSON.stringify(card, null, 2));
+    const out = await run({ path: "notes/card.json" });
+    expect(out).toContain("- avatar: string, 30022 chars");
+    expect(out).toContain("json_get");
+    expect(out).not.toContain("AAAA");
+    expect(await run({ path: "notes/card.json", offset: 3, limit: 1 })).toContain('"name": "Ember"');
+    // a small one, and a big file that is not JSON, read as before
+    fs.writeFileSync(path.join(p.root, "notes", "small.json"), JSON.stringify({ name: "Ember" }));
+    expect(await run({ path: "notes/small.json" })).toBe('{"name":"Ember"}');
+    fs.writeFileSync(path.join(p.root, "notes", "broken.json"), `{ "a": "${"x".repeat(20_000)}"`);
+    expect(await run({ path: "notes/broken.json" })).toStartWith('{ "a": "xxx');
+  });
+
   it("cuts a one-line file by characters and points to grep", async () => {
     const { p, run } = setup();
-    fs.writeFileSync(path.join(p.root, "notes", "card.json"), JSON.stringify({ description: "d".repeat(100_000) }));
-    const out = await run({ path: "notes/card.json" });
+    fs.writeFileSync(path.join(p.root, "notes", "one-line.txt"), "d".repeat(100_000));
+    const out = await run({ path: "notes/one-line.txt" });
     expect(out.length).toBeLessThan(41_000);
     expect(out).toContain("use grep");
     // a long first line in a multi-line file points to offset 2

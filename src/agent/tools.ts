@@ -16,7 +16,7 @@ import { guardedGitHttp, readSandboxSettings } from "../sandbox/network.js";
 import { makePathGuard } from "../sandbox/workspace.js";
 import * as git from "../git.js";
 import { GIT_COMMANDS, runGitCli } from "./git-cli.js";
-import { applyEdits, detectStyle, getAt, type JsonEdit, parsePointer, serialize, showPath, viewValue } from "./json-edit.js";
+import { applyEdits, detectStyle, getAt, type JsonEdit, parsePointer, serialize, showPath, viewValue, BIG_JSON_CHARS, bigJsonView } from "./json-edit.js";
 import { createAppSkeleton, readApp } from "../apps/manager.js";
 import { hasPackages, installApp, uninstallApp } from "../apps/packages.js";
 import { builderVersion } from "../builder/assets.js";
@@ -304,7 +304,7 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
     name: "read_file",
     label: "Read file or directory",
     description:
-      `Read a text file, or list a directory, inside the user's directory (relative path). Several files you need anyway: pass them all in paths (up to ${READ_PATHS_MAX}) in ONE call. A file over ${READ_CAP_CHARS} characters comes back cut, with a note on how to read on; for big files read a slice: offset/limit are 1-based line numbers, the result is prefixed with line numbers and tells you the total.`,
+      `Read a text file, or list a directory, inside the user's directory (relative path). Several files you need anyway: pass them all in paths (up to ${READ_PATHS_MAX}) in ONE call. A file over ${READ_CAP_CHARS} characters comes back cut, with a note on how to read on; a JSON file over ${BIG_JSON_CHARS} characters (a character card, a lorebook) comes back as its shape: read its fields with json_get; for big files read a slice: offset/limit are 1-based line numbers, the result is prefixed with line numbers and tells you the total.`,
     parameters: Type.Object({
       path: Type.Optional(Type.String()),
       paths: Type.Optional(Type.Array(Type.String(), { description: `Several files at once (up to ${READ_PATHS_MAX}), instead of path; no offset/limit` })),
@@ -370,6 +370,11 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
     const content = fs.readFileSync(abs, "utf8");
     const lines = content.split("\n");
     if (offset === undefined && limit === undefined) {
+      if (content.length <= cap && content.length <= BIG_JSON_CHARS) return { text: content, details: { path: rel } };
+      // a big JSON file read whole is mostly a portrait in base64 or entries
+      // nobody asked for, riding every later call: its shape says where to look
+      const shape = /.json$/i.test(rel) ? bigJsonView(content) : null;
+      if (shape) return { text: `${shape} To read it as text, pass offset/limit.`, details: { path: rel, shape: true } };
       if (content.length <= cap) return { text: content, details: { path: rel } };
       // the start of the file, whole lines, with a note on how to read on
       let k = 0;

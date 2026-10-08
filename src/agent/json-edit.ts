@@ -206,3 +206,20 @@ export function serialize(doc: unknown, style: JsonStyle): string {
   if (style.finalNewline) out += "\n";
   return style.crlf ? out.replace(/\n/g, "\r\n") : out;
 }
+
+/** Above this size a JSON file read whole is mostly not what the reader wants
+ *  (a character card's base64 portrait, a lorebook's hundred entries). */
+export const BIG_JSON_CHARS = 16 * 1024;
+
+/** A big JSON text as its shape (top-level fields and their sizes) with how to
+ *  read the fields themselves; null when the text does not parse. */
+export function bigJsonView(text: string): string | null {
+  let doc: unknown;
+  try {
+    doc = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  if (doc === null || typeof doc !== "object") return null;
+  return `${viewValue(doc, "/", 0)}\n(${Math.round(text.length / 1024)} KB of JSON: only its shape is shown. Read the fields you need with json_get, several pointers in one call.)`;
+}

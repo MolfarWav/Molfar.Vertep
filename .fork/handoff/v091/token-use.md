@@ -71,3 +71,18 @@ book + json_set on the card in one step, json_set the entries, finish-change, on
 The same task: 49 calls / 1.5M (0.9.0), 84 / 2.2M, 37 / 0.68M, 32 / 0.67M and 31 minutes on the
 first model as the fixes landed. The first model dominates what is left: it makes one small step per
 call and is slow; the engine side of item 3 is done.
+
+## The user's own runs with the card skills (2026-10-08 night, GLM 5.2 thinking via NanoGPT)
+- `2026-10-08-gnfq7v`, a new card from an idea: 7 calls, 145k input + 60k cached, 23k output.
+  card-craft loaded (and card-import, not needed); then ONE read_file of two other cards (58 KB and
+  125 KB, mostly base64 portraits, cut at the cap) plus two references "to learn the format": that
+  read rode the four later calls and is most of the input. Then one write_file of the card, a python
+  check (sandbox still starting), a json_get check, finish-change.
+- `2026-10-08-g1p6ji`, improve Cordelia's first message and examples: 6 calls, 85k + 20k cached,
+  8k output. find|grep to locate the card, card-craft + its first-message reference, json_get of the
+  shape then the fields, ONE json_set (first_mes, mes_example), a json_get check.
+- The same kind of task cost 49 calls / 1.5M on 0.9.0. Fixed after these runs: read_file of a JSON
+  file over 16k characters returns its shape (like an @-mention), offset/limit still read the text;
+  card-craft finds the card by its folder (no grep, no other card for the format) and treats the
+  write's result as the proof (no check, no finish-change load); card-import says it is only for
+  cards from elsewhere.
