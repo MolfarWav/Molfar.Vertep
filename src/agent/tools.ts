@@ -16,6 +16,7 @@ import { guardedGitHttp, readSandboxSettings } from "../sandbox/network.js";
 import { makePathGuard } from "../sandbox/workspace.js";
 import * as git from "../git.js";
 import { GIT_COMMANDS, runGitCli } from "./git-cli.js";
+import { applyEdits, detectStyle, getAt, type JsonEdit, parsePointer, serialize, showPath, viewValue } from "./json-edit.js";
 import { createAppSkeleton, readApp } from "../apps/manager.js";
 import { hasPackages, installApp, uninstallApp } from "../apps/packages.js";
 import { builderVersion } from "../builder/assets.js";
@@ -44,6 +45,7 @@ export interface AgentToolOptions {
 
 /** Tools that mutate state — stripped in plan mode (read-only investigation). */
 export const WRITE_TOOLS = new Set([
+  "json_set",
   "write_file",
   "edit_file",
   "app_create",
@@ -303,8 +305,8 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
     },
   };
 
-  /** One file or directory for read_file; throws on a refused or missing path. */
-  function readOne(rel: string, offset: number | undefined, limit: number | undefined, cap: number): { text: string; details: Record<string, unknown> } {
+  /** The absolute path of a file the agent may read; throws on a refused or missing one. */
+  function readablePath(rel: string): string {
     // credentials never exist inside the workspace (they live in the
     // data-root credentials dir) — answer by result, identically to a
     // missing file, even if a decoy of that name is dropped in
@@ -320,6 +322,12 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
     const abs = safeResolve(p.root, rel);
     guard.assertReadable(abs, rel);
     if (!fs.existsSync(abs)) throw new Error(`File not found: ${rel}`);
+    return abs;
+  }
+
+  /** One file or directory for read_file; throws on a refused or missing path. */
+  function readOne(rel: string, offset: number | undefined, limit: number | undefined, cap: number): { text: string; details: Record<string, unknown> } {
+    const abs = readablePath(rel);
     const stat = fs.statSync(abs);
     if (stat.isDirectory()) {
       const entries = fs.readdirSync(abs, { withFileTypes: true })
@@ -508,6 +516,91 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
         path: rel,
         ...(diff ? { diff } : {}),
       });
+    },
+  };
+
+  /** A JSON file the agent may read, parsed. */
+  function loadJson(rel: string): { abs: string; raw: string; doc: unknown } {
+    const abs = readablePath(rel);
+    const stat = fs.statSync(abs);
+    if (stat.isDirectory()) throw new Error(`${rel} is a directory`);
+    if (stat.size > MAX_READ_BYTES) throw new Error(`${rel} is too large (${stat.size} bytes)`);
+    const raw = fs.readFileSync(abs, "utf8");
+    try {
+      return { abs, raw, doc: JSON.parse(raw.replace(/^﻿/, "")) };
+    } catch (e) {
+      throw new Error(`${rel} is not valid JSON: ${(e as Error).message}`);
+    }
+  }
+
+  const jsonGet: AgentTool = {
+    name: "json_get",
+    label: "Read JSON field",
+    description:
+      'Read one or more fields of a JSON file (a character card, a lorebook) without loading the whole file. pointer: "/data/description", "data.character_book.entries[3].content", or "" for the top. A value too big to show comes back as its shape (keys with types and sizes) or its head. Look at the shape first, then ask for the fields you need, several at once with pointers.',
+    parameters: Type.Object({
+      path: Type.String(),
+      pointer: Type.Optional(Type.String()),
+      pointers: Type.Optional(Type.Array(Type.String(), { description: "Several fields in one call" })),
+      maxChars: Type.Optional(Type.Number({ description: "Largest value shown whole (default 12000)" })),
+    }),
+    async execute(_id, params) {
+      const { path: rel, pointer, pointers, maxChars } = params as { path: string; pointer?: string; pointers?: unknown; maxChars?: number };
+      const { doc } = loadJson(rel);
+      const list = [...(typeof pointer === "string" ? [pointer] : []), ...(Array.isArray(pointers) ? pointers.filter((x): x is string => typeof x === "string") : [])];
+      if (!list.length) list.push("");
+      if (list.length > 20) throw new Error("at most 20 pointers per call");
+      const cap = Math.min(Math.max(500, Math.floor(maxChars ?? 12_000)), READ_CAP_CHARS);
+      const parts = list.map((ptr) => {
+        try {
+          const path = parsePointer(ptr);
+          return viewValue(getAt(doc, path), showPath(path), cap);
+        } catch (e) {
+          return `[${ptr || "/"}] Error: ${(e as Error).message}`;
+        }
+      });
+      return textResult(parts.join("\n\n"), { path: rel });
+    },
+  };
+
+  const jsonSet: AgentTool = {
+    name: "json_set",
+    label: "Change JSON fields",
+    description:
+      'Change fields of a JSON file in place, several in one call: edits = [{ pointer, value }] sets a field (a new key is added), op "delete" removes one, op "append" adds value to the end of an array. Pointers as in json_get. The file keeps its format (one line or indented, \\u escapes), so the diff shows only what changed; it commits like write_file. value is any JSON: a string, number, object or array.',
+    parameters: Type.Object({
+      path: Type.String(),
+      edits: Type.Array(
+        Type.Object({
+          pointer: Type.String(),
+          op: Type.Optional(Type.Union([Type.Literal("set"), Type.Literal("delete"), Type.Literal("append")])),
+          value: Type.Optional(Type.Unknown()),
+        }),
+      ),
+    }),
+    async execute(_id, params) {
+      const { path: rel, edits } = params as { path: string; edits: JsonEdit[] };
+      if (!Array.isArray(edits) || !edits.length) throw new Error("edits is empty");
+      const denied = agentWriteDenied(rel);
+      if (denied) throw new Error(`Refused: ${rel} is not agent-writable.`);
+      const { abs, raw, doc } = loadJson(rel);
+      guard.assertWritable(abs, rel);
+      const { doc: next, lines } = applyEdits(doc, edits);
+      const out = serialize(next, detectStyle(raw));
+      if (out === raw) return textResult(`Nothing changed in ${rel}.`, { path: rel });
+      // a one-line file's diff is the whole file: shown only when small
+      const diff = out.length + raw.length < 40_000 ? fileDiff(rel, raw, out) : undefined;
+      const area = protectedFor(rel);
+      if (area) await askToChange(area, diff ?? `${rel}:\n${lines.join("\n")}`, !!diff);
+      fs.writeFileSync(abs, out, "utf8");
+      let committed = "";
+      try {
+        const oid = await git.commitAll(p.root, username, `agent: json_set ${rel}`, true);
+        if (oid) committed = `, committed ${oid.slice(0, 8)}`;
+      } catch (e) {
+        committed = `. Commit failed: ${(e as Error).message} — retry with the git tool: "commit -m <message>"`;
+      }
+      return textResult(`${lines.join("\n")}\n${rel}: ${raw.length} → ${out.length} bytes, format kept${committed}.`, { path: rel, ...(diff ? { diff } : {}) });
     },
   };
 
@@ -807,5 +900,5 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
       }
     : bash;
 
-  return [readFile, writeFile, editFile, grepFiles, gitTool, appCreate, appDeps, appCheck, appRebuild, appConsole, shell, askUser];
+  return [readFile, writeFile, editFile, jsonGet, jsonSet, grepFiles, gitTool, appCreate, appDeps, appCheck, appRebuild, appConsole, shell, askUser];
 }

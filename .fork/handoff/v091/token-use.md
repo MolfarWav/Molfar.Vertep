@@ -58,3 +58,7 @@ recorded runs, -19% for this run, -17..27% for other long runs.
 Base per call on the desktop: the active app's AGENTS.md (Roleplay) ~4.0k tokens, static prompt
 ~2.4k + shell part ~0.6k, tool schemas ~2.5k+, workspace AGENTS.md ~1.6k, memory and skills ~1.3k,
 persona ~0.3k. Open: what to cut there (the user decides).
+User 2026-10-08, base and calls: (a) the app/plugin authoring and app UI sections of the static
+prompt move into the built-in skill app-authoring; (b) the app tools show only when needed, in the
+full prompt too (like small-window groups); (c) json_get / json_set from the agent-tools handoff join
+0.9.1 (the other three tools stay queued); edit-large-card then builds on them.

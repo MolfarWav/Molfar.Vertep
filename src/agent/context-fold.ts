@@ -142,7 +142,7 @@ export function foldToolResults(msgs: AgentMessage[], runStart: number): FoldRes
     const r = out[i] as Msg;
     const call = r.toolCallId ? calls.get(r.toolCallId) : undefined;
     if (!call) continue;
-    const target = fullRead(call) ?? (call.name === "write_file" ? normPath(call.args.path) : undefined);
+    const target = fullRead(call) ?? (call.name === "write_file" || call.name === "json_set" ? normPath(call.args.path) : undefined);
     if (call.name === "read_file" && target && laterFull.has(target)) {
       out[i] = withText(out[i]!, `[read_file ${target}: an older copy, dropped to save tokens; the file was read again or rewritten later in this task]`);
       folded++;

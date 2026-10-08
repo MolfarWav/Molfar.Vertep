@@ -97,23 +97,26 @@ describe("when the mode is on", () => {
 });
 
 describe("what a small model is sent", () => {
-  it("stays under 3.5k tokens before the first message", async () => {
+  it("stays under 3.7k tokens before the first message", async () => {
     const [s] = await run({ window: 16_000 });
     expect(s!.systemPrompt).toContain("# Workspace (compact mode)");
-    expect(s!.systemPrompt).not.toContain("# App/plugin authoring contract");
+    expect(s!.systemPrompt).not.toContain("# Building apps and plugins");
     expect(s!.systemPrompt).not.toContain("# Molfar Vertep workspace"); // AGENTS.md is pointed to, not inlined
     expect(names(s!)).toEqual(expect.arrayContaining(["read_file", "write_file", "edit_file", "grep", "git", "ask_user", "skill_load", "memory_propose", "tools_enable"]));
     expect(names(s!)).not.toContain("app_check");
     expect(names(s!)).not.toContain("skill_propose");
-    expect(size(s!)).toBeLessThan(3_500);
+    // 0.9.1: json_get and json_set are core (+~100 tokens over the old 3.5k): one
+    // call each where a card edit took dozens of bash, jq and python steps
+    expect(size(s!)).toBeLessThan(3_700);
   });
 
-  it("a large model keeps the full prompt and every tool, and no tools_enable", async () => {
+  it("a large model keeps the full prompt and every tool but the app tools, which tools_enable shows", async () => {
     const [s] = await run({ window: 128_000 });
-    expect(s!.systemPrompt).toContain("# App/plugin authoring contract");
+    expect(s!.systemPrompt).toContain("# Building apps and plugins");
     expect(s!.systemPrompt).toContain("# Molfar Vertep workspace");
-    expect(names(s!)).toContain("app_check");
-    expect(names(s!)).not.toContain("tools_enable");
+    expect(names(s!)).not.toContain("app_check");
+    expect(names(s!)).toContain("tools_enable");
+    expect(names(s!)).toContain("skill_propose");
     // no shell on this instance: no bash schema either
     expect(names(s!)).not.toContain("bash");
     // 2026-10-02: the language, precedence and how-you-work sections (about
@@ -131,7 +134,7 @@ describe("what a small model is sent", () => {
     bootstrapUserDir(dataDir, "mia");
     users = new UserService(dataDir);
     const [off] = await run({ window: 8_000, mode: "off" });
-    expect(off!.systemPrompt).toContain("# App/plugin authoring contract");
+    expect(off!.systemPrompt).toContain("# Building apps and plugins");
   });
 
   it("the skills index carries only the first sentence of each description", async () => {
@@ -147,6 +150,17 @@ describe("hidden tools", () => {
     const seen = await run({ window: 16_000, steps: [call("read_file", { path: "apps/rp/manifest.json" }), () => fauxAssistantMessage("done")] });
     expect(names(seen[0]!)).not.toContain("app_check");
     expect(names(seen[1]!)).toEqual(expect.arrayContaining(["app_check", "app_create", "checkpoint"]));
+  });
+
+  it("a large model: app data keeps the app tools hidden, app code shows them", async () => {
+    makeApp("rp");
+    const seen = await run({
+      window: 128_000,
+      steps: [call("read_file", { path: "apps/rp/data/characters/a/card.json" }), call("read_file", { paths: ["notes/x.md", "apps/rp/src/main.tsx"] }), () => fauxAssistantMessage("done")],
+    });
+    expect(names(seen[1]!)).not.toContain("app_check");
+    expect(names(seen[2]!)).toEqual(expect.arrayContaining(["app_check", "checkpoint"]));
+    expect(names(seen[2]!)).not.toContain("tools_enable");
   });
 
   it("a chat in an app's project starts with them", async () => {

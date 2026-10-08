@@ -44,7 +44,7 @@ export function isSmallWindow(mode: SmallModelMode, contextWindow: number | null
 export type ToolGroup = "app" | "skills" | "shell" | "admin" | "mcp";
 
 /** Always sent in small mode. */
-export const CORE_TOOLS: ReadonlySet<string> = new Set(["read_file", "write_file", "edit_file", "grep", "git", "ask_user", "skill_load", "memory_propose", "memory_search", "tools_enable"]);
+export const CORE_TOOLS: ReadonlySet<string> = new Set(["read_file", "write_file", "edit_file", "json_get", "json_set", "grep", "git", "ask_user", "skill_load", "memory_propose", "memory_search", "tools_enable"]);
 
 const GROUP_OF: Record<string, ToolGroup> = {
   app_create: "app",
@@ -81,6 +81,8 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
     'Git for the workspace; args as typed after "git": status, diff, log, show, restore --source <commit> -- <path>, revert <commit>, commit -m "...", clone <url>. File tools commit on their own; commit after bash changes.',
   ask_user:
     "Ask the user and wait. options: strings or {label, description, recommended}; multiSelect for several picks; questions for several questions in one card.",
+  json_get: 'Read fields of a JSON file (card, lorebook). pointer "/data/description" or pointers [...]; "" = the shape (keys, types, sizes).',
+  json_set: 'Change JSON fields in place, format kept, commits: edits [{pointer, value}], op "delete" or "append" (to an array).',
   app_create: "Create a new app (UI scaffold) in apps/<id>/.",
   app_deps: "Add or remove npm packages of an app (edit package.json first, or pass remove).",
   app_check: "Wait for an app's browser build and return ok or the errors. Call after editing src/ or package.json.",
@@ -96,7 +98,8 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
 
 /** The tools the model is sent this step. */
 export function visibleTools(all: AgentTool[], small: boolean, unlocked: ReadonlySet<ToolGroup>): AgentTool[] {
-  if (!small) return all.filter((t) => t.name !== "tools_enable");
+  // full mode hides only the app tools, until an app's code is in play
+  if (!small) return all.filter((t) => (t.name === "tools_enable" ? !unlocked.has("app") : groupOf(t.name) !== "app" || unlocked.has("app")));
   return all
     // a tool in no group is core (or new and unclassified: better sent than lost)
     .filter((t) => {
@@ -199,7 +202,7 @@ ${o.apps ? `Installed apps:\n${o.apps}` : ""}
 - write_file/edit_file commit on their own. Commit bash changes with git (commit -m "...").
 - Protected files (an app's src/ and index.html, persona.md) change only after the user allows it in a card. Never work around a no.
 - Never delete the user's content (chats, characters, notes, uploads) unless asked for exactly that.
-- Large files: grep or read a slice; never load a big JSON whole.
+- JSON files (cards, lorebooks): json_get for the shape or a field, json_set to change fields, several in one call. Never load a big JSON whole.
 - Few steps: each one resends the whole chat. Put independent tool calls in ONE reply (read_file paths for several files).
 - Before building something big, ask first: one ask_user with 2-6 questions.
 - Check your work (app_check after src/ or package.json edits). Finish with what changed, what you checked and what you could not check.

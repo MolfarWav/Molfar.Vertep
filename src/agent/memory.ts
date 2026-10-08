@@ -595,6 +595,18 @@ export function appTouched(toolName: string, args: unknown): string | undefined 
   return undefined;
 }
 
+const APP_CODE = /(?:^|[\s"'`=(/])apps\/[A-Za-z0-9][A-Za-z0-9_-]{0,63}\/(?:src\/|plugins\/|index\.html|package\.json|manifest\.json)/;
+
+/** A tool call about an app's code (not its data/): an app tool, or a path
+ *  under src/, plugins/ or the app's top-level build files. */
+export function appCodeTouched(toolName: string, args: unknown): boolean {
+  if (toolName.startsWith("app_") || toolName === "checkpoint") return true;
+  if (!args || typeof args !== "object") return false;
+  return Object.values(args as Record<string, unknown>)
+    .flatMap((x) => (Array.isArray(x) ? x : [x]))
+    .some((v) => typeof v === "string" && APP_CODE.test(v.replace(/\\/g, "/")));
+}
+
 /** What to attach for an app the first time it is touched; null when it has neither memory nor skills. */
 export function projectContextFor(root: string, appId: string): string | null {
   if (!fs.existsSync(path.join(root, "apps", appId, "manifest.json"))) return null;

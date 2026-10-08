@@ -79,7 +79,7 @@ describe("the rules every system prompt carries", () => {
 
   it("the full prompt carries each exactly once", async () => {
     const s = await promptOf({ window: 128_000 });
-    expect(s).toContain("# App/plugin authoring contract");
+    expect(s).toContain("# Building apps and plugins");
     expect(count(s, LANGUAGE_RULE)).toBe(1);
     expect(count(s, PRECEDENCE_RULE)).toBe(1);
   });

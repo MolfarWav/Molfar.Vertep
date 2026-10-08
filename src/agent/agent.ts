@@ -21,7 +21,7 @@ import { log } from "../logger.js";
 import { clampThinkingLevel, isContextOverflow, type AssistantMessage } from "@earendil-works/pi-ai";
 import { clampMaxTokens, fitContext, newTrimState } from "./context-budget.js";
 import { foldToolResults } from "./context-fold.js";
-import { appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
+import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
   SKILL_UNLOCKS,
   availableGroups,
@@ -51,7 +51,7 @@ export interface AgentRunTurn {
 }
 
 /** Tools whose first touch of an app in a run takes an automatic checkpoint. */
-const AUTO_CHECKPOINT_TOOLS = new Set(["write_file", "edit_file", "bash", "app_deps"]);
+const AUTO_CHECKPOINT_TOOLS = new Set(["write_file", "edit_file", "json_set", "bash", "app_deps"]);
 
 interface RunState {
   username: string;
@@ -472,6 +472,11 @@ export class UserAgent {
       if (project?.startsWith("app:")) unlocked.add("app");
       const groups = availableGroups(tools);
       if (groups.length) tools.push(buildToolsEnable(groups, (g) => unlocked.add(g)));
+    } else {
+      // full mode hides only the app tools (~1k tokens a call) until an app's
+      // code is in play: a card edit in data/ does not need them
+      if (groupsFromHistory(messages, (n, a) => (appCodeTouched(n, a) ? "code" : undefined)).has("app") || project?.startsWith("app:")) unlocked.add("app");
+      if (availableGroups(tools).includes("app")) tools.push(buildToolsEnable(["app"], (g) => unlocked.add(g)));
     }
     // request level → user default → medium for reasoning-capable models,
     // clamped by pi-ai's clampThinkingLevel (walks the ladder to a supported one)
@@ -530,13 +535,13 @@ export class UserAgent {
       // touches that app, once per agent (see memory.ts)
       afterToolCall: async (ctx) => {
         try {
-          if (small && !ctx.isError) {
+          if (!ctx.isError) {
             const loaded = ctx.toolCall.name === "skill_load" ? (ctx.args as { name?: unknown } | undefined)?.name : undefined;
             const fromSkill = typeof loaded === "string" ? SKILL_UNLOCKS[loaded] : undefined;
             if (fromSkill) unlocked.add(fromSkill);
           }
           const appId = appTouched(ctx.toolCall.name, ctx.args);
-          if (small && appId) unlocked.add("app");
+          if (small ? appId : appCodeTouched(ctx.toolCall.name, ctx.args)) unlocked.add("app");
           if (!appId || shownProjects.has(appId)) return undefined;
           shownProjects.add(appId);
           const extra = projectContextFor(paths.root, appId);
@@ -1364,27 +1369,12 @@ ${PRECEDENCE_RULE}
 3. Put each change in the lightest place that carries it: the app's data/ first, then a plugin of your own, the app's src/ only when the change needs it (the workspace contract below explains why).
 4. Work in small steps and check each one: app_check after editing src/ or package.json, read back JSON you wrote, call a route or tool you wrote once, app_console for runtime errors. If an edit broke a file, restore it from git before going on. Never call something done that you have not verified (skill finish-change has the checklist).
 5. Finish with a short report in plain words: what changed, what you checked, what you could not check, and how to undo it.
-6. Few steps, not many small ones: every step is a model call that resends the whole conversation. Put independent actions in ONE reply as several tool calls (the files you need via read_file paths, several greps, a check after an edit); read a file once, not in small slices; a one-value change in a big JSON file is grep, then one edit_file.
+6. Few steps, not many small ones: every step is a model call that resends the whole conversation. Put independent actions in ONE reply as several tool calls (the files you need via read_file paths, several greps, a check after an edit); read a file once, not in small slices; a change in a JSON file is one json_set.
 
 ${workspaceLayout(paths)}
 
-# App/plugin authoring contract (how you build things)
-plugin.js is an ES MODULE — use ESM syntax exactly like this (NOT CommonJS \`exports.foo\`):
-  export function handleRoute(req, host) { /* ... */ }
-Exports:
-- handleRoute(req, host) → { status, json | text } for HTTP routes under /v1/apps/<activeApp>/<path> (permission: routes). req = { method, path, query, body }. EVERY bundled plugin receives the same app-scoped path (the plugin's folder id is NOT part of the URL) and the first plugin that responds wins, so namespace your routes with your own prefix (e.g. chats/…, import/…) or another plugin's catch-all will answer for you. A route that needs a model calls host.llm.request(key, genReq) and returns { __llmPending: true } without writing anything (pass A); the engine then calls the route again (pass B), which reads host.llm.results[key] and writes (stateless two-phase).
-- TOOLS + handleTool(name, args, host) → { text, isError? } for model tools (permission: tools).
-- uiPanel(ctx, host) → a declarative settings panel the app renders for this plugin. onTick(ctx, host) fires (two arguments: ctx first) on the manifest's schedule (permission: schedule). appTools(host) → { tools } contributes model tools to sibling generations that request them (permission: tools). llmRequest(ctx, host) → a patch object over a sibling plugin's model request (ctx.request is a JSON snapshot; permission: hooks + llm; manifest priority orders multiple patchers, lower runs first and higher wins conflicts). These and the route/tool exports above are the exports the engine calls.
-host API: host.fs (read/write/readBase64/list/remove — scoped to the app's data/ for bundled plugins), host.store (get/put/delete/keys — persists), host.llm.request/results, host.log.
-Permissions: routes, tools, llm, store, fs, schedule, hooks, network. network = two-phase host.net, fetch-class (method/headers/body/form/json/binary/timeout/maxBytes/redirects; results carry status, headers, json/text/base64 — same pattern as llm; optional manifest networkHosts allowlist). Imported plugins need grants (settings.json pluginGrants); origin local = trusted.
-manifest.json may declare schedule: { intervalMs } → onTick(ctx, host) fires on a timer, and priority (number) → cross-plugin hook order.
-
-# App UI authoring (React + tailwind, with the module conventions you know best)
-- package.json holds REAL package deps (any package works — edit it, then call app_deps; remove one with app_deps { remove: ["name"] }. Both run engine-side with lifecycle scripts disabled, because the sandbox has no node or npm). shadcn/ui and any React library drops in natively. Tailwind v4 is built in (no need to install it); @plugin/@source work.
-- Builds happen in the user's browser, in a sandbox: index.html module scripts are the entries; TS/TSX/JSX, CSS + CSS modules, JSON, assets as URLs, ?raw ?url ?inline ?worker, import.meta.glob, import.meta.env (the .env VITE_* values), tsconfig paths and the @ -> src alias, public/ copied as-is. Editor/toolchain config files are NOT run: no bundler plugins (Vue/Svelte SFCs are not supported).
-- Write utility classes directly in TSX; app css (src/app.css) starts with @import "tailwindcss". Theme colors live as CSS vars in :root + @theme (bg-base, text-ink, text-accent…).
-- Save a source file → the user's open app hot-updates in place (React Fast Refresh keeps component state). The build runs in the user's browser, so after editing src/ or package.json call app_check: it waits for the build and returns ok or the errors. Never assume an edit built cleanly. An app nobody has open builds when it is next opened.
-- Static assets go in public/ (served at the app root). State: useState or @preact/signals-react (signal/effect — same API on React). Fast refresh preserves component state, not module state.
+# Building apps and plugins
+Before you build or change an app's code, a plugin, a manifest or an app's UI, call skill_load app-authoring and follow it: the plugin contract, the host API, the UI build rules and the checks (app_check after src/ edits, app_rebuild, app_console, checkpoints) are there. The app tools show once you work on an app's code or load that skill; tools_enable shows them sooner.
 
 # Learn from the apps already installed
 ${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its exact files, field shapes and gotchas. To learn how to build one, read its plugins/ for backend behavior (routes, two-phase LLM turns, how it lays out data/) and its src/ for the UI. Take the patterns, not the subject matter. New app: app_create (UI app scaffolded), app_deps, then write plugins + src/ + seed data.
@@ -1392,13 +1382,9 @@ ${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its
 # Workflow rules
 - write_file/edit_file commit each change immediately under your name; after changes made through bash, commit them with the git tool (commit -m "..."). The git tool takes command-line arguments: status and diff to review work, log and show to read history, restore --source <commit> -- <path> or revert <commit> to undo.
 - App data files (apps/<id>/data/) are plain JSON/JSONL you can read and edit directly — open clients sync within ~1s, no reload. Underscore-prefixed files there (_example.json) are AI-only templates: never shown in the UI, copy one to a real name to create the entity. Copy the template's field shape exactly.
-- Plugins and manifests hot-reload by mtime; nothing to call. Create apps with app_create.
 - Never delete the user's content (chats, characters, notes, uploads, memory) unless they asked for exactly that.
 - Protected paths (by default an app's src/ and index.html, plus persona.md; the user can add more) change only after the user allows it in a card, once per request and app. A no means: put the change in data/ or a plugin of your own, or explain why those files must change. Never work around it through bash or git.
-- Checkpoints: before building a feature or a risky change in an app, call checkpoint { action: "create", app, label }. Commit bash changes first (the checkpoint does it too). The engine also takes one before your first change to an app in each request. When app_check keeps failing after your fixes, or the user says the app broke, offer to go back with ask_user, then checkpoint { action: "restore" }. A restore puts back code only; data/ stays.
-- Need a fresh build even though nothing changed (a stale page, a hot-update chain that went wrong, an untrusted status): app_rebuild forces one, like the pane's Rebuild button.
-- console.log/info/warn/debug from an open app page are captured: app_console reads them back like a test log (newest last). Print, let the page run, read. Nothing is captured while no page has the app open.
-- Large files (a character card can pass 100 KB): grep or read a slice; never load a whole large JSON to change one value.`;
+- JSON files (a character card can pass 100 KB, a lorebook several MB): json_get to see the shape or a field, json_set to change fields, several in one call. Never load a whole large JSON, and never rewrite one through bash or python, to change a value.`;
   let out = isAdmin ? `${base}\n\n${ADMIN_TOOLS_PROMPT}` : base;
   // shell availability shapes how the agent approaches heavy work
   if (sandbox && sandbox.config.provider !== "off") {

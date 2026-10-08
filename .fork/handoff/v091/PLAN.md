@@ -21,7 +21,11 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
    fixes chosen by the user: `src/agent/context-fold.ts` (earlier tasks' results cut to the reload
    summary, stale and over-budget results in a run cut, on a copy before each call; `RunState.startedAt`),
    read_file cap 40k characters with a note + `paths` (up to 8 files in one call), the batching rule
-   in both prompts. Tests `test/context-fold.test.ts`. Original text:
+   in both prompts. Tests `test/context-fold.test.ts`. Then (user, same day): sandbox traps fixed (python3 argv/env note,
+   `RUN_RESET`), in-run age fold (6 steps), app authoring sections moved to the app-authoring skill,
+   app tools lazy in the full prompt too (`appCodeTouched`), json_get / json_set (`src/agent/json-edit.ts`,
+   core tools), edit-large-card rewritten for them (`.fork/app-skills/roleplay/edit-large-card`).
+   Original text:
    **Token use** (queue 0d; user's choice: measure, then fix the top 2-3 shares): per run, model calls,
    input/output per call, what the input is made of (system prompt, AGENTS.md and docs, skills index,
    history, tool results) and what repeats between calls; whether provider prompt caching is used. Data:
