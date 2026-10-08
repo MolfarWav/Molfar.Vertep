@@ -38,7 +38,7 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
    editing Roleplay presets. As built-in skills (`builtin-skills/`), loaded on demand by `skill_load`.
    Card and preset formats from the Roleplay code (cards: `data/characters/<id>/card.json`; presets:
    check the app). Drafts by an external model from a spec with made-up examples only.
-5. **Molfar's page: reasoning and tool calls collapsed by default** (client-agent), desktop and phone.
+5. DONE 2026-10-09 `d24d758`: **Molfar's page: reasoning and tool calls collapsed by default** (client-agent), desktop and phone; the folded line names the live step. Browser-checked folded/opened at 1280 and 390 px; the live label not seen (the mock answers at once).
 6. **Roleplay card editor shows the card's id with a copy button** (Roleplay app), so Molfar can be told
    exactly which card to edit.
 7. **Bash on the phone** (queue 0b2 item 2): Molfar cannot change or append to a card on Android. The
@@ -66,8 +66,7 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
    installs them at once (installMissingPackages). Bash on the phone (item 7): Molfar saw `ls /workspace`
    empty; the sandbox code reads fine (one small flaw: after a sandbox reset the remount uses the last
    known tree, without a pull). Needs from the user: the bash tool results (expanded) and Logs > Copy.
-9. Small: `.claude/skills/browser-check/pw.mjs` hardcodes a Linux Chromium path; add a Windows
-   fallback (Chrome under Program Files).
+9. DONE `9448a5a`: browser-check finds Chrome/Edge on Windows (CHROME_PATH overrides) and turns Git Bash paths into C:/ ones.
 
 ## Not in 0.9.1
 Inspector with sources (0e), connections in the shell Settings + pi-ai upgrade, the five agent tools,
