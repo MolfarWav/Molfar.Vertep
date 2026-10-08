@@ -51,3 +51,12 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
 ## Not in 0.9.1
 Inspector with sources (0e), connections in the shell Settings + pi-ai upgrade, the five agent tools,
 Molfar's own memory, skill usage chip.
+
+## Note for item 4 (user, 2026-10-08)
+Card and lorebook formats will change (new card fields, changed ones). So the format reference must
+not be hand-written in a skill: it lives in the Roleplay fork next to the code (`data/README.md`
+sections or `docs/CARD-FORMAT.md`), a Roleplay test fails when a field of the card/lorebook mapping
+(`cardToCharacter`, `characterToCard`, `lorebookToEngine` in `src/lib/engine.ts`) is missing from it,
+and edit-large-card moves into the fork's `.skills/` with the call order only, reading the reference
+with one read_file. Until then the fork-only copy in `.fork/app-skills/roleplay/edit-large-card`
+(copied to the desktop workspace 2026-10-08) carries today's format.
