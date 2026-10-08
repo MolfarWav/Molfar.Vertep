@@ -74,7 +74,16 @@ They hold the user's own names and cases: strip them. Shared drafter spec writte
 scratchpad (`skills/spec-common.md`); it is gone with the session, rewrite it from this list:
 target Molfar, few tool calls, json_get/json_set, point to DATA-FORMATS.md, privacy rule, English,
 description <= 280 chars, body <= 14k, <= 4 references of <= 15k, output `=== FILE: ... ===`.
-NEXT: one drafter call per skill (card-craft: rp-card-adaptation core + bot-writer + character-depth;
+DONE 2026-10-08 (second session): Roleplay `skills-v091` `13b38cd`: `.skills/card-craft`,
+`card-import`, `lorebook-craft`, `preset-craft` (drafted by the external `work` model, about a
+minute each, then reviewed: multi-line description that the engine's `parseSkill` reads as `>-`,
+an author's own tag template presented as the RisuAI V3 format, claims the app has no macros or
+regex, a wrong prompt_order list; all fixed against the code), `edit-large-card` cut to the call
+order + DATA-FORMATS.md, AGENTS.md rule (format change = reference + skills), DATA-FORMATS.md fixed
+(every preset editable unless `studio.readOnly`; new Macros and regex section). 750 Roleplay tests
+pass. NEXT: the user's live test on the desktop (skills into the workspace's
+`apps/roleplay/.skills/`, or a Roleplay release), then merge `skills-v091` into the fork's main.
+Done before (first session): one drafter call per skill (card-craft: rp-card-adaptation core + bot-writer + character-depth;
 card-import: rp-card-adaptation platform parts + wyvern format + bot-writer platform-delivery;
 lorebook-craft: lore-architect; preset-craft: rp-preset-architecture without Marinara agent parts),
 review each, rewrite `.skills/edit-large-card` to point to DATA-FORMATS.md, a rule in the fork's
