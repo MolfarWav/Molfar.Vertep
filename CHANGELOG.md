@@ -8,6 +8,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 ## Unreleased
 
 - Release archives are named `Molfar-Vertep-<version>-<system>` (they were `Chrysalis-*` up to 0.9.0); self-update finds both, so older copies still update.
+- README rewritten for people new to the project, with screenshots, GIFs of Molfar rebuilding the app, a pixel Molfar, a work-in-progress and vibe-coding note, what Molfar's skills, projects and memory are for, and Ukrainian and Russian translations (`README.uk.md`, `README.ru.md`); a social preview banner in `.github/assets/`.
 
 ## 0.9.0 (2026-10-08)
 

@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- Source of social-preview.png (1280x640, GitHub > Settings > Social preview).
+     Re-render: chrome --headless --hide-scrollbars --window-size=1280,640
+     --screenshot=social-preview.png banner.html -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1280px; height: 640px; overflow: hidden; background: #0b0c11; }
+  .frame { position: relative; width: 1280px; height: 640px; box-sizing: border-box; border: 3px solid #16171d; }
+  .corner { position: absolute; width: 62px; height: 62px; border-color: #a3323a; border-style: solid; border-width: 0; }
+  .tl { top: 24px; left: 24px; border-top-width: 3px; border-left-width: 3px; }
+  .tr { top: 24px; right: 24px; border-top-width: 3px; border-right-width: 3px; }
+  .bl { bottom: 24px; left: 24px; border-bottom-width: 3px; border-left-width: 3px; }
+  .br { bottom: 24px; right: 24px; border-bottom-width: 3px; border-right-width: 3px; }
+  .logo { position: absolute; top: 64px; left: 50%; width: 190px; height: 190px; transform: translateX(-50%); }
+  h1 { position: absolute; top: 270px; left: 0; right: 0; margin: 0; text-align: center;
+       font: 400 92px/1 Georgia, "Times New Roman", serif; letter-spacing: 0.1em; color: #ece4d4; }
+  h1 .red { color: #a3323a; }
+  .divider { position: absolute; top: 410px; left: 50%; width: 560px; transform: translateX(-50%); }
+  p { position: absolute; top: 492px; left: 0; right: 0; margin: 0; text-align: center;
+      font: italic 400 46px/1 Georgia, serif; color: #d9d2c4; }
+  p b { font-weight: 400; color: #ffffff; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <img class="logo" src="../../../client/public/vertep-logo.svg" alt="">
+    <h1><span class="red">MOLFAR</span> VERTEP</h1>
+    <img class="divider" src="../divider.svg" alt="">
+    <p>Ask, and <b>Molfar</b> rebuilds it.</p>
+  </div>
+</body>
+</html>
