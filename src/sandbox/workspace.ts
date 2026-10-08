@@ -32,7 +32,18 @@ export interface WorkspaceFileInfo {
  *  the workspace must not turn a sandbox sync into a read/write handle on the
  *  rest of the machine. */
 export function makePathGuard(root: string) {
-  const inside = (real: string): boolean => real === root || real.startsWith(root + path.sep);
+  // Compared with the root's own real path: a root reached through a link (on
+  // Android /data/user/0/<app> is a link to /data/data/<app>) made every file
+  // look outside it, so read_file refused everything and the sandbox mounted
+  // an empty workspace.
+  let realRoot = root;
+  try {
+    realRoot = fs.realpathSync(root);
+  } catch {
+    /* not created yet: compared as given */
+  }
+  const under = (real: string, base: string): boolean => real === base || real.startsWith(base + path.sep);
+  const inside = (real: string): boolean => under(real, realRoot) || under(real, root);
   return {
     /** read/list guard: the resolved target must stay inside the workspace */
     assertReadable(abs: string, rel: string): void {
