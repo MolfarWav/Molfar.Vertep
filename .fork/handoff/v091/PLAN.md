@@ -41,7 +41,7 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
 5. DONE 2026-10-09 `d24d758`: **Molfar's page: reasoning and tool calls collapsed by default** (client-agent), desktop and phone; the folded line names the live step. Browser-checked folded/opened at 1280 and 390 px; the live label not seen (the mock answers at once).
 6. **Roleplay card editor shows the card's id with a copy button** (Roleplay app), so Molfar can be told
    exactly which card to edit.
-7. **Bash on the phone** (queue 0b2 item 2): Molfar cannot change or append to a card on Android. The
+7. FIXED 2026-10-09 (waiting for the phone test): makePathGuard compared real paths with the root as given; on Android /data/user/0 is a link to /data/data, so every file looked outside the workspace (read_file refused, the sandbox mounted nothing). Original text: **Bash on the phone** (queue 0b2 item 2): Molfar cannot change or append to a card on Android. The
    agent shell never runs on the host: it runs in the browser, in a WebAssembly sandbox (wasmsh) inside a
    sandboxed frame of Molfar's page (`src/sandbox/`). Guesses to test, none proven: the Android WebView
    lacks something that sandbox needs, or the WebView pauses when the page is not on screen and the
