@@ -11,6 +11,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { isDiscardDir } from "../paths.js";
 
 /** App shape: "web" is a UI the builder builds, "app"/"skin" are backend
  *  only. Older manifests carry "vite" for a UI; it reads as "web". */
@@ -295,7 +296,7 @@ export function appTree(appsDir: string, appId: string, maxDepth = 8): TreeNode 
     }
     const nodes: TreeNode[] = [];
     for (const e of entries.slice(0, 500)) {
-      if (TREE_EXCLUDE.has(e.name)) continue;
+      if (TREE_EXCLUDE.has(e.name) || isDiscardDir(e.name)) continue;
       const rel = path.relative(root, path.join(dir, e.name)).split(path.sep).join("/");
       if (e.isDirectory()) {
         nodes.push({ name: e.name, path: rel, type: "dir", children: walk(path.join(dir, e.name), depth + 1) });
@@ -346,7 +347,7 @@ export function hashAppTree(appDir: string): string | null {
     const walk = (dir: string, rel: string): void => {
       const entries = fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
       for (const e of entries) {
-        if (HASH_EXCLUDE.has(e.name)) continue;
+        if (HASH_EXCLUDE.has(e.name) || isDiscardDir(e.name)) continue;
         // the root manifest is provenance metadata (it CARRIES the hash) —
         // hashing it would be circular
         if (!rel && e.name === "manifest.json") continue;

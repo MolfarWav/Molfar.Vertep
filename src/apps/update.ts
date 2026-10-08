@@ -17,6 +17,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createTwoFilesPatch } from "diff";
 import { UPDATE_KEEP, fileHistory, mergeFile, readDirAt, showFile } from "./git.js";
+import { isDiscardDir } from "../paths.js";
 
 export type UpdateStrategy = "merge" | "mine" | "theirs" | "agent";
 
@@ -44,6 +45,7 @@ function outsideCode(rel: string): boolean {
     rel === "manifest.json" ||
     segs.includes(".git") ||
     segs.includes("node_modules") ||
+    segs.some(isDiscardDir) ||
     head.startsWith(".__")
   );
 }
@@ -453,10 +455,14 @@ export function mergeBrief(
  *  (an antivirus scanning a fresh clone) froze the whole engine mid-update.
  *  The folder is moved aside first when it can be, so its name is free at
  *  once; the delete itself runs off the main thread, with retries. */
-export function discardDir(dir: string, onError: (message: string) => void = () => {}): void {
+export function discardDir(dir: string, onError: (message: string) => void = () => {}, asideIn?: string): void {
   let target = dir;
   try {
-    const aside = `${dir}.discard-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    const name = `${path.basename(dir)}.discard-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    // asideIn: a folder outside the tree dir lives in, so nothing that walks
+    // that tree meets a folder being deleted file by file
+    if (asideIn) fs.mkdirSync(asideIn, { recursive: true });
+    const aside = path.join(asideIn ?? path.dirname(dir), name);
     fs.renameSync(dir, aside);
     target = aside;
   } catch {

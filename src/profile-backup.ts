@@ -30,7 +30,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { zip as zipFiles } from "fflate";
 import { BACKUP_MAX_BYTES, BackupError, extractZip } from "./apps/backup.js";
-import { type UserPaths, bootstrapUserDir, ensureGitignoreEntries, userPaths } from "./paths.js";
+import { type UserPaths, bootstrapUserDir, ensureGitignoreEntries, isDiscardDir, userPaths } from "./paths.js";
 import { isNewer } from "./updates.js";
 
 export const PROFILE_FORMAT = 1;
@@ -66,6 +66,7 @@ function skippedInWorkspace(rel: string): boolean {
   const head = segs[0] ?? "";
   return (
     segs.includes("node_modules") ||
+    segs.some(isDiscardDir) ||
     // cloned repositories the agent read: fetched again when needed
     head === "repos" ||
     (head === "apps" && (segs[1] === ".staging" || segs[2] === "dist")) ||

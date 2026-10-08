@@ -4253,7 +4253,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     // granting from it left that plugin with no permissions at all
     grantBundledPlugins(p, id, incoming, source.git);
     dropStaging();
-    discardDir(path.join(info.dir, "dist"), warnDiscard);
+    discardDir(path.join(info.dir, "dist"), warnDiscard, stagingRoot);
     const warnings: string[] = [];
     // installed over the old packages: if the install fails, the app keeps
     // the ones it had instead of none

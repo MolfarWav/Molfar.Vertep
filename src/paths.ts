@@ -94,6 +94,12 @@ export function agentReadDenied(relPath: string): string | null {
  * .gitignore AND in code (git.ts filters), so a hand-edited .gitignore can't
  * resurface them into history.
  */
+/** A folder moved aside to be deleted in the background (discardDir): never
+ *  walked, tracked or backed up, since it may vanish file by file meanwhile. */
+export function isDiscardDir(name: string): boolean {
+  return /.discard-[a-z0-9]+$/.test(name);
+}
+
 export function gitBoundaryIgnored(relPath: string): boolean {
   const norm = relPath.replace(/\\/g, "/").replace(/^\.\//, "");
   const segs = norm.split("/");
@@ -116,7 +122,8 @@ export function gitBoundaryIgnored(relPath: string): boolean {
     // instead, so neither history nor a push ever carries them
     PROJECT_FILES.test(norm) ||
     segs.includes("node_modules") ||
-    segs.includes("dist")
+    segs.includes("dist") ||
+    segs.some(isDiscardDir)
   );
 }
 

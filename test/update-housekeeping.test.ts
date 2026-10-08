@@ -45,6 +45,30 @@ describe("discardDir", () => {
     expect(errors).toEqual([]);
   });
 
+  it("moves a folder out of its tree when told where, so walkers of that tree never meet it", async () => {
+    const app = path.join(base, "apps", "roleplay");
+    fs.mkdirSync(path.join(app, "dist", "assets"), { recursive: true });
+    fs.writeFileSync(path.join(app, "dist", "assets", "font.woff"), "x");
+    fs.writeFileSync(path.join(app, "package.json"), "{}");
+    discardDir(path.join(app, "dist"), undefined, path.join(base, "apps", ".staging"));
+    // the app folder holds no dist and no dist.discard-… at any moment
+    expect(fs.readdirSync(app)).toEqual(["package.json"]);
+    await until(() => !fs.readdirSync(path.join(base, "apps", ".staging")).length);
+  });
+
+  it("an aside folder left in an app is not code, not history and not backed up", async () => {
+    const { readCodeTree } = await import("../src/apps/update.js");
+    const { gitBoundaryIgnored, isDiscardDir } = await import("../src/paths.js");
+    const app = path.join(base, "app");
+    fs.mkdirSync(path.join(app, "dist.discard-mv01ktgjthji", "assets"), { recursive: true });
+    fs.writeFileSync(path.join(app, "dist.discard-mv01ktgjthji", "assets", "noto.woff"), "x");
+    fs.writeFileSync(path.join(app, "index.html"), "<p>");
+    expect([...readCodeTree(app).keys()]).toEqual(["index.html"]);
+    expect(gitBoundaryIgnored("apps/roleplay/dist.discard-mv01ktgjthji/assets/noto.woff")).toBe(true);
+    expect(isDiscardDir("dist.discard-mv01ktgjthji")).toBe(true);
+    expect(isDiscardDir("discard-notes")).toBe(false);
+  });
+
   it("discardStaleStaging removes only that app's update folders", async () => {
     for (const n of ["roleplay.update-a", "roleplay.update-b", "roleplay-extra.update-c", "plugin-x"]) fs.mkdirSync(path.join(base, n));
     discardStaleStaging(base, "roleplay.update-");

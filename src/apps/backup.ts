@@ -15,6 +15,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Unzip, UnzipInflate, zip as zipFiles } from "fflate";
 import { isValidGitRef, isValidGitUrl } from "./git.js";
+import { isDiscardDir } from "../paths.js";
 
 /** Largest app a backup holds, uncompressed, and largest zip accepted. */
 export const BACKUP_MAX_BYTES = 512 * 1024 * 1024;
@@ -50,7 +51,7 @@ function appFiles(root: string, what = "app"): Record<string, Uint8Array> {
   const walk = (rel: string) => {
     const abs = rel ? path.join(root, rel) : root;
     for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
-      if (SKIPPED_DIRS.has(entry.name) || entry.name.startsWith(".__") || entry.isSymbolicLink()) continue;
+      if (SKIPPED_DIRS.has(entry.name) || isDiscardDir(entry.name) || entry.name.startsWith(".__") || entry.isSymbolicLink()) continue;
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
       if (entry.isDirectory()) walk(childRel);
       else if (entry.isFile()) {
