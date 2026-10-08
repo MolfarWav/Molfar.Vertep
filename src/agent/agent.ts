@@ -51,6 +51,8 @@ export interface AgentRunTurn {
 }
 
 /** Tools whose first touch of an app in a run takes an automatic checkpoint. */
+/** Retries of a model call the provider refused for now (429, 5xx): about 15 s of backoff in all. */
+const AGENT_RETRIES = 5;
 const AUTO_CHECKPOINT_TOOLS = new Set(["write_file", "edit_file", "json_set", "bash", "app_deps"]);
 
 interface RunState {
@@ -555,7 +557,11 @@ export class UserAgent {
       streamFn: (m, c, o) => {
         const sent = c.tools ? { ...c, tools: visibleTools(c.tools as AgentTool[], small, unlocked) } : c;
         const maxTokens = clampMaxTokens(m, sent, o?.maxTokens);
-        return svc.streamFn(m, sent, maxTokens !== undefined ? { ...o, maxTokens } : o, sessionId, small ? { smallModelMode: true } : undefined);
+        // a busy or briefly down provider (429, 5xx) is asked again with
+        // backoff instead of ending the task (seen live: one 503 from
+        // NanoGPT dropped a run 37 calls in); Stop cuts the wait short
+        const opts = { ...o, ...(maxTokens !== undefined ? { maxTokens } : {}), maxRetries: o?.maxRetries ?? AGENT_RETRIES, maxRetryDelayMs: o?.maxRetryDelayMs ?? 30_000 };
+        return svc.streamFn(m, sent, opts, sessionId, small ? { smallModelMode: true } : undefined);
       },
     });
     return new UserAgent(agent, sessionId, sFile, budget, svc, project, runState, paths.root);

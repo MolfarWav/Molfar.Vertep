@@ -57,6 +57,35 @@ export const WRITE_TOOLS = new Set([
   "checkpoint",
 ]);
 
+const parsesAsJson = (text: string): boolean => {
+  try {
+    JSON.parse(text.replace(/^﻿/, ""));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/** write_file / edit_file never leave a JSON file broken: a file that parses
+ *  today, or a new one under a data/ folder, must still parse after the
+ *  change, or nothing is written. Seen live: a model wrote a 270-line
+ *  lorebook with a stray word and duplicate keys, then spent 29 calls
+ *  patching it. Files that never were strict JSON (a tsconfig with comments)
+ *  are left alone. */
+export function keepJsonValid(rel: string, before: string, after: string): void {
+  if (!/\.json$/i.test(rel)) return;
+  const strictNow = before.trim() !== "" && parsesAsJson(before);
+  const newData = before.trim() === "" && /(^|[\\/])data[\\/]/.test(rel);
+  if (!strictNow && !newData) return;
+  try {
+    JSON.parse(after.replace(/^﻿/, ""));
+  } catch (e) {
+    throw new Error(
+      `Refused: ${rel} would not be valid JSON after this change (${(e as Error).message}). Nothing was written. Fix the text and try again; to change fields of a JSON file, json_set is safer.`,
+    );
+  }
+}
+
 /** Above this read_file refuses: the file would be read into memory whole. */
 const MAX_READ_BYTES = 8 * 1024 * 1024;
 /** A read_file result over this many characters comes back cut: every later
@@ -400,6 +429,7 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
       if (count === 0) throw new Error("oldText not found in file.");
       if (count > 1) throw new Error(`oldText matches ${count} times — include more surrounding lines to make it unique.`);
       const next = content.replace(oldText, newText);
+      keepJsonValid(rel, content, next);
       const area = protectedFor(rel);
       if (area) await askToChange(area, fileDiff(rel, content, next) ?? rel, true);
       fs.writeFileSync(abs, next, "utf8");
@@ -500,6 +530,7 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
       // read the file the write replaces BEFORE it lands: the write commits
       // immediately, so afterwards there is nothing left to diff against
       const before = fs.existsSync(abs) ? fs.readFileSync(abs, "utf8") : "";
+      keepJsonValid(rel, before, content);
       const area = protectedFor(rel);
       if (area) await askToChange(area, fileDiff(rel, before, content) ?? rel, true);
       fs.mkdirSync(path.dirname(abs), { recursive: true });

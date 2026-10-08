@@ -3,11 +3,11 @@ name: edit-large-card
 description: Use when reading or changing a Roleplay character card or lorebook: fields, example dialogues, a new lorebook, linking it to a character. Triggers: "поправ картку", "зміни опис персонажа", "додай приклади діалогів", "напиши лорбук", "додай запис у лорбук", "edit card", "lorebook entry".
 ---
 
-# Cards and lorebooks: the whole reference, then four calls
+# Cards and lorebooks: the whole reference, then five calls
 
 Every step resends the whole conversation, so do not explore: the formats are below. Do not read the
 app's code, do not run git, jq or python, do not list folders you do not need. A typical card task is:
-one json_get, one write_file (a new lorebook), one json_set, a short report.
+one json_get, a new lorebook (one write_file, one json_set), one json_set on the card, a short report.
 
 ## The card on disk: `apps/roleplay/data/characters/<id>/card.json`
 Fields sit at the TOP level (not under /data):
@@ -32,7 +32,10 @@ Fields sit at the TOP level (not under /data):
 ```
 
 ## A lorebook: `apps/roleplay/data/lorebooks/<id>.json`
-The id is the file name without `.json`, and the same string in `"id"`. A new book is one write_file:
+The id is the file name without `.json`, and the same string in `"id"`. A new book is made in two
+calls, never typed out whole: (1) write_file the book below with `"entries": []`, (2) ONE json_set
+with an `append` to `/entries` per entry (a long JSON typed as text breaks: stray words, duplicate
+keys and uids, `"true"` as a string; json_set values cannot). The shape, with one entry:
 ```json
 {
   "id": "lyriel-lore",
@@ -73,7 +76,10 @@ only feeds a counter in the list; leave it):
 1. `json_get { path: card, pointers: ["/name", "/description", "/personality", "/scenario", "/mes_example", "/tags", "/studio/linkedLorebookIds", "/studio/embeddedLorebookId"] }`
    One call. If a linked book exists and the task changes it, json_get its `/entries` in the same reply.
 2. Write the new texts in your head, in the card's language.
-3. A new book: `write_file` the whole JSON above. A change to an existing book: json_set on its file
-   (`/entries` with op append for a new entry, `/entries/3/content` to change one).
+3. A new book: `write_file` the JSON above with `"entries": []`, then ONE json_set:
+   `edits: [{ pointer: "/entries", op: "append", value: { "uid": 1, ... } }, { ..."uid": 2... }]`.
+   `enabled` is `true`, not `"true"`; uids 1, 2, 3… in order. A change to an existing book: json_set
+   on its file (`/entries/3/content` to change one entry). write_file refuses broken JSON, so a
+   refusal means fix the text, not patch the file afterwards.
 4. ONE json_set on the card with every field change and the link append. It commits on its own and
    open chats pick it up within a second. Do not check with git afterwards; json_set reports what changed.

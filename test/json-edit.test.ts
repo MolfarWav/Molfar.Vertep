@@ -108,6 +108,21 @@ describe("the tools", () => {
     expect(JSON.parse(after).data.description).toBe("A new description.");
   });
 
+  it("write_file and edit_file never leave a JSON file broken", async () => {
+    const { p, run } = setup();
+    const rel = "apps/roleplay/data/lorebooks/new-book.json";
+    fs.mkdirSync(path.join(p.root, path.dirname(rel)), { recursive: true });
+    // a new data file with a stray word: refused, nothing written
+    await expect(run("write_file", { path: rel, content: '{"settings":{"minActivations": hot water}}' })).rejects.toThrow(/would not be valid JSON.*Nothing was written/);
+    expect(fs.existsSync(path.join(p.root, rel))).toBe(false);
+    await run("write_file", { path: rel, content: '{"entries":[],"enabled":true}' });
+    await expect(run("edit_file", { path: rel, oldText: "true", newText: "true," })).rejects.toThrow(/would not be valid JSON/);
+    expect(JSON.parse(fs.readFileSync(path.join(p.root, rel), "utf8")).enabled).toBe(true);
+    // a file that never was strict JSON (comments) stays editable
+    fs.writeFileSync(path.join(p.root, "notes", "tsconfig.json"), "{ // comment\n}");
+    await run("edit_file", { path: "notes/tsconfig.json", oldText: "// comment", newText: "// other" });
+  });
+
   it("json_set refuses what write_file refuses, and is a write tool", async () => {
     const { p, run } = setup();
     fs.writeFileSync(path.join(p.root, "notes", "bad.json"), "{nope");
