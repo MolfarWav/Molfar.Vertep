@@ -10,17 +10,36 @@ const env = Object.fromEntries(
 )
 export const ENGINE_URL = env.ENGINE_URL
 export const MODEL_REF = env.MODEL_REF
-export const DATA = env.DATA
-export const WORK = env.WORK
+// start.sh runs in Git Bash on Windows and writes /c/Users/…; node would read
+// that as C:\c\Users\…, so drive paths become C:/Users/… here
+const native = (p) => (process.platform === "win32" && /^\/[a-zA-Z]\//.test(p ?? "") ? `${p[1].toUpperCase()}:${p.slice(2)}` : p)
+export const DATA = native(env.DATA)
+export const WORK = native(env.WORK)
 
-/** The Chromium this machine has (never `playwright install`). */
+/** The Chromium this machine has (never `playwright install`): CHROME_PATH
+ *  when set, the cloud image's /opt/pw-browsers, else an installed Chrome or
+ *  Edge (the user's Windows machines have no Playwright browsers). */
 function chromePath() {
+  if (process.env.CHROME_PATH && fs.existsSync(process.env.CHROME_PATH)) return process.env.CHROME_PATH
   const root = "/opt/pw-browsers"
-  for (const d of fs.readdirSync(root).filter((n) => /^chromium-\d+$/.test(n)).sort().reverse()) {
-    const p = `${root}/${d}/chrome-linux/chrome`
-    if (fs.existsSync(p)) return p
+  if (fs.existsSync(root)) {
+    for (const d of fs.readdirSync(root).filter((n) => /^chromium-\d+$/.test(n)).sort().reverse()) {
+      const p = `${root}/${d}/chrome-linux/chrome`
+      if (fs.existsSync(p)) return p
+    }
   }
-  throw new Error(`no chromium under ${root}`)
+  const installed = [
+    "C:/Program Files/Google/Chrome/Application/chrome.exe",
+    "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+    `${process.env.LOCALAPPDATA ?? ""}/Google/Chrome/Application/chrome.exe`,
+    "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/usr/bin/google-chrome",
+    "/usr/bin/chromium",
+  ]
+  const found = installed.find((p) => fs.existsSync(p))
+  if (found) return found
+  throw new Error(`no Chromium found: set CHROME_PATH (looked in ${root} and the usual Chrome/Edge places)`)
 }
 
 let browser

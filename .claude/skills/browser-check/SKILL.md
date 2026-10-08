@@ -52,5 +52,6 @@ Run it with `cd $W && bun t.mjs`.
 ## Traps
 - `/v1/models` without `?all=1` lists only shown models; start.sh writes `models-shown.json` so the mock is the only one.
 - The agent page theme comes from `localStorage["chrysalis-theme"]`, not the OS.
+- The browser: the cloud image's /opt/pw-browsers, else an installed Chrome or Edge (Windows, macOS, Linux); `CHROME_PATH` overrides.
 - Screens prove layout. A behavior claim needs the file on disk (`$DATA/...`) or an API read too.
 - A subagent building UI gets this file's path and runs the same steps; ask it for screenshot paths and look at them yourself.
