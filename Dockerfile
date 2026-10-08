@@ -17,7 +17,7 @@ RUN bun install --frozen-lockfile && cd client-agent && bun install --frozen-loc
 COPY . .
 RUN arch=$([ "$TARGETARCH" = "arm64" ] && echo arm64 || echo x64) \
  && CHRYSALIS_VERSION="$CHRYSALIS_VERSION" bun run dist "linux-$arch" --no-archive \
- && mkdir /out && mv out/dist/Chrysalis-*-linux-$arch/* /out/
+ && mkdir /out && mv out/dist/Molfar-Vertep-*-linux-$arch/* /out/
 
 FROM debian:bookworm-slim
 # ca-certificates for model providers over HTTPS; git lets apps come from SSH remotes

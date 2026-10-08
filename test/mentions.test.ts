@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { findMentionables, mentionedFiles } from "../src/agent/mentions.ts";
+import { findMentionables, mentionedFiles } from "../src/agent/mentions.js";
 
 function workspace(): { root: string; apps: string } {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "mentions-"));

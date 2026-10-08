@@ -1,3 +1,5 @@
+import type { Mentionable } from "./file-mentions.js"
+
 // Engine HTTP client. Cookie-authenticated (same-origin); errors surface as
 // readable messages, never "[object Object]".
 
@@ -210,15 +212,6 @@ export function listMcp(): Promise<McpServer[]> {
 export async function agentFiles(q: string): Promise<string[]> {
   const r = await api<{ files?: string[] }>("GET", `/v1/agent/files?q=${encodeURIComponent(q)}`)
   return r.files ?? []
-}
-
-/** A character, lorebook or preset of an app, for the same "@" picker. */
-export interface Mentionable {
-  kind: "character" | "lorebook" | "preset"
-  name: string
-  /** Workspace-relative path of its file. */
-  path: string
-  app: string
 }
 
 /** Characters, lorebooks and presets whose display name or id contains `q`. */

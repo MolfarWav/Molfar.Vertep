@@ -3,7 +3,17 @@ import type {
   Unstable_TriggerAdapter,
   Unstable_TriggerItem,
 } from "@assistant-ui/core"
-import type { Mentionable } from "./api"
+
+/** A character, lorebook or preset of an app (GET /v1/agent/mentions). Kept
+ *  here rather than in api.ts: the engine's tests import this file, and api.ts
+ *  is not written for the engine's module resolution. */
+export interface Mentionable {
+  kind: "character" | "lorebook" | "preset"
+  name: string
+  /** Workspace-relative path of its file. */
+  path: string
+  app: string
+}
 
 /**
  * What a picked file leaves in the message: the path, after the "@" that opened

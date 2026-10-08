@@ -3,8 +3,8 @@ import { BookOpenText, File as FileIcon, SlidersHorizontal, User } from "@phosph
 import { ComposerPrimitive } from "@assistant-ui/react"
 import type { Unstable_TriggerAdapter } from "@assistant-ui/core"
 import type { ReactNode } from "react"
-import { agentFiles, agentMentionables, type Mentionable } from "./api"
-import { filePathDirective, fileTriggerAdapter } from "./file-mentions"
+import { agentFiles, agentMentionables } from "./api"
+import { filePathDirective, fileTriggerAdapter, type Mentionable } from "./file-mentions"
 import { useScrollHighlightIntoView } from "./trigger-popover"
 
 /**
