@@ -60,3 +60,22 @@ sections or `docs/CARD-FORMAT.md`), a Roleplay test fails when a field of the ca
 and edit-large-card moves into the fork's `.skills/` with the call order only, reading the reference
 with one read_file. Until then the fork-only copy in `.fork/app-skills/roleplay/edit-large-card`
 (copied to the desktop workspace 2026-10-08) carries today's format.
+
+## Item 4 progress (2026-10-08, stopped at the usage limit)
+User choices: all four skills (card craft, import from other platforms, lorebooks and world,
+Roleplay presets), shipped in the Roleplay fork's `.skills/` without anything personal, drafted by an
+external non-training model (`work` alias) from a spec, the format reference first.
+DONE: Roleplay clone `.claude/worktrees/rp-memory`, branch `skills-v091` (from fork main 4.25.0,
+pushed, not main): `d196218` `docs/DATA-FORMATS.md` + `test/rp-data-formats.test.ts` (proven to fail
+on a missing field). Sources (newest): `E:\Hermes\profiles\silvi\skills\user-context\`
+`rp-card-adaptation`, `rp-preset-architecture` (+ references); older only in
+`E:\Hermes\profiles\rp-platforms\skills\`: `bot-writer`, `character-depth`, `lore-architect`.
+They hold the user's own names and cases: strip them. Shared drafter spec written in the session
+scratchpad (`skills/spec-common.md`); it is gone with the session, rewrite it from this list:
+target Molfar, few tool calls, json_get/json_set, point to DATA-FORMATS.md, privacy rule, English,
+description <= 280 chars, body <= 14k, <= 4 references of <= 15k, output `=== FILE: ... ===`.
+NEXT: one drafter call per skill (card-craft: rp-card-adaptation core + bot-writer + character-depth;
+card-import: rp-card-adaptation platform parts + wyvern format + bot-writer platform-delivery;
+lorebook-craft: lore-architect; preset-craft: rp-preset-architecture without Marinara agent parts),
+review each, rewrite `.skills/edit-large-card` to point to DATA-FORMATS.md, a rule in the fork's
+AGENTS.md (format change = docs + skills), then the user's live test.
