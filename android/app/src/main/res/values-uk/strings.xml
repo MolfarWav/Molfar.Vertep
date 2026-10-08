@@ -14,6 +14,23 @@
     <string name="action_logs">Журнали</string>
     <string name="action_battery">Працювати у фоні</string>
     <string name="action_update">Отримати версію %1$s</string>
+    <string name="update_downloading">Завантаження… %1$d%%</string>
+    <string name="update_checking">Перевірка завантаженого файлу…</string>
+    <string name="update_installing">Встановлення…</string>
+    <string name="update_allow_installs">Дозвольте Molfar Vertep встановлювати застосунки й поверніться: оновлення продовжиться.</string>
+    <string name="update_not_ours">Завантажений файл не є оновленням Molfar Vertep.</string>
+    <string name="update_failed_title">Оновлення не встановилося</string>
+    <string name="update_in_browser">Завантажити в браузері</string>
+    <string name="reinstall_title">Потрібна разова перевстановка</string>
+    <string name="reinstall_body">Цю версію підписано іншим ключем, ніж застосунок на телефоні, тож Android не може встановити її поверх. Таке буває один раз, коли змінюється ключ підпису.
+
+1. Відкрийте Molfar Vertep, Налаштування → Резервна копія, і збережіть повну копію (з паролем, щоб у ній були ваші ключі API).
+2. Завантажте нову версію кнопкою нижче.
+3. Видаліть цей застосунок, тоді встановіть завантажений.
+4. Відновіть копію в Налаштування → Резервна копія.
+
+Далі оновлення ставитимуться поверх застосунку, а дані лишатимуться.</string>
+    <string name="reinstall_download">Завантажити нову версію</string>
     <string name="action_update_staging">Отримати найновішу тестову збірку</string>
 
     <string name="battery_hint">Android може призупиняти Molfar Vertep, поки ви в браузері. Дозвольте йому працювати у фоні.</string>

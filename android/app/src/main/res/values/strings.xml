@@ -14,6 +14,23 @@
     <string name="action_logs">Logs</string>
     <string name="action_battery">Keep running in the background</string>
     <string name="action_update">Get version %1$s</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_checking">Checking the download…</string>
+    <string name="update_installing">Installing…</string>
+    <string name="update_allow_installs">Allow Molfar Vertep to install apps, then come back: the update carries on.</string>
+    <string name="update_not_ours">The downloaded file is not a Molfar Vertep update.</string>
+    <string name="update_failed_title">The update did not install</string>
+    <string name="update_in_browser">Download in the browser</string>
+    <string name="reinstall_title">A one-time reinstall is needed</string>
+    <string name="reinstall_body">This version is signed with a different key than the app on this phone, so Android cannot install it over this one. This happens once, when the signing key changes.
+
+1. Open Molfar Vertep, Settings → Backup, and save a full backup (with a password, so your API keys are in it).
+2. Download the new version below.
+3. Uninstall this app, then install the downloaded one.
+4. Restore the backup in Settings → Backup.
+
+From then on, updates install over the app with your data kept.</string>
+    <string name="reinstall_download">Download the new version</string>
     <string name="action_update_staging">Get the latest staging build</string>
 
     <string name="battery_hint">Android may pause Molfar Vertep while you use the browser. Allow it to run in the background.</string>

@@ -7,6 +7,8 @@ import android.content.ActivityNotFoundException;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.app.PendingIntent;
+import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -28,6 +30,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /** Start and stop the local server, open it in the browser, and check for a
  *  newer release. Chrysalis itself runs in the phone's browser. */
@@ -39,6 +45,13 @@ public final class MainActivity extends Activity implements EngineService.Listen
     private Button update;
     private AlertDialog logDialog;
     private boolean openWhenReady;
+    /** A verified update waiting for the person to allow installs from this app. */
+    private File awaitingPermission;
+    private String updateLabel;
+    private String updatePage;
+    private boolean updating;
+
+    static final String ACTION_INSTALL_STATUS = "io.github.molfarwav.vertep.INSTALL_STATUS";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +99,18 @@ public final class MainActivity extends Activity implements EngineService.Listen
         boolean exempt = pm.isIgnoringBatteryOptimizations(getPackageName());
         findViewById(R.id.battery).setVisibility(exempt ? View.GONE : View.VISIBLE);
         findViewById(R.id.battery_hint).setVisibility(exempt ? View.GONE : View.VISIBLE);
+        // back from "Install unknown apps": carry on with the update if it was allowed
+        if (awaitingPermission != null && getPackageManager().canRequestPackageInstalls()) {
+            File apk = awaitingPermission;
+            awaitingPermission = null;
+            install(apk);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (ACTION_INSTALL_STATUS.equals(intent.getAction())) onInstallStatus(intent);
     }
 
     @Override
@@ -258,9 +283,10 @@ public final class MainActivity extends Activity implements EngineService.Listen
         }
     }
 
-    /** A newer release on the project's GitHub page shows a button to it. The
-     *  APK is downloaded and installed by the person, in the browser. A
-     *  staging build follows the rolling staging-latest pre-release instead
+    /** A newer release on the project's GitHub page shows a button. The app
+     *  downloads the APK itself, checks it is our release signed with our key,
+     *  and hands it to Android's installer, which asks the person to confirm.
+     *  A staging build follows the rolling staging-latest pre-release instead
      *  of the stable latest: it is replaced on every push, so any build other
      *  than this one is newer. */
     private void checkForUpdate() {
@@ -275,10 +301,8 @@ public final class MainActivity extends Activity implements EngineService.Listen
                     8000);
                 String tag = release.optString("tag_name", "").replaceFirst("^v", "");
                 String apkName = "Molfar-Vertep-" + BuildConfig.VERSION_NAME + "-android-arm64.apk";
-                // straight at the APK so the browser downloads it; the release
-                // page carries every platform's file and invites mis-taps
                 String page = release.getString("html_url");
-                String apk = null;
+                Updater.Asset apk = null;
                 boolean carriesThisBuild = false;
                 JSONArray assets = release.optJSONArray("assets");
                 if (assets != null) {
@@ -287,21 +311,158 @@ public final class MainActivity extends Activity implements EngineService.Listen
                         String name = asset == null ? "" : asset.optString("name", "");
                         if (!name.endsWith("-android-arm64.apk")) continue;
                         if (name.equals(apkName)) carriesThisBuild = true;
-                        apk = asset.optString("browser_download_url", null);
+                        apk = new Updater.Asset(name, asset.optString("browser_download_url", ""), asset.optLong("size", 0), asset.optString("digest", null));
                     }
                 }
                 // a staging release still uploading has no APK yet: nothing to offer
                 if (staging ? apk == null || carriesThisBuild : !Versions.newer(tag, BuildConfig.VERSION_NAME)) return;
-                final String url = apk != null ? apk : page;
+                final Updater.Asset found = apk;
                 runOnUiThread(() -> {
-                    if (staging) update.setText(R.string.action_update_staging);
-                    else update.setText(getString(R.string.action_update, tag));
+                    updateLabel = staging ? getString(R.string.action_update_staging) : getString(R.string.action_update, tag);
+                    updatePage = found != null ? found.url : page;
+                    update.setText(updateLabel);
                     update.setVisibility(View.VISIBLE);
-                    update.setOnClickListener(v -> startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url))));
+                    // no APK in the release: its page is all there is to offer
+                    update.setOnClickListener(v -> {
+                        if (found == null) openUrl(page);
+                        else startUpdate(found);
+                    });
                 });
             } catch (Exception ignored) {
                 // offline or no releases yet
             }
         }, "chrysalis-update").start();
+    }
+
+    private void openUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, getString(R.string.no_browser, url), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void startUpdate(Updater.Asset asset) {
+        if (updating) return;
+        updating = true;
+        update.setEnabled(false);
+        update.setText(getString(R.string.update_downloading, 0));
+        new Thread(() -> {
+            try {
+                File apk = Updater.download(this, asset, p -> runOnUiThread(() -> update.setText(getString(R.string.update_downloading, p))));
+                runOnUiThread(() -> update.setText(R.string.update_checking));
+                Updater.Verdict verdict = Updater.check(this, apk);
+                runOnUiThread(() -> {
+                    switch (verdict) {
+                        case OK:
+                        case UNKNOWN_KEY:
+                            install(apk);
+                            break;
+                        case OTHER_KEY:
+                            apk.delete();
+                            updateDone();
+                            showReinstall();
+                            break;
+                        case NOT_OURS:
+                            apk.delete();
+                            updateDone();
+                            showUpdateFailed(getString(R.string.update_not_ours));
+                            break;
+                    }
+                });
+            } catch (IOException e) {
+                Log.w("MolfarVertep", "Update download failed", e);
+                runOnUiThread(() -> {
+                    updateDone();
+                    showUpdateFailed(e.getMessage() == null ? e.toString() : e.getMessage());
+                });
+            }
+        }, "chrysalis-download").start();
+    }
+
+    private void updateDone() {
+        updating = false;
+        update.setEnabled(true);
+        if (updateLabel != null) update.setText(updateLabel);
+    }
+
+    /** Hand a verified APK to Android's installer. The first time, Android
+     *  wants the person to allow installs from this app; onResume picks the
+     *  update up again when they come back with it allowed. */
+    private void install(File apk) {
+        if (!getPackageManager().canRequestPackageInstalls()) {
+            awaitingPermission = apk;
+            updateDone();
+            Toast.makeText(this, R.string.update_allow_installs, Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName())));
+            return;
+        }
+        update.setText(R.string.update_installing);
+        PackageInstaller installer = getPackageManager().getPackageInstaller();
+        PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+        params.setAppPackageName(getPackageName());
+        try {
+            int id = installer.createSession(params);
+            try (PackageInstaller.Session session = installer.openSession(id)) {
+                try (InputStream in = new FileInputStream(apk); OutputStream out = session.openWrite("base.apk", 0, apk.length())) {
+                    byte[] buf = new byte[64 * 1024];
+                    int n;
+                    while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                    session.fsync(out);
+                }
+                // the installer fills in the status, so the intent must be mutable
+                Intent status = new Intent(this, MainActivity.class).setAction(ACTION_INSTALL_STATUS);
+                PendingIntent pending = PendingIntent.getActivity(this, id, status, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
+                session.commit(pending.getIntentSender());
+            }
+        } catch (IOException | RuntimeException e) {
+            Log.w("MolfarVertep", "Update install failed", e);
+            updateDone();
+            showUpdateFailed(e.getMessage() == null ? e.toString() : e.getMessage());
+        }
+    }
+
+    /** What the installer reports back. Success replaces this process, so
+     *  only the confirmation step and failures arrive here in practice. */
+    @SuppressWarnings("deprecation")
+    private void onInstallStatus(Intent intent) {
+        int status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE);
+        if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+            Intent confirm = Build.VERSION.SDK_INT >= 33
+                ? intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent.class)
+                : intent.getParcelableExtra(Intent.EXTRA_INTENT);
+            if (confirm != null) startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            return;
+        }
+        updateDone();
+        if (status == PackageInstaller.STATUS_SUCCESS || status == PackageInstaller.STATUS_FAILURE_ABORTED) return;
+        // a key the parser could not compare, refused by the system after all
+        if (status == PackageInstaller.STATUS_FAILURE_CONFLICT) {
+            showReinstall();
+            return;
+        }
+        String message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE);
+        showUpdateFailed(message == null ? "status " + status : message);
+    }
+
+    /** The update is signed with another key: Android will never install it
+     *  over this app. Say what to do instead, once. */
+    private void showReinstall() {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.reinstall_title)
+            .setMessage(R.string.reinstall_body)
+            .setPositiveButton(R.string.reinstall_download, (d, w) -> openUrl(updatePage))
+            .setNeutralButton(R.string.action_open, (d, w) -> openBrowser())
+            .setNegativeButton(R.string.logs_close, null)
+            .show();
+    }
+
+    private void showUpdateFailed(String why) {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.update_failed_title)
+            .setMessage(why)
+            .setPositiveButton(R.string.update_in_browser, (d, w) -> openUrl(updatePage))
+            .setNegativeButton(R.string.logs_close, null)
+            .show();
     }
 }
