@@ -48,6 +48,19 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
    commands time out. Needs the user's repro on the phone: the engine log (Logs in the app) and the
    agent page's console. File tools may fail separately: check both.
 
+8. **APK updates install over the old app** (user, 2026-10-08). DONE: the cause was the debug key a CI
+   runner makes per build; the user created a release key and the four `ANDROID_KEY*` secrets
+   (cert `CN=Molfar Vertep, O=MolfarWav`, SHA-256 `298ce687…4c5235`, checked in run 37840321053).
+   The alias secret is `molfar`, so GitHub masks that word in every log (`io.github.***wav.vertep`).
+   One-time reinstall for existing installs (backup, uninstall, install, restore): say it in the 0.9.1
+   notes. Dockerfile fixed for the renamed archives (`Molfar-Vertep-*`). TODO (user: "do it later,
+   so it never bothers again"): "Get update" downloads and installs the APK itself (PackageInstaller,
+   no browser), checks the download's signing cert against the installed one and, on a mismatch,
+   says plainly "a one-time reinstall is needed: back up in Settings > Backup" instead of Android's
+   "App not installed".
+9. Small: `.claude/skills/browser-check/pw.mjs` hardcodes a Linux Chromium path; add a Windows
+   fallback (Chrome under Program Files).
+
 ## Not in 0.9.1
 Inspector with sources (0e), connections in the shell Settings + pi-ai upgrade, the five agent tools,
 Molfar's own memory, skill usage chip.
