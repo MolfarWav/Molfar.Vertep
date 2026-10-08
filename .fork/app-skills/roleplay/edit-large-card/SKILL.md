@@ -14,7 +14,7 @@ Fields sit at the TOP level (not under /data):
 - `name`, `description`, `personality`, `scenario`, `first_mes`, `mes_example` (strings),
   `alternate_greetings` (array of strings), `creator_notes`, `tags` (array), `extensions` (object).
 - `avatar`: a base64 image, tens of KB. Never ask for it, never print it.
-- `studio`: the app's own bag. `studio.linkedLorebookIds` (array of lorebook ids: the books this
+- `studio`: the app's own bag (an imported card may have none yet: json_set creates it, no need to check). `studio.linkedLorebookIds` (array of lorebook ids: the books this
   character uses), `studio.embeddedLorebookId` (null or an id), `studio.avatar` (base64 again, never),
   `studio.descVariants` / `personalityVariants` / `scenarioVariants`, `studio.versions`.
 - `extensions.molfar_soul` belongs to the dashboard's Soul tab: leave it alone.

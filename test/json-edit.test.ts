@@ -33,7 +33,12 @@ describe("pointers and edits", () => {
     expect(doc.data.tags).toEqual(["a", "b"]);
     expect((doc.data.character_book.entries as unknown[])[0]).toEqual({ content: "x" });
     expect(lines[0]).toBe("set /data/description: string, 3 chars → string, 3 chars");
-    expect(() => applyEdits(structuredClone(card), [{ pointer: "/data/nope/x", value: 1 }])).toThrow(/no such key\. Keys here: name, description/);
+    // an imported card with no studio bag: set and append create what is missing
+    const bare = { name: "Ereshkigal" } as Record<string, unknown>;
+    applyEdits(bare, [{ pointer: "/studio/linkedLorebookIds", op: "append", value: "book" }, { pointer: "/studio/colors/name", value: "#fff" }]);
+    expect(bare.studio).toEqual({ linkedLorebookIds: ["book"], colors: { name: "#fff" } });
+    expect(() => applyEdits(structuredClone(card), [{ pointer: "/data/nope/x", op: "delete" }])).toThrow(/no such key\. Keys here: name, description/);
+    expect(() => applyEdits(structuredClone(card), [{ pointer: "/data/name/x", value: 1 }])).toThrow(/is a string/);
     expect(() => applyEdits(structuredClone(card), [{ pointer: "/data/tags/5", value: 1 }])).toThrow(/out of range/);
   });
 

@@ -74,6 +74,20 @@ export function viewValue(v: unknown, at: string, maxChars: number): string {
   return `[${at}: ${sizeOf(v)}, too big to show whole (${whole.length} chars); its parts:]\n${shown.join("\n")}`;
 }
 
+/** The container at a path, with missing object keys on the way created as
+ *  {} (an imported card may have no `studio` bag yet). Array steps must exist. */
+function ensureAt(doc: unknown, path: JsonPath): unknown {
+  let cur = doc;
+  for (const [i, raw] of path.entries()) {
+    if (cur && typeof cur === "object" && !Array.isArray(cur) && !Object.hasOwn(cur, String(raw))) {
+      (cur as Record<string, unknown>)[String(raw)] = {};
+    }
+    cur = getAt(cur, [raw]);
+    if (cur === null || typeof cur !== "object") throw new Error(`${showPath(path.slice(0, i + 1))} is a ${kindOf(cur)}, not an object or array`);
+  }
+  return cur;
+}
+
 export interface JsonEdit {
   pointer: string;
   op?: "set" | "delete" | "append";
@@ -88,9 +102,15 @@ export function applyEdits(doc: unknown, edits: JsonEdit[]): { doc: unknown; lin
     const path = parsePointer(e.pointer);
     const at = showPath(path);
     if (op === "append") {
+      if (e.value === undefined) throw new Error(`${at}: append needs a value`);
+      // a missing array under an object is created (and the objects above it)
+      if (path.length) {
+        const parent = ensureAt(doc, path.slice(0, -1));
+        const k = String(path[path.length - 1]);
+        if (!Array.isArray(parent) && !Object.hasOwn(parent as object, k)) (parent as Record<string, unknown>)[k] = [];
+      }
       const target = getAt(doc, path);
       if (!Array.isArray(target)) throw new Error(`${at} is a ${kindOf(target)}: append needs an array`);
-      if (e.value === undefined) throw new Error(`${at}: append needs a value`);
       target.push(e.value);
       lines.push(`appended to ${at} (now ${target.length} items)`);
       continue;
@@ -102,7 +122,8 @@ export function applyEdits(doc: unknown, edits: JsonEdit[]): { doc: unknown; lin
       lines.push(`replaced the whole document (${sizeOf(doc)})`);
       continue;
     }
-    const parent = getAt(doc, path.slice(0, -1));
+    // set creates missing objects on the way; delete needs the path to exist
+    const parent = op === "delete" ? getAt(doc, path.slice(0, -1)) : ensureAt(doc, path.slice(0, -1));
     const last = path[path.length - 1]!;
     if (Array.isArray(parent)) {
       const n = typeof last === "number" ? last : /^\d+$/.test(last) ? Number(last) : Number.NaN;

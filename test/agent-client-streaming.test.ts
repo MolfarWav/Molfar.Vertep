@@ -111,6 +111,22 @@ describe("agent steps: live stream and saved run lay out the same", () => {
     expect(shape(saved)).toEqual(shape(live));
   });
 
+  it("a reply's first letter sent before the reasoning reads whole after the thought", () => {
+    const stream = [
+      { type: "tool_start", id: "c1", name: "json_get", args: {} },
+      { type: "tool_end", id: "c1", name: "json_get", ok: true, summary: "{}" },
+      { type: "text", delta: "К" },
+      { type: "thinking", delta: "the card has no " },
+      { type: "thinking", delta: "studio bag" },
+      { type: "thinking_end", ms: 900 },
+      { type: "text", delta: "артка без studio-сумки" },
+    ] as Parameters<typeof applyStreamEvent>[1][];
+    const live = stream.reduce<PartData[]>((parts, ev) => applyStreamEvent(parts, ev), []);
+    expect(live.map((p) => p.kind)).toEqual(["tool", "think", "text"]);
+    expect(live[1]).toMatchObject({ text: "the card has no studio bag", done: true, ms: 900 });
+    expect(live[2]).toMatchObject({ text: "Картка без studio-сумки" });
+  });
+
   it("a blank thinking fragment is not a step", () => {
     const msg = { id: "m", role: "assistant" as const, parts: applyStreamEvent([], { type: "thinking", delta: " \n" }) };
     expect(visibleParts(msg)).toEqual([]);

@@ -598,7 +598,7 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
     name: "json_set",
     label: "Change JSON fields",
     description:
-      'Change fields of a JSON file in place, several in one call: edits = [{ pointer, value }] sets a field (a new key is added), op "delete" removes one, op "append" adds value to the end of an array. Pointers as in json_get. The file keeps its format (one line or indented, \\u escapes), so the diff shows only what changed; it commits like write_file. value is any JSON: a string, number, object or array.',
+      'Change fields of a JSON file in place, several in one call: edits = [{ pointer, value }] sets a field (a new key is added), op "delete" removes one, op "append" adds value to the end of an array. Pointers as in json_get; missing objects on the way are created (an append creates a missing array). The file keeps its format (one line or indented, \\u escapes), so the diff shows only what changed; it commits like write_file. value is any JSON: a string, number, object or array.',
     parameters: Type.Object({
       path: Type.String(),
       edits: Type.Array(

@@ -151,14 +151,23 @@ export function applyStreamEvent(parts: PartData[], ev: StreamEvent): PartData[]
     return out
   }
   if (ev.type === "thinking") {
-    // a thinking phase continues only the block it is streaming into; one
-    // that starts after a tool call or text is a new step, placed there
-    if (last?.kind === "think" && !last.done) out[out.length - 1] = { ...last, text: last.text + (ev.delta ?? "") }
+    // some providers send the reply's first letter or two before the
+    // reasoning ("К", thinking, "артка …"): that stub moves after the
+    // thought, so the text reads whole
+    const stub = last?.kind === "text" && last.text.length <= 3 && out[out.length - 2]?.kind !== "text" ? last : undefined
+    if (stub) out.pop()
+    const tail = out[out.length - 1]
+    if (tail?.kind === "think" && !tail.done) out[out.length - 1] = { ...tail, text: tail.text + (ev.delta ?? "") }
+    // a thinking phase that starts after a tool call or text is a new step, placed there
     else out.push({ kind: "think", text: ev.delta ?? "", done: false })
+    if (stub) out.push(stub)
     return out
   }
   if (ev.type === "thinking_end") {
-    if (last?.kind === "think") out[out.length - 1] = { ...last, done: true, ms: ev.ms }
+    // the open thought may sit just before a moved text stub
+    const i = last?.kind === "think" ? out.length - 1 : last?.kind === "text" && out[out.length - 2]?.kind === "think" ? out.length - 2 : -1
+    const think = i >= 0 ? out[i] : undefined
+    if (think?.kind === "think") out[i] = { ...think, done: true, ms: ev.ms }
     return out
   }
   if (ev.type === "tool_start") {
