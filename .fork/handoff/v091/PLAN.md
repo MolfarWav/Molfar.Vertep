@@ -58,6 +58,14 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
    no browser), checks the download's signing cert against the installed one and, on a mismatch,
    says plainly "a one-time reinstall is needed: back up in Settings > Backup" instead of Android's
    "App not installed".
+   DONE 2026-10-09 `android: "Get update" downloads and installs the update itself` (Updater.java,
+   PackageInstaller, REQUEST_INSTALL_PACKAGES; APK compiles in CI run 37844352178). Testable only once a
+   newer release than the installed one exists (0.9.1 over the CI 0.9.0 build).
+   Also found on the phone after the reinstall + restore: Roleplay did not build (fonts, react…: a backup
+   carries no node_modules, and only boot installed missing packages). Fixed `2a70b8d`: the restore
+   installs them at once (installMissingPackages). Bash on the phone (item 7): Molfar saw `ls /workspace`
+   empty; the sandbox code reads fine (one small flaw: after a sandbox reset the remount uses the last
+   known tree, without a pull). Needs from the user: the bash tool results (expanded) and Logs > Copy.
 9. Small: `.claude/skills/browser-check/pw.mjs` hardcodes a Linux Chromium path; add a Windows
    fallback (Chrome under Program Files).
 
