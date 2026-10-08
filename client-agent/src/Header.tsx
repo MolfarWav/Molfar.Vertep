@@ -14,7 +14,7 @@ type PickerOption = ModelOption & { group: string; shown: boolean }
 /** The composer's model picker: the models switched on in Settings > Models,
  *  grouped by connection. A search also finds the hidden ones, behind one
  *  row, and a star puts a model in the short list or takes it out. */
-function ModelPicker(): ReactNode {
+export function ModelPicker({ wide = false }: { wide?: boolean }): ReactNode {
   const models = useAgent((s) => s.models)
   const filtered = useAgent((s) => s.modelsFiltered)
   const model = useAgent(effectiveModel)
@@ -75,7 +75,7 @@ function ModelPicker(): ReactNode {
       <ModelSelector.Trigger
         variant="ghost"
         size="sm"
-        className="h-8 min-w-0 max-w-60 shrink gap-1 rounded-full px-2 [&>span]:truncate [&>span]:gap-1.5"
+        className={cn("h-8 min-w-0 shrink gap-1 rounded-full px-2 [&>span]:truncate [&>span]:gap-1.5", wide ? "max-w-full" : "max-w-60")}
       />
       <ModelSelector.Content align="start" className="w-80">
         <ModelSelector.Search
@@ -169,7 +169,10 @@ export function ComposerSettings(): ReactNode {
 
   return (
     <div className="flex min-w-0 items-center gap-1">
-      <ModelPicker />
+      {/* on a narrow composer the model has a row of its own (thread.aui.tsx) */}
+      <div className="flex min-w-0 items-center @max-lg:hidden">
+        <ModelPicker />
+      </div>
       <ReasoningSelect />
       <Select
         items={[

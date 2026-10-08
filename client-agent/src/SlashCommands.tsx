@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useMemo, useState } from "react"
 import { BookOpen, Broom, Plus, TextAa } from "@phosphor-icons/react"
 import { ComposerPrimitive, unstable_useComposerInput, unstable_useSlashCommandAdapter } from "@assistant-ui/react"
+import type { Unstable_TriggerAdapter } from "@assistant-ui/core"
 import type { ReactNode } from "react"
 import { agentCommands, memoryApi, type AgentSkill, type UserCommand } from "./api"
 import { useAgent } from "./store"
+import { useScrollHighlightIntoView } from "./trigger-popover"
 
 /** Icon shown next to a command in the "/" menu. */
 function commandIcon(id: string): ReactNode {
@@ -11,6 +13,28 @@ function commandIcon(id: string): ReactNode {
   if (id === "compact") return <Broom size={15} />
   if (id.startsWith("skill:")) return <BookOpen size={15} />
   return <TextAa size={15} />
+}
+
+/**
+ * The text a skill puts in the composer: the request to load it, ahead of the
+ * task. The "/" menu and the quick-action chips both write exactly this.
+ */
+export function skillPrefix(k: Pick<AgentSkill, "name" | "scope">): string {
+  return `Load the skill "${k.name}"${k.scope === "global" ? "" : ` (scope ${k.scope})`} with skill_load, follow it, and do this: `
+}
+
+/** Group headers of the "/" menu, in the order the groups are listed. */
+const GROUPS = ["Commands", "My commands", "App skills", "Project skills", "Skills"] as const
+type Group = (typeof GROUPS)[number]
+
+/** The group of an item, read off its id: the popover hands the render
+ *  callback a flat list, so the id is all there is to go by. */
+function groupOf(id: string): Group {
+  if (id === "new" || id === "compact") return "Commands"
+  if (id.startsWith("user:")) return "My commands"
+  if (id.startsWith("skill:app:")) return "App skills"
+  if (id.startsWith("skill:project:")) return "Project skills"
+  return "Skills"
 }
 
 /**
@@ -38,6 +62,7 @@ export function SlashCommands(): ReactNode {
   // the supported bridge to the composer's text — a command fills the box, it
   // does not send, so the usual "…and check X too" can be added first
   const input = unstable_useComposerInput()
+  const popoverRef = useScrollHighlightIntoView()
   const slash = unstable_useSlashCommandAdapter({
     // the typed command text is consumed by selecting the item, never sent
     removeOnExecute: true,
@@ -71,40 +96,73 @@ export function SlashCommands(): ReactNode {
         description: c.description || "From commands/",
         execute: () => input.setText(c.body),
       })),
-      ...skills.map((k) => ({
-        id: `skill:${k.scope}:${k.name}`,
-        label: `/${k.name}`,
-        description: `Skill${k.scope === "global" ? "" : ` (${k.scope})`}: ${k.description}`,
-        execute: () =>
-          input.setText(`Load the skill "${k.name}"${k.scope === "global" ? "" : ` (scope ${k.scope})`} with skill_load, follow it, and do this: `),
-      })),
+      // listed by where a skill lives; the sort is stable, so each group keeps
+      // the engine's order
+      ...[...skills]
+        .sort((a, b) => GROUPS.indexOf(groupOf(`skill:${a.scope}:`)) - GROUPS.indexOf(groupOf(`skill:${b.scope}:`)))
+        .map((k) => ({
+          id: `skill:${k.scope}:${k.name}`,
+          label: `/${k.name}`,
+          description: `Skill${k.scope === "global" ? "" : ` (${k.scope})`}: ${k.description}`,
+          execute: () => input.setText(skillPrefix(k)),
+        })),
     ],
   })
+  // The stock adapter also matches the item id ("skill:app:…"), so typing
+  // "skill" or "app" would match every row for a reason nobody can see. This
+  // one matches what is on screen: the name and the description.
+  const adapter = useMemo<Unstable_TriggerAdapter>(
+    () => ({
+      categories: () => [],
+      categoryItems: () => [],
+      search: (query: string) => {
+        const q = query.trim().toLowerCase()
+        const all = slash.adapter.search?.("") ?? []
+        return q ? all.filter((i) => i.label.toLowerCase().includes(q) || i.description?.toLowerCase().includes(q)) : all
+      },
+    }),
+    [slash.adapter],
+  )
+  // right after "/", before anything is typed: the menu is long, say so
+  const untyped = input.value.endsWith("/")
   return (
     <ComposerPrimitive.Unstable_TriggerPopover
       char="/"
-      adapter={slash.adapter}
+      adapter={adapter}
+      ref={popoverRef}
       aria-label="Commands"
-      className="aui-trigger-popover bg-popover text-popover-foreground border-border absolute inset-x-2 bottom-full z-50 mb-2 overflow-hidden rounded-xl border p-1 shadow-lg"
+      className="aui-trigger-popover bg-popover text-popover-foreground border-border absolute inset-x-2 bottom-full z-50 mb-2 max-h-[min(60vh,24rem)] overflow-y-auto overscroll-contain rounded-xl border p-1 shadow-lg"
     >
       <ComposerPrimitive.Unstable_TriggerPopover.Action {...slash.action} />
       <ComposerPrimitive.Unstable_TriggerPopoverItems>
         {(items) =>
           items.length ? (
-            items.map((item, i) => (
-              <ComposerPrimitive.Unstable_TriggerPopoverItem
-                key={item.id}
-                item={item}
-                index={i}
-                className="data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm outline-none"
-              >
-                <span className="text-muted-foreground shrink-0">{commandIcon(item.id)}</span>
-                <span className="flex min-w-0 flex-col">
-                  <span className="font-medium">{item.label}</span>
-                  {item.description ? <span className="text-muted-foreground truncate text-xs">{item.description}</span> : null}
-                </span>
-              </ComposerPrimitive.Unstable_TriggerPopoverItem>
-            ))
+            <>
+              {untyped ? <div className="text-muted-foreground/70 px-2.5 py-1.5 text-xs italic">Type to filter</div> : null}
+              {items.map((item, i) => {
+                const group = groupOf(item.id)
+                const header = i === 0 || groupOf(items[i - 1]?.id ?? "") !== group
+                return (
+                  <Fragment key={item.id}>
+                    {/* not an option: the arrow keys and the highlight count items only */}
+                    {header ? (
+                      <div className="text-muted-foreground/70 px-2.5 pt-2 pb-1 text-[11px] font-medium tracking-wide uppercase">{group}</div>
+                    ) : null}
+                    <ComposerPrimitive.Unstable_TriggerPopoverItem
+                      item={item}
+                      index={i}
+                      className="data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm outline-none"
+                    >
+                      <span className="text-muted-foreground shrink-0">{commandIcon(item.id)}</span>
+                      <span className="flex min-w-0 flex-col">
+                        <span className="font-medium">{item.label}</span>
+                        {item.description ? <span className="text-muted-foreground truncate text-xs">{item.description}</span> : null}
+                      </span>
+                    </ComposerPrimitive.Unstable_TriggerPopoverItem>
+                  </Fragment>
+                )
+              })}
+            </>
           ) : (
             <div className="text-muted-foreground px-2.5 py-2 text-xs">No matching commands</div>
           )

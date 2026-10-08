@@ -212,6 +212,21 @@ export async function agentFiles(q: string): Promise<string[]> {
   return r.files ?? []
 }
 
+/** A character, lorebook or preset of an app, for the same "@" picker. */
+export interface Mentionable {
+  kind: "character" | "lorebook" | "preset"
+  name: string
+  /** Workspace-relative path of its file. */
+  path: string
+  app: string
+}
+
+/** Characters, lorebooks and presets whose display name or id contains `q`. */
+export async function agentMentionables(q: string): Promise<Mentionable[]> {
+  const r = await api<{ items?: Mentionable[] }>("GET", `/v1/agent/mentions?q=${encodeURIComponent(q)}`)
+  return r.items ?? []
+}
+
 export interface UserCommand {
   name: string
   description: string

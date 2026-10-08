@@ -1,6 +1,6 @@
 "use client";
 
-import { ComposerSettings } from "@/Header";
+import { ComposerSettings, ModelPicker } from "@/Header";
 import { ContextActions } from "@/ContextActions";
 
 import {
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AskBar } from "@/AskBar"
 import { FileMentions } from "@/FileMentions";
+import { QuickActions } from "@/QuickActions";
 import { SlashCommands } from "@/SlashCommands";
 import { cn, copyText } from "@/lib/utils";
 import {
@@ -117,11 +118,9 @@ export const Thread: FC<ThreadProps> = ({
   components = EMPTY_COMPONENTS,
   autoFocus = true,
 }) => {
-  const isEmpty = useAuiState(isNewChatView);
-
   return (
     <ThreadComponentsContext.Provider value={components}>
-      <ThreadRoot isEmpty={isEmpty} autoFocus={autoFocus} />
+      <ThreadRoot autoFocus={autoFocus} />
     </ThreadComponentsContext.Provider>
   );
 };
@@ -160,10 +159,7 @@ function useFollowBottom(contentRef: RefObject<HTMLDivElement | null>) {
   }, [contentRef]);
 }
 
-const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
-  isEmpty,
-  autoFocus,
-}) => {
+const ThreadRoot: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
   const { Welcome = ThreadWelcome } = useContext(ThreadComponentsContext);
   const messagesRef = useRef<HTMLDivElement>(null);
   useFollowBottom(messagesRef);
@@ -172,7 +168,7 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root bg-background @container flex min-h-0 flex-1 flex-col"
       style={{
-        ["--thread-max-width" as string]: "44rem",
+        ["--thread-max-width" as string]: "56rem",
         ["--composer-bg" as string]: "var(--color-card)",
         ["--composer-radius" as string]: "1.5rem",
         ["--composer-padding" as string]: "8px",
@@ -182,14 +178,15 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
         data-slot="aui_thread-viewport"
         turnAnchor="bottom"
         autoScroll
-        className={cn(
-          "relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4",
-          isEmpty && "justify-center",
-        )}
+        className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4"
       >
         <ProjectContextLine />
+        {/* a new chat keeps the composer at the bottom like any other; the
+            welcome takes the room above it and sits in the middle of it */}
         <AuiIf condition={isNewChatView}>
-          <Welcome />
+          <div className="flex flex-1 flex-col justify-center">
+            <Welcome />
+          </div>
         </AuiIf>
         <AuiIf condition={isHistoryLoadingView}>
           <ThreadHistorySkeleton />
@@ -205,15 +202,13 @@ const ThreadRoot: FC<{ isEmpty: boolean; autoFocus: boolean }> = ({
           </ThreadPrimitive.Messages>
         </div>
 
-        <ThreadPrimitive.ViewportFooter
-          className={cn(
-            "aui-thread-viewport-footer bg-background relative mx-auto flex w-full max-w-(--thread-max-width) shrink-0 flex-col gap-4 overflow-visible pt-2 pb-4 md:pb-6",
-            !isEmpty && "sticky bottom-0 mt-auto rounded-t-(--composer-radius)",
-          )}
-        >
+        <ThreadPrimitive.ViewportFooter className="aui-thread-viewport-footer bg-background sticky bottom-0 mx-auto mt-auto flex w-full max-w-(--thread-max-width) shrink-0 flex-col gap-4 overflow-visible rounded-t-(--composer-radius) pt-2 pb-4 md:pb-6">
           <ThreadScrollToBottom />
           <ThreadFollowupSuggestions />
           <AskBar />
+          <AuiIf condition={(s) => s.composer.isEmpty && !s.thread.isRunning}>
+            <QuickActions />
+          </AuiIf>
           <Composer autoFocus={autoFocus} />
           <AuiIf condition={(s) => isNewChatView(s) && s.composer.isEmpty}>
             <ThreadSuggestions />
@@ -457,6 +452,12 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
             />
             <SlashCommands />
             <FileMentions />
+            {/* a narrow composer cannot fit the model name beside the buttons:
+                it gets a row of its own (the picker in the action row is
+                hidden at that width, so only one of the two can be opened) */}
+            <div className="aui-composer-model-row flex min-w-0 px-1 empty:hidden @lg:hidden">
+              <ModelPicker wide />
+            </div>
             <ComposerAction />
           </div>
         </ComposerPrimitive.AttachmentDropzone>
@@ -467,7 +468,7 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
 
 const ComposerAction: FC = () => {
   return (
-    // one row at every width: the model name truncates before anything wraps
+    // one row at every width; on a narrow one the model name moves to a row of its own above
     <div className="aui-composer-action-wrapper relative flex items-center justify-between gap-1">
       <div className="flex min-w-0 flex-1 items-center gap-1">
         <ComposerAddAttachment />
