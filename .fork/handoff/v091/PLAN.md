@@ -7,7 +7,11 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
 ## Items, in order
 1. DONE: release archives renamed `Chrysalis-*` → `Molfar-Vertep-*` (`scripts/dist.ts`, the CI smoke
    step in `build.yml`, README). Self-update and the staging check accept both names since 0.8.0.
-2. **Lighter skills index** (handoff `.fork/handoff/molfar-skills/HANDOFF.md`, part A): the system
+2. DONE 2026-10-08 (user's choices: app skills by name, no trigger lists in the index): `memoryPromptSection`
+   lists global skills with their description cut before "Triggers:", and app/project skills as one
+   names-only line per scope; full lines still come with `projectContextFor` on the first touch.
+   Desktop workspace: section 1860 → 1322 tokens (full), 877 → 840 (compact). Original text:
+   **Lighter skills index** (handoff `.fork/handoff/molfar-skills/HANDOFF.md`, part A): the system
    prompt lists only global and built-in skills; app and project skills stop riding every chat (today
    `memoryPromptSection` lists them all, ~1k tokens for 11 skills on the desktop). Decide how Molfar
    still finds an app's skills when working on that app (e.g. listed when the session's project or the
@@ -18,7 +22,8 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
    history, tool results) and what repeats between calls; whether provider prompt caching is used. Data:
    the inspector (`src/inspector.ts`), `llm-logger.ts`, real runs on the desktop workspace read LOCALLY
    (never sent to external models). Report the numbers to the user, they choose the trade-offs.
-4. **Card and preset skills for Molfar** (handoff part B): create / edit / adapt character cards, from
+4. **Card and preset skills for Molfar** (handoff part B; user 2026-10-08: they live as Roleplay app
+   skills in the fork, `apps/roleplay/.skills/`, NOT in `builtin-skills/`; "As built-in skills" below is overruled): create / edit / adapt character cards, from
    the user's own skills (bot-writer, character-depth, lore-architect, rp-card-adaptation in
    `E:\Hermes\profiles\rp-platforms\skills\`, on the desktop only), and a new skill for creating and
    editing Roleplay presets. As built-in skills (`builtin-skills/`), loaded on demand by `skill_load`.

@@ -134,6 +134,20 @@ describe("skills", () => {
     expect(section).toContain("- port-card: When porting a character card");
     expect(section).toContain("memory_propose");
   });
+
+  it("the index names app skills only and drops trigger lists", () => {
+    makeApp("rp");
+    writeSkill("skills", "port-card", 'When porting a character card. Triggers: "перенеси картку", "port card".');
+    writeSkill("apps/rp/.skills", "add-plugin", "When adding a backend plugin to the roleplay app");
+    writeSkill("apps/rp/.skills", "fix-theme", "When a theme does not apply");
+    for (const section of [memoryPromptSection(p.root), memoryPromptSection(p.root, { compact: true })]) {
+      expect(section).toContain("- port-card: When porting a character card.");
+      expect(section).toContain("- app:rp: add-plugin, fix-theme");
+      expect(section).not.toContain("When adding a backend plugin");
+      expect(section).not.toContain("перенеси картку");
+    }
+    expect(projectContextFor(p.root, "rp")).toContain("- add-plugin (app:rp): When adding a backend plugin to the roleplay app");
+  });
 });
 
 describe("memory tools (the user confirms)", () => {

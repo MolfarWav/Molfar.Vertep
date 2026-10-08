@@ -512,13 +512,33 @@ const shortSkillLine = (s: SkillInfo): string => {
   return `- ${s.name}${s.scope === "global" ? "" : ` (${s.scope})`}: ${first.length > 140 ? `${first.slice(0, 139)}…` : first}`;
 };
 
+/** A global skill in the full index: the description without its
+ *  "Triggers: ..." phrase list, about half of the index's tokens and of
+ *  little help next to the "when to use" part. */
+const indexSkillLine = (s: SkillInfo): string => {
+  const desc = s.description.replace(/\s*Triggers?:.*$/s, "").trim() || s.description;
+  return `- ${s.name}${s.builtin ? " [built-in]" : ""}: ${desc}`;
+};
+
+/** App and project skills by name, one line per scope. Their full lines come
+ *  with the app's context the first time it is touched (projectContextFor),
+ *  or in a project chat's own section. */
+const scopedSkillNames = (skills: SkillInfo[]): string => {
+  const by = new Map<string, string[]>();
+  for (const s of skills) by.set(s.scope, [...(by.get(s.scope) ?? []), s.name]);
+  return [...by].map(([scope, names]) => `- ${scope}: ${names.join(", ")}`).join("\n");
+};
+
 /** Small-window mode keeps less of MEMORY.md in view. */
 const COMPACT_MEMORY_CHARS = 2000;
 
 /** The system-prompt section: global memory, the skills index, the rules. */
 export function memoryPromptSection(root: string, opts: { compact?: boolean } = {}): string {
   const memory = readText(root, GLOBAL_MEMORY).trim();
-  const skills = listSkills(root);
+  const all = listSkills(root);
+  const skills = all.filter((s) => s.scope === "global");
+  const scoped = scopedSkillNames(all.filter((s) => s.scope !== "global"));
+  const scopedPart = scoped ? `\n\n## Skills of apps and projects (names only; skill_load one when the task is about that app or project)\n${scoped}` : "";
   const topics = topicIndex(root, resolveScope(root, "global"));
   const topicPart = `\n\n## Memory topics (read_file one when it bears on the task)\n${topics || "(none yet)"}`;
   if (opts.compact) {
@@ -529,12 +549,12 @@ export function memoryPromptSection(root: string, opts: { compact?: boolean } = 
 ${memory ? clipMemory(memory, COMPACT_MEMORY_CHARS) : "(nothing yet)"}${topicPart}
 
 ## Skills (skill_load <name> before a task one covers)
-${skills.length ? skills.map(shortSkillLine).join("\n") : "(none yet)"}
+${skills.length ? skills.map(shortSkillLine).join("\n") : "(none yet)"}${scopedPart}
 
 ## Rules
 - Remember durable things (a preference, a decision, a gotcha that cost time) with memory_propose, once, at a natural stopping point. No trivia, no secrets. Never say it is saved until the tool says so. Core memory is for facts that matter in every chat; anything else goes to a topic (topic: "lowercase-dashes").
 - memory_search finds past entries in every memory file by words; use it before saying you do not remember.
-- Memory and skill folders change only through the tools; the user confirms each change. A project's memory and skills show the first time you touch that app.
+- Memory and skill folders change only through the tools; the user confirms each change. A project's memory and full skill lines show the first time you touch that app.
 - When a task took several attempts or the user corrected you twice, offer a skill: load skill-authoring first.`;
   }
   return `
@@ -546,10 +566,10 @@ You keep a long-term memory across sessions and can grow reusable skills. Both a
 ${memory ? clipMemory(memory) : "(nothing yet)"}${topicPart}
 
 ## Skills
-${skills.length ? skills.map(skillLine).join("\n") : "(none yet)"}
+${skills.length ? skills.map(indexSkillLine).join("\n") : "(none yet)"}${scopedPart}
 
 ## Rules
-- A project's memory (${appMemoryPath("<id>")}) and its skills are shown to you automatically the first time you touch that app in a session. A chat opened inside a project has that project's section below instead.
+- A project's memory (${appMemoryPath("<id>")}) and its skills in full are shown to you automatically the first time you touch that app in a session; until then you see only the skills' names. A chat opened inside a project has that project's section below instead.
 - To remember something durable — a user preference, a decision, where a project stands, a gotcha that cost real time — call memory_propose with scope "global", "app:<id>" or "project:<name>". Never say something is saved until the tool says so. Do not propose trivia, one-off details, or secrets (keys, passwords, tokens).
 - Core memory (MEMORY.md, capped) holds what matters in every chat. Everything else goes to a topic file (memory_propose topic). memory_search finds entries in all memory files by words; search before saying you do not remember.
 - After substantial work, at a natural stopping point, propose what is worth keeping — once, not after every message. When an entry is outdated, pass replaces with a phrase from the old entry.
