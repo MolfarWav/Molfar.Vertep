@@ -17,7 +17,12 @@ the fork's main (4.25.0). Fixes the user finds in 0.9.0 (Memory v2, arcs) go int
    still finds an app's skills when working on that app (e.g. listed when the session's project or the
    app's files are in play, or one index line per app). Measure before and after with
    `estimateTextTokens`.
-3. **Token use** (queue 0d; user's choice: measure, then fix the top 2-3 shares): per run, model calls,
+3. BUILT 2026-10-08, waiting for the before/after run on the desktop: measured (`token-use.md`), four
+   fixes chosen by the user: `src/agent/context-fold.ts` (earlier tasks' results cut to the reload
+   summary, stale and over-budget results in a run cut, on a copy before each call; `RunState.startedAt`),
+   read_file cap 40k characters with a note + `paths` (up to 8 files in one call), the batching rule
+   in both prompts. Tests `test/context-fold.test.ts`. Original text:
+   **Token use** (queue 0d; user's choice: measure, then fix the top 2-3 shares): per run, model calls,
    input/output per call, what the input is made of (system prompt, AGENTS.md and docs, skills index,
    history, tool results) and what repeats between calls; whether provider prompt caching is used. Data:
    the inspector (`src/inspector.ts`), `llm-logger.ts`, real runs on the desktop workspace read LOCALLY

@@ -55,7 +55,12 @@ export const WRITE_TOOLS = new Set([
   "checkpoint",
 ]);
 
-const MAX_READ_BYTES = 256 * 1024;
+/** Above this read_file refuses: the file would be read into memory whole. */
+const MAX_READ_BYTES = 8 * 1024 * 1024;
+/** A read_file result over this many characters comes back cut: every later
+ *  model call of the run resends it (token use measured 2026-10-08). */
+const READ_CAP_CHARS = 40_000;
+const READ_PATHS_MAX = 8;
 
 function textResult(text: string, details: unknown = {}): { content: { type: "text"; text: string }[]; details: unknown } {
   return { content: [{ type: "text", text }], details };
@@ -268,57 +273,101 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
     name: "read_file",
     label: "Read file or directory",
     description:
-      "Read a text file, or list a directory, inside the user's directory (relative path). For big files, read a slice: offset/limit are 1-based line numbers; the result is prefixed with line numbers and tells you the total.",
+      `Read a text file, or list a directory, inside the user's directory (relative path). Several files you need anyway: pass them all in paths (up to ${READ_PATHS_MAX}) in ONE call. A file over ${READ_CAP_CHARS} characters comes back cut, with a note on how to read on; for big files read a slice: offset/limit are 1-based line numbers, the result is prefixed with line numbers and tells you the total.`,
     parameters: Type.Object({
-      path: Type.String(),
+      path: Type.Optional(Type.String()),
+      paths: Type.Optional(Type.Array(Type.String(), { description: `Several files at once (up to ${READ_PATHS_MAX}), instead of path; no offset/limit` })),
       offset: Type.Optional(Type.Number({ description: "First line to read (1-based); default 1" })),
-      limit: Type.Optional(Type.Number({ description: "Max lines to return (default 2000 when whole file is too big)" })),
+      limit: Type.Optional(Type.Number({ description: "Max lines to return (default 2000)" })),
     }),
     async execute(_id, params) {
-      const { path: rel } = params as { path: string };
-      const { offset, limit } = params as { offset?: number; limit?: number };
-      // credentials never exist inside the workspace (they live in the
-      // data-root credentials dir) — answer by result, identically to a
-      // missing file, even if a decoy of that name is dropped in
-      if (/(^|\/)auth\.json$/i.test(rel.replace(/\\/g, "/"))) {
-        throw new Error(`File not found: ${rel}`);
+      const { path: one, paths, offset, limit } = params as { path?: string; paths?: unknown; offset?: number; limit?: number };
+      const many = Array.isArray(paths) ? paths.filter((x): x is string => typeof x === "string" && x.trim() !== "") : [];
+      if (!many.length) {
+        if (typeof one !== "string" || !one.trim()) throw new Error("path is required (or paths for several files)");
+        const r = readOne(one, offset, limit, READ_CAP_CHARS);
+        return textResult(r.text, r.details);
       }
-      // user settings are the Settings UI's: root copy only, so an app's own
-      // data/settings.json stays editable below
-      {
-        const denied = agentReadDenied(rel);
-        if (denied) throw new Error(`Refused: ${denied}`);
-      }
-      const abs = safeResolve(p.root, rel);
-      try { guard.assertReadable(abs, rel); } catch (e) { throw e as Error; }
-      if (!fs.existsSync(abs)) throw new Error(`File not found: ${rel}`);
-      const stat = fs.statSync(abs);
-      if (stat.isDirectory()) {
-        const entries = fs.readdirSync(abs, { withFileTypes: true })
-          .filter((e) => !agentReadDenied(rel === "." || rel === "" ? e.name : `${rel.replace(/\\/g, "/").replace(/\/+$/, "")}/${e.name}`))
-          .map((e) => (e.isDirectory() ? `${e.name}/` : e.name));
-        return textResult(entries.sort().join("\n") || "(empty)", { path: rel, entries: entries.length });
-      }
-      if (stat.size > MAX_READ_BYTES && offset === undefined && limit === undefined) {
-        const total = fs.readFileSync(abs, "utf8").split("\n").length;
-        return textResult(
-          `File is large (${stat.size} bytes, ${total} lines). Re-call read_file with offset/limit to read a slice, e.g. { path: "${rel}", offset: 1, limit: 500 }.`,
-          { path: rel, totalLines: total },
-        );
-      }
-      const content = fs.readFileSync(abs, "utf8");
-      if (offset === undefined && limit === undefined) return textResult(content, { path: rel });
-      // sliced read: 1-based lines, numbered like a code viewer
-      const lines = content.split("\n");
-      const start = Math.max(1, Math.floor(offset ?? 1));
-      const count = Math.min(Math.max(1, Math.floor(limit ?? 2000)), 5000);
-      const slice = lines.slice(start - 1, start - 1 + count);
-      const numbered = slice.map((l, i) => `${String(start + i).padStart(5)}| ${l}`).join("\n");
-      const end = Math.min(start + slice.length - 1, lines.length);
-      const header = `[${rel} lines ${start}-${end} of ${lines.length}]\n`;
-      return textResult(header + numbered, { path: rel, from: start, to: end, totalLines: lines.length });
+      const list = [...new Set(typeof one === "string" && one.trim() ? [one, ...many] : many)];
+      if (list.length > READ_PATHS_MAX) throw new Error(`at most ${READ_PATHS_MAX} paths per call`);
+      // a shared budget: about one and a half big reads per call at most
+      const cap = Math.min(READ_CAP_CHARS, Math.max(8000, Math.floor((READ_CAP_CHARS * 1.5) / list.length)));
+      const parts = list.map((rel) => {
+        try {
+          return `=== ${rel} ===\n${readOne(rel, undefined, undefined, cap).text}`;
+        } catch (e) {
+          return `=== ${rel} ===\nError: ${(e as Error).message}`;
+        }
+      });
+      return textResult(parts.join("\n\n"), { paths: list });
     },
   };
+
+  /** One file or directory for read_file; throws on a refused or missing path. */
+  function readOne(rel: string, offset: number | undefined, limit: number | undefined, cap: number): { text: string; details: Record<string, unknown> } {
+    // credentials never exist inside the workspace (they live in the
+    // data-root credentials dir) — answer by result, identically to a
+    // missing file, even if a decoy of that name is dropped in
+    if (/(^|\/)auth\.json$/i.test(rel.replace(/\\/g, "/"))) {
+      throw new Error(`File not found: ${rel}`);
+    }
+    // user settings are the Settings UI's: root copy only, so an app's own
+    // data/settings.json stays editable below
+    {
+      const denied = agentReadDenied(rel);
+      if (denied) throw new Error(`Refused: ${denied}`);
+    }
+    const abs = safeResolve(p.root, rel);
+    guard.assertReadable(abs, rel);
+    if (!fs.existsSync(abs)) throw new Error(`File not found: ${rel}`);
+    const stat = fs.statSync(abs);
+    if (stat.isDirectory()) {
+      const entries = fs.readdirSync(abs, { withFileTypes: true })
+        .filter((e) => !agentReadDenied(rel === "." || rel === "" ? e.name : `${rel.replace(/\\/g, "/").replace(/\/+$/, "")}/${e.name}`))
+        .map((e) => (e.isDirectory() ? `${e.name}/` : e.name));
+      return { text: entries.sort().join("\n") || "(empty)", details: { path: rel, entries: entries.length } };
+    }
+    if (stat.size > MAX_READ_BYTES) {
+      throw new Error(`${rel} is too large to read (${stat.size} bytes): use grep to find what you need`);
+    }
+    const content = fs.readFileSync(abs, "utf8");
+    const lines = content.split("\n");
+    if (offset === undefined && limit === undefined) {
+      if (content.length <= cap) return { text: content, details: { path: rel } };
+      // the start of the file, whole lines, with a note on how to read on
+      let k = 0;
+      let size = 0;
+      while (k < lines.length && size + lines[k]!.length + 1 <= cap) size += lines[k++]!.length + 1;
+      if (k === 0) {
+        const how = lines.length > 1 ? `The first line alone is ${lines[0]!.length} characters; the rest starts at offset 2.` : "The file is one line, so offset/limit cannot page through it: use grep to find what you need.";
+        return {
+          text: `${content.slice(0, cap)}\n[cut at ${cap} of ${content.length} characters. ${how}]`,
+          details: { path: rel, cut: true, totalLines: lines.length },
+        };
+      }
+      return {
+        text: `[${rel}: lines 1-${k} of ${lines.length} (${content.length} characters in all); read on with offset ${k + 1}, or grep for what you need]\n${lines.slice(0, k).join("\n")}`,
+        details: { path: rel, from: 1, to: k, totalLines: lines.length, cut: true },
+      };
+    }
+    // sliced read: 1-based lines, numbered like a code viewer
+    const start = Math.max(1, Math.floor(offset ?? 1));
+    const count = Math.min(Math.max(1, Math.floor(limit ?? 2000)), 5000);
+    const slice = lines.slice(start - 1, start - 1 + count);
+    // whole numbered lines up to twice the cap; the header names what came back
+    const rows: string[] = [];
+    let size = 0;
+    for (const [i, l] of slice.entries()) {
+      const row = `${String(start + i).padStart(5)}| ${l}`;
+      if (rows.length && size + row.length + 1 > cap * 2) break;
+      rows.push(row.length > cap * 2 ? `${row.slice(0, cap * 2)} [line cut at ${cap * 2} characters]` : row);
+      size += row.length + 1;
+    }
+    const end = Math.min(start + rows.length - 1, lines.length);
+    const more = rows.length < slice.length ? ` (cut for size; read on with offset ${end + 1})` : "";
+    const header = `[${rel} lines ${start}-${end} of ${lines.length}${more}]\n`;
+    return { text: header + rows.join("\n"), details: { path: rel, from: start, to: end, totalLines: lines.length } };
+  }
 
   const editFile: AgentTool = {
     name: "edit_file",

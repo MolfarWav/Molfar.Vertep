@@ -586,7 +586,8 @@ export function appTouched(toolName: string, args: unknown): string | undefined 
   if (!args || typeof args !== "object") return undefined;
   const a = args as Record<string, unknown>;
   if (toolName.startsWith("app_") && typeof a.id === "string" && APP_ID.test(a.id)) return a.id;
-  for (const v of Object.values(a)) {
+  // read_file takes several paths in one array
+  for (const v of Object.values(a).flatMap((x) => (Array.isArray(x) ? x : [x]))) {
     if (typeof v !== "string") continue;
     const m = APP_IN_ARGS.exec(v.replace(/\\/g, "/")) ?? (/^apps\/([A-Za-z0-9][A-Za-z0-9_-]{0,63})/.exec(v.replace(/\\/g, "/")) as RegExpExecArray | null);
     if (m && m[1] !== ".staging") return m[1];

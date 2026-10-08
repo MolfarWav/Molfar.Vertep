@@ -20,6 +20,7 @@ import { Type } from "typebox";
 import { log } from "../logger.js";
 import { clampThinkingLevel, isContextOverflow, type AssistantMessage } from "@earendil-works/pi-ai";
 import { clampMaxTokens, fitContext, newTrimState } from "./context-budget.js";
+import { foldToolResults } from "./context-fold.js";
 import { appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
   SKILL_UNLOCKS,
@@ -57,6 +58,8 @@ interface RunState {
   /** The run's request, shortened: the automatic checkpoint's label. */
   label: string;
   checkpoints: Map<string, Checkpoint>;
+  /** When the current run began: tool results stamped before it belong to earlier runs. */
+  startedAt: number;
 }
 
 /** An app the run changed, and the checkpoint taken before it did. */
@@ -365,7 +368,7 @@ export class UserAgent {
     /** The project this session belongs to (null: a plain chat). */
     readonly project: string | null = null,
     /** Checkpoints the current run took (reset at each run). */
-    private runState: RunState = { username: "", label: "", checkpoints: new Map() },
+    private runState: RunState = { username: "", label: "", checkpoints: new Map(), startedAt: 0 },
     private root = "",
   ) {}
 
@@ -409,7 +412,7 @@ export class UserAgent {
       }
     }
     const projectSettings = project ? readSettings(paths.root, projectLayout(paths.root, project)) : null;
-    const runState: RunState = { username, label: "", checkpoints: new Map() };
+    const runState: RunState = { username, label: "", checkpoints: new Map(), startedAt: 0 };
 
     let tools: AgentTool[] = [
       ...buildUserTools(username, paths, {
@@ -487,7 +490,9 @@ export class UserAgent {
         // pi-agent-core's contract: this hook must never throw
         try {
           const st = agent.state;
-          const fit = fitContext(st.model, { systemPrompt: st.systemPrompt, messages: msgs, tools: visibleTools(st.tools, small, unlocked) }, { force: budget.force, state: trim });
+          // earlier tasks' and stale results cut on a copy (context-fold.ts)
+          const { messages: lean } = foldToolResults(msgs, runState.startedAt);
+          const fit = fitContext(st.model, { systemPrompt: st.systemPrompt, messages: lean, tools: visibleTools(st.tools, small, unlocked) }, { force: budget.force, state: trim });
           if (fit.advanced) log.info(`[agent:${sessionId}] context trimmed ~${fit.before} → ~${fit.after} tokens (window ${st.model.contextWindow})`);
           return fit.messages;
         } catch (e) {
@@ -585,6 +590,7 @@ export class UserAgent {
     this.markStarted(userMessage);
     this.runState.label = userMessage.replace(/\s+/g, " ").trim().slice(0, 60) || "a request";
     this.runState.checkpoints.clear();
+    this.runState.startedAt = Date.now();
     // what the user allowed in protected paths covers one request
     if (this.runState.username) resetAllowed(this.runState.username);
     // "@path" in the message means the person is pointing at a file. Reading
@@ -1358,6 +1364,7 @@ ${PRECEDENCE_RULE}
 3. Put each change in the lightest place that carries it: the app's data/ first, then a plugin of your own, the app's src/ only when the change needs it (the workspace contract below explains why).
 4. Work in small steps and check each one: app_check after editing src/ or package.json, read back JSON you wrote, call a route or tool you wrote once, app_console for runtime errors. If an edit broke a file, restore it from git before going on. Never call something done that you have not verified (skill finish-change has the checklist).
 5. Finish with a short report in plain words: what changed, what you checked, what you could not check, and how to undo it.
+6. Few steps, not many small ones: every step is a model call that resends the whole conversation. Put independent actions in ONE reply as several tool calls (the files you need via read_file paths, several greps, a check after an edit); read a file once, not in small slices; a one-value change in a big JSON file is grep, then one edit_file.
 
 ${workspaceLayout(paths)}
 
