@@ -45,23 +45,31 @@ function useThinkingMs(indices: readonly number[]): number | null {
 
 /**
  * A run of reasoning and tool calls between two pieces of the answer, as one
- * step list in the order it happened. A list that appears while the model is
- * working opens so the reader watches it happen, and stays open when that
- * stretch ends: folding it then would pull the text out from under someone
- * reading it. Lists loaded from history start folded to their summary line.
+ * step list in the order it happened. It starts folded to its summary line,
+ * live or loaded from history: a long run of steps open by default pushed the
+ * answer off a phone screen, and most readers want the answer. While the model
+ * works, the line names the step it is on, so progress shows without opening
+ * the list; a list the reader opened stays open.
  */
 export const ChainOfThought: FC<
   PropsWithChildren<{ indices: readonly number[]; running: boolean }>
 > = ({ indices, running, children }) => {
-  const [open, setOpen] = useState(running);
+  const [open, setOpen] = useState(false);
   const toolCount = useAuiState((s) =>
     indices.reduce((n, i) => n + (s.message.parts[i]?.type === "tool-call" ? 1 : 0), 0),
   );
+  // the step the model is on: the newest tool by name, or its thinking
+  const current = useAuiState((s) => {
+    if (!running) return "";
+    const last = s.message.parts[indices[indices.length - 1] ?? -1];
+    return last?.type === "tool-call" ? last.toolName : last?.type === "reasoning" ? "thinking" : "";
+  });
   const thinkingMs = useThinkingMs(indices);
 
   const summary = [
     running ? "Working" : thinkingMs !== null ? `Thought for ${formatSeconds(thinkingMs)}` : toolCount ? "" : "Thought",
     toolCount ? `${toolCount} tool ${toolCount === 1 ? "call" : "calls"}` : "",
+    open ? "" : current,
   ]
     .filter(Boolean)
     .join(" · ");
