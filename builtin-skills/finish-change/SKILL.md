@@ -18,12 +18,12 @@ description: Use right before telling the user a change is done, fixed or ready,
 | Visible behavior of the app | Add a `console.log` where it matters, let the open tab run, read `app_console { id }`. Remove the log after. `app_console` shows nothing when no Molfar Vertep page has the app open: then ask the user to open it. |
 | App looks stale, or `app_check` cannot be trusted | `app_rebuild { id }`, then check again. |
 | `plugins/**/plugin.js` or a plugin `manifest.json` | No build is involved: plugins hot-reload by file time. Prove the plugin actually runs (skill `plugin-silent-failure`, step 6: the heartbeat file). A plugin that calls a model: skill `two-phase-llm`, "Before calling it done". |
-| `apps/<id>/data/` files | Re-read the part you changed. JSON must still parse: `jq empty <file>` in bash. Open pages pick the change up within about a second. |
+| `apps/<id>/data/` files | Changed with `json_set` or `write_file`: the tool's result is the proof (json_set parses the file and names every field it changed); add no extra reads or checks. Changed through bash: `json_get` the changed fields once. Open pages pick the change up within about a second. |
 | Dependencies | `app_deps` must report success, then `app_check`. |
 
 ## 3. Commit state
-- `write_file` and `edit_file` commit on their own. Changes made through bash do not: run `git` with `status`. If anything is listed, commit it with `git` `commit -m "what changed and why"`.
-- Run `git` with `status` again. It must be clean before you report.
+- `write_file`, `edit_file` and `json_set` commit on their own: when you used only them, skip git.
+- Changes made through bash do not: run `git` with `status`, commit what it lists with `git` `commit -m "what changed and why"`, in one step if you can (`status` then `commit` in the same reply).
 - Remove temporary things: debug `console.log`, heartbeat files, a lowered `intervalMs`, test data.
 
 ## 4. Report
