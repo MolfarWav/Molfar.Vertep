@@ -61,3 +61,18 @@ builds it instead, in the Roleplay fork). Everything below overrides that file w
 ## 0.9.4 (next): deeper lorebook work
 The user brings a Hermes write-up; plan it together then. A lorebook format change updates the
 `edit-large-card` skill in the same change (CLAUDE.md rule).
+
+## Round 2 (user, 2026-10-09): every source a full storefront, plus Wyvern, Pygmalion, JannyAI search
+- CharaVault: documented keyless API (its site has an "API" section inviting integrations); filters
+  tags / exclude_tags / creator / has_book / token_min/max / 10 orderings / origin (a tag); thumbnails
+  `/cards/thumb/<folder>/<file>`. Its own site forces SFW for anonymous visitors; its API accepts nsfw=true
+  without login; ours defaults to off. Commit `2e44ee1`.
+- RisuRealm orderings checked: none = recommended, trending, date, random, download (only with a query).
+- Wyvern (`api.wyvern.chat`, public JSON, SFW only without an account; linked lorebooks 404 without one,
+  named as skipped) and Pygmalion (`server.pygmalion.chat` Connect GET, SFW only without an account, tag
+  filter returns nothing anonymously so not offered): search, detail, install as a built V2 JSON card with
+  the avatar from the listing. JannyAI (user chose option 2): search only through the public Meilisearch
+  index its site queries (search-only key in code; a 401/403 says the key rotated); install = the user's
+  browser + drop. No browser headers faked anywhere. Commit `a74cfd1`. 782 tests (+10).
+- App pages run with `connect-src 'none'` in an opaque-origin sandbox: browser-side calls to other sites
+  (Marinara's JannyAI one-click) are impossible by design; not to be loosened for this.
