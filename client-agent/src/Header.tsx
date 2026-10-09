@@ -17,9 +17,9 @@ type PickerOption = ModelOption & { group: string; shown: boolean }
  *  Settings > Connections and models only. */
 export function ModelPicker({ wide = false }: { wide?: boolean }): ReactNode {
   const models = useAgent((s) => s.models)
+  const favorites = useAgent((s) => s.favorites)
   const model = useAgent(effectiveModel)
   const setModel = useAgent((s) => s.setModel)
-  const favorites = useAgent((s) => s.favorites)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [showHidden, setShowHidden] = useState(false)
@@ -30,13 +30,14 @@ export function ModelPicker({ wide = false }: { wide?: boolean }): ReactNode {
         .map((m) => ({
           id: `${m.provider}/${m.modelId}`,
           // Keep the full provider label searchable when the button is truncated.
-          name: shortModelName(m.label),
+          // a quick-switch name wins, in the list and on the button
+          name: favorites.find((f) => f.ref === `${m.provider}/${m.modelId}`)?.name || shortModelName(m.label),
           keywords: [m.provider, m.connectionName ?? "", m.label],
           group: m.connectionName ?? m.provider,
           shown: m.shown,
         }))
         .sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)),
-    [models],
+    [models, favorites],
   )
   if (!options.length) return null
   const first = models.find((m) => m.shown)
