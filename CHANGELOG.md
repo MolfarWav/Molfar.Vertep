@@ -7,6 +7,16 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.2 (2026-10-09)
+
+- Models in one place: Settings' "API connections" and "Models" tabs are one tab, "Connections and models". One search over every model; under each connection its models, each with "show in the pickers", a star for the quick switch and its own settings.
+- A model's settings: its context window and prices, and its parameters in blocks by who calls it: Chat (app replies and API callers: temperature, top P/K, min P, penalties, seed, max output, reasoning, thinking tags, custom parameters JSON, extra headers), Plugins (trackers, memory, translation: a short set), one plugin of your choice, and Molfar. A switched-off field is not sent. The model's values win over what a request carries unless the request asks otherwise (Roleplay's preset switch); stored in `model-params.json` (routes `GET/PUT /v1/models/params`, `GET /v1/models/params/effective`; credential and transport headers are refused; Molfar asks before writing the file). Each block has recommended values with a "fill in" button, and Molfar warns when a model's window is under 64k.
+- Quick switch: starred models in your order, each with an optional name of its own (`model-favorites.json`, served with `GET /v1/models`, `PUT /v1/models/favorites`); Molfar's picker and the apps offer them first. Molfar's picker no longer has its own star for hiding models: that is chosen in Settings.
+- Apps can open Settings on one model's panel (`chrysalisShell.openSettings(model)`, trusted apps).
+- Roleplay 4.27.0 through app updates: models chosen in Settings and switched in the chat (a model per chat), the model's parameters first, chats that continue each other with the earlier story as backstory, Library portraits on the dashboard and in Soul, full-screen drawers.
+- The add-connection screen shows a failed provider list with "Try again" instead of offering only the sign-ins (seen on Android).
+- The reasoning level "min" from older presets now means "minimal" instead of switching reasoning off.
+
 ## 0.9.1 (2026-10-09)
 
 - Roleplay 4.26.0 through app updates: four skills for Molfar (card-craft, card-import, lorebook-craft, preset-craft) built on one reference for card, lorebook and preset files (`docs/DATA-FORMATS.md`, kept current by a test), and the card's id with a copy button in the character editor.
