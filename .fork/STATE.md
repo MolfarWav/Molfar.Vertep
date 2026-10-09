@@ -8,7 +8,7 @@ Plan: `.fork/handoff/v093/PLAN.md` (the items: `card-sources-prompt.md`). Built 
 DONE: item 8 (`marinara-sources.md`), the design, the plugin part with tests and the shared import helper (Roleplay branch `card-sources`, pushed, not main; two old bugs fixed on the way: V3 PNG with ccv3 first, latin1 PNG names on the Characters page). BUILDING: the Store UI (`UI-SPEC.md`, Sonnet subagent with the browser check). Then the live check with the user and the release (Roleplay 4.28.0).
 
 ## 0.9.4: deeper lorebook work (user, 2026-10-09)
-Not planned yet: the user brings a Hermes write-up.
+Plan agreed 2026-10-10: `.fork/handoff/v094/PLAN.md` (Cyrillic word forms in keys, real keyword test, why an entry fired, minActivations; export from Litopys and @@ decorators later). Not started; 0.9.3 first.
 
 ## 0.9.5: what 0.9.2 left open
 Plan: `.fork/handoff/v095/PLAN.md` (was the 0.9.3 plan; moved by the user 2026-10-09). Not started; ask the user for the order.
