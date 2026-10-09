@@ -69,10 +69,19 @@ error. Browser check by a subagent: see STATE.
    sideways. Wanted: the map opens for ONE chat; a search field finds another chat (like the link
    field of a text editor, the user's analogy: an SEO backlink from one page to another); the found
    chat's sphere is placed on the map and a line joins the old chat to the new one. The link is
-   stored, not only drawn (the disabled "Draw a bridge" button was the placeholder). Open
-   questions for the user before design: what the link does beyond the picture (the new chat gets
-   the old chat's Litopys story as background? only a marker?), direction (old -> new only?), can a
-   chat have several links, where the map opens from (Library, chat header).
+   stored, not only drawn (the disabled "Draw a bridge" button was the placeholder). DECIDED with
+   the user 2026-10-09: (a) the link is a BACKSTORY: the new chat's model requests carry the old
+   chat's Litopys memory (arcs/chapters + pinned facts) as "what happened before", within the token
+   budget; (b) a chat has at most one predecessor, a chat may have several continuations (chain +
+   branches; the map of a chat shows its chain back and its branches forward); (c) the map opens
+   from the Library as now, but for the selected chat; (d) message forks (parentChatId) show on
+   the same map with a dashed line, backlinks with a solid one.
+   BUILT 2026-10-09 (spec `LINKS-SPEC.md`), Roleplay worktree `.claude/worktrees/rp-links`, branch
+   `chat-links` from `portraits` (pushed to the fork, not main): `88f08a6` plugin (links.json, POST/GET
+   /litopys/links, backstory block before the chat's own insert, linkBudget 800, `continues` in GET
+   /litopys/chats, 6 tests), `f8d042b` UI (chats-map.tsx drafted by an external model, layout/search
+   fixed in review; graph in chats-graph.ts, 3 tests; Backstory budget field in the Library settings).
+   760 tests. Not browser-checked yet.
 4. **Section drawer full screen** (user, 2026-10-09): DONE `dac290b` (a button in the drawer header,
    remembered; every desktop drawer section).
 5. **Price noise** seen in the same screenshot ("$0.42000000000000004"): DONE `7b3a7c4`.
