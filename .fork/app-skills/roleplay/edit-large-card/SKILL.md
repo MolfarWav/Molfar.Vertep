@@ -1,85 +1,43 @@
 ---
 name: edit-large-card
-description: Use when reading or changing a Roleplay character card or lorebook: fields, example dialogues, a new lorebook, linking it to a character. Triggers: "поправ картку", "зміни опис персонажа", "додай приклади діалогів", "напиши лорбук", "додай запис у лорбук", "edit card", "lorebook entry".
+description: Use when reading or changing fields of a Roleplay character card or lorebook: one field, example dialogues, a new lorebook, linking a book to a character. Triggers: "поправ картку", "зміни опис персонажа", "додай запис у лорбук", "знайди в лорбуку", "edit card", "lorebook entry".
 ---
 
-# Cards and lorebooks: the whole reference, then five calls
+# Cards and lorebooks: the call order
 
-Every step resends the whole conversation, so do not explore: the formats are below. Do not read the
-app's code, do not run git, jq or python, do not list folders you do not need. A typical card task is:
-one json_get, a new lorebook (one write_file, one json_set), one json_set on the card, a short report.
+Every step resends the whole conversation, so do not explore. Do not read the app's code, do not
+run git, jq or python, do not list folders you do not need, never type a large JSON file out as
+text. A typical task is: one json_get, at most two writes, a short report.
 
-## The card on disk: `apps/roleplay/data/characters/<id>/card.json`
-Fields sit at the TOP level (not under /data):
-- `name`, `description`, `personality`, `scenario`, `first_mes`, `mes_example` (strings),
-  `alternate_greetings` (array of strings), `creator_notes`, `tags` (array), `extensions` (object).
-- `avatar`: a base64 image, tens of KB. Never ask for it, never print it.
-- `studio`: the app's own bag (an imported card may have none yet: json_set creates it, no need to check). `studio.linkedLorebookIds` (array of lorebook ids: the books this
-  character uses), `studio.embeddedLorebookId` (null or an id), `studio.avatar` (base64 again, never),
-  `studio.descVariants` / `personalityVariants` / `scenarioVariants`, `studio.versions`.
-- `extensions.molfar_soul` belongs to the dashboard's Soul tab: leave it alone.
-- Character id = the folder name. The other characters: one json_get per card is not needed; the
-  folder list `apps/roleplay/data/characters/` is enough.
+The fields and their meaning are in `apps/roleplay/docs/DATA-FORMATS.md`. Read it with one
+`read_file` when the task touches a field you do not know; trust it over memory. For writing the
+texts themselves load `card-craft` (characters) or `lorebook-craft` (worlds).
 
-`mes_example` format: blocks that start with `<START>`, turns as `{{user}}: ...` and `{{char}}: ...`:
-```
-<START>
-{{user}}: How long have you lived here?
-{{char}}: *She shrugs.* Long enough to know which floorboards creak.
-<START>
-{{user}}: ...
-{{char}}: ...
-```
-
-## A lorebook: `apps/roleplay/data/lorebooks/<id>.json`
-The id is the file name without `.json`, and the same string in `"id"`. A new book is made in two
-calls, never typed out whole: (1) write_file the book below with `"entries": []`, (2) ONE json_set
-with an `append` to `/entries` per entry (a long JSON typed as text breaks: stray words, duplicate
-keys and uids, `"true"` as a string; json_set values cannot). The shape, with one entry:
-```json
-{
-  "id": "lyriel-lore",
-  "name": "Lyriel — World",
-  "globalActive": false,
-  "linkedCharacterIds": [],
-  "entries": [
-    {
-      "uid": 1, "title": "The Silver Grove", "memo": "",
-      "keys": ["срібний гай", "срібного гаю", "срібному гаю", "silver grove"],
-      "keysRegex": false, "secondaryKeys": [], "selectiveLogic": "AND_ANY",
-      "status": "normal",
-      "content": "Two or three sentences the model needs when the place comes up.",
-      "position": "before_char", "depth": 4, "role": "system", "order": 100,
-      "probability": 100, "enabled": true
-    }
-  ],
-  "settings": { "scanDepth": 4, "contextPercent": 25, "budgetCap": 0, "minActivations": 0, "maxRecursion": 2,
-    "insertionStrategy": "character_first", "caseSensitive": false, "wholeWords": true, "groupScoring": false,
-    "recursiveScan": true, "includeNames": true, "overflowAlert": true }
-}
-```
-- `status`: `"normal"` fires on a key, `"constant"` rides every message (keep those few and short),
-  `"vectorized"` matches by meaning. Never write the old `constant` boolean.
-- `uid`: 1, 2, 3… unique in the book. Content: short, concrete, one topic per entry.
-- Keys in Ukrainian or Russian: list the inflected forms people will type (`вежа`, `вежі`, `вежу`,
-  `вежею`), plus the English or Latin name if the story uses it. That is enough; load the skill
-  `cyrillic-text-matching` only when a key keeps failing to fire.
-- Files starting with `_` are AI-only templates: never edit them.
-
-## Linking a book to a character
-A chat uses the global books, the character's `studio.embeddedLorebookId` and every id in
-`studio.linkedLorebookIds`. To link a book, append its id there (the book's own `linkedCharacterIds`
-only feeds a counter in the list; leave it):
-`json_set { path: card, edits: [{ pointer: "/studio/linkedLorebookIds", op: "append", value: "lyriel-lore" }] }`
+## Paths
+- Card: `apps/roleplay/data/characters/<id>/card.json` (id = folder name; fields at the TOP level,
+  not under `/data`).
+- Lorebook: `apps/roleplay/data/lorebooks/<id>.json` (id = file name, repeated in `"id"`).
+- Files starting with `_` are AI-only templates: copy, never edit.
+- Never ask for or print `/avatar` or `/studio/avatar` (base64 images). Leave
+  `/extensions/molfar_soul` to the Soul tab.
+- `/extensions/molfar_translation` keeps the texts from before a translation
+  (for "Restore original"): leave it alone. To translate a card, point the user
+  to Translate in the character editor instead of rewriting fields one by one.
+- `/studio/expressions` holds the emotion images (base64): never print it.
 
 ## The calls
-1. `json_get { path: card, pointers: ["/name", "/description", "/personality", "/scenario", "/mes_example", "/tags", "/studio/linkedLorebookIds", "/studio/embeddedLorebookId"] }`
-   One call. If a linked book exists and the task changes it, json_get its `/entries` in the same reply.
+1. Read: ONE `json_get` with every pointer you need, for example
+   `pointers: ["/name", "/description", "/personality", "/scenario", "/first_mes", "/mes_example", "/studio/linkedLorebookIds"]`.
+   A value too big comes back as its shape: ask again for the part you need. If a linked book
+   matters, json_get its `/entries` in the same reply.
 2. Write the new texts in your head, in the card's language.
-3. A new book: `write_file` the JSON above with `"entries": []`, then ONE json_set:
-   `edits: [{ pointer: "/entries", op: "append", value: { "uid": 1, ... } }, { ..."uid": 2... }]`.
-   `enabled` is `true`, not `"true"`; uids 1, 2, 3… in order. A change to an existing book: json_set
-   on its file (`/entries/3/content` to change one entry). write_file refuses broken JSON, so a
-   refusal means fix the text, not patch the file afterwards.
-4. ONE json_set on the card with every field change and the link append. It commits on its own and
-   open chats pick it up within a second. Do not check with git afterwards; json_set reports what changed.
+3. A new lorebook: `write_file` a small book with `"entries": []` (`settings` copied from
+   `_example.json`), then ONE `json_set` with `{ pointer: "/entries", op: "append", value: {...} }`
+   per entry (`uid` 1, 2, 3…, `enabled: true` as a boolean). A change to one entry:
+   `json_set` on `/entries/<index>/<field>`.
+4. ONE `json_set` on the card with every field change, plus the link when a book is new:
+   `{ pointer: "/studio/linkedLorebookIds", op: "append", value: "<book id>" }` (json_set creates a
+   missing `studio`; the book's own `linkedCharacterIds` is display only).
+5. Report what changed. json_set and write_file commit on their own and open chats pick the change
+   up within a second: do not read the file back or check with git. A write_file refusal means the
+   JSON text is broken: fix the text, never patch the file afterwards.

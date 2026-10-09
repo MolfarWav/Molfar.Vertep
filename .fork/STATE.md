@@ -1,11 +1,11 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-08.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-10.
 The full log of everything before this date, with commit hashes, is `.fork/archive/STATE-until-2026-10-02.md`; finished handoffs are in `.fork/archive/`. Standing rules are in `CLAUDE.md`.
 
-## 0.9.3: NEXT, more card sources for the Roleplay Store (user, 2026-10-09)
-Plan: `.fork/handoff/v093/PLAN.md` (the items: `card-sources-prompt.md`). Built by Claude Code in the Roleplay fork (user's choice), item 8 (Marinara research) first. Engine branch `claude/v093` (worktree `.claude/worktrees/v093`).
-DONE: item 8 (`marinara-sources.md`), the design, the plugin part with tests and the shared import helper (Roleplay branch `card-sources`, pushed, not main; two old bugs fixed on the way: V3 PNG with ccv3 first, latin1 PNG names on the Characters page). BUILDING: the Store UI (`UI-SPEC.md`, Sonnet subagent with the browser check). Then the live check with the user and the release (Roleplay 4.28.0).
+## 0.9.3: RELEASED 2026-10-10 (engine main, tag v0.9.3 by the user; Roleplay 4.28.0 on the fork main)
+Plan and every round: `.fork/handoff/v093/PLAN.md`. Roleplay: six storefronts (Chub, RisuRealm, CharaVault, Wyvern, Pygmalion, JannyAI search), paste-a-link, cards up to 200 MB through the engine file route (`GET /v1/apps/:appId/file`, bridge passes ArrayBuffers), RisuAI emotion images imported and sized to the 3 MB budget inside card.json, translation of cards (Store preview, Install translated, editor Translate / Restore original, record `extensions.molfar_translation`), Cyrillic emotion detection, the floating sprite folds and resizes; fixes: latin1 PNG names, ccv3-first V3 PNGs, chub PNG path (the plugin PNG reader never worked in QuickJS), charx portraits. Engine: file route, bridge bytes, untyped raster images in the image proxy. Seen live by the user on the E: workspace (big RisuRealm cards, emotions). Built with a Sonnet subagent for the UI (browser-checked each round); external drafts and reviews: DeepSeek V4 Pro / V4.1 Flash (GLM 5.3 and once V4 Pro hung and were killed).
+Left for later: emotion images as separate files at full size (next, PLAN.md last section); the Emotions badge from the card itself after download; a cancel button for long translations; Wyvern/Pygmalion adult cards need the user's own token (not built).
 
 ## 0.9.4: deeper lorebook work (user, 2026-10-09)
 Plan agreed 2026-10-10: `.fork/handoff/v094/PLAN.md` (Cyrillic word forms in keys, real keyword test, why an entry fired, minActivations; export from Litopys and @@ decorators later). Not started; 0.9.3 first.

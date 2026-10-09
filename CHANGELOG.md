@@ -7,6 +7,13 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.3 (2026-10-10)
+
+- Roleplay 4.28.0 through app updates: the Marketplace has six storefronts (Chub, RisuRealm, CharaVault, Wyvern, Pygmalion, JannyAI) with their own filters, a "paste a card link" box, cards of any size up to 200 MB with their emotion images, translation of cards in the Marketplace and in the character editor (with "Restore original"), expression sprites that follow Ukrainian and Russian replies, and a floating sprite that folds and resizes.
+- Apps can pull big files: `GET /v1/apps/:appId/file?url=` streams a remote file up to 200 MB with the image proxy's gate (https, default port, a host an app plugin declared with the network permission granted, every redirect re-checked), as opaque octet-stream. A plugin's own network answer is held in its sandbox (20 MB at most), too small for a card with an image pack.
+- The app bridge hands a fetch answer over as bytes (a transferred ArrayBuffer) instead of base64 text, so a large download is not held three times; frames still read base64 from an older shell.
+- The app image proxy takes images sent with no type or a generic one when their bytes are PNG, JPEG, GIF or WebP (RisuRealm's thumbnails showed as placeholders); anything else, SVG included, is still refused.
+
 ## 0.9.2 (2026-10-09)
 
 - Models in one place: Settings' "API connections" and "Models" tabs are one tab, "Connections and models". One search over every model; under each connection its models, each with "show in the pickers", a star for the quick switch and its own settings.
