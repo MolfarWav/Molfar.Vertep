@@ -73,6 +73,25 @@ The user brings a Hermes write-up; plan it together then. A lorebook format chan
   filter returns nothing anonymously so not offered): search, detail, install as a built V2 JSON card with
   the avatar from the listing. JannyAI (user chose option 2): search only through the public Meilisearch
   index its site queries (search-only key in code; a 401/403 says the key rotated); install = the user's
-  browser + drop. No browser headers faked anywhere. Commit `a74cfd1`. 782 tests (+10).
+  browser + drop. No browser headers faked anywhere. Commit `a74cfd1`. 775 Roleplay tests (765 + 10; an earlier "782" here was a miscount).
 - App pages run with `connect-src 'none'` in an opaque-origin sandbox: browser-side calls to other sites
   (Marinara's JannyAI one-click) are impossible by design; not to be loosened for this.
+
+## Round 3: the real sandbox (2026-10-09)
+- The browser check (Sonnet subagent, UI commits `174d85b`, `431ccc5`) found what bun tests could not: the
+  engine's QuickJS sandbox has no atob/btoa/TextDecoder/TextEncoder and gives a route 10 s. Fixed in
+  `81ebda7`: plain-JS base64/UTF-8, PNGs checked by chunk headers only (11 MB PNG in 0.6 s, measured in
+  the real sandbox with `PluginSandbox`); the card-sources tests now run with those globals removed. The
+  old PNG reader had the same flaw and failed silently, so chub imports always used the detail JSON; they
+  now read the card PNG.
+- Engine `f8384b6` (this branch): the app image proxy takes untyped raster images (RisuRealm's CDN sends
+  no content-type; SVG/HTML still refused). Needed for RisuRealm thumbnails: ships with engine 0.9.3.
+- `e1631c9`: a charx with a large main icon (3.9 MB seen) gets a browser-downscaled portrait.
+- Re-check without patches: RisuRealm thumbnails 30/30; installs from all six sources on disk with
+  portraits and linked books; no sandbox errors in the engine log.
+- External review of the UI (DeepSeek V4 Pro; GLM 5.3 hung 15 min and was killed): 5 of its findings
+  taken (detail request guard, close detail on source switch, hasMore reset, empty-state filter count,
+  scroll to top), the rest rejected as non-defects.
+- The engine worktree's typecheck shows 7 errors in client-agent/src/file-mentions.ts and
+  test/agent-composer.test.ts, also on clean main there (fresh `bun install` in the worktree); check before
+  the release on the main checkout.
