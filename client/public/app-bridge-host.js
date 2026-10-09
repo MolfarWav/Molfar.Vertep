@@ -85,7 +85,7 @@
     if (method === "PUT" && (path === "/v1/assets" || path.indexOf("/v1/assets/") === 0)) return true;
     // engine-wide settings writes: shipped apps only
     if (trusted === true) {
-      if (method === "PUT" && (path === "/v1/models/context" || path === "/v1/models/pricing" || path === "/v1/embeddings/config")) return true;
+      if (method === "PUT" && (path === "/v1/models/context" || path === "/v1/models/pricing" || path === "/v1/models/params" || path === "/v1/embeddings/config")) return true;
       if (method === "POST" && path === "/v1/embeddings/probe") return true;
     }
     return false;

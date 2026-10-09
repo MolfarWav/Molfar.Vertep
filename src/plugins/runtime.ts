@@ -715,7 +715,8 @@ async function runPassRequests(
     const onToolEvent = streamTag && deps.onLlmTool ? (ev: Parameters<NonNullable<PluginRuntimeDeps["onLlmTool"]>>[1]) => deps.onLlmTool!(streamTag, ev) : undefined;
     const abortSignal = streamTag && deps.abortCtlFor ? deps.abortCtlFor(streamTag) : null;
     try {
-      const out = await deps.models.generate({ ...request, ...toolBridge, ...(onToolEvent ? { onToolEvent } : {}), ...(abortSignal ? { signal: abortSignal } : {}), source: llmSourceOf(plugin) }, onDelta, onThinking);
+      // source + paramsKey pick the model's parameter block (model-params.ts); set here, after the spread, so a plugin cannot pose as another
+      const out = await deps.models.generate({ ...request, ...toolBridge, ...(onToolEvent ? { onToolEvent } : {}), ...(abortSignal ? { signal: abortSignal } : {}), source: llmSourceOf(plugin), paramsKey: key }, onDelta, onThinking);
       // cancelled generations never commit: the client owns what a cancel
       // keeps (it froze the exact on-screen bytes) and writes them itself
       results.llm[key] = streamTag && deps.consumeCancel?.(streamTag) ? emptyGeneration() : out;

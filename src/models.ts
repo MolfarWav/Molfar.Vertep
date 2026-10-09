@@ -18,6 +18,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { inspectAssistantMessage, inspectRequest, inspectResult, type InspectorEntry } from "./inspector.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
+import { blockFor, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
 
 /** File-backed CredentialStore over the user's auth.json (outside git). */
 class FileCredentialStore implements CredentialStore {
@@ -134,7 +135,7 @@ export interface GenerateRequest {
    *  routing/caching session headers; a fresh id is generated when a
    *  stateless caller omits it. */
   sessionId?: string;
-  reasoning?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "med";
+  reasoning?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | "med" | "min";
   /** Cap thinking tokens for the active level (pi-ai thinkingBudgets;
    *  token-based providers only, ignored elsewhere). */
   thinkingBudget?: number;
@@ -170,6 +171,13 @@ export interface GenerateRequest {
   signal?: AbortSignal;
   /** Trace tag for the console LLM log ("app:roleplay/engine", "api:/v1/chat/completions", …). */
   source?: string;
+  /** The plugin's own key for this request ("reply", "translation", …), set by the plugin runtime;
+   *  with `source` it picks the model's parameter block (model-params.ts). */
+  paramsKey?: string;
+  /** "request": the request's own params win over the model's block (a preset that overrides). */
+  paramsSource?: "model" | "request";
+  /** Set by generateInner from model-params.json only (a caller's value is overwritten). */
+  modelHeaders?: Record<string, string>;
 }
 
 export interface GenerateResult {
@@ -181,8 +189,9 @@ export interface GenerateResult {
   reasoningTimeMs?: number;
   /** Total wall time of the generation (measured by the traced generate()). */
   genTimeMs?: number;
-  /** Echo of the request's presetParams (sampler snapshot for the caller). */
-  requestParams?: GenerateRequest["presetParams"];
+  /** The params the request went out with (the model's block merged in), with the block's name and
+   *  where each value came from ("model" | "request"). */
+  requestParams?: GenerateRequest["presetParams"] & { block?: string | null; reasoning?: string; from?: Record<string, string> };
   /** Echo of the request's assistantPrefill metadata. */
   assistantPrefill?: string;
   /** Parsed structured output when `schema` was requested and the model complied. */
@@ -719,7 +728,7 @@ export class UserModelService {
       // stateless echoes for two-phase callers (their module state resets
       // between passes): timing, sampler snapshot, prefill metadata
       res.genTimeMs = Date.now() - t0;
-      if (req.presetParams && Object.keys(req.presetParams).length > 0) res.requestParams = req.presetParams;
+      if (!res.requestParams && req.presetParams && Object.keys(req.presetParams).length > 0) res.requestParams = req.presetParams;
       if (req.assistantPrefill) res.assistantPrefill = req.assistantPrefill;
       return res;
     } catch (e) {
@@ -886,7 +895,7 @@ export class UserModelService {
 
     const res = await fetch(entry.baseUrl.replace(/\/$/, "") + "/completions", {
       method: "POST",
-      headers: { "content-type": "application/json", ...auth },
+      headers: { "content-type": "application/json", ...req.modelHeaders, ...auth },
       body: JSON.stringify(body),
       signal: req.signal,
     });
@@ -982,8 +991,49 @@ export class UserModelService {
     };
   }
 
-  async generateInner(req: GenerateRequest, onDelta?: (delta: string) => void, onThinking?: (delta: string) => void): Promise<GenerateResult> {
-    const model = await this.resolveModel(req.model ?? null);
+  async generateInner(req0: GenerateRequest, onDelta?: (delta: string) => void, onThinking?: (delta: string) => void): Promise<GenerateResult> {
+    const model = await this.resolveModel(req0.model ?? null);
+    const { req, applied } = this.withModelParams(model, req0);
+    const res = await this.generateResolved(model, req, onDelta, onThinking);
+    if (applied.block) {
+      res.requestParams = {
+        ...(applied.temperature !== undefined ? { temperature: applied.temperature } : {}),
+        ...(applied.max_tokens !== undefined ? { max_tokens: applied.max_tokens } : {}),
+        ...(applied.params ? { params: applied.params } : {}),
+        ...(applied.reasoning ? { reasoning: applied.reasoning } : {}),
+        block: applied.block,
+        from: applied.from,
+      };
+    }
+    return res;
+  }
+
+  /** The model's parameter block for this caller, merged into the request (model-params.ts). */
+  private withModelParams(model: Model<Api>, req: GenerateRequest): { req: GenerateRequest; applied: AppliedParams } {
+    const entry = readModelParams(this.paths.root).models[`${model.provider}/${model.id}`];
+    const name = blockFor(entry, { source: req.source, key: req.paramsKey });
+    const applied = mergeParams(name ? entry?.[name] : undefined, name, req);
+    const { modelHeaders: _ignored, ...rest } = req;
+    if (!applied.block) return { req: rest, applied };
+    const presetParams: NonNullable<GenerateRequest["presetParams"]> = {
+      ...(applied.temperature !== undefined ? { temperature: applied.temperature } : {}),
+      ...(applied.max_tokens !== undefined ? { max_tokens: applied.max_tokens } : {}),
+      ...(applied.params ? { params: applied.params } : {}),
+    };
+    return {
+      req: {
+        ...rest,
+        presetParams,
+        ...(applied.reasoning !== undefined ? { reasoning: applied.reasoning as GenerateRequest["reasoning"] } : {}),
+        ...(applied.thinkingBudget !== undefined ? { thinkingBudget: applied.thinkingBudget } : {}),
+        ...(applied.reasoningTags ? { reasoningTags: applied.reasoningTags } : {}),
+        ...(applied.headers ? { modelHeaders: applied.headers } : {}),
+      },
+      applied,
+    };
+  }
+
+  private async generateResolved(model: Model<Api>, req: GenerateRequest, onDelta?: (delta: string) => void, onThinking?: (delta: string) => void): Promise<GenerateResult> {
     const signal = req.signal;
     if (!signal || !isLocalEndpoint(model.baseUrl)) return this.generateModel(model, req, onDelta, onThinking);
     const stopServer = () => abortLocalGeneration(model.baseUrl);
@@ -1048,7 +1098,7 @@ export class UserModelService {
     const toolTrace: GenerateResult["toolTrace"] = [];
     // legacy presets write the short level "med"; pi-ai clamps unknown levels
     // to OFF (silently disabling thinking) — normalize to "medium"
-    const reasoningLevel = req.reasoning === "med" ? "medium" : req.reasoning;
+    const reasoningLevel = req.reasoning === "med" ? "medium" : req.reasoning === "min" ? "minimal" : req.reasoning;
     const MAX_TOOL_ROUNDS = 8;
 
     // Structured output: forced-tool pattern (pi-ai has no first-class
@@ -1214,7 +1264,7 @@ export class UserModelService {
         ...(req.signal ? ({ signal: req.signal } as never) : {}),
         // key provider prompt caching (set when a cache session exists)
         sessionId,
-        ...(sessionHeaders ? { headers: sessionHeaders } : {}),
+        ...(sessionHeaders || req.modelHeaders ? { headers: { ...req.modelHeaders, ...sessionHeaders } } : {}),
       });
       const final = await consumeStream(stream);
       if (final.stopReason === "error") {
@@ -1277,7 +1327,7 @@ export class UserModelService {
     const stream = this.models.streamSimple(model, context, {
       ...(req.signal ? ({ signal: req.signal } as never) : {}),
       sessionId,
-      ...(sessionHeaders ? { headers: sessionHeaders } : {}),
+      ...(sessionHeaders || req.modelHeaders ? { headers: { ...req.modelHeaders, ...sessionHeaders } } : {}),
     });
     roundThinkStart = 0;
     roundThinkEnd = 0;
@@ -1367,10 +1417,32 @@ export class UserModelService {
     // upstream inference.
     const sid = sessionId ?? uuidv7();
     const sessionHeaders = opencodeSessionHeaders(model, sid);
+    // the model's Molfar block (model-params.ts) fills what the agent leaves unset; the agent page's
+    // own choices (its reasoning selector) stay the agent's
+    const entry = readModelParams(this.paths.root).models[`${model.provider}/${model.id}`];
+    const blockName = blockFor(entry, { source: "agent" });
+    const own = options as { reasoning?: string; temperature?: number; maxTokens?: number } | undefined;
+    const applied = blockName
+      ? mergeParams(entry?.[blockName], blockName, {
+          reasoning: own?.reasoning,
+          presetParams: { temperature: own?.temperature, max_tokens: own?.maxTokens },
+          paramsSource: "request",
+        })
+      : null;
+    const fromBlock = applied
+      ? {
+          ...(applied.temperature !== undefined ? { temperature: applied.temperature } : {}),
+          ...(applied.max_tokens !== undefined ? { maxTokens: applied.max_tokens } : {}),
+          ...(applied.reasoning !== undefined && applied.reasoning !== "off" ? { reasoning: applied.reasoning as never } : {}),
+          ...(applied.params ? { samplingParams: applied.params } : {}),
+        }
+      : {};
+    const headers = applied?.headers || sessionHeaders ? { ...applied?.headers, ...options?.headers, ...sessionHeaders } : undefined;
     const merged = {
       ...options,
+      ...fromBlock,
       sessionId: options?.sessionId ?? sid,
-      ...(sessionHeaders ? { headers: { ...options?.headers, ...sessionHeaders } } : {}),
+      ...(headers ? { headers } : {}),
     };
     // pi-agent-core sends the ThinkingLevel as `reasoning`, but openai-completions
     // endpoints (deepseek etc.) read `reasoningEffort` — pass both so every

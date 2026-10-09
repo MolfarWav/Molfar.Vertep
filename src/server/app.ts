@@ -26,6 +26,7 @@ import { SELF_UPDATE, startUpdate, updateState } from "../self-update.js";
 import { DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
 import * as git from "../git.js";
 import { UserModelService, ModelNotConfiguredError, type ModelPricing } from "../models.js";
+import { blockFor, ModelParamsError, readModelParams, writeModelParams } from "../model-params.js";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
 import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
 import type { AuthPrompt, Credential, ProviderAuthInteraction } from "@earendil-works/pi-ai";
@@ -191,7 +192,7 @@ export function appBridgeAllows(appId: string, method: string, path: string, tru
   if (method === "POST" && (path === "/v1/images" || path === "/v1/audio/speech")) return true;
   if (method === "PUT" && (path === "/v1/assets" || path.startsWith("/v1/assets/"))) return true;
   if (trusted) {
-    if (method === "PUT" && (path === "/v1/models/context" || path === "/v1/models/pricing" || path === "/v1/embeddings/config")) return true;
+    if (method === "PUT" && (path === "/v1/models/context" || path === "/v1/models/pricing" || path === "/v1/models/params" || path === "/v1/embeddings/config")) return true;
     if (method === "POST" && path === "/v1/embeddings/probe") return true;
   }
   return false;
@@ -1336,6 +1337,33 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     await git.commitAll(p.root, u.username, `models: pricing ${body.ref} = ${pricing ? "set" : "catalog"}`).catch(() => undefined);
     bus.emit(u.username, "connections_changed", { id: body.ref });
     return c.json({ ok: true, pricing: table });
+  });
+
+  // per-model parameters in blocks by caller (chat, plugins, plugin:<app>/<id>, molfar): what a model
+  // is sent, whichever preset or app calls it (model-params.ts, CONNECTIONS-SPEC.md)
+  app.get("/v1/models/params", (c) => c.json(readModelParams(c.get("paths").root)));
+
+  // the block a caller would get and its values: for UIs that show the effective value and its source
+  app.get("/v1/models/params/effective", (c) => {
+    const ref = c.req.query("model") ?? "";
+    const entry = readModelParams(c.get("paths").root).models[ref];
+    const block = blockFor(entry, { source: c.req.query("source") ?? "", key: c.req.query("key") ?? undefined });
+    return c.json({ model: ref, block, values: block ? entry?.[block] ?? {} : {} });
+  });
+
+  app.put("/v1/models/params", async (c) => {
+    const u = c.get("user");
+    const p = c.get("paths");
+    const body = await c.req.json<{ model?: unknown; blocks?: unknown }>().catch(() => ({}) as { model?: unknown; blocks?: unknown });
+    try {
+      const file = writeModelParams(p.root, body.model as string, body.blocks ?? null);
+      await git.commitAll(p.root, u.username, `models: params ${String(body.model)}`).catch(() => undefined);
+      bus.emit(u.username, "connections_changed", { id: String(body.model) });
+      return c.json({ ok: true, ...file });
+    } catch (e) {
+      if (e instanceof ModelParamsError) return c.json({ error: e.message }, 400);
+      throw e;
+    }
   });
 
   // embeddings config (settings.json): which provider serves /embeddings

@@ -16,8 +16,9 @@
 import fs from "node:fs";
 
 export const DEFAULT_PROTECTED_PATHS: readonly string[] = ["apps/*/src/**", "apps/*/index.html"];
-/** Always protected, whatever the list says. */
-export const ALWAYS_PROTECTED: readonly string[] = ["persona.md"];
+/** Always protected, whatever the list says. model-params.json changes what every model call is
+ *  sent (0.9.2), so the user says yes first. */
+export const ALWAYS_PROTECTED: readonly string[] = ["persona.md", "model-params.json"];
 
 const SETTING = "agentProtectedPaths";
 const MAX_PATTERNS = 40;

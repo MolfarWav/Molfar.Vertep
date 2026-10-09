@@ -110,7 +110,7 @@ describe("protected paths", () => {
       app.request(url, { method, headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, ...(body !== undefined ? { body: JSON.stringify(body) } : {}) });
     let r = await (await req("GET", "/v1/settings/agent-protection")).json() as { paths: string[]; defaults: string[]; always: string[] };
     expect(r.paths).toEqual(r.defaults);
-    expect(r.always).toEqual(["persona.md"]);
+    expect(r.always).toEqual(["persona.md", "model-params.json"]);
     expect((await req("PUT", "/v1/settings/agent-protection", { paths: ["../x"] })).status).toBe(400);
     r = await (await req("PUT", "/v1/settings/agent-protection", { paths: ["apps/*/src/**", "apps/*/plugins/**"] })).json() as typeof r;
     expect(readProtectedPaths(p.settings)).toEqual(["apps/*/src/**", "apps/*/plugins/**"]);

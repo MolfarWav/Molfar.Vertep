@@ -239,6 +239,7 @@ describe("exfiltration ways out of an app page", () => {
     const settingsWrites: Array<[string, string]> = [
       ["PUT", "/v1/models/context"],
       ["PUT", "/v1/models/pricing"],
+      ["PUT", "/v1/models/params"],
       ["PUT", "/v1/embeddings/config"],
       ["POST", "/v1/embeddings/probe"],
     ];
