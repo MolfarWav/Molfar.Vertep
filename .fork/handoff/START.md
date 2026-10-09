@@ -13,6 +13,7 @@ Phrase to open the session: "Read .fork/handoff/START.md and start with item 1."
 - 0.4.0: the agent is **Molfar** (Мольфар): name in prompts and UI, avatar (`client/public/molfar-128.webp`, `-512.webp`), character and report emoji markers in the default instructions.
 
 ## Queue
+000. **0.9.3: NEXT (user, 2026-10-09: what 0.9.2 left open goes here).** Plan: `.fork/handoff/v093/PLAN.md` (effective parameters in the chat, a live provider run, the Android provider list, backstory depth, the duplicate-key warning, a timing-out builder test, older small bugs, branch and worktree cleanup). Ask the user for the order first.
 00. **0.9.2: DONE, RELEASED 2026-10-09** (engine 0.9.2 on main `9db6321`, tag by the user; Roleplay 4.27.0 on the fork main `4b93ada`). Plan: `.fork/handoff/v092/PLAN.md` (Library portraits on the dashboard and in Soul first, then connections in one place). 0.9.1 is released (engine `v0.9.1`, Roleplay 4.26.1): items 0b2, 0c and 0d below are DONE in it.
 0. **Relationship dashboard v2: DONE 2026-10-05** (released in 0.8.0 / Roleplay 4.23.0). Next is 0a.
 0a. **0.8.1, right after 0.8.0 (user, 2026-10-04)**, together with the small fixes of item 4 (APK, malformed tool call retry):
