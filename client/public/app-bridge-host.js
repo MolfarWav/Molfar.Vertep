@@ -118,8 +118,8 @@
 
   var FORWARD_HEADERS = new Set(["content-type", "accept", "accept-language", "range", "cache-control", "if-none-match"]);
 
-  function send(source, msg) {
-    try { source.postMessage(msg, "*"); } catch { /* frame gone */ }
+  function send(source, msg, transfer) {
+    try { source.postMessage(msg, "*", transfer || []); } catch { /* frame gone */ }
   }
 
   function handleFetch(record, source, d) {
@@ -159,6 +159,8 @@
           if (k === "set-cookie") return;
           outHeaders.push([k, v]);
         });
+        // the bytes themselves, transferred (no copy, no base64): a large
+        // file (a card with an image pack) would otherwise be held three times
         send(source, {
           __chrysalis: 1,
           type: "fetch-result",
@@ -166,8 +168,8 @@
           status: res.status,
           statusText: res.statusText,
           headers: outHeaders,
-          body: buf.byteLength ? bytesToB64(new Uint8Array(buf)) : null,
-        });
+          body: buf.byteLength ? buf : null,
+        }, buf.byteLength ? [buf] : []);
       });
     }).catch(function (e) {
       send(source, { __chrysalis: 1, type: "fetch-error", id: d.id, error: String((e && e.message) || e) });

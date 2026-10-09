@@ -125,6 +125,9 @@ const FRAME_CONNECTION_ALLOWLIST = "(response-origin); webrtc=block";
 /** The raster type of image bytes (PNG, JPEG, GIF, WebP), or null. Used only
  *  when an upstream sends no image type; never yields SVG or anything that
  *  could run as a document. */
+/** Largest remote file an app may pull through GET /v1/apps/:appId/file. */
+export const APP_FILE_CAP = 200 * 1024 * 1024;
+
 export function rasterImageType(b: Uint8Array): string | null {
   if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image/png";
   if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
@@ -4905,9 +4908,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
   // must come through the engine. The gate is the union of the app's plugins'
   // networkHosts allowlists: an app can only pull images from hosts its
   // plugins already declared, and every redirect hop is re-validated.
-  app.get("/v1/apps/:appId/img", async (c) => {
+  /** The remote URL an app asks the engine to fetch (?url=), checked: https,
+   *  default port, and a host that one of the app's plugins declared in
+   *  networkHosts WITH the network permission granted. Shared by the image
+   *  proxy and the file route; returns the url and the host test for the
+   *  redirect hops, or the refusal to send. */
+  const appRemoteTarget = (c: Context<AppEnv>): { url: URL; hostAllowed: (h: string) => boolean } | Response => {
     const u = c.get("user");
-    const appId = c.req.param("appId");
+    const appId = c.req.param("appId") ?? "";
     let url: URL;
     try {
       url = new URL(c.req.query("url") ?? "");
@@ -4915,8 +4923,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
       return c.json({ error: "invalid url" }, 400);
     }
     if (url.protocol !== "https:") return c.json({ error: "https url required" }, 400);
-    // image CDNs live on 443; explicit ports would turn allowlisted hostnames
-    // into a port scanner against those hosts
+    // CDNs live on 443; explicit ports would turn allowlisted hostnames into
+    // a port scanner against those hosts
     if (url.port) return c.json({ error: "port must be the https default" }, 400);
     const p = userPaths(dataDir, u.username);
     if (!readApp(p.apps, appId)) return c.json({ error: "app not found" }, 404);
@@ -4927,7 +4935,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
       // a declared hostname only counts when the network permission is
       // actually granted; otherwise an imported plugin with no grants could
       // still make the engine fetch on its behalf (a data-carrying URL query
-      // leaves even when the response is not an image)
+      // leaves even when the response is refused)
       if (!pluginGranted(plugin, "network", grants)) continue;
       for (const host of plugin.manifest.networkHosts ?? []) {
         if (host.startsWith("*.")) suffixes.push(host.slice(1));
@@ -4938,6 +4946,13 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
     if (!hostAllowed(url.hostname)) {
       return c.json({ error: `host not allowlisted by any ${appId} plugin: ${url.hostname}` }, 403);
     }
+    return { url, hostAllowed };
+  };
+
+  app.get("/v1/apps/:appId/img", async (c) => {
+    const target = appRemoteTarget(c);
+    if (target instanceof Response) return target;
+    const { url, hostAllowed } = target;
     const CAP = 8 * 1024 * 1024;
     try {
       let current = url;
@@ -4977,6 +4992,62 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
       return c.json({ error: "too many redirects" }, 502);
     } catch (e) {
       return c.json({ error: `image fetch failed: ${(e as Error).message}` }, 502);
+    }
+  });
+
+  // Same gate as the image proxy, for files too big to pass through a plugin
+  // (the sandbox holds a route's net answer in memory, 20 MB at most): a
+  // character card with a large image pack can be 100 MB+. Streamed with a
+  // hard cap and handed to the app as opaque bytes (octet-stream, nosniff,
+  // sandboxed), never rendered; the app reads what it asked for.
+  app.get("/v1/apps/:appId/file", async (c) => {
+    const target = appRemoteTarget(c);
+    if (target instanceof Response) return target;
+    const { url, hostAllowed } = target;
+    const CAP = APP_FILE_CAP;
+    try {
+      let current = url;
+      for (let hop = 0; hop < 5; hop++) {
+        await assertPublicHost(current.hostname);
+        const res = await fetch(current, {
+          headers: { "user-agent": "Molfar-Vertep (+https://github.com/MolfarWav/Molfar.Vertep)", accept: "*/*" },
+          redirect: "manual",
+          signal: AbortSignal.timeout(120_000),
+        });
+        if (res.status >= 300 && res.status < 400) {
+          const loc = res.headers.get("location");
+          if (!loc) return c.json({ error: "redirect without location" }, 502);
+          const next = new URL(loc, current);
+          if (next.protocol !== "https:" || next.port || !hostAllowed(next.hostname)) {
+            return c.json({ error: `redirect to non-allowlisted host: ${next.hostname}` }, 403);
+          }
+          current = next;
+          continue;
+        }
+        if (!res.ok) return c.json({ error: `upstream ${res.status}` }, res.status === 404 || res.status === 429 ? res.status : 502);
+        if (Number(res.headers.get("content-length") ?? 0) > CAP) return c.json({ error: `file too large (over ${CAP / 1024 / 1024} MB)` }, 413);
+        if (!res.body) return c.json({ error: "empty answer" }, 502);
+        // count while streaming: a missing or false content-length must not
+        // let more than the cap through
+        let seen = 0;
+        const capped = res.body.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+          transform(chunk, ctrl) {
+            seen += chunk.byteLength;
+            if (seen > CAP) ctrl.error(new Error("file too large"));
+            else ctrl.enqueue(chunk);
+          },
+        }));
+        c.header("cache-control", "no-store");
+        return c.body(capped, 200, {
+          "content-type": "application/octet-stream",
+          "x-content-type-options": "nosniff",
+          "content-security-policy": "sandbox; default-src 'none'",
+          "x-final-url": current.href,
+        });
+      }
+      return c.json({ error: "too many redirects" }, 502);
+    } catch (e) {
+      return c.json({ error: `file fetch failed: ${(e as Error).message}` }, 502);
     }
   });
 

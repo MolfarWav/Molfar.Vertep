@@ -138,7 +138,8 @@
         body: isBodyless || buf.byteLength === 0 ? null : bytesToB64(new Uint8Array(buf)),
       });
     }).then(function (res) {
-      var body = res.body ? b64ToBytes(res.body) : null;
+      // an ArrayBuffer from this engine; a base64 string from an older shell
+      var body = res.body ? (typeof res.body === "string" ? b64ToBytes(res.body) : new Uint8Array(res.body)) : null;
       var status = res.status || 200;
       var bodyless = status === 204 || status === 205 || status === 304;
       var out = bodyless || !body || body.byteLength === 0 ? null : body;

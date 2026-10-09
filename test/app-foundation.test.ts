@@ -9,7 +9,7 @@ import os from "node:os";
 import path from "node:path";
 import type { AppEnv } from "../src/server/app.js";
 import type { Hono } from "hono";
-import { buildApp } from "../src/server/app.js";
+import { APP_FILE_CAP, buildApp } from "../src/server/app.js";
 import { EventBus } from "../src/server/ws.js";
 import { SessionService } from "../src/sessions.js";
 import { UserService } from "../src/users.js";
@@ -299,6 +299,25 @@ afterEach(() => {
       answer('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
       const svg = await app.request(`/v1/apps/notes/img?url=${encodeURIComponent("https://avatars.charhub.io/y")}`, { headers: h() });
       expect(svg.status).toBe(415);
+
+      // the file route: same gate, any bytes, handed over as opaque octet-stream
+      answer("<html>a card page or anything</html>", { "content-type": "text/html" });
+      const file = await app.request(`/v1/apps/notes/file?url=${encodeURIComponent("https://avatars.charhub.io/card.charx")}`, { headers: h() });
+      expect(file.status).toBe(200);
+      expect(file.headers.get("content-type")).toBe("application/octet-stream");
+      expect(file.headers.get("x-content-type-options")).toBe("nosniff");
+      expect(file.headers.get("content-security-policy")).toContain("sandbox");
+      expect(await file.text()).toBe("<html>a card page or anything</html>");
+      const elsewhere = await app.request(`/v1/apps/notes/file?url=${encodeURIComponent("https://evil.example.com/x")}`, { headers: h() });
+      expect(elsewhere.status).toBe(403);
+      const plain = await app.request(`/v1/apps/notes/file?url=${encodeURIComponent("http://avatars.charhub.io/x")}`, { headers: h() });
+      expect(plain.status).toBe(400);
+      answer("x", { "content-length": String(APP_FILE_CAP + 1) });
+      const huge = await app.request(`/v1/apps/notes/file?url=${encodeURIComponent("https://avatars.charhub.io/big")}`, { headers: h() });
+      expect(huge.status).toBe(413);
+      globalThis.fetch = Object.assign(async () => new Response(null, { status: 302, headers: { location: "https://evil.example.com/steal" } }), { preconnect: (): void => {} }) as typeof fetch;
+      const hop = await app.request(`/v1/apps/notes/file?url=${encodeURIComponent("https://avatars.charhub.io/hop")}`, { headers: h() });
+      expect(hop.status).toBe(403);
     } finally {
       globalThis.fetch = realFetch;
     }
