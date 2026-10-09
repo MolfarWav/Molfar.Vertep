@@ -13,6 +13,18 @@ fork's main ships to every install: ask the user first.
   editor, the Library map toggle, "Story, move" with an empty composer. Ask the user, or check with
   the `browser-check` skill (it works on Windows now; Roleplay must be installed in its workspace).
 
+Carry-over results (2026-10-09): the APK updater WORKED (user). Roleplay 4.26.x looked at live by the
+user: the Library map toggle works; the card id copy failed ("writeText ... blocked by permissions
+policy": the app is a sandboxed frame) -> fixed with the shared `copyText` fallback; "Story, move"
+from an empty box sent at once and read as an empty message (the empty Jude bubble in the user's
+screenshot was a reply they stopped after 8 s of thinking) -> user's choice: the button only ARMS
+the note, Send/Enter carries it (empty send with a note armed = no user turn).
+
+Done in the Roleplay clone, branch `portraits` (pushed to the fork, not main; on top of 4.26.1):
+`720b41e` story move arms only, `047eec5` copy, `cec2db6` portraits (item 1), `dac290b` drawer full
+screen (item 4), `7b3a7c4` price rounding (item 5). 751 tests, typecheck only the old plugin-panel
+error. Browser check by a subagent: see STATE.
+
 ## Items, in order
 1. **Library portraits on the dashboard and in Soul** (user, 2026-10-08; small, reuse M4c).
    The dashboard strip, wide view and phone sheet (`useAvatars` in Roleplay
@@ -41,6 +53,29 @@ fork's main ships to every install: ask the user first.
      the agent and every OAuth flow checked on desktop and APK).
    Plan with the user (AskUserQuestion) after the screenshot: what moves where, the data format of a
    connection's parameters, the preset migration, what the agent page shows.
+
+   The user sent Marinara's connection screen (2026-10-09, 7 screenshots): a Connections list
+   (Defaults, Local Model, Text to Speech, then each saved connection: name, provider, model) and a
+   connection editor on one page: name, provider tiles, API key, management token (NanoGPT),
+   subscription usage, base URL, model picker + id, max context, max output override, max parallel
+   agent jobs, max requests per minute, local/custom endpoint switch, prompt preset override, then
+   "Default chat parameters" with per-field switches (temperature, max output, top P, frequency,
+   presence, post-processing, assistant prefill, reasoning prefill, thinking tags, custom
+   parameters JSON, custom headers, service tier, reasoning effort, image captioning), connection
+   tests. The user crossed out the Semantic search (embeddings) block: "we already have it
+   separately in Memory". Plan the design with the user (AskUserQuestion) from this.
+3. **Map of chats per chat, linked like backlinks** (user, 2026-10-09; replaces the all-chats
+   forest in `chats-map.tsx`). Today the map shows every chat at once in a row that scrolls
+   sideways. Wanted: the map opens for ONE chat; a search field finds another chat (like the link
+   field of a text editor, the user's analogy: an SEO backlink from one page to another); the found
+   chat's sphere is placed on the map and a line joins the old chat to the new one. The link is
+   stored, not only drawn (the disabled "Draw a bridge" button was the placeholder). Open
+   questions for the user before design: what the link does beyond the picture (the new chat gets
+   the old chat's Litopys story as background? only a marker?), direction (old -> new only?), can a
+   chat have several links, where the map opens from (Library, chat header).
+4. **Section drawer full screen** (user, 2026-10-09): DONE `dac290b` (a button in the drawer header,
+   remembered; every desktop drawer section).
+5. **Price noise** seen in the same screenshot ("$0.42000000000000004"): DONE `7b3a7c4`.
 
 ## Done means (as always)
 `bun run typecheck`, `bun run test` (13 known Windows failures, listed in STATE), `bun run build:client`,
