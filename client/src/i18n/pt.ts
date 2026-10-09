@@ -579,6 +579,22 @@ const dict = {
   "Model settings": "Configurações do modelo",
   "{n} more: search to find them": "Mais {n}: pesquise para encontrá-los",
   "Could not load the provider list: {error}": "Não foi possível carregar a lista de provedores: {error}",
+  "Temperature 0.8 to 1.0 gives lively prose; lower it when characters drift or ramble.": "Temperatura 0,8 a 1,0 dá uma prosa vivaz; diminua quando os personagens se desviarem ou divagarem.",
+  "Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense.": "Min P 0,05 com penalidade de repetição 1,05 mantém as respostas variadas sem absurdos.",
+  "Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too.": "Saída máxima de 1000 a 2000 tokens é uma resposta longa; modelos de raciocínio precisam de mais, o raciocínio deles também conta.",
+  "Context window 32k to 128k: more remembers more, and every reply costs more.": "Janela de contexto 32k a 128k: mais lembra mais, e cada resposta custa mais.",
+  "Model: a large model writes best; a thinking variant plans scenes better but answers slower.": "Modelo: um modelo grande escreve melhor; uma variante de raciocínio planeja cenas melhor, mas responde mais devagar.",
+  "Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest.": "Janela de contexto de pelo menos 64k: as instruções e ferramentas do Molfar ocupam cerca de 10k, os arquivos que ele lê ficam com o resto.",
+  "Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code.": "Raciocínio médio; deixe a temperatura desligada (padrão do provedor) ou 0,3 a 0,7 para código mais estável.",
+  "Model: one that is good at tool calls; small free models often stop after the first tool.": "Modelo: um que seja bom em chamadas de ferramentas; modelos gratuitos pequenos costumam parar após a primeira ferramenta.",
+  "Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively.": "Temperatura 0,2 a 0,3: rastreadores e memória precisam responder com precisão, não com criatividade.",
+  "Reasoning off: faster and cheaper; these answers are short structured data.": "Raciocínio desligado: mais rápido e barato; essas respostas são dados estruturados curtos.",
+  "Max output about 2000 tokens; a context window of 16k is plenty.": "Saída máxima de cerca de 2000 tokens; uma janela de contexto de 16k é suficiente.",
+  "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "Modelo: um rápido e barato (do tipo Flash ou mini) é suficiente; escolha-o nas configurações do próprio plugin no app.",
+  "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "A janela de contexto deste modelo ({n} tokens) é pequena para o Molfar: tarefas longas serão cortadas.",
+  "Recommended settings": "Configurações recomendadas",
+  "Fill in the recommended values": "Preencher os valores recomendados",
+  "The values fill the form; nothing changes until you save.": "Os valores preenchem o formulário; nada muda até você salvar.",
 }
 
 export default dict

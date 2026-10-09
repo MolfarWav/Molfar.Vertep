@@ -50,6 +50,43 @@ const DEFAULTS: Record<Key, FieldState> = {
   headers: { on: true, text: "{}" },
 }
 
+/** What we suggest per block, for people who do not know these knobs: values the "Fill in" button
+ *  puts into the form (nothing is saved until Save), and the lines that explain them. */
+function recommended(block: string, model: ModelDetails): { values: Partial<Record<Key, FieldState>>; lines: string[] } {
+  const reasoningOk = model.reasoning || model.reasoningLevels.length > 0
+  if (block === "chat") {
+    return {
+      values: { temperature: { on: true, text: "0.9" }, min_p: { on: true, text: "0.05" }, repetition_penalty: { on: true, text: "1.05" }, max_tokens: { on: true, text: "1500" } },
+      lines: [
+        tr("Temperature 0.8 to 1.0 gives lively prose; lower it when characters drift or ramble."),
+        tr("Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense."),
+        tr("Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too."),
+        tr("Context window 32k to 128k: more remembers more, and every reply costs more."),
+        tr("Model: a large model writes best; a thinking variant plans scenes better but answers slower."),
+      ],
+    }
+  }
+  if (block === "molfar") {
+    return {
+      values: reasoningOk ? { reasoning: { on: true, text: "medium" } } : {},
+      lines: [
+        tr("Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest."),
+        tr("Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code."),
+        tr("Model: one that is good at tool calls; small free models often stop after the first tool."),
+      ],
+    }
+  }
+  return {
+    values: { temperature: { on: true, text: "0.3" }, max_tokens: { on: true, text: "2048" }, ...(reasoningOk ? { reasoning: { on: true, text: "off" } } : {}) },
+    lines: [
+      tr("Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively."),
+      tr("Reasoning off: faster and cheaper; these answers are short structured data."),
+      tr("Max output about 2000 tokens; a context window of 16k is plenty."),
+      tr("Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app."),
+    ],
+  }
+}
+
 function fields(): FieldDef[] {
   return [
     { key: "temperature", label: tr("Temperature"), kind: "number", min: 0, max: 2, step: 0.05 },
@@ -276,6 +313,13 @@ export function ModelPanel(props: { model: ModelDetails; onClose: () => void; on
         </div>
       ) : null}
       <p className="text-11 text-ink-faint">{blockHint}</p>
+      {stored !== null ? (
+        <Recommendations
+          block={block}
+          model={model}
+          onFill={(values) => setForms((all) => ({ ...all, [block]: { ...(all[block] ?? {}), ...values } }))}
+        />
+      ) : null}
 
       {stored === null ? (
         <div className="text-13 text-ink-faint">{tr("Loading…")}</div>
@@ -328,6 +372,34 @@ export function ModelPanel(props: { model: ModelDetails; onClose: () => void; on
       </div>
       {err ? <div className="text-12 text-danger">{err}</div> : null}
     </section>
+  )
+}
+
+function Recommendations(props: { block: string; model: ModelDetails; onFill: (values: Partial<Record<Key, FieldState>>) => void }) {
+  const [open, setOpen] = useState(false)
+  const rec = recommended(props.block, props.model)
+  const smallForMolfar = props.block === "molfar" && !!props.model.contextWindow && props.model.contextWindow < 65536
+  return (
+    <div className="flex flex-col gap-1.5 rounded-lg border border-line px-3 py-2" data-testid="model-recommended">
+      {smallForMolfar ? <div className="text-12 text-danger">{tr("This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.", { n: props.model.contextWindow ?? 0 })}</div> : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-12 text-ink-muted" aria-expanded={open} onClick={() => setOpen(!open)}>
+          <IconSmall name={open ? "chevron-down" : "chevron-right"} size="small" />
+          {tr("Recommended settings")}
+        </button>
+        {Object.keys(rec.values).length ? (
+          <Button variant="ghost" size="small" onClick={() => props.onFill(rec.values)}>
+            {tr("Fill in the recommended values")}
+          </Button>
+        ) : null}
+      </div>
+      {open ? (
+        <ul className="flex list-disc flex-col gap-0.5 pl-5 text-11 text-ink-muted">
+          {rec.lines.map((l) => <li key={l}>{l}</li>)}
+          <li className="text-ink-faint">{tr("The values fill the form; nothing changes until you save.")}</li>
+        </ul>
+      ) : null}
+    </div>
   )
 }
 

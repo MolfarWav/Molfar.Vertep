@@ -579,6 +579,22 @@ const dict = {
   "Model settings": "모델 설정",
   "{n} more: search to find them": "{n}개 더: 검색하여 찾으세요",
   "Could not load the provider list: {error}": "공급자 목록을 불러올 수 없습니다: {error}",
+  "Temperature 0.8 to 1.0 gives lively prose; lower it when characters drift or ramble.": "온도 0.8~1.0은 생생한 문장을 만듭니다. 캐릭터가 흔들리거나 횡설수설하면 낮추세요.",
+  "Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense.": "Min P 0.05와 반복 페널티 1.05는 엉뚱한 소리 없이 답변을 다양하게 유지합니다.",
+  "Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too.": "최대 출력 1000~2000 토큰은 긴 답변 하나 분량입니다. 사고 모델은 더 필요하며 추론도 계산에 포함됩니다.",
+  "Context window 32k to 128k: more remembers more, and every reply costs more.": "컨텍스트 창 32k~128k: 클수록 더 많이 기억하고, 답변마다 비용도 더 듭니다.",
+  "Model: a large model writes best; a thinking variant plans scenes better but answers slower.": "모델: 큰 모델이 글을 가장 잘 씁니다. 사고형 변형은 장면을 더 잘 계획하지만 답변이 느립니다.",
+  "Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest.": "컨텍스트 창 최소 64k: Molfar의 지침과 도구가 약 10k를 차지하고, 읽는 파일이 나머지를 씁니다.",
+  "Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code.": "추론 중간, 온도는 끄거나(제공자 기본값) 더 안정적인 코드를 원하면 0.3~0.7로 두세요.",
+  "Model: one that is good at tool calls; small free models often stop after the first tool.": "모델: 도구 호출을 잘하는 것으로. 작은 무료 모델은 첫 도구에서 멈추는 경우가 많습니다.",
+  "Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively.": "온도 0.2~0.3: 트래커와 메모리는 창의적이지 않고 정확하게 답해야 합니다.",
+  "Reasoning off: faster and cheaper; these answers are short structured data.": "추론 끔: 더 빠르고 저렴합니다. 이 답변들은 짧은 구조화 데이터입니다.",
+  "Max output about 2000 tokens; a context window of 16k is plenty.": "최대 출력 약 2000 토큰, 컨텍스트 창 16k면 충분합니다.",
+  "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "모델: 빠르고 저렴한 것(Flash 또는 mini 종류)이면 충분합니다. 앱의 플러그인 자체 설정에서 선택하세요.",
+  "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "이 모델의 컨텍스트 창({n} 토큰)은 Molfar에 비해 작습니다. 긴 작업은 중간에 잘립니다.",
+  "Recommended settings": "권장 설정",
+  "Fill in the recommended values": "권장 값 채우기",
+  "The values fill the form; nothing changes until you save.": "값이 양식을 채웁니다. 저장하기 전까지는 아무것도 바뀌지 않습니다.",
 }
 
 export default dict

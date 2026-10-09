@@ -579,6 +579,22 @@ const dict = {
   "Model settings": "Model ayarları",
   "{n} more: search to find them": "{n} tane daha: bulmak için arayın",
   "Could not load the provider list: {error}": "Sağlayıcı listesi yüklenemedi: {error}",
+  "Temperature 0.8 to 1.0 gives lively prose; lower it when characters drift or ramble.": "Sıcaklık 0,8 ile 1,0 canlı bir metin verir; karakterler kaydığında ya da saçmaladığında düşürün.",
+  "Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense.": "Min P 0,05 ve tekrar cezası 1,05, yanıtları saçmalamadan çeşitli tutar.",
+  "Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too.": "Maksimum çıktı 1000 ile 2000 token bir uzun yanıt eder; düşünen modeller daha fazlasına ihtiyaç duyar, akıl yürütmeleri de sayılır.",
+  "Context window 32k to 128k: more remembers more, and every reply costs more.": "Bağlam penceresi 32k ile 128k: fazlası daha çok hatırlar ve her yanıt daha pahalıya gelir.",
+  "Model: a large model writes best; a thinking variant plans scenes better but answers slower.": "Model: büyük bir model en iyi yazar; düşünen varyant sahneleri daha iyi planlar ama daha yavaş yanıtlar.",
+  "Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest.": "Bağlam penceresi en az 64k: Molfar'ın talimatları ve araçları yaklaşık 10k tutar, okuduğu dosyalar geri kalanını alır.",
+  "Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code.": "Akıl yürütme orta; sıcaklığı kapalı bırakın (sağlayıcının varsayılanı) ya da daha kararlı kod için 0,3 ile 0,7.",
+  "Model: one that is good at tool calls; small free models often stop after the first tool.": "Model: araç çağrılarında iyi olan bir tane; küçük ücretsiz modeller genelde ilk araçtan sonra durur.",
+  "Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively.": "Sıcaklık 0,2 ile 0,3: izleyiciler ve hafıza yaratıcı değil, kesin yanıt vermeli.",
+  "Reasoning off: faster and cheaper; these answers are short structured data.": "Akıl yürütme kapalı: daha hızlı ve daha ucuz; bu yanıtlar kısa yapılandırılmış verilerdir.",
+  "Max output about 2000 tokens; a context window of 16k is plenty.": "Maksimum çıktı yaklaşık 2000 token; 16k bağlam penceresi fazlasıyla yeter.",
+  "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "Model: hızlı ve ucuz bir tane (Flash ya da mini türü) yeterli; uygulamadaki eklentinin kendi ayarlarından seçin.",
+  "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "Bu modelin bağlam penceresi ({n} token) Molfar için küçük: uzun görevler kesilecek.",
+  "Recommended settings": "Önerilen ayarlar",
+  "Fill in the recommended values": "Önerilen değerleri doldur",
+  "The values fill the form; nothing changes until you save.": "Değerler formu doldurur; siz kaydedene kadar hiçbir şey değişmez.",
 }
 
 export default dict

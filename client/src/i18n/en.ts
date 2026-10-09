@@ -581,6 +581,22 @@ const en = {
   "Model settings": "",
   "{n} more: search to find them": "",
   "Could not load the provider list: {error}": "",
+  "Temperature 0.8 to 1.0 gives lively prose; lower it when characters drift or ramble.": "",
+  "Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense.": "",
+  "Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too.": "",
+  "Context window 32k to 128k: more remembers more, and every reply costs more.": "",
+  "Model: a large model writes best; a thinking variant plans scenes better but answers slower.": "",
+  "Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest.": "",
+  "Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code.": "",
+  "Model: one that is good at tool calls; small free models often stop after the first tool.": "",
+  "Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively.": "",
+  "Reasoning off: faster and cheaper; these answers are short structured data.": "",
+  "Max output about 2000 tokens; a context window of 16k is plenty.": "",
+  "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "",
+  "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "",
+  "Recommended settings": "",
+  "Fill in the recommended values": "",
+  "The values fill the form; nothing changes until you save.": "",
 } as const
 
 export default en

@@ -579,6 +579,22 @@ const dict = {
   "Model settings": "模型设置",
   "{n} more: search to find them": "还有 {n} 个：搜索以找到它们",
   "Could not load the provider list: {error}": "无法加载提供商列表：{error}",
+  "Temperature 0.8 to 1.0 gives lively prose; lower it when characters drift or ramble.": "温度 0.8 到 1.0 能写出鲜活的文字；当角色跑偏或啰嗦时调低它。",
+  "Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense.": "Min P 0.05 配合重复惩罚 1.05，能让回复保持多样又不胡言乱语。",
+  "Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too.": "最大输出 1000 到 2000 token 相当于一条长回复；思考型模型需要更多，它们的推理也计入其中。",
+  "Context window 32k to 128k: more remembers more, and every reply costs more.": "上下文窗口 32k 到 128k：越大记得越多，每条回复也越贵。",
+  "Model: a large model writes best; a thinking variant plans scenes better but answers slower.": "模型：大模型写得最好；思考型变体更擅长规划场景，但回答更慢。",
+  "Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest.": "上下文窗口至少 64k：Molfar 的指令和工具约占 10k，它读取的文件占用其余部分。",
+  "Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code.": "推理设为中；温度保持关闭（服务商的默认值），或设为 0.3 到 0.7 让代码更稳定。",
+  "Model: one that is good at tool calls; small free models often stop after the first tool.": "模型：选擅长工具调用的；小型免费模型常常在第一个工具之后就停下。",
+  "Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively.": "温度 0.2 到 0.3：追踪器和记忆必须精确作答，而不是发挥创意。",
+  "Reasoning off: faster and cheaper; these answers are short structured data.": "推理关闭：更快也更便宜；这些回答是简短的结构化数据。",
+  "Max output about 2000 tokens; a context window of 16k is plenty.": "最大输出约 2000 token；16k 的上下文窗口完全够用。",
+  "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "模型：快速、便宜的（Flash 或 mini 那类）就够了；在应用里插件自身的设置中选择它。",
+  "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "该模型的上下文窗口（{n} token）对 Molfar 来说太小：长任务会被截断。",
+  "Recommended settings": "推荐设置",
+  "Fill in the recommended values": "填入推荐值",
+  "The values fill the form; nothing changes until you save.": "这些值会填入表单；在保存之前不会有任何改动。",
 }
 
 export default dict

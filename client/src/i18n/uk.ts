@@ -579,6 +579,22 @@ const dict = {
   "Model settings": "Налаштування моделі",
   "{n} more: search to find them": "Ще {n}: скористайтеся пошуком, щоб знайти їх",
   "Could not load the provider list: {error}": "Не вдалося завантажити список постачальників: {error}",
+  "Temperature 0.8 to 1.0 gives lively prose; lower it when characters drift or ramble.": "Температура 0,8–1,0 дає живу прозу; знижуйте її, коли персонажі плутаються або розводять воду.",
+  "Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense.": "Min P 0,05 і штраф за повторення 1,05 дають різноманітні відповіді без нісенітниць.",
+  "Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too.": "Максимальний вивід 1000–2000 токенів — це одна довга відповідь; думаючим моделям потрібно більше, їхні міркування теж враховуються.",
+  "Context window 32k to 128k: more remembers more, and every reply costs more.": "Вікно контексту 32k–128k: що більше вікно, то більше модель пам'ятає і то дорожча кожна відповідь.",
+  "Model: a large model writes best; a thinking variant plans scenes better but answers slower.": "Модель: велика модель пише найкраще; думаючий варіант краще планує сцени, але відповідає повільніше.",
+  "Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest.": "Контекстне вікно щонайменше 64k: інструкції та інструменти Мольфара займають близько 10k, решту беруть файли, які він читає.",
+  "Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code.": "Міркування середні; залиште температуру вимкненою (типове значення постачальника) або 0,3–0,7 для стабільнішого коду.",
+  "Model: one that is good at tool calls; small free models often stop after the first tool.": "Модель: та, що добре працює з викликами інструментів; маленькі безкоштовні моделі часто зупиняються після першого інструмента.",
+  "Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively.": "Температура 0,2–0,3: трекери та пам'ять мають відповідати точно, а не творчо.",
+  "Reasoning off: faster and cheaper; these answers are short structured data.": "Міркування вимкнено: швидше й дешевше; ці відповіді — короткі структуровані дані.",
+  "Max output about 2000 tokens; a context window of 16k is plenty.": "Максимальний вивід близько 2000 токенів; контекстного вікна 16k цілком достатньо.",
+  "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "Модель: достатньо швидкої та дешевої (на кшталт Flash або mini); виберіть її в налаштуваннях самого плагіна в застосунку.",
+  "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "Контекстне вікно цієї моделі ({n} токенів) замале для Мольфара: довгі завдання обрізатимуться.",
+  "Recommended settings": "Рекомендовані налаштування",
+  "Fill in the recommended values": "Підставити рекомендовані значення",
+  "The values fill the form; nothing changes until you save.": "Значення заповнять форму; нічого не зміниться, доки ви не збережете.",
 }
 
 export default dict

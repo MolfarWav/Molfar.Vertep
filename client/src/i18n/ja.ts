@@ -579,6 +579,22 @@ const dict = {
   "Model settings": "モデル設定",
   "{n} more: search to find them": "他に{n}件: 検索して見つけてください",
   "Could not load the provider list: {error}": "プロバイダー一覧を読み込めませんでした: {error}",
+  "Temperature 0.8 to 1.0 gives lively prose; lower it when characters drift or ramble.": "温度0.8～1.0で生き生きとした文章になります。キャラクターがぶれたり脱線したりするときは下げてください。",
+  "Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense.": "Min P 0.05と繰り返しペナルティ1.05で、支離滅裂にならずに返答を多様に保てます。",
+  "Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too.": "最大出力1000～2000トークンで長めの返答1回分です。思考モデルはもっと必要で、その推論もカウントされます。",
+  "Context window 32k to 128k: more remembers more, and every reply costs more.": "コンテキストウィンドウ32k～128k：大きいほど多くを記憶し、返答ごとのコストも上がります。",
+  "Model: a large model writes best; a thinking variant plans scenes better but answers slower.": "モデル：大きなモデルほど文章が上手です。思考バリアントは場面の計画が得意ですが返答は遅くなります。",
+  "Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest.": "コンテキストウィンドウは少なくとも64k：Molfarの指示とツールで約10kを使い、読むファイルが残りを使います。",
+  "Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code.": "推論は中程度。温度はオフ（プロバイダの既定値）のままにするか、安定したコードには0.3～0.7に。",
+  "Model: one that is good at tool calls; small free models often stop after the first tool.": "モデル：ツール呼び出しが得意なもの。小さな無料モデルは最初のツールで止まることがよくあります。",
+  "Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively.": "温度0.2～0.3：トラッカーとメモリは創造的でなく正確に答える必要があります。",
+  "Reasoning off: faster and cheaper; these answers are short structured data.": "推論オフ：より速く安価です。これらの答えは短い構造化データです。",
+  "Max output about 2000 tokens; a context window of 16k is plenty.": "最大出力は約2000トークン。コンテキストウィンドウ16kで十分です。",
+  "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "モデル：高速で安価なもの（Flashやminiの種類）で十分です。アプリ内のプラグイン自身の設定で選んでください。",
+  "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "このモデルのコンテキストウィンドウ（{n}トークン）はMolfarには小さすぎます。長いタスクは途中で切れます。",
+  "Recommended settings": "推奨設定",
+  "Fill in the recommended values": "推奨値を入力",
+  "The values fill the form; nothing changes until you save.": "値はフォームに入るだけです。保存するまで何も変わりません。",
 }
 
 export default dict
