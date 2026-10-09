@@ -4,6 +4,8 @@ export interface Resource<T> {
   /** undefined until the first load settles. */
   data: T | undefined
   loading: boolean
+  /** The last load's failure, cleared by the next success; callers that care show it. */
+  error: string | undefined
   /** Run the fetcher again, e.g. after a write; resolves when it settles. */
   refetch: () => Promise<void>
   /** Set the value without a round trip, for a response we already hold. */
@@ -16,6 +18,7 @@ export interface Resource<T> {
 export function useResource<T>(fetcher: () => Promise<T>, deps: DependencyList = []): Resource<T> {
   const [data, setData] = useState<T | undefined>(undefined)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | undefined>(undefined)
   const seq = useRef(0)
   const alive = useRef(true)
 
@@ -27,10 +30,12 @@ export function useResource<T>(fetcher: () => Promise<T>, deps: DependencyList =
       .then((value) => {
         if (!alive.current || ticket !== seq.current) return
         setData(value)
+        setError(undefined)
         setLoading(false)
       })
-      .catch(() => {
+      .catch((e: unknown) => {
         if (!alive.current || ticket !== seq.current) return
+        setError(e instanceof Error ? e.message : String(e))
         setLoading(false)
       })
   }, deps)
@@ -43,5 +48,5 @@ export function useResource<T>(fetcher: () => Promise<T>, deps: DependencyList =
     }
   }, [run])
 
-  return { data, loading, refetch: run, mutate: setData }
+  return { data, loading, error, refetch: run, mutate: setData }
 }

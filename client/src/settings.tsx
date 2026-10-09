@@ -32,6 +32,7 @@ import {
   speechApi,
   listPromptFormats,
   modelsApi,
+  type ModelDetails,
   type PickerModel,
   type ProfileSummary,
   type PromptFormat,
@@ -42,6 +43,7 @@ import {
 } from "./api"
 import type { Me } from "./types"
 import { ServerTab } from "./server-settings"
+import { ModelPanel } from "./model-panel"
 import { LOCALES, getLocale, setLocale, tr, useLocale, type Locale } from "./i18n/index"
 
 export const inputClass =
@@ -1494,6 +1496,8 @@ function AccountSection(props: { me: Me; onLogout: () => void }) {
 function ApiTab() {
   const connections = useResource(() => connectionsApi.list())
   const formats = useResource(() => listPromptFormats())
+  const models = useResource(() => modelsApi.all())
+  const [openModels, setOpenModels] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<EngineConnection | null>(null)
   const [err, setErr] = useState("")
@@ -1503,7 +1507,8 @@ function ApiTab() {
       <div className="flex flex-col gap-4 pb-4">
         <section className="flex flex-col gap-2">
           {!connections.loading ? <>{(connections.data ?? []).map((c: EngineConnection) => (
-                editing?.id !== c.id ? <div key={c.id} className="flex items-center gap-3 rounded-lg border border-line px-3 py-2 text-13">
+                editing?.id !== c.id ? <div key={c.id} className="flex flex-col rounded-lg border border-line text-13">
+                  <div className="flex items-center gap-3 px-3 py-2">
                     <ProviderIcon id={c.proxyOf ?? c.effectiveProviderId} className="size-5 shrink-0 text-icon" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{c.name}</span>
@@ -1538,6 +1543,14 @@ function ApiTab() {
                         }
                       }}
                     />
+                  </div>
+                  <ConnectionModels
+                    connection={c}
+                    models={models.data?.models}
+                    open={openModels === c.id}
+                    onToggle={() => setOpenModels(openModels === c.id ? null : c.id)}
+                    onChanged={() => void models.refetch()}
+                  />
                   </div> : <EditConnection key={c.id} connection={c} onDone={() => { setEditing(null); connections.refetch() }} onCancel={() => setEditing(null)} />
               ))}
             {(connections.data ?? []).length === 0 ? <div className="rounded-lg border border-dashed border-line px-3 py-4 text-center text-13 text-ink-faint">
@@ -1561,11 +1574,52 @@ function ApiTab() {
   )
 }
 
+/** The provider id a connection's models carry in GET /v1/models (engine connectionNames). */
+const modelProviderOf = (c: EngineConnection) => (c.oauthProvider === "radius" ? "radius" : c.effectiveProviderId)
+
+/** A connection's models under its row: the shown ones first, a search when there are many, and each
+ *  model's own settings (context, prices, parameters) one click away. */
+function ConnectionModels(props: { connection: EngineConnection; models: ModelDetails[] | undefined; open: boolean; onToggle: () => void; onChanged: () => void }) {
+  const [query, setQuery] = useState("")
+  const [setup, setSetup] = useState<string | null>(null)
+  const provider = modelProviderOf(props.connection)
+  const all = (props.models ?? []).filter((m) => m.provider === provider)
+  if (!props.models || all.length === 0) return null
+  const q = query.trim().toLowerCase()
+  const list = all
+    .filter((m) => !q || `${m.label} ${m.modelId}`.toLowerCase().includes(q))
+    .sort((a, b) => Number(b.shown) - Number(a.shown) || a.label.localeCompare(b.label))
+  const shown = all.filter((m) => m.shown).length
+  return (
+    <div className="border-t border-line">
+      <button className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-12 text-ink-muted hover:bg-hover" aria-expanded={props.open} onClick={props.onToggle}>
+        <IconSmall name={props.open ? "chevron-down" : "chevron-right"} size="small" />
+        <span className="flex-1">{tr("Models and their settings")}</span>
+        <span className="text-11 text-ink-faint">{shown === all.length ? all.length : `${shown}/${all.length}`}</span>
+      </button>
+      {props.open ? <div className="flex flex-col gap-1 px-2 pb-2">
+          {all.length > 12 ? <input className={inputClass} placeholder={tr("Search models…")} value={query} onChange={(e) => setQuery(e.currentTarget.value)} /> : null}
+          {list.slice(0, q ? 200 : 60).map((m) => {
+            const ref = `${m.provider}/${m.modelId}`
+            return setup === ref ? <ModelPanel key={ref} model={m} onClose={() => setSetup(null)} onChanged={props.onChanged} /> : (
+              <div key={ref} className="flex items-center gap-2 rounded px-1 py-0.5 hover:bg-hover">
+                <span className="min-w-0 flex-1 truncate text-12 text-ink">{m.label}{m.shown ? null : <span className="ml-1 text-11 text-ink-faint">· {tr("hidden from pickers")}</span>}</span>
+                <IconButton icon={<IconSmall name="outline-sliders" />} variant="ghost-muted" size="small" title={tr("Model settings")} onClick={() => setSetup(ref)} />
+              </div>
+            )
+          })}
+          {!q && list.length > 60 ? <div className="px-1 text-11 text-ink-faint">{tr("{n} more: search to find them", { n: list.length - 60 })}</div> : null}
+        </div> : null}
+    </div>
+  )
+}
+
 /** Which models the pickers offer (the agent's and every app's). Grouped by
  *  connection, because three connections can bring a thousand models and
  *  the same model name from two of them is otherwise impossible to tell apart. */
 function ModelsTab() {
   const res = useResource(() => modelsApi.all())
+  const [setup, setSetup] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState<Record<string, boolean>>({})
   const [busy, setBusy] = useState(false)
@@ -1590,7 +1644,7 @@ function ModelsTab() {
   }
 
   const q = query.trim().toLowerCase()
-  const groups = new Map<string, PickerModel[]>()
+  const groups = new Map<string, ModelDetails[]>()
   for (const m of models) {
     const name = m.connectionName ?? m.provider
     if (q && !`${m.label} ${m.modelId} ${name}`.toLowerCase().includes(q)) continue
@@ -1643,7 +1697,7 @@ function ModelsTab() {
                 </Button>
               </div>
               {expanded ? <div className="flex flex-col border-t border-line py-1">
-                  {list.map((m) => (
+                  {list.map((m) => setup === refOf(m) ? <div key={refOf(m)} className="px-2 py-1"><ModelPanel model={m} onClose={() => setSetup(null)} onChanged={() => void res.refetch()} /></div> : (
                     <label key={refOf(m)} className="flex items-center gap-2 px-3 py-1 text-13 text-ink hover:bg-hover">
                       <input
                         type="checkbox"
@@ -1653,7 +1707,8 @@ function ModelsTab() {
                         onChange={(e) => void change([refOf(m)], e.currentTarget.checked)}
                       />
                       <span className="min-w-0 truncate">{m.label}</span>
-                      {m.label !== m.modelId ? <span className="min-w-0 truncate text-11 text-ink-faint">{m.modelId}</span> : null}
+                      {m.label !== m.modelId ? <span className="min-w-0 flex-1 truncate text-11 text-ink-faint">{m.modelId}</span> : <span className="flex-1" />}
+                      <IconButton icon={<IconSmall name="outline-sliders" />} variant="ghost-muted" size="small" title={tr("Model settings")} onClick={(e) => { e.preventDefault(); setSetup(refOf(m)) }} />
                     </label>
                   ))}
                 </div> : null}
@@ -1835,6 +1890,13 @@ function AddConnection(props: { onCancel: () => void; onCreated: () => void }) {
             value={q}
             onChange={(e) => setQ(e.currentTarget.value)}
           />
+          {/* a failed provider list used to leave only the sign-ins and the custom tiles, silently (seen on Android) */}
+          {providers.error ? <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line px-3 py-2 text-12">
+              <span className="min-w-0 flex-1 text-danger">{tr("Could not load the provider list: {error}", { error: providers.error })}</span>
+              <Button variant="ghost" size="small" disabled={providers.loading} onClick={() => void providers.refetch()}>
+                {tr("Try again")}
+              </Button>
+            </div> : null}
           {(groups()).map((group) => (
               <div key={group.title} className="flex flex-col gap-1">
                 <div className="px-1 pt-1 text-11 text-ink-faint">{group.title}</div>
