@@ -37,8 +37,6 @@ ordered with the user: ask for the order before starting. Engine branch to creat
 13. Enter does not send in Molfar's composer on a phone (maybe intended: decide with the user).
 
 ## Housekeeping
-14. Remote branches `claude/showcase` and `claude/v081` are not merged into main: ask the user whether to
-    delete them. Old local worktrees under `C:\Users\sulaz\Chrysalis-Engine\.claude\worktrees` and the
-    0.9.2 ones (`v092`, `rp-links`, `rp-params`, `rp-memory`) can go once the user agrees.
+14. DONE 2026-10-09 (user's word): remote `claude/showcase` and `claude/v081` deleted; every old local worktree removed (engine: dashboard, molfar, publish-app, ui-redesign, v081, memory-v2, showcase, v091, v092; Roleplay: rp-links, rp-params, rp-example, the old rp-dashboard clone); merged local branches deleted. Left: the main checkout (detached at v0.9.1, the launcher's) with its untracked `.fork/ui-assets/` and `start-chrysalis.bat`, and the Roleplay clone `.claude/worktrees/rp-memory` on main. The C: path `C:UserssulazChrysalis-Engine` is a link to the E: checkout.
 15. The `@earendil-works/pi-ai` upgrade for newer builtin models stays its own careful step (user's word):
     branch, full test run, the agent and every OAuth flow checked on desktop and APK.
