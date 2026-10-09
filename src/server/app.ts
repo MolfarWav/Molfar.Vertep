@@ -122,6 +122,18 @@ export function pageConnectSrc(host: string | undefined): string {
  *  calls ride the bridge, not the network. */
 const FRAME_CONNECTION_ALLOWLIST = "(response-origin); webrtc=block";
 
+/** The raster type of image bytes (PNG, JPEG, GIF, WebP), or null. Used only
+ *  when an upstream sends no image type; never yields SVG or anything that
+ *  could run as a document. */
+export function rasterImageType(b: Uint8Array): string | null {
+  if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image/png";
+  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg";
+  if (b.length >= 6 && b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return "image/gif";
+  if (b.length >= 12 && b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46
+    && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return "image/webp";
+  return null;
+}
+
 function parseCookies(header: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const part of header.split(";")) {
@@ -4947,11 +4959,16 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
           continue;
         }
         if (!res.ok) return c.json({ error: `upstream ${res.status}` }, 502);
-        const type = res.headers.get("content-type") ?? "";
-        if (!type.startsWith("image/")) return c.json({ error: `not an image (${type || "unknown type"})` }, 415);
+        const declared = res.headers.get("content-type") ?? "";
+        // some CDNs (RisuRealm's) send images with no type or a generic one:
+        // those are taken only when the bytes are a raster image
+        const untyped = declared === "" || /^(application|binary)\/octet-stream\b/i.test(declared);
+        if (!declared.startsWith("image/") && !untyped) return c.json({ error: `not an image (${declared})` }, 415);
         if (Number(res.headers.get("content-length") ?? 0) > CAP) return c.json({ error: "image too large" }, 413);
         const buf = Buffer.from(await res.arrayBuffer());
         if (buf.length > CAP) return c.json({ error: "image too large" }, 413);
+        const type = declared.startsWith("image/") ? declared : rasterImageType(buf);
+        if (!type) return c.json({ error: `not an image (${declared || "unknown type"})` }, 415);
         c.header("cache-control", "private, max-age=86400");
         // an allowlisted host can still serve image/svg+xml: opened top-level
         // it would be a script page on the engine origin

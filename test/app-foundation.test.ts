@@ -284,6 +284,21 @@ afterEach(() => {
       globalThis.fetch = Object.assign(async () => new Response("nope", { status: 200, headers: { "content-type": "text/html" } }), { preconnect: (): void => {} }) as typeof fetch;
       const html = await app.request(`/v1/apps/notes/img?url=${encodeURIComponent("https://avatars.charhub.io/x")}`, { headers: h() });
       expect(html.status).toBe(415);
+      // no content-type (RisuRealm's CDN): taken only when the bytes are a raster image
+      const answer = (body: Uint8Array | string, headers: Record<string, string> = {}) => {
+        globalThis.fetch = Object.assign(async () => new Response(body, { status: 200, headers }), { preconnect: (): void => {} }) as typeof fetch;
+      };
+      answer(new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]));
+      const bare = await app.request(`/v1/apps/notes/img?url=${encodeURIComponent("https://avatars.charhub.io/y")}`, { headers: h() });
+      expect(bare.status).toBe(200);
+      expect(bare.headers.get("content-type")).toBe("image/png");
+      answer(new Uint8Array([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]), { "content-type": "application/octet-stream" });
+      const webp = await app.request(`/v1/apps/notes/img?url=${encodeURIComponent("https://avatars.charhub.io/y")}`, { headers: h() });
+      expect(webp.headers.get("content-type")).toBe("image/webp");
+      // untyped SVG or HTML stays refused
+      answer('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+      const svg = await app.request(`/v1/apps/notes/img?url=${encodeURIComponent("https://avatars.charhub.io/y")}`, { headers: h() });
+      expect(svg.status).toBe(415);
     } finally {
       globalThis.fetch = realFetch;
     }
