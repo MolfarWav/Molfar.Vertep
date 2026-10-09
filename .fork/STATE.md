@@ -5,6 +5,7 @@ The full log of everything before this date, with commit hashes, is `.fork/archi
 
 ## 0.9.3: NEXT, more card sources for the Roleplay Store (user, 2026-10-09)
 Plan: `.fork/handoff/v093/PLAN.md` (the items: `card-sources-prompt.md`). Built by Claude Code in the Roleplay fork (user's choice), item 8 (Marinara research) first. Engine branch `claude/v093` (worktree `.claude/worktrees/v093`).
+DONE: item 8 (`marinara-sources.md`), the design, the plugin part with tests and the shared import helper (Roleplay branch `card-sources`, pushed, not main; two old bugs fixed on the way: V3 PNG with ccv3 first, latin1 PNG names on the Characters page). BUILDING: the Store UI (`UI-SPEC.md`, Sonnet subagent with the browser check). Then the live check with the user and the release (Roleplay 4.28.0).
 
 ## 0.9.4: deeper lorebook work (user, 2026-10-09)
 Not planned yet: the user brings a Hermes write-up.
