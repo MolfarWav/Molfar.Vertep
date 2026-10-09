@@ -37,11 +37,12 @@ each its own commits; S1 and the data format are the orchestrator's, S2/S3 UI dr
 - Writes only through the route (below). `protect.ts`: Molfar asks the user before writing
   `model-params.json` (it changes every generation).
 
-## Which block a request gets (engine, `src/models.ts`)
+## Which block a request gets (engine, `src/models.ts`) — S1 DONE `e9818a0`
 - Agent (Molfar) model calls: `molfar`.
-- Plugin calls (source `app:<app>/<plugin>`): `plugin:<app>/<plugin>` when that block exists, else
-  `plugins`; EXCEPT the Roleplay reply path (source `app:roleplay/engine`, request key `reply` or any
-  turn op send/next/swipe/continue/impersonate): `chat`.
+- Plugin calls (source `app:<app>/<plugin>`): a request under the key `reply` (any app: its chat
+  replies) gets `chat`; others `plugin:<app>/<plugin>` when that block exists, else `plugins`. The runtime
+  sets `paramsKey` after the plugin's fields, so a plugin cannot pose as another.
+- As built: the agent path (streamFn) lets the agent's own choices win and the molfar block fills the rest.
 - `/v1/chat/completions` and other API callers: `chat` (they are chat-like); `agent-compact`: `molfar`.
 - Precedence: the block's fields WIN over the request's own presetParams/reasoning for the fields the
   block has; the request fills the rest. A request may set `paramsSource: "request"` to win instead
