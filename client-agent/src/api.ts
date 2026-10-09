@@ -191,8 +191,18 @@ export function answerAgent(sessionId: string, id: string, answer: string): Prom
 
 /** Every model, each marked shown or not, so the picker can offer the hidden
  *  ones on a search. filtered: false while nothing is chosen. */
-export function listModels(): Promise<{ models: EngineModel[]; filtered: boolean }> {
-  return api<{ models?: EngineModel[]; filtered?: boolean }>("GET", "/v1/models?all=1").then((r) => ({ models: r.models ?? [], filtered: r.filtered === true }))
+export function listModels(): Promise<{ models: EngineModel[]; filtered: boolean; favorites: ModelFavorite[] }> {
+  return api<{ models?: EngineModel[]; filtered?: boolean; favorites?: ModelFavorite[] }>("GET", "/v1/models?all=1").then((r) => ({
+    models: r.models ?? [],
+    filtered: r.filtered === true,
+    favorites: Array.isArray(r.favorites) ? r.favorites : [],
+  }))
+}
+
+/** A starred model of the quick switch (set in the shell's Settings), with an optional name of its own. */
+export interface ModelFavorite {
+  ref: string
+  name?: string
 }
 
 export function setModelsShown(refs: string[], shown: boolean): Promise<{ ok: boolean }> {

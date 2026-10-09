@@ -21,6 +21,7 @@ import {
   type McpServer,
   type ProjectDetail,
   type ProjectSummary,
+  type ModelFavorite,
 } from "./api"
 import { applyStreamEvent, msgsFromRuns, partsFromResponse, uid, type Msg, type PartData } from "./runs"
 import { createStreamDeltaBatcher, type AskOption, type AskQuestion, type StreamEvent } from "./streaming"
@@ -87,6 +88,8 @@ export interface AgentState {
   models: EngineModel[]
   /** a short list of models is chosen (Settings > Models or the picker's stars) */
   modelsFiltered: boolean
+  /** The quick switch from Settings: offered first by the picker. */
+  favorites: ModelFavorite[]
   /** star a model into the short list, or take it out */
   setModelShown: (ref: string, shown: boolean) => Promise<void>
   /** the global pick, used by chats outside a project */
@@ -257,6 +260,7 @@ export const useAgent = create<AgentState>()((set, get) => {
     ask: null,
     models: [],
     modelsFiltered: false,
+    favorites: [],
     model: prefs.get("agent-ui-model"),
     reasoning: prefs.get("agent-ui-reasoning") ?? "",
     sessionModels: readMap("agent-ui-session-models"),
@@ -282,6 +286,7 @@ export const useAgent = create<AgentState>()((set, get) => {
         set({
           models: list.models,
           modelsFiltered: list.filtered,
+          favorites: list.favorites,
           model: get().model ?? settings.model ?? null,
           reasoning: get().reasoning || settings.reasoning || "",
         })
@@ -612,7 +617,7 @@ export const useAgent = create<AgentState>()((set, get) => {
       try {
         await setModelsShown([ref], shown)
         const list = await listModels()
-        set({ models: list.models, modelsFiltered: list.filtered })
+        set({ models: list.models, modelsFiltered: list.filtered, favorites: list.favorites })
       } catch (e) {
         set({ banner: { kind: "error", text: e instanceof Error ? e.message : String(e) } })
       }
@@ -708,7 +713,7 @@ export function connectWs(): void {
       // catalog is stale. The engine emits after discovery finished, so the
       // re-pull lands the fresh list immediately.
       listModels()
-        .then((list) => useAgent.setState({ models: list.models, modelsFiltered: list.filtered }))
+        .then((list) => useAgent.setState({ models: list.models, modelsFiltered: list.filtered, favorites: list.favorites }))
         .catch(() => undefined)
       return
     }

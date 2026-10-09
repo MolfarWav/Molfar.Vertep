@@ -1,7 +1,7 @@
 import { ModelSelector, type ModelOption } from "@/components/assistant-ui/elements/model-selector.aui"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Folder, SidebarSimple, Star, WifiSlash } from "@phosphor-icons/react"
+import { Folder, SidebarSimple, WifiSlash } from "@phosphor-icons/react"
 import { useMemo, useState, type ReactNode } from "react"
 import { CommandItem } from "@/components/ui/command"
 import { currentProjectId, effectiveModel, effectiveReasoning, useAgent } from "./store"
@@ -11,15 +11,15 @@ import { cn, shortModelName } from "@/lib/utils"
 
 type PickerOption = ModelOption & { group: string; shown: boolean }
 
-/** The composer's model picker: the models switched on in Settings > Models,
- *  grouped by connection. A search also finds the hidden ones, behind one
- *  row, and a star puts a model in the short list or takes it out. */
+/** The composer's model picker: the quick switch from Settings first (the starred models, under
+ *  their own names), then the models shown in the pickers, grouped by connection. A search also
+ *  finds the hidden ones, behind one row. Which models show and which are starred is set in
+ *  Settings > Connections and models only. */
 export function ModelPicker({ wide = false }: { wide?: boolean }): ReactNode {
   const models = useAgent((s) => s.models)
-  const filtered = useAgent((s) => s.modelsFiltered)
   const model = useAgent(effectiveModel)
   const setModel = useAgent((s) => s.setModel)
-  const setModelShown = useAgent((s) => s.setModelShown)
+  const favorites = useAgent((s) => s.favorites)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [showHidden, setShowHidden] = useState(false)
@@ -47,8 +47,15 @@ export function ModelPicker({ wide = false }: { wide?: boolean }): ReactNode {
   // the chosen model stays in the list even when it is hidden
   const visible = options.filter((o) => (o.shown || o.id === model) && hit(o))
   const hiddenHits = words.length ? options.filter((o) => !o.shown && o.id !== model && hit(o)) : []
-  const listed = showHidden ? [...visible, ...hiddenHits].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)) : visible
-  const groups: Array<[string, PickerOption[]]> = []
+  const quick = favorites
+    .map((f) => {
+      const o = options.find((x) => x.id === f.ref)
+      return o ? { ...o, name: f.name || o.name } : null
+    })
+    .filter((o): o is PickerOption => !!o && hit(o))
+  const quickIds = new Set(quick.map((o) => o.id))
+  const listed = (showHidden ? [...visible, ...hiddenHits].sort((a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)) : visible).filter((o) => !quickIds.has(o.id))
+  const groups: Array<[string, PickerOption[]]> = quick.length ? [["★ Quick switch", quick]] : []
   for (const o of listed) {
     const last = groups.at(-1)
     if (last && last[0] === o.group) last[1].push(o)
@@ -88,31 +95,14 @@ export function ModelPicker({ wide = false }: { wide?: boolean }): ReactNode {
         <ModelSelector.List className="max-h-[min(60vh,26rem)]">
           <ModelSelector.Empty>{hiddenHits.length ? "No shown models match." : "No models found."}</ModelSelector.Empty>
           {groups.map(([group, items]) => (
-            <ModelSelector.Group key={group} heading={multi ? group : undefined}>
-              {items.map((o) => {
-                const starred = filtered && o.shown
-                return (
-                  <ModelSelector.Item key={o.id} model={o}>
-                    <span className="flex min-w-0 flex-1 items-center gap-2">
-                      <span className={cn("truncate font-medium", !o.shown && "text-muted-foreground")}>{o.name}</span>
-                      <button
-                        type="button"
-                        title={starred ? "Remove from the short list" : "Add to the short list"}
-                        aria-label={starred ? `Remove ${o.name} from the short list` : `Add ${o.name} to the short list`}
-                        className="text-muted-foreground hover:text-foreground ms-auto shrink-0 rounded p-0.5"
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          e.preventDefault()
-                          void setModelShown(o.id, !starred)
-                        }}
-                      >
-                        <Star weight={starred ? "fill" : "regular"} className={cn("size-3.5", starred && "text-amber-500")} />
-                      </button>
-                    </span>
-                  </ModelSelector.Item>
-                )
-              })}
+            <ModelSelector.Group key={group} heading={multi || quick.length ? group : undefined}>
+              {items.map((o) => (
+                <ModelSelector.Item key={`${group}:${o.id}`} model={o}>
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className={cn("truncate font-medium", !o.shown && "text-muted-foreground")}>{o.name}</span>
+                  </span>
+                </ModelSelector.Item>
+              ))}
             </ModelSelector.Group>
           ))}
           {hiddenHits.length && !showHidden ? (
