@@ -63,7 +63,29 @@ error. Browser check by a subagent: see STATE.
    presence, post-processing, assistant prefill, reasoning prefill, thinking tags, custom
    parameters JSON, custom headers, service tier, reasoning effort, image captioning), connection
    tests. The user crossed out the Semantic search (embeddings) block: "we already have it
-   separately in Memory". Plan the design with the user (AskUserQuestion) from this.
+   separately in Memory". Plan the design with the user (AskUserQuestion) from this. The user
+   (2026-10-09): Marinara is a source of ideas, NOT a template to copy one to one.
+   Today's code: `connections-today.md` (engine connections, Roleplay's read-only view, where samplers live,
+   gaps). DECISIONS with the user 2026-10-09:
+   - One screen, in the SHELL (Settings > Connections): provider, key, models and each model's parameters;
+     no dependency on Roleplay. Roleplay's rail "Connections" becomes the app's model choice + a button that
+     opens the shell screen on that model; the chat header picker stays a quick switch.
+   - Parameters belong to the MODEL: samplers (temperature, top_p, top_k, min_p, penalties, seed; each with
+     a send/don't switch), max output and the context window (ONE source of truth instead of today's three;
+     Roleplay budgets from the model's window), reasoning effort + thinking tags + custom params JSON +
+     extra headers. Prefill stays in the preset (prompt structure).
+   - One parameter set per model, in BLOCKS by caller (the user's Marinara duplicates existed only to give
+     a tracker a different temperature): Chat (Roleplay replies: the full set), Plugins (a short set:
+     temperature, max output, reasoning, custom params; default for every plugin call), an optional block
+     per plugin (Dashboard sensor, Litopys...) added on demand, and Molfar (its own set). The engine picks
+     the block from the request's plugin id and key (`roleplay__engine` + key `reply` = Chat).
+   - Presets: the model wins. Once, the active preset's samplers are copied into the current model's Chat
+     block; afterwards preset samplers are kept but ignored, with a preset switch "preset samplers override
+     the model" (off).
+   - No per-chat overrides; the screens show the effective value and where it comes from.
+   - Roleplay Settings: only the model-related parts move (context, prices, model choices for sensor /
+     Litopys / translation become picks of a model); an audit of the rest of Roleplay Settings is a later item.
+   - Android: the add-connection screen shows the providers fetch error with Retry instead of hiding it.
 3. **Map of chats per chat, linked like backlinks** (user, 2026-10-09; replaces the all-chats
    forest in `chats-map.tsx`). Today the map shows every chat at once in a row that scrolls
    sideways. Wanted: the map opens for ONE chat; a search field finds another chat (like the link
