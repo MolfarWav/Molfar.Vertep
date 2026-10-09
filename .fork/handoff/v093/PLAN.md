@@ -95,3 +95,21 @@ The user brings a Hermes write-up; plan it together then. A lorebook format chan
 - The engine worktree's typecheck shows 7 errors in client-agent/src/file-mentions.ts and
   test/agent-composer.test.ts, also on clean main there (fresh `bun install` in the worktree); check before
   the release on the main checkout.
+
+## Round 4 (user's live look, 2026-10-09)
+- Asked: translate a card in the Store (button in the detail dialog; translated preview; installing while
+  translated installs a translated card and its lorebook, keys added next to the originals, originals kept
+  in `extensions.molfar_translation`), coloured Lorebook / Emotions badges, "Open Characters" opening the
+  character itself. UI with the Sonnet subagent.
+- RisuAI emotion images (`x-risu-asset`, in PNG as `chara-ext-asset_:N` chunks) now import (`aa6227a`),
+  downscaled in the browser to what the pack's 3 MB budget allows (`002448d`: 768 px down, 20-30 images
+  stay ~512-640 px); what does not fit is named in a note.
+- Expressions follow Ukrainian and Russian replies (`6194bba`).
+
+## After 0.9.3 (user, 2026-10-09): emotion images as files, full size
+Plugins cannot write binary files and the app serves only its dist/, so expressions live as data URLs
+inside card.json (4 MB sandbox write cap) and must be downscaled. Plan: engine `fs.writeBytes` for
+plugins (images only by magic bytes, inside the app data dir, size cap), an engine route that serves
+those images to the app like the image proxy, Roleplay stores expressions as files
+(`characters/<id>/expressions/*.webp`) with a reference in card.json, old inline ones keep working, PNG/charx
+export embeds them back. A card format change: update `edit-large-card` and DATA-FORMATS with it.
