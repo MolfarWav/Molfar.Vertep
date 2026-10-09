@@ -171,6 +171,20 @@ export interface ParamsCaller {
   key?: string;
 }
 
+/**
+ * The block name of one plugin from its llm source: "app:roleplay/roleplay__relations" (an app's
+ * plugin, whose id carries the app's prefix) -> "plugin:roleplay/relations"; "app:notes" (a plugin of
+ * the user's own, outside any app) -> "plugin:user/notes".
+ */
+export function pluginBlockName(source: string): string {
+  const rest = source.replace(/^app:/, "").toLowerCase();
+  const slash = rest.indexOf("/");
+  if (slash < 0) return `plugin:user/${rest}`;
+  const app = rest.slice(0, slash);
+  const id = rest.slice(slash + 1);
+  return `plugin:${app}/${id.startsWith(`${app}__`) ? id.slice(app.length + 2) : id}`;
+}
+
 /** The block name a call takes, and the blocks to try in order. */
 export function blockFor(entry: ModelParamsEntry | undefined, caller: ParamsCaller): string | null {
   const src = caller.source ?? "";
@@ -178,9 +192,16 @@ export function blockFor(entry: ModelParamsEntry | undefined, caller: ParamsCall
   if (src === "agent" || src === "agent-compact") return pick("molfar");
   if (src.startsWith("app:")) {
     if (caller.key === "reply") return pick("chat");
-    return pick(`plugin:${src.slice(4).toLowerCase()}`, "plugins");
+    return pick(pluginBlockName(src), "plugins");
   }
   return pick("chat");
+}
+
+/** The values a block name stands for: a plugin's own block falls back field by field to `plugins`. */
+export function blockValues(entry: ModelParamsEntry | undefined, name: string | null): ParamBlock | undefined {
+  if (!entry || !name) return undefined;
+  if (name.startsWith("plugin:")) return { ...entry.plugins, ...entry[name] };
+  return entry[name];
 }
 
 export type ParamSource = "model" | "request";

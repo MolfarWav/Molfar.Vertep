@@ -46,10 +46,60 @@ export interface PickerModel {
   shown: boolean
 }
 
+/** What GET /v1/models says about one model beyond the picker fields. */
+export interface ModelDetails extends PickerModel {
+  /** "openai-completions", "anthropic-messages", "openai-text", … */
+  api: string
+  /** The user's override when set, else the catalog's; null = unknown. */
+  contextWindow: number | null
+  reasoning: boolean
+  reasoningLevels: string[]
+  /** USD per million tokens (the user's first, then the catalog); null = unknown. */
+  pricing: ModelPricing | null
+}
+
+export interface ModelPricing {
+  input: number
+  output: number
+  cacheRead: number
+  cacheWrite: number
+}
+
 export const modelsApi = {
   /** filtered: false while nothing is chosen, which shows every model. */
-  all: () => api<{ models: PickerModel[]; filtered: boolean }>("GET", "/v1/models?all=1"),
+  all: () => api<{ models: ModelDetails[]; filtered: boolean }>("GET", "/v1/models?all=1"),
   setShown: (refs: string[], shown: boolean) => api<{ ok: boolean; shown: string[] }>("PUT", "/v1/models/shown", { refs, shown }),
+  /** null clears back to the catalog number. */
+  setContext: (ref: string, contextWindow: number | null) => api<{ ok: boolean }>("PUT", "/v1/models/context", { ref, contextWindow }),
+  /** null clears back to the catalog prices. */
+  setPricing: (ref: string, pricing: ModelPricing | null) => api<{ ok: boolean }>("PUT", "/v1/models/pricing", { ref, pricing }),
+}
+
+/** One block of a model's parameters (engine src/model-params.ts). An absent field is not sent. */
+export interface ParamBlock {
+  temperature?: number
+  top_p?: number
+  top_k?: number
+  min_p?: number
+  repetition_penalty?: number
+  frequency_penalty?: number
+  presence_penalty?: number
+  seed?: number
+  max_tokens?: number
+  reasoning?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"
+  thinkingBudget?: number
+  reasoningTags?: { open: string; close: string }
+  params?: Record<string, unknown>
+  headers?: Record<string, string>
+}
+
+/** Block name -> block: "chat", "plugins", "molfar", "plugin:<app>/<plugin>". */
+export type ModelParamsEntry = Record<string, ParamBlock>
+
+export const modelParamsApi = {
+  all: () => api<{ v: 1; models: Record<string, ModelParamsEntry> }>("GET", "/v1/models/params"),
+  /** Replace one model's blocks; null (or no blocks) removes its entry. Refused with a message on bad values. */
+  put: (model: string, blocks: ModelParamsEntry | null) => api<{ ok: boolean; v: 1; models: Record<string, ModelParamsEntry> }>("PUT", "/v1/models/params", { model, blocks }),
 }
 
 export const listPromptFormats = () =>
@@ -474,3 +524,7 @@ export const adminUsersApi = {
     api<{ user: AuthUser }>("PATCH", `/v1/admin/users/${encodeURIComponent(username)}`, body),
   remove: (username: string) => api("DELETE", `/v1/admin/users/${encodeURIComponent(username)}`),
 }
+
+/** The plugins the engine knows: the user's own and the active app's (id "<app>__<plugin>", source "app:<app>"). */
+export const listPlugins = () =>
+  api<{ plugins: { id: string; source: string; manifest: { name?: string; description?: string } }[]; activeApp: string | null }>("GET", "/v1/plugins")

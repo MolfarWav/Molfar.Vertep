@@ -18,7 +18,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { inspectAssistantMessage, inspectRequest, inspectResult, type InspectorEntry } from "./inspector.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
-import { blockFor, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
+import { blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
 
 /** File-backed CredentialStore over the user's auth.json (outside git). */
 class FileCredentialStore implements CredentialStore {
@@ -1012,7 +1012,7 @@ export class UserModelService {
   private withModelParams(model: Model<Api>, req: GenerateRequest): { req: GenerateRequest; applied: AppliedParams } {
     const entry = readModelParams(this.paths.root).models[`${model.provider}/${model.id}`];
     const name = blockFor(entry, { source: req.source, key: req.paramsKey });
-    const applied = mergeParams(name ? entry?.[name] : undefined, name, req);
+    const applied = mergeParams(blockValues(entry, name), name, req);
     const { modelHeaders: _ignored, ...rest } = req;
     if (!applied.block) return { req: rest, applied };
     const presetParams: NonNullable<GenerateRequest["presetParams"]> = {
@@ -1423,7 +1423,7 @@ export class UserModelService {
     const blockName = blockFor(entry, { source: "agent" });
     const own = options as { reasoning?: string; temperature?: number; maxTokens?: number } | undefined;
     const applied = blockName
-      ? mergeParams(entry?.[blockName], blockName, {
+      ? mergeParams(blockValues(entry, blockName), blockName, {
           reasoning: own?.reasoning,
           presetParams: { temperature: own?.temperature, max_tokens: own?.maxTokens },
           paramsSource: "request",

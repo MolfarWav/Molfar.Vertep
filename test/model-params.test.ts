@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fauxProvider, fauxAssistantMessage } from "@earendil-works/pi-ai/providers/faux";
-import { blockFor, mergeParams, ModelParamsError, readModelParams, validateBlock, writeModelParams } from "../src/model-params.js";
+import { blockFor, blockValues, mergeParams, pluginBlockName, ModelParamsError, readModelParams, validateBlock, writeModelParams } from "../src/model-params.js";
 import { UserModelService } from "../src/models.js";
 import { defaultInstanceConfig } from "../src/config.js";
 import { bootstrapUserDir } from "../src/paths.js";
@@ -37,14 +37,23 @@ describe("model params: validation", () => {
 describe("model params: which block and who wins", () => {
   const entry = { chat: { temperature: 0.95 }, plugins: { temperature: 0.3 }, "plugin:roleplay/relations": { temperature: 0.2 }, molfar: { reasoning: "medium" as const } };
   it("picks the block by caller", () => {
-    expect(blockFor(entry, { source: "app:roleplay/engine", key: "reply" })).toBe("chat");
-    expect(blockFor(entry, { source: "app:roleplay/engine", key: "translation" })).toBe("plugins");
-    expect(blockFor(entry, { source: "app:roleplay/relations", key: "sense_c1" })).toBe("plugin:roleplay/relations");
-    expect(blockFor(entry, { source: "app:roleplay/litopys", key: "lit_c1" })).toBe("plugins");
+    expect(blockFor(entry, { source: "app:roleplay/roleplay__engine", key: "reply" })).toBe("chat");
+    expect(blockFor(entry, { source: "app:roleplay/roleplay__engine", key: "translation" })).toBe("plugins");
+    expect(blockFor(entry, { source: "app:roleplay/roleplay__relations", key: "sense_c1" })).toBe("plugin:roleplay/relations");
+    expect(blockFor(entry, { source: "app:roleplay/roleplay__litopys", key: "lit_c1" })).toBe("plugins");
     expect(blockFor(entry, { source: "agent" })).toBe("molfar");
+    expect(pluginBlockName("app:roleplay/roleplay__relations")).toBe("plugin:roleplay/relations");
+    expect(pluginBlockName("app:notes")).toBe("plugin:user/notes");
     expect(blockFor(entry, { source: "api:/v1/chat/completions" })).toBe("chat");
     expect(blockFor({ chat: { temperature: 1 } }, { source: "agent" })).toBeNull();
     expect(blockFor(undefined, { source: "agent" })).toBeNull();
+  });
+
+  it("a plugin block falls back field by field to Plugins", () => {
+    const e = { plugins: { temperature: 0.3, max_tokens: 2048 }, "plugin:roleplay/relations": { temperature: 0.2 } };
+    expect(blockValues(e, "plugin:roleplay/relations")).toEqual({ temperature: 0.2, max_tokens: 2048 });
+    expect(blockValues(e, "plugins")).toEqual({ temperature: 0.3, max_tokens: 2048 });
+    expect(blockValues(e, null)).toBeUndefined();
   });
 
   it("the model wins unless the request asks to; custom params come last", () => {
@@ -108,7 +117,7 @@ describe("model params: file and generation", () => {
       },
     ]);
     const reply = await svc.generate({
-      model: ref, messages: [{ role: "user", content: "hi" }], source: "app:roleplay/engine", paramsKey: "reply",
+      model: ref, messages: [{ role: "user", content: "hi" }], source: "app:roleplay/roleplay__engine", paramsKey: "reply",
       presetParams: { temperature: 0.5, max_tokens: 200 },
       // a caller cannot smuggle headers in: only model-params.json sets them
       modelHeaders: { Authorization: "Bearer stolen" },
@@ -120,7 +129,7 @@ describe("model params: file and generation", () => {
     expect((seen[0]!.headers as Record<string, string>).Authorization).toBeUndefined();
     expect(reply.requestParams).toMatchObject({ block: "chat", temperature: 0.95, from: { temperature: "model", max_tokens: "request" } });
 
-    const tracker = await svc.generate({ model: ref, messages: [{ role: "user", content: "hi" }], source: "app:roleplay/relations", paramsKey: "sense" });
+    const tracker = await svc.generate({ model: ref, messages: [{ role: "user", content: "hi" }], source: "app:roleplay/roleplay__relations", paramsKey: "sense" });
     expect(seen[1]!.temperature).toBe(0.2);
     expect(tracker.requestParams).toMatchObject({ block: "plugins" });
   }, 30_000);

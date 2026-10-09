@@ -26,7 +26,7 @@ import { SELF_UPDATE, startUpdate, updateState } from "../self-update.js";
 import { DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
 import * as git from "../git.js";
 import { UserModelService, ModelNotConfiguredError, type ModelPricing } from "../models.js";
-import { blockFor, ModelParamsError, readModelParams, writeModelParams } from "../model-params.js";
+import { blockFor, blockValues, ModelParamsError, readModelParams, writeModelParams } from "../model-params.js";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
 import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
 import type { AuthPrompt, Credential, ProviderAuthInteraction } from "@earendil-works/pi-ai";
@@ -1348,7 +1348,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const ref = c.req.query("model") ?? "";
     const entry = readModelParams(c.get("paths").root).models[ref];
     const block = blockFor(entry, { source: c.req.query("source") ?? "", key: c.req.query("key") ?? undefined });
-    return c.json({ model: ref, block, values: block ? entry?.[block] ?? {} : {} });
+    return c.json({ model: ref, block, values: blockValues(entry, block) ?? {} });
   });
 
   app.put("/v1/models/params", async (c) => {
