@@ -86,6 +86,16 @@ error. Browser check by a subagent: see STATE.
    - Roleplay Settings: only the model-related parts move (context, prices, model choices for sensor /
      Litopys / translation become picks of a model); an audit of the rest of Roleplay Settings is a later item.
    - Android: the add-connection screen shows the providers fetch error with Retry instead of hiding it.
+   - ROUND 2 (user, 2026-10-09, after looking at S2: "still 3-4 places, profiles confuse"): (a) the shell's
+     "API connections" and "Models" tabs merge into ONE "Connections and models" tab: connection -> its models,
+     each model with "in pickers" checkbox, a STAR (quick switch) and its settings; one search over all
+     models; (b) quick switch = favourite models stored by the engine (`model-favorites.json`, a star with an
+     optional own name), shown first by every picker (Roleplay chat header, Molfar, other apps); Roleplay's
+     profiles (library.json connectionProfiles) move into favourites once and "Save current as profile" /
+     "Manage profiles" go; (c) Roleplay's rail "Connections" section is removed: the model is chosen in the
+     chat header picker (favourites, then shown models, star toggles, "Set up" opens Settings); Home points
+     to Settings when no model exists; (d) the model is PER CHAT (chat meta.model, already in the data); a new
+     chat takes the last one chosen.
 3. **Map of chats per chat, linked like backlinks** (user, 2026-10-09; replaces the all-chats
    forest in `chats-map.tsx`). Today the map shows every chat at once in a row that scrolls
    sideways. Wanted: the map opens for ONE chat; a search field finds another chat (like the link

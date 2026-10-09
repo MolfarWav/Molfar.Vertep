@@ -33,7 +33,7 @@ import {
   listPromptFormats,
   modelsApi,
   type ModelDetails,
-  type PickerModel,
+  type ModelFavorite,
   type ProfileSummary,
   type PromptFormat,
   type SpeechEndpoint,
@@ -88,12 +88,13 @@ type ProviderPick = EngineProvider | CustomPick | OAuthPick | LocalPick
 export type TabValue = "general" | "backup" | "api" | "models" | "speech" | "agent" | "memory" | "mcp" | "developer" | "server" | "users"
 
 export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; initialModel?: string | null; onLogout: () => void }) {
-  const [tab, setTab] = useState<TabValue>(props.initialTab ?? "api")
+  // "models" was its own tab before 0.9.2: it lives in the connections tab now
+  const asked = props.initialTab === "models" ? "api" : props.initialTab
+  const [tab, setTab] = useState<TabValue>(asked ?? "api")
   const tabs: Array<{ value: TabValue; label: string; icon: ReactNode }> = [
     { value: "general", label: tr("General"), icon: <IconSmall name="outline-sliders" /> },
     { value: "backup", label: tr("Backup"), icon: <Icon name="download" /> },
-    { value: "api", label: tr("API connections"), icon: <Icon name="cloud-upload" /> },
-    { value: "models", label: tr("Models"), icon: <Icon name="providers" /> },
+    { value: "api", label: tr("Connections and models"), icon: <Icon name="cloud-upload" /> },
     { value: "speech", label: tr("Speech"), icon: <Icon name="speaker" /> },
     { value: "agent", label: tr("Molfar"), icon: <Icon name="brain" /> },
     { value: "memory", label: tr("Memory"), icon: <Icon name="books" /> },
@@ -111,7 +112,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
   // desktop sidebar: five labels in a tab row can't breathe at 390px
   const [mobile, setMobile] = useState(typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches)
   // a section asked for by name (an app's "set up this model") opens straight away on phones too
-  const [openSection, setOpenSection] = useState<TabValue | null>(props.initialTab ?? null)
+  const [openSection, setOpenSection] = useState<TabValue | null>(asked ?? null)
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)")
     const fn = () => setMobile(mq.matches)
@@ -124,7 +125,6 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
       {v === "general" && <GeneralTab me={props.me} onLogout={props.onLogout} />}
       {v === "backup" && <BackupTab />}
       {v === "api" && <ApiTab initialModel={props.initialModel} />}
-      {v === "models" && <ModelsTab />}
       {v === "speech" && <SpeechTab />}
       {v === "agent" && <AgentTab />}
       {v === "memory" && <MemoryTab />}
@@ -167,9 +167,6 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
           </Tabs.Content>
           <Tabs.Content value="api" className="no-scrollbar">
             <ApiTab initialModel={props.initialModel} />
-          </Tabs.Content>
-          <Tabs.Content value="models" className="no-scrollbar">
-            <ModelsTab />
           </Tabs.Content>
           <Tabs.Content value="speech" className="no-scrollbar">
             <SpeechTab />
@@ -1509,10 +1506,58 @@ function ApiTab(props: { initialModel?: string | null }) {
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<EngineConnection | null>(null)
   const [err, setErr] = useState("")
+  const [query, setQuery] = useState("")
+  const [busy, setBusy] = useState(false)
+  const all = models.data?.models ?? []
+  const filtered = models.data?.filtered ?? false
+  const favorites = models.data?.favorites ?? []
+
+  // which models the pickers offer: nothing chosen shows every model, the first tick starts the short list
+  const setShown = async (refs: string[], on: boolean) => {
+    if (!filtered && !on) return
+    setBusy(true)
+    setErr("")
+    try {
+      await modelsApi.setShown(refs, on)
+      await models.refetch()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const saveFavorites = async (items: ModelFavorite[]) => {
+    setBusy(true)
+    setErr("")
+    try {
+      const r = await modelsApi.setFavorites(items)
+      if (models.data) models.mutate({ ...models.data, favorites: r.favorites })
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const star = (ref: string, on: boolean) =>
+    void saveFavorites(on ? [...favorites.filter((f) => f.ref !== ref), { ref }] : favorites.filter((f) => f.ref !== ref))
 
   return (
-    <Pane title={tr("API connections")} description={tr("Name a connection once and pick it by name in any app. Keys never leave this machine.")}>
+    <Pane title={tr("Connections and models")} description={tr("Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.")}>
       <div className="flex flex-col gap-4 pb-4">
+        <QuickSwitch favorites={favorites} models={all} busy={busy} onSave={(items) => void saveFavorites(items)} />
+        {all.length ? <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <input className={inputClass} placeholder={tr("Search every model…")} value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
+              {filtered ? <Button variant="ghost" size="normal" disabled={busy} onClick={() => void setShown(all.filter((m) => m.shown).map((m) => `${m.provider}/${m.modelId}`), false)}>
+                  {tr("Show every model")}
+                </Button> : null}
+            </div>
+            <p className="text-12 text-ink-muted">
+              {filtered
+                ? tr("{shown} of {total} models shown", { shown: all.filter((m) => m.shown).length, total: all.length })
+                : tr("Nothing is chosen, so every model is shown. Tick the models you use, and only those appear in the pickers.")}
+            </p>
+          </div> : null}
         <section className="flex flex-col gap-2">
           {!connections.loading ? <>{(connections.data ?? []).map((c: EngineConnection) => (
                 editing?.id !== c.id ? <div key={c.id} className="flex flex-col rounded-lg border border-line text-13">
@@ -1555,10 +1600,16 @@ function ApiTab(props: { initialModel?: string | null }) {
                   <ConnectionModels
                     connection={c}
                     models={models.data?.models}
+                    query={query}
+                    filtered={filtered}
+                    favorites={favorites}
+                    busy={busy}
                     open={openModels === c.id}
                     initialSetup={c.id === wantedConnection ? wanted : null}
                     onToggle={() => setOpenModels(openModels === c.id ? null : c.id)}
                     onChanged={() => void models.refetch()}
+                    onShown={(refs, on) => void setShown(refs, on)}
+                    onStar={star}
                   />
                   </div> : <EditConnection key={c.id} connection={c} onDone={() => { setEditing(null); connections.refetch() }} onCancel={() => setEditing(null)} />
               ))}
@@ -1588,144 +1639,123 @@ const modelProviderOf = (c: EngineConnection) => (c.oauthProvider === "radius" ?
 
 /** A connection's models under its row: the shown ones first, a search when there are many, and each
  *  model's own settings (context, prices, parameters) one click away. */
-function ConnectionModels(props: { connection: EngineConnection; models: ModelDetails[] | undefined; open: boolean; initialSetup?: string | null; onToggle: () => void; onChanged: () => void }) {
-  const [query, setQuery] = useState("")
+function ConnectionModels(props: {
+  connection: EngineConnection
+  models: ModelDetails[] | undefined
+  /** the tab's search over every model: when set, matching models show unfolded */
+  query: string
+  filtered: boolean
+  favorites: ModelFavorite[]
+  busy: boolean
+  open: boolean
+  initialSetup?: string | null
+  onToggle: () => void
+  onChanged: () => void
+  onShown: (refs: string[], on: boolean) => void
+  onStar: (ref: string, on: boolean) => void
+}) {
   const [setup, setSetup] = useState<string | null>(props.initialSetup ?? null)
   const provider = modelProviderOf(props.connection)
   const all = (props.models ?? []).filter((m) => m.provider === provider)
   if (!props.models || all.length === 0) return null
-  const q = query.trim().toLowerCase()
+  const q = props.query.trim().toLowerCase()
+  const refOf = (m: ModelDetails) => `${m.provider}/${m.modelId}`
+  const starred = new Set(props.favorites.map((f) => f.ref))
   const list = all
     .filter((m) => !q || `${m.label} ${m.modelId}`.toLowerCase().includes(q))
-    .sort((a, b) => Number(b.shown) - Number(a.shown) || a.label.localeCompare(b.label))
-  const shown = all.filter((m) => m.shown).length
+    .sort((a, b) => Number(starred.has(refOf(b))) - Number(starred.has(refOf(a))) || Number(b.shown) - Number(a.shown) || a.label.localeCompare(b.label))
+  if (q && !list.length) return null
+  const open = props.open || !!q
+  const chosen = (m: ModelDetails) => props.filtered && m.shown
+  const shownCount = all.filter(chosen).length
   return (
     <div className="border-t border-line">
-      <button className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-12 text-ink-muted hover:bg-hover" aria-expanded={props.open} onClick={props.onToggle}>
-        <IconSmall name={props.open ? "chevron-down" : "chevron-right"} size="small" />
-        <span className="flex-1">{tr("Models and their settings")}</span>
-        <span className="text-11 text-ink-faint">{shown === all.length ? all.length : `${shown}/${all.length}`}</span>
-      </button>
-      {props.open ? <div className="flex flex-col gap-1 px-2 pb-2">
-          {all.length > 12 ? <input className={inputClass} placeholder={tr("Search models…")} value={query} onChange={(e) => setQuery(e.currentTarget.value)} /> : null}
-          {list.slice(0, q ? 200 : 60).map((m) => {
-            const ref = `${m.provider}/${m.modelId}`
+      <div className="flex items-center gap-1 px-3 py-1">
+        <button className="flex min-w-0 flex-1 items-center gap-2 py-0.5 text-left text-12 text-ink-muted hover:text-ink" aria-expanded={open} onClick={props.onToggle}>
+          <IconSmall name={open ? "chevron-down" : "chevron-right"} size="small" />
+          <span className="flex-1">{tr("Models")}</span>
+          <span className="text-11 text-ink-faint">{props.filtered ? `${shownCount}/${all.length}` : all.length}</span>
+        </button>
+        {open ? <>
+            <Button variant="ghost" size="small" disabled={props.busy} onClick={() => props.onShown(all.map(refOf), true)}>{tr("All")}</Button>
+            <Button variant="ghost" size="small" disabled={props.busy} onClick={() => props.onShown(all.map(refOf), false)}>{tr("None")}</Button>
+          </> : null}
+      </div>
+      {open ? <div className="flex flex-col gap-0.5 px-2 pb-2">
+          {list.slice(0, q ? 200 : 80).map((m) => {
+            const ref = refOf(m)
+            const isStar = starred.has(ref)
             return setup === ref ? <ModelPanel key={ref} model={m} onClose={() => setSetup(null)} onChanged={props.onChanged} /> : (
-              <div key={ref} className="flex items-center gap-2 rounded px-1 py-0.5 hover:bg-hover">
-                <span className="min-w-0 flex-1 truncate text-12 text-ink">{m.label}{m.shown ? null : <span className="ml-1 text-11 text-ink-faint">· {tr("hidden from pickers")}</span>}</span>
+              <div key={ref} className="flex items-center gap-2 rounded px-1 py-0.5 hover:bg-hover" data-testid="connection-model">
+                <input
+                  type="checkbox"
+                  className="size-4 shrink-0 accent-[var(--c-contrast)]"
+                  checked={chosen(m)}
+                  disabled={props.busy}
+                  title={tr("Show in the model pickers")}
+                  aria-label={tr("Show {name} in the model pickers", { name: m.label })}
+                  onChange={(e) => props.onShown([ref], e.currentTarget.checked)}
+                />
+                <span className="min-w-0 flex-1 truncate text-12 text-ink">
+                  {m.label}
+                  {m.label !== m.modelId ? <span className="ml-1 text-11 text-ink-faint">{m.modelId}</span> : null}
+                </span>
+                <button
+                  type="button"
+                  className={cn("shrink-0 rounded px-1 text-14 leading-none", isStar ? "text-ink" : "text-ink-faint hover:text-ink")}
+                  disabled={props.busy}
+                  aria-pressed={isStar}
+                  title={isStar ? tr("Remove from the quick switch") : tr("Add to the quick switch")}
+                  onClick={() => props.onStar(ref, !isStar)}
+                >
+                  {isStar ? "★" : "☆"}
+                </button>
                 <IconButton icon={<IconSmall name="outline-sliders" />} variant="ghost-muted" size="small" title={tr("Model settings")} onClick={() => setSetup(ref)} />
               </div>
             )
           })}
-          {!q && list.length > 60 ? <div className="px-1 text-11 text-ink-faint">{tr("{n} more: search to find them", { n: list.length - 60 })}</div> : null}
+          {!q && list.length > 80 ? <div className="px-1 text-11 text-ink-faint">{tr("{n} more: search to find them", { n: list.length - 80 })}</div> : null}
         </div> : null}
     </div>
   )
 }
 
-/** Which models the pickers offer (the agent's and every app's). Grouped by
- *  connection, because three connections can bring a thousand models and
- *  the same model name from two of them is otherwise impossible to tell apart. */
-function ModelsTab() {
-  const res = useResource(() => modelsApi.all())
-  const [setup, setSetup] = useState<string | null>(null)
-  const [query, setQuery] = useState("")
-  const [open, setOpen] = useState<Record<string, boolean>>({})
-  const [busy, setBusy] = useState(false)
-  const [err, setErr] = useState("")
-  const models = res.data?.models ?? []
-  const filtered = res.data?.filtered ?? false
-  const refOf = (m: PickerModel) => `${m.provider}/${m.modelId}`
-
-  const change = async (refs: string[], on: boolean) => {
-    // nothing chosen shows every model; the first tick starts the short list
-    if (!filtered && !on) return
-    setBusy(true)
-    setErr("")
-    try {
-      await modelsApi.setShown(refs, on)
-      await res.refetch()
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
-    } finally {
-      setBusy(false)
-    }
+/** The quick switch: starred models in order, each with an optional name of its own. Every picker
+ *  (the chat in Roleplay, Molfar, other apps) offers these first; they are chosen here only. */
+function QuickSwitch(props: { favorites: ModelFavorite[]; models: ModelDetails[]; busy: boolean; onSave: (items: ModelFavorite[]) => void }) {
+  const [names, setNames] = useState<Record<string, string>>({})
+  const label = (ref: string) => props.models.find((m) => `${m.provider}/${m.modelId}` === ref)?.label
+  const move = (i: number, d: number) => {
+    const next = [...props.favorites]
+    const [it] = next.splice(i, 1)
+    if (it) next.splice(i + d, 0, it)
+    props.onSave(next)
   }
-
-  const q = query.trim().toLowerCase()
-  const groups = new Map<string, ModelDetails[]>()
-  for (const m of models) {
-    const name = m.connectionName ?? m.provider
-    if (q && !`${m.label} ${m.modelId} ${name}`.toLowerCase().includes(q)) continue
-    groups.set(name, [...(groups.get(name) ?? []), m])
-  }
-  const sorted = [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, list]) => [name, list.sort((a, b) => a.label.localeCompare(b.label))] as const)
-  // a model counts as chosen only once a short list exists
-  const chosen = (m: PickerModel) => filtered && m.shown
-  const shownCount = models.filter(chosen).length
-
   return (
-    <Pane title={tr("Models")} description={tr("Choose which models appear in the model pickers, in Molfar and in every app.")}>
-      <div className="flex flex-col gap-3 pb-4">
-        <div className="flex items-center gap-2">
-          <input className={inputClass} placeholder={tr("Search models…")} value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
-          {filtered ? <Button variant="ghost" size="normal" disabled={busy} onClick={() => void change(models.filter((m) => m.shown).map(refOf), false)}>
-              {tr("Show every model")}
-            </Button> : null}
+    <section className="flex flex-col gap-1.5 rounded-lg border border-line p-3" data-testid="quick-switch">
+      <h3 className="text-13 font-medium text-ink">★ {tr("Quick switch")}</h3>
+      <p className="text-11 text-ink-faint">{tr("The models you switch between in chats. Star them in the lists below; a name of your own is optional.")}</p>
+      {props.favorites.length === 0 ? <div className="text-12 text-ink-faint">{tr("Nothing starred yet.")}</div> : null}
+      {props.favorites.map((f, i) => (
+        <div key={f.ref} className="flex flex-wrap items-center gap-2">
+          <input
+            className={cn(inputClass, "min-w-40")}
+            aria-label={tr("Name for {model}", { model: f.ref })}
+            placeholder={label(f.ref) ?? f.ref}
+            value={names[f.ref] ?? f.name ?? ""}
+            onChange={(e) => setNames({ ...names, [f.ref]: e.currentTarget.value })}
+            onBlur={() => {
+              const v = (names[f.ref] ?? f.name ?? "").trim()
+              if (v !== (f.name ?? "")) props.onSave(props.favorites.map((x) => (x.ref === f.ref ? { ref: x.ref, ...(v ? { name: v } : {}) } : x)))
+            }}
+          />
+          <span className={cn("min-w-0 flex-1 truncate text-11", label(f.ref) ? "text-ink-faint" : "text-danger")}>{label(f.ref) ? f.ref : tr("{ref}: this model is gone", { ref: f.ref })}</span>
+          <IconButton icon={<IconSmall name="outline-chevron-down" className="rotate-180" />} variant="ghost-muted" size="small" title={tr("Move up")} disabled={props.busy || i === 0} onClick={() => move(i, -1)} />
+          <IconButton icon={<IconSmall name="outline-chevron-down" />} variant="ghost-muted" size="small" title={tr("Move down")} disabled={props.busy || i === props.favorites.length - 1} onClick={() => move(i, 1)} />
+          <IconButton icon={<IconSmall name="outline-xmark" />} variant="ghost-muted" size="small" title={tr("Remove from the quick switch")} disabled={props.busy} onClick={() => props.onSave(props.favorites.filter((x) => x.ref !== f.ref))} />
         </div>
-        <p className="text-12 text-ink-muted">
-          {filtered
-            ? tr("{shown} of {total} models shown", { shown: shownCount, total: models.length })
-            : tr("Nothing is chosen, so every model is shown. Tick the models you use, and only those appear in the pickers.")}
-        </p>
-        {err ? <div className="text-12 text-danger">{err}</div> : null}
-        {res.loading && !res.data ? <div className="text-13 text-ink-faint">{tr("Loading…")}</div> : null}
-        {!res.loading && !models.length ? <div className="rounded-lg border border-dashed border-line px-3 py-4 text-center text-13 text-ink-faint">
-            {tr("No models yet. Add an API connection first.")}
-          </div> : null}
-        {models.length && !sorted.length ? <div className="text-13 text-ink-faint">{tr("No models match.")}</div> : null}
-        {sorted.map(([name, list]) => {
-          const expanded = q ? true : open[name] ?? (sorted.length === 1 || list.length <= 12)
-          const on = list.filter(chosen).length
-          return (
-            <section key={name} className="rounded-lg border border-line">
-              <div className="flex items-center gap-2 px-3 py-2">
-                <button className="flex min-w-0 flex-1 items-center gap-2 text-left text-13 font-medium text-ink" onClick={() => setOpen({ ...open, [name]: !expanded })}>
-                  <IconSmall name={expanded ? "chevron-down" : "chevron-right"} size="small" />
-                  <ProviderIcon id={list[0]?.provider ?? ""} className="size-4 shrink-0 text-icon" />
-                  <span className="truncate">{name}</span>
-                  <span className="shrink-0 text-11 font-normal text-ink-faint">{on}/{list.length}</span>
-                </button>
-                <Button variant="ghost" size="small" disabled={busy} onClick={() => void change(list.map(refOf), true)}>
-                  {tr("All")}
-                </Button>
-                <Button variant="ghost" size="small" disabled={busy} onClick={() => void change(list.map(refOf), false)}>
-                  {tr("None")}
-                </Button>
-              </div>
-              {expanded ? <div className="flex flex-col border-t border-line py-1">
-                  {list.map((m) => setup === refOf(m) ? <div key={refOf(m)} className="px-2 py-1"><ModelPanel model={m} onClose={() => setSetup(null)} onChanged={() => void res.refetch()} /></div> : (
-                    <label key={refOf(m)} className="flex items-center gap-2 px-3 py-1 text-13 text-ink hover:bg-hover">
-                      <input
-                        type="checkbox"
-                        className="size-4 shrink-0 accent-[var(--c-contrast)]"
-                        checked={chosen(m)}
-                        disabled={busy}
-                        onChange={(e) => void change([refOf(m)], e.currentTarget.checked)}
-                      />
-                      <span className="min-w-0 truncate">{m.label}</span>
-                      {m.label !== m.modelId ? <span className="min-w-0 flex-1 truncate text-11 text-ink-faint">{m.modelId}</span> : <span className="flex-1" />}
-                      <IconButton icon={<IconSmall name="outline-sliders" />} variant="ghost-muted" size="small" title={tr("Model settings")} onClick={(e) => { e.preventDefault(); setSetup(refOf(m)) }} />
-                    </label>
-                  ))}
-                </div> : null}
-            </section>
-          )
-        })}
-      </div>
-    </Pane>
+      ))}
+    </section>
   )
 }
 

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { fauxProvider, fauxAssistantMessage } from "@earendil-works/pi-ai/providers/faux";
 import { blockFor, blockValues, mergeParams, pluginBlockName, ModelParamsError, readModelParams, validateBlock, writeModelParams } from "../src/model-params.js";
-import { UserModelService } from "../src/models.js";
+import { cleanFavorites, UserModelService } from "../src/models.js";
 import { defaultInstanceConfig } from "../src/config.js";
 import { bootstrapUserDir } from "../src/paths.js";
 import { UserService } from "../src/users.js";
@@ -133,4 +133,15 @@ describe("model params: file and generation", () => {
     expect(seen[1]!.temperature).toBe(0.2);
     expect(tracker.requestParams).toMatchObject({ block: "plugins" });
   }, 30_000);
+});
+
+describe("quick-switch favourites", () => {
+  it("keeps refs with a slash once, trims names, caps the list", () => {
+    expect(cleanFavorites([{ ref: "nanogpt/a", name: "  Fast " }, { ref: "nanogpt/a" }, { ref: "bad" }, { ref: "x/\ny" }, null, { ref: "o/b", name: "" }])).toEqual([
+      { ref: "nanogpt/a", name: "Fast" },
+      { ref: "o/b" },
+    ]);
+    expect(cleanFavorites(Array.from({ length: 150 }, (_, i) => ({ ref: `p/m${i}` }))).length).toBe(100);
+    expect(cleanFavorites("nope")).toEqual([]);
+  });
 });

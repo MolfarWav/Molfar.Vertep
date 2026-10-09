@@ -595,6 +595,20 @@ const dict = {
   "Recommended settings": "권장 설정",
   "Fill in the recommended values": "권장 값 채우기",
   "The values fill the form; nothing changes until you save.": "값이 양식을 채웁니다. 저장하기 전까지는 아무것도 바뀌지 않습니다.",
+  "Connections and models": "연결 및 모델",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "연결이 모델을 가져옵니다. 여기에서 선택 목록에 표시할 모델, 빠른 전환(별표)에 넣을 모델, 각 모델의 설정을 선택합니다. 키는 이 컴퓨터를 떠나지 않습니다.",
+  "Search every model…": "모든 모델 검색…",
+  "Show in the model pickers": "모델 선택 목록에 표시",
+  "Show {name} in the model pickers": "{name}을(를) 모델 선택 목록에 표시",
+  "Remove from the quick switch": "빠른 전환에서 제거",
+  "Add to the quick switch": "빠른 전환에 추가",
+  "Quick switch": "빠른 전환",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "채팅에서 전환하는 모델입니다. 아래 목록에서 별표를 붙이세요. 직접 정한 이름은 선택 사항입니다.",
+  "Nothing starred yet.": "아직 별표를 붙인 항목이 없습니다.",
+  "Name for {model}": "{model}의 이름",
+  "{ref}: this model is gone": "{ref}: 이 모델은 더 이상 없습니다",
+  "Move up": "위로 이동",
+  "Move down": "아래로 이동",
 }
 
 export default dict

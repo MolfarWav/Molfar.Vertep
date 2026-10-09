@@ -595,6 +595,20 @@ const dict = {
   "Recommended settings": "推荐设置",
   "Fill in the recommended values": "填入推荐值",
   "The values fill the form; nothing changes until you save.": "这些值会填入表单；在保存之前不会有任何改动。",
+  "Connections and models": "连接与模型",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "连接会带来模型。在这里，您可以选择选择器显示哪些模型、哪些进入快速切换（星标），以及每个模型的设置。密钥永远不会离开这台机器。",
+  "Search every model…": "搜索所有模型…",
+  "Show in the model pickers": "在模型选择器中显示",
+  "Show {name} in the model pickers": "在模型选择器中显示 {name}",
+  "Remove from the quick switch": "从快速切换中移除",
+  "Add to the quick switch": "添加到快速切换",
+  "Quick switch": "快速切换",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "您在聊天中切换的模型。在下方列表中为其加星标；自定义名称可选。",
+  "Nothing starred yet.": "尚未标星任何内容。",
+  "Name for {model}": "{model} 的名称",
+  "{ref}: this model is gone": "{ref}：该模型已不存在",
+  "Move up": "上移",
+  "Move down": "下移",
 }
 
 export default dict

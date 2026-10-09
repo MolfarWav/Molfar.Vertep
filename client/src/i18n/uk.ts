@@ -595,6 +595,20 @@ const dict = {
   "Recommended settings": "Рекомендовані налаштування",
   "Fill in the recommended values": "Підставити рекомендовані значення",
   "The values fill the form; nothing changes until you save.": "Значення заповнять форму; нічого не зміниться, доки ви не збережете.",
+  "Connections and models": "Підключення та моделі",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "Підключення дають моделі. Тут ви обираєте, які моделі показувати у списках, які додавати до швидкого перемикання (зірочка), і налаштовуєте кожну модель. Ключі ніколи не покидають цю машину.",
+  "Search every model…": "Пошук за всіма моделями…",
+  "Show in the model pickers": "Показувати у списках моделей",
+  "Show {name} in the model pickers": "Показувати {name} у списках моделей",
+  "Remove from the quick switch": "Прибрати зі швидкого перемикання",
+  "Add to the quick switch": "Додати до швидкого перемикання",
+  "Quick switch": "Швидке перемикання",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "Моделі, між якими ви перемикаєтеся в чатах. Позначте їх зірочкою у списках нижче; власна назва необов'язкова.",
+  "Nothing starred yet.": "Поки нічого не позначено зірочкою.",
+  "Name for {model}": "Назва для {model}",
+  "{ref}: this model is gone": "{ref}: цієї моделі більше немає",
+  "Move up": "Вгору",
+  "Move down": "Вниз",
 }
 
 export default dict

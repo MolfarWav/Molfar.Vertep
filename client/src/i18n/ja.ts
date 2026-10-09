@@ -595,6 +595,20 @@ const dict = {
   "Recommended settings": "推奨設定",
   "Fill in the recommended values": "推奨値を入力",
   "The values fill the form; nothing changes until you save.": "値はフォームに入るだけです。保存するまで何も変わりません。",
+  "Connections and models": "接続とモデル",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "接続がモデルを提供します。ここでは、選択リストに表示するモデル、クイック切り替え（星印）に入れるモデル、各モデルの設定を選びます。キーがこのマシンから出ることはありません。",
+  "Search every model…": "すべてのモデルを検索…",
+  "Show in the model pickers": "モデル選択リストに表示",
+  "Show {name} in the model pickers": "{name} をモデル選択リストに表示",
+  "Remove from the quick switch": "クイック切り替えから削除",
+  "Add to the quick switch": "クイック切り替えに追加",
+  "Quick switch": "クイック切り替え",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "チャットで切り替えるモデルです。下のリストで星印を付けてください。独自の名前は任意です。",
+  "Nothing starred yet.": "まだ星印が付いたものはありません。",
+  "Name for {model}": "{model} の名前",
+  "{ref}: this model is gone": "{ref}: このモデルはなくなりました",
+  "Move up": "上へ移動",
+  "Move down": "下へ移動",
 }
 
 export default dict

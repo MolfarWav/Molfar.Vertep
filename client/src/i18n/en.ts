@@ -597,6 +597,20 @@ const en = {
   "Recommended settings": "",
   "Fill in the recommended values": "",
   "The values fill the form; nothing changes until you save.": "",
+  "Connections and models": "",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "",
+  "Search every model…": "",
+  "Show in the model pickers": "",
+  "Show {name} in the model pickers": "",
+  "Remove from the quick switch": "",
+  "Add to the quick switch": "",
+  "Quick switch": "",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "",
+  "Nothing starred yet.": "",
+  "Name for {model}": "",
+  "{ref}: this model is gone": "",
+  "Move up": "",
+  "Move down": "",
 } as const
 
 export default en

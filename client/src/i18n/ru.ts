@@ -595,6 +595,20 @@ const dict = {
   "Recommended settings": "Рекомендуемые настройки",
   "Fill in the recommended values": "Подставить рекомендуемые значения",
   "The values fill the form; nothing changes until you save.": "Значения заполнят форму; ничего не изменится, пока вы не сохраните.",
+  "Connections and models": "Подключения и модели",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "Подключения дают модели. Здесь вы выбираете, какие модели показывать в списках, какие добавлять в быстрое переключение (звёздочка), и настраиваете каждую модель. Ключи никогда не покидают эту машину.",
+  "Search every model…": "Поиск по всем моделям…",
+  "Show in the model pickers": "Показывать в списках моделей",
+  "Show {name} in the model pickers": "Показывать {name} в списках моделей",
+  "Remove from the quick switch": "Убрать из быстрого переключения",
+  "Add to the quick switch": "Добавить в быстрое переключение",
+  "Quick switch": "Быстрое переключение",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "Модели, между которыми вы переключаетесь в чатах. Отметьте их звёздочкой в списках ниже; своё название необязательно.",
+  "Nothing starred yet.": "Пока ничего не отмечено звёздочкой.",
+  "Name for {model}": "Название для {model}",
+  "{ref}: this model is gone": "{ref}: этой модели больше нет",
+  "Move up": "Вверх",
+  "Move down": "Вниз",
 }
 
 export default dict

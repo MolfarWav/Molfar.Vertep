@@ -192,7 +192,7 @@ export function appBridgeAllows(appId: string, method: string, path: string, tru
   if (method === "POST" && (path === "/v1/images" || path === "/v1/audio/speech")) return true;
   if (method === "PUT" && (path === "/v1/assets" || path.startsWith("/v1/assets/"))) return true;
   if (trusted) {
-    if (method === "PUT" && (path === "/v1/models/context" || path === "/v1/models/pricing" || path === "/v1/models/params" || path === "/v1/embeddings/config")) return true;
+    if (method === "PUT" && (path === "/v1/models/context" || path === "/v1/models/pricing" || path === "/v1/models/params" || path === "/v1/models/favorites" || path === "/v1/embeddings/config")) return true;
     if (method === "POST" && path === "/v1/embeddings/probe") return true;
   }
   return false;
@@ -1250,8 +1250,23 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     // must not leave every picker empty: that counts as nothing chosen
     const filtered = models.some((m) => shown.has(`${m.provider}/${m.modelId}`));
     const isShown = (m: { provider: string; modelId: string }) => !filtered || shown.has(`${m.provider}/${m.modelId}`);
-    if (c.req.query("all") === "1") return c.json({ models: models.map((m) => ({ ...m, shown: isShown(m) })), filtered });
-    return c.json({ models: models.filter(isShown) });
+    // the quick-switch list rides along: every picker shows it first (0.9.2)
+    const favorites = svc.favoriteModels();
+    if (c.req.query("all") === "1") return c.json({ models: models.map((m) => ({ ...m, shown: isShown(m) })), filtered, favorites });
+    return c.json({ models: models.filter(isShown), favorites });
+  });
+
+  // the quick-switch list, replaced whole (Settings, or a trusted app moving its old profiles in once)
+  app.get("/v1/models/favorites", (c) => c.json({ favorites: c.get("models").favoriteModels() }));
+  app.put("/v1/models/favorites", async (c) => {
+    const u = c.get("user");
+    const p = c.get("paths");
+    const body = await c.req.json<{ items?: unknown }>().catch(() => ({}) as { items?: unknown });
+    if (!Array.isArray(body.items)) return c.json({ error: "items must be a list of { ref, name? }" }, 400);
+    const favorites = c.get("models").setFavorites(body.items);
+    await git.commitAll(p.root, u.username, `models: quick switch (${favorites.length})`).catch(() => undefined);
+    bus.emit(u.username, "connections_changed", { id: "models-favorites" });
+    return c.json({ ok: true, favorites });
   });
 
   // switch models on or off in the pickers; the shell's Settings and the

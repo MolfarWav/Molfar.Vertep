@@ -595,6 +595,20 @@ const dict = {
   "Recommended settings": "Aanbevolen instellingen",
   "Fill in the recommended values": "Aanbevolen waarden invullen",
   "The values fill the form; nothing changes until you save.": "De waarden vullen het formulier; er verandert niets tot je opslaat.",
+  "Connections and models": "Verbindingen en modellen",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "Verbindingen brengen modellen. Hier kies je welke modellen de keuzelijsten tonen, welke in de snelle wissel (het sterretje) komen en de instellingen van elk model. Sleutels verlaten deze machine nooit.",
+  "Search every model…": "Alle modellen doorzoeken…",
+  "Show in the model pickers": "Tonen in de modelkeuzelijsten",
+  "Show {name} in the model pickers": "{name} tonen in de modelkeuzelijsten",
+  "Remove from the quick switch": "Uit de snelle wissel verwijderen",
+  "Add to the quick switch": "Aan de snelle wissel toevoegen",
+  "Quick switch": "Snelle wissel",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "De modellen waartussen je in chats wisselt. Markeer ze met een ster in de lijsten hieronder; een eigen naam is optioneel.",
+  "Nothing starred yet.": "Nog niets met een ster gemarkeerd.",
+  "Name for {model}": "Naam voor {model}",
+  "{ref}: this model is gone": "{ref}: dit model is verdwenen",
+  "Move up": "Omhoog",
+  "Move down": "Omlaag",
 }
 
 export default dict

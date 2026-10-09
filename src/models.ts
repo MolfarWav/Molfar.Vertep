@@ -111,6 +111,28 @@ export interface ModelInfo {
   pricing: ModelPricing | null;
 }
 
+/** A starred model in the quick-switch list. */
+export interface ModelFavorite {
+  ref: string;
+  /** The user's own name for it; absent = the model's label. */
+  name?: string;
+}
+
+export function cleanFavorites(items: unknown): ModelFavorite[] {
+  if (!Array.isArray(items)) return [];
+  const out: ModelFavorite[] = [];
+  const seen = new Set<string>();
+  for (const it of items) {
+    const ref = it && typeof it === "object" ? (it as { ref?: unknown }).ref : undefined;
+    if (typeof ref !== "string" || !ref.includes("/") || ref.length > 300 || /[\r\n]/.test(ref) || seen.has(ref)) continue;
+    const name = (it as { name?: unknown }).name;
+    seen.add(ref);
+    out.push({ ref, ...(typeof name === "string" && name.trim() ? { name: name.trim().slice(0, 80) } : {}) });
+    if (out.length >= 100) break;
+  }
+  return out;
+}
+
 /** USD per million tokens, the unit every catalog and price page quotes. */
 export interface ModelPricing {
   input: number;
@@ -458,6 +480,25 @@ export class UserModelService {
     }
     const list = [...set].sort();
     fs.writeFileSync(path.join(this.paths.root, "models-shown.json"), JSON.stringify({ shown: list }, null, 2));
+    return list;
+  }
+
+  /** The quick-switch list (model-favorites.json, 0.9.2): starred models in the user's order, each
+   *  with an optional name of its own ("Glm 5.3 Think"). Every picker shows them first; they are set
+   *  in Settings only. */
+  favoriteModels(): ModelFavorite[] {
+    try {
+      const raw = JSON.parse(fs.readFileSync(path.join(this.paths.root, "model-favorites.json"), "utf8")) as { items?: unknown };
+      return cleanFavorites(raw.items);
+    } catch {
+      return [];
+    }
+  }
+
+  /** Replace the list (validated: refs with a slash, names up to 80 characters, at most 100, no repeats). */
+  setFavorites(items: unknown): ModelFavorite[] {
+    const list = cleanFavorites(items);
+    fs.writeFileSync(path.join(this.paths.root, "model-favorites.json"), JSON.stringify({ v: 1, items: list }, null, 2));
     return list;
   }
 

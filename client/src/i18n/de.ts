@@ -595,6 +595,20 @@ const dict = {
   "Recommended settings": "Empfohlene Einstellungen",
   "Fill in the recommended values": "Empfohlene Werte eintragen",
   "The values fill the form; nothing changes until you save.": "Die Werte füllen das Formular aus; nichts ändert sich, bis du speicherst.",
+  "Connections and models": "Verbindungen und Modelle",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "Verbindungen bringen Modelle. Hier wählst du, welche Modelle die Auswahllisten zeigen, welche in die Schnellauswahl (der Stern) kommen und die Einstellungen jedes Modells. Schlüssel verlassen diese Maschine nie.",
+  "Search every model…": "Alle Modelle durchsuchen…",
+  "Show in the model pickers": "In den Modellauswahlen anzeigen",
+  "Show {name} in the model pickers": "{name} in den Modellauswahlen anzeigen",
+  "Remove from the quick switch": "Aus der Schnellauswahl entfernen",
+  "Add to the quick switch": "Zur Schnellauswahl hinzufügen",
+  "Quick switch": "Schnellauswahl",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "Die Modelle, zwischen denen du in Chats wechselst. Markiere sie in den Listen unten mit einem Stern; ein eigener Name ist optional.",
+  "Nothing starred yet.": "Noch nichts mit Stern markiert.",
+  "Name for {model}": "Name für {model}",
+  "{ref}: this model is gone": "{ref}: dieses Modell ist nicht mehr verfügbar",
+  "Move up": "Nach oben",
+  "Move down": "Nach unten",
 }
 
 export default dict

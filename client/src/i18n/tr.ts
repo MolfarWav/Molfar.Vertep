@@ -595,6 +595,20 @@ const dict = {
   "Recommended settings": "Önerilen ayarlar",
   "Fill in the recommended values": "Önerilen değerleri doldur",
   "The values fill the form; nothing changes until you save.": "Değerler formu doldurur; siz kaydedene kadar hiçbir şey değişmez.",
+  "Connections and models": "Bağlantılar ve modeller",
+  "Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.": "Bağlantılar modelleri getirir. Burada seçicilerin hangi modelleri göstereceğini, hangilerinin hızlı geçişe (yıldız) gireceğini ve her modelin ayarlarını seçersiniz. Anahtarlar bu makineden asla çıkmaz.",
+  "Search every model…": "Tüm modellerde ara…",
+  "Show in the model pickers": "Model seçicilerinde göster",
+  "Show {name} in the model pickers": "{name} modelini seçicilerde göster",
+  "Remove from the quick switch": "Hızlı geçişten kaldır",
+  "Add to the quick switch": "Hızlı geçişe ekle",
+  "Quick switch": "Hızlı geçiş",
+  "The models you switch between in chats. Star them in the lists below; a name of your own is optional.": "Sohbetlerde aralarında geçiş yaptığınız modeller. Aşağıdaki listelerde yıldızlayın; kendi adınız isteğe bağlıdır.",
+  "Nothing starred yet.": "Henüz yıldızlanan bir şey yok.",
+  "Name for {model}": "{model} için ad",
+  "{ref}: this model is gone": "{ref}: bu model artık yok",
+  "Move up": "Yukarı taşı",
+  "Move down": "Aşağı taşı",
 }
 
 export default dict

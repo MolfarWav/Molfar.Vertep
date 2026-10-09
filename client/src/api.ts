@@ -58,6 +58,12 @@ export interface ModelDetails extends PickerModel {
   pricing: ModelPricing | null
 }
 
+/** A starred model in the quick-switch list, with an optional name of its own. */
+export interface ModelFavorite {
+  ref: string
+  name?: string
+}
+
 export interface ModelPricing {
   input: number
   output: number
@@ -67,7 +73,9 @@ export interface ModelPricing {
 
 export const modelsApi = {
   /** filtered: false while nothing is chosen, which shows every model. */
-  all: () => api<{ models: ModelDetails[]; filtered: boolean }>("GET", "/v1/models?all=1"),
+  all: () => api<{ models: ModelDetails[]; filtered: boolean; favorites?: ModelFavorite[] }>("GET", "/v1/models?all=1"),
+  /** The quick-switch list, replaced whole (order kept). */
+  setFavorites: (items: ModelFavorite[]) => api<{ ok: boolean; favorites: ModelFavorite[] }>("PUT", "/v1/models/favorites", { items }),
   setShown: (refs: string[], shown: boolean) => api<{ ok: boolean; shown: string[] }>("PUT", "/v1/models/shown", { refs, shown }),
   /** null clears back to the catalog number. */
   setContext: (ref: string, contextWindow: number | null) => api<{ ok: boolean }>("PUT", "/v1/models/context", { ref, contextWindow }),
