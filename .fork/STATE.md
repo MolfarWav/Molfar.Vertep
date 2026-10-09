@@ -3,6 +3,9 @@
 Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-08.
 The full log of everything before this date, with commit hashes, is `.fork/archive/STATE-until-2026-10-02.md`; finished handoffs are in `.fork/archive/`. Standing rules are in `CLAUDE.md`.
 
+## 0.9.2 (planned 2026-10-09): NEXT
+Plan: `.fork/handoff/v092/PLAN.md`. Item 1 Library portraits on the dashboard and in Soul; item 2 connections in one place (ask for the Marinara screenshot first). Check the 0.9.1 carry-overs listed there first.
+
 ## 0.9.1 (started 2026-10-08): RELEASED to main 2026-10-09, tag v0.9.1 by the user
 Engine 0.9.1 (CHANGELOG, `.fork/release-notes/0.9.1.md`) with Roleplay 4.26.0 on the fork's main (skills, DATA-FORMATS, card id copy). All plan items done (PLAN.md); item 7 (bash on the phone) confirmed by the user. Android APKs are release-signed from now on (secrets `ANDROID_KEY*`); the in-app updater is first testable on the next release over 0.9.1. Roleplay 4.26.1 published 2026-10-09 (fork main `bf8fc7c`): the Library map of chats closes (toggle; Overview/Ledger close it), "Story, move" with an empty composer sends no user turn even when the preset has send_if_empty ("..." in the imported Sola V2 Flame) and its note builds the event from the scene (old note in PAST_DEFAULT_PROMPTS). Not browser-checked. Next: the user's list (queue in START.md; open items summarised to the user 2026-10-09: connections in one place, inspector with sources, reply-ready notification, Chats page, Library portraits on the dashboard).
 
