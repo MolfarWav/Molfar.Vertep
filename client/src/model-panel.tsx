@@ -382,8 +382,9 @@ function Recommendations(props: { block: string; model: ModelDetails; onFill: (v
   return (
     <div className="flex flex-col gap-1.5 rounded-lg border border-line px-3 py-2" data-testid="model-recommended">
       {smallForMolfar ? <div className="text-12 text-danger">{tr("This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.", { n: props.model.contextWindow ?? 0 })}</div> : null}
-      <div className="flex flex-wrap items-center gap-2">
-        <button type="button" className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-12 text-ink-muted" aria-expanded={open} onClick={() => setOpen(!open)}>
+      {/* title and button stack on phones: a long translated title wrapped under the button there */}
+      <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
+        <button type="button" className="flex w-full min-w-0 items-center gap-1.5 text-left text-12 text-ink-muted sm:w-auto sm:flex-1" aria-expanded={open} onClick={() => setOpen(!open)}>
           <IconSmall name={open ? "chevron-down" : "chevron-right"} size="small" />
           {tr("Recommended settings")}
         </button>
