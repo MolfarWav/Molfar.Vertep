@@ -87,7 +87,7 @@ type ProviderPick = EngineProvider | CustomPick | OAuthPick | LocalPick
 
 export type TabValue = "general" | "backup" | "api" | "models" | "speech" | "agent" | "memory" | "mcp" | "developer" | "server" | "users"
 
-export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; onLogout: () => void }) {
+export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; initialModel?: string | null; onLogout: () => void }) {
   const [tab, setTab] = useState<TabValue>(props.initialTab ?? "api")
   const tabs: Array<{ value: TabValue; label: string; icon: ReactNode }> = [
     { value: "general", label: tr("General"), icon: <IconSmall name="outline-sliders" /> },
@@ -110,7 +110,8 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
   // phones get drill-down navigation (menu → section → back) instead of the
   // desktop sidebar: five labels in a tab row can't breathe at 390px
   const [mobile, setMobile] = useState(typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches)
-  const [openSection, setOpenSection] = useState<TabValue | null>(null)
+  // a section asked for by name (an app's "set up this model") opens straight away on phones too
+  const [openSection, setOpenSection] = useState<TabValue | null>(props.initialTab ?? null)
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)")
     const fn = () => setMobile(mq.matches)
@@ -122,7 +123,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
     <>
       {v === "general" && <GeneralTab me={props.me} onLogout={props.onLogout} />}
       {v === "backup" && <BackupTab />}
-      {v === "api" && <ApiTab />}
+      {v === "api" && <ApiTab initialModel={props.initialModel} />}
       {v === "models" && <ModelsTab />}
       {v === "speech" && <SpeechTab />}
       {v === "agent" && <AgentTab />}
@@ -165,7 +166,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
             <BackupTab />
           </Tabs.Content>
           <Tabs.Content value="api" className="no-scrollbar">
-            <ApiTab />
+            <ApiTab initialModel={props.initialModel} />
           </Tabs.Content>
           <Tabs.Content value="models" className="no-scrollbar">
             <ModelsTab />
@@ -1493,11 +1494,18 @@ function AccountSection(props: { me: Me; onLogout: () => void }) {
 
 // ----------------------------------------------------------------------- api
 
-function ApiTab() {
+function ApiTab(props: { initialModel?: string | null }) {
   const connections = useResource(() => connectionsApi.list())
   const formats = useResource(() => listPromptFormats())
   const models = useResource(() => modelsApi.all())
   const [openModels, setOpenModels] = useState<string | null>(null)
+  // opened for one model (an app's "set up this model"): unfold its connection once both lists are in
+  const wanted = props.initialModel ?? null
+  const wantedProvider = wanted ? wanted.slice(0, wanted.indexOf("/")) : null
+  const wantedConnection = wantedProvider ? (connections.data ?? []).find((c) => modelProviderOf(c) === wantedProvider)?.id ?? null : null
+  useEffect(() => {
+    if (wantedConnection) setOpenModels(wantedConnection)
+  }, [wantedConnection])
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<EngineConnection | null>(null)
   const [err, setErr] = useState("")
@@ -1548,6 +1556,7 @@ function ApiTab() {
                     connection={c}
                     models={models.data?.models}
                     open={openModels === c.id}
+                    initialSetup={c.id === wantedConnection ? wanted : null}
                     onToggle={() => setOpenModels(openModels === c.id ? null : c.id)}
                     onChanged={() => void models.refetch()}
                   />
@@ -1579,9 +1588,9 @@ const modelProviderOf = (c: EngineConnection) => (c.oauthProvider === "radius" ?
 
 /** A connection's models under its row: the shown ones first, a search when there are many, and each
  *  model's own settings (context, prices, parameters) one click away. */
-function ConnectionModels(props: { connection: EngineConnection; models: ModelDetails[] | undefined; open: boolean; onToggle: () => void; onChanged: () => void }) {
+function ConnectionModels(props: { connection: EngineConnection; models: ModelDetails[] | undefined; open: boolean; initialSetup?: string | null; onToggle: () => void; onChanged: () => void }) {
   const [query, setQuery] = useState("")
-  const [setup, setSetup] = useState<string | null>(null)
+  const [setup, setSetup] = useState<string | null>(props.initialSetup ?? null)
   const provider = modelProviderOf(props.connection)
   const all = (props.models ?? []).filter((m) => m.provider === provider)
   if (!props.models || all.length === 0) return null

@@ -187,6 +187,11 @@
     }
     if (d.op === "apps") return { op: "apps" };
     if (d.op === "open-app") return typeof d.appId === "string" && SHELL_APP_ID.test(d.appId) ? { op: "open-app", appId: d.appId } : null;
+    // Settings > API connections, on one model's panel when a "<provider>/<model>" ref is given
+    if (d.op === "open-settings") {
+      if (d.model == null || d.model === "") return { op: "open-settings" };
+      return typeof d.model === "string" && d.model.length <= 300 && /^[^\s/]+\/\S+$/.test(d.model) ? { op: "open-settings", model: d.model } : null;
+    }
     return null;
   }
 

@@ -132,6 +132,7 @@ function Shell(props: { theme: ThemeControl }) {
    * clobbers the session before it's read back */
   const [sessionLoaded, setSessionLoaded] = useState(false)
   const [settingsTab, setSettingsTab] = useState<TabValue | null>(null)
+  const [settingsModel, setSettingsModel] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   // update checks run once per shell start (and when the app list changes),
   // then on "Check now" or after an update: the launcher badges, the top-bar
@@ -158,8 +159,9 @@ function Shell(props: { theme: ThemeControl }) {
       JSON.stringify({ tabs, active: active?.id ?? null, pinned: pinned?.id ?? null }),
     )
   }, [sessionLoaded, tabs, active, pinned])
-  const openSettings = (tab?: TabValue) => {
+  const openSettings = (tab?: TabValue, model?: string) => {
     setSettingsTab(tab ?? null)
+    setSettingsModel(model ?? null)
     setSettingsOpen(true)
   }
   // a strip that scrolls (phones, many tabs) keeps the active tab in view
@@ -325,8 +327,8 @@ function Shell(props: { theme: ThemeControl }) {
   // Apps ask the shell for a few things over the bridge (the allowlist is
   // shellRequest in app-bridge-host.js: trusted apps only). Heard only from
   // the app on screen, and Molfar gets an unsent draft, never a sent message.
-  const shellNow = useRef({ active, pinned, launch, openApp, askAgent })
-  shellNow.current = { active, pinned, launch, openApp, askAgent }
+  const shellNow = useRef({ active, pinned, launch, openApp, askAgent, openSettings })
+  shellNow.current = { active, pinned, launch, openApp, askAgent, openSettings }
   const lastShellDraft = useRef(0)
   useEffect(() => {
     const host = window.ChrysalisBridgeHost
@@ -340,6 +342,10 @@ function Shell(props: { theme: ThemeControl }) {
       if (req.op === "open-app") {
         if (!apps.some((a) => a.id === req.appId)) throw new Error("no such app")
         now.openApp(req.appId)
+        return null
+      }
+      if (req.op === "open-settings") {
+        now.openSettings("api", req.model)
         return null
       }
       if (Date.now() - lastShellDraft.current < 2000) throw new Error("too many requests")
@@ -626,7 +632,7 @@ function Shell(props: { theme: ThemeControl }) {
         </div> : null}
       {user ? (
         <ModalDialog open={settingsOpen} onClose={() => setSettingsOpen(false)}>
-          <SettingsBody onClose={() => setSettingsOpen(false)} me={user} initialTab={settingsTab} onLogout={() => { setSettingsOpen(false); void logout() }} />
+          <SettingsBody onClose={() => setSettingsOpen(false)} me={user} initialTab={settingsTab} initialModel={settingsModel} onLogout={() => { setSettingsOpen(false); void logout() }} />
         </ModalDialog>
       ) : null}
     </>

@@ -110,6 +110,8 @@
     apps: function () { return shellCall("apps", {}); },
     /** Switch the shell to another installed app's tab. */
     openApp: function (id) { return shellCall("open-app", { appId: String(id) }); },
+    /** Open the shell's Settings on the connections, on one model's settings when given "<provider>/<model>". */
+    openSettings: function (model) { return shellCall("open-settings", model ? { model: String(model) } : {}); },
   });
 
   // ---------- fetch ----------

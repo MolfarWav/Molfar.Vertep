@@ -23,7 +23,7 @@ declare global {
       rebuild(appId: string): Promise<void>;
     };
   }
-  type ShellRequest = { op: "ask-molfar"; text: string } | { op: "apps" } | { op: "open-app"; appId: string };
+  type ShellRequest = { op: "ask-molfar"; text: string } | { op: "apps" } | { op: "open-app"; appId: string } | { op: "open-settings"; model?: string };
   interface AppBuildStatus {
     phase: "checking" | "building" | "ready" | "error" | "waiting";
     message?: string;
