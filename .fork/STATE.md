@@ -51,7 +51,12 @@ fork main 4.29.0.
   (client-agent/src/runs.ts) keeps the shown ids; edit/regenerate find the run by `runAt`.
 - Browser check round 1 (Sonnet subagent): item 1 passed (dark/light/390, override); Home tiles not clipped but
   broke mid-word at 1280 -> rows in a narrow column; the preset's thinking budget was marked "model" -> own row.
-  Round 2 (A-D, the fixes) running.
+  Round 2 PASSED (all 7): no picker after live runs, edit/regenerate on live messages, Home rows, the budget
+  row, Samplers read-only numbers (and editable with override / unknown window), the shell's language and an
+  in-app pick that sticks, Memory and Backup links. Note: shell links and locale need a trusted (official)
+  install; a hand-copied app is untrusted and gets "not allowed".
+- LEFT: 3 (the phone's error text), 2 (live NanoGPT run with the user), then the release (engine 0.9.5 +
+  Roleplay 4.30.0; CHANGELOG, release notes, merge on the user's word).
 - 2026-10-10: the 13 changed Roleplay files (v095 `d8e2ee2` vs 4.29.0) copied into the E: workspace for the
   user (all were still 4.29.0 there; root manifest untouched). They need the engine from `claude/v095`.
 - 2 (live NanoGPT run) at the end with the user; 3 (Android provider list) needs the phone's error text; 6 left.
