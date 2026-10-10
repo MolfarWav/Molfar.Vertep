@@ -11,13 +11,11 @@ Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio ba
 4. **Group chats** do not work for the user (seen 2026-10-10, cause unknown): look into them for 1.0.0.
 5. **Data Bank, the rest** (`.fork/handoff/v094/data-bank.md`): embeddings through `/v1/embeddings`
    with the term search as fallback; "document -> lorebook entries".
-6. **Prompt inspector with sources: IN WORK as 0.9.7** (user, 2026-10-06; plan
-   `.fork/handoff/inspector-sources/PLAN.md`): on Molfar's page (`src/inspector.ts`), label
-   every part of one request by its source (card fields, group members, persona, preset blocks,
-   lorebook entries with book/entry/why, Litopys, the dashboard insert, the "Story, move" note, regex
-   changes, history and what the budget cut). Likely: Roleplay's `assemble()` and each llmRequest hook
-   tag what they add, the engine keeps the tags for the inspector and strips them before the provider.
-   0.9.4's why-rows are the lorebook part's data.
+6. **Plugin speed on phones** (from 0.9.7): the sandbox gives every route pass 10 s on every device and a
+   phone runs QuickJS several times slower. Left after 0.9.7: Roleplay reads each regex script as its own
+   host call (150 files ~0.3 s per pass; a bulk read in the engine would cut it); a longer limit on
+   Android, only together with speed work. Measure first: `.fork/bench/`. Ask the Discord player whose
+   sends timed out for their card or its lorebook size to confirm the 0.9.7 fix.
 6a. **HTML blocks and dialogue colors in the chat** (user, 2026-10-10; for later, not 0.9.7): check how
    model-generated HTML blocks reach and render in a Roleplay chat (example: a reply that draws a sheet of
    paper with a note on it: what is sanitized, what styles survive, light/dark, the phone). With it,
@@ -27,8 +25,6 @@ Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio ba
    when a reply is ready while the app is in the background (browser Notifications API; check whether
    the Android service should post it). Plan and spec it first.
 8. **Molfar's skill usage chip** (left from 0.9.1): show in the chat which skills Molfar loaded.
-9. **Release archives named Molfar-Vertep-*** (planned since 0.8.0): `release.yml` still writes
-   Chrysalis-*; `self-update.ts` already accepts both.
 10. **pi-ai upgrade** (builtin catalogs miss newer models; latest major 1.x): its own careful step on a
     branch with the full test run, the agent and every OAuth flow checked on desktop and APK.
 11. **Each only on the user's word:**

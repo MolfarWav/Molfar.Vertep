@@ -7,6 +7,14 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.7 (2026-10-11)
+
+- Roleplay 4.32.0 through app updates: Prompt peek shows where every part of the next request comes from (card fields, persona, preset sections, lorebook entries with why they fired, Data Bank, history with the regex scripts that changed it), what was left out and why, and the preset's choices; sends stay fast with big lorebooks (a 1000-entry book ran past the plugin time limit, now 0.6 s on a desktop) and with many preset regex scripts; counts take the right word form.
+- Prompt inspector with sources: a request shows a table of its parts by kind with tokens and share, colored marks in the text (a click scrolls to the part), what the app left out and the preset's choices. Apps label their parts with a host-only `promptSources` beside an llm request (never sent to the model; documented in the `app-authoring` skill); whatever an `llmRequest` hook adds is labeled with the plugin's name by comparing the request before and after it, for any app.
+- Molfar's own requests are labeled too: the system prompt by section (rules, workspace layout, installed apps, each instruction doc, notes, memory, project, personal instructions), the history by role, and each tool definition's size. The prompt text is unchanged.
+- The inspector keeps up to 200k characters of a system prompt and 50k of a message (was 20k), so late inserts can be shown; the leading system messages were listed twice in an entry and counted twice in its estimate.
+- A failed app route names its method and path in the error the app shows (a phone timeout said only "route failed").
+
 ## 0.9.6 (2026-10-10)
 
 - Roleplay 4.31.0 through app updates: presets offer options you pick for each chat (one or several, with the tokens each adds) and switches for whole blocks, in a Preset panel in the chat and a short step when a chat starts, remembered per character; switching the preset in a chat changes only that chat, with a muted line saying what changed; Marinara presets import with their options; FRANKENX 1.6 ships as a ready preset, adapted to the app.

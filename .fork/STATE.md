@@ -1,47 +1,21 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-10.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-11.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 0.9.7 (started 2026-10-10): the prompt inspector with sources
-Engine branch `claude/v097-inspector` (worktree `.claude/worktrees/v097`, from main `95ec2a1` = v0.9.6); Roleplay
-clone `.claude/worktrees/rp-memory`, branch `inspector-sources` from the fork main `4cb3a8d` (4.31.0).
-Plan: `.fork/handoff/inspector-sources/PLAN.md`; UI spec `UI-SPEC.md`.
-- 1 BUILT `8784088`: `src/prompt-sources.ts` (sanitize, hook diff, locate), runtime strips `promptSources` and
-  labels hook inserts for any app, inspector keeps `sources` (labels + ranges). Fixed on the way: the leading
-  system messages were listed twice in an inspector entry.
-- 2 BUILT `e3a75bf`: Molfar's system prompt from labeled sections (byte-identical, checked on full, compact,
-  plan), parts looked up by the prompt text (`rememberSystemParts`), history by role, per-tool sizes.
-- 3 BUILT (Roleplay `inspector-sources` `1685451`, pushed, not main): `assemble()` returns `sources` (card, persona,
-  preset sections, lorebook entries with why, Data Bank, author's note, utility, history with regex names, prefill;
-  omitted with reasons; preset choices), the five reply requests send `promptSources`, the peek route returns
-  `sources` + `sourceSpans` (`locateSources` in the plugin), Litopys and dashboard hooks label their inserts.
-  Draft by an external code model (Kimi K2.7 Code); fixed in review: regex names never reached (rx dropped
-  `hits`), history labeled before the budget trim, preset vars as objects, the section loop edit. 871 tests.
-  Engine `cadd33e`: a short part equal to a whole message locates anywhere (history turns after post-history parts).
-- 4 agent page BUILT `5c95a98` (draft DeepSeek V4 Pro after a hung Kimi run; fixed: syntax, the active part index,
-  hooks order, Tailwind v4 alpha classes, Base UI trigger). Roleplay peek dialog + browser check: Sonnet subagent.
-- 5 docs: `app-authoring` documents `promptSources` (`3a6a21c`).
-- Discord report 2026-10-10 (Android APK, a heavy third-party preset with regex): "route failed: script execution
-  exceeded the time limit" on send. The sandbox gives every route pass 10 s on every device. Engine `93ae166`: the
-  error names the route's method and path. Roleplay `0490c68`: measured in the real sandbox (`.fork/bench/`),
-  400 messages with 150 regex scripts 3.3 s -> 1.3 s, no regex 1.6 s -> 0.37 s on the desktop (macros skip text
-  without "{{", regex scripts read and filtered once per pass, compiled once, skipped by literal head). Left:
-  150 host file reads per pass (~0.3 s; a bulk read in the engine would cut it), a longer limit on Android only
-  together with this.
-  The player then said: a NEW chat, Default and FRANKENX, NanoGPT and OpenRouter, several models, same error. So
-  neither history nor the preset. Bench (`LORE_N`, `CARD_MB`): a 16 MB card.json costs ~0.3 s; a big lorebook was
-  it: 300 entries 3.2 s, 1000 entries hit the 10 s limit even on the desktop (`keyMatch` compiled a Unicode regex
-  per key per call). Roleplay `7b096a1`: indexOf + edge checks (same matches as the old pattern, tested),
-  compiled keys cached: 300 entries 0.26 s, 1000 entries 0.6 s. Not confirmed on the player's card (likely a
-  simulator card with a big embedded book); ask them for the card or its book size.
-- 4 Roleplay peek BUILT `144d6c0` (Sonnet subagent: port of the panel, browser-checked dark/light 1280/390, 45
-  screenshots in `.fork/screens/v097/`, untracked); engine `a85a99c`: Esc clears the highlight without closing
-  the inspector. Seen: entries whose keys did not hit are not in "Left out" (only skipped/blocked are); a book of
-  1000 would flood it, so a count row is the likely answer (ask the user).
-- LEFT: the plurals (last, before the push), the user's live test, release 0.9.7 + Roleplay 4.32.0.
+## 0.9.7: RELEASED to main 2026-10-11 (Roleplay 4.32.0 on the fork main); the tag v0.9.7 is the user's
+The prompt inspector with sources: apps send a host-only `promptSources` (`src/prompt-sources.ts`: sanitize,
+hook diff, locate), hook inserts are labeled for any app, Molfar's own prompt by section (byte-identical text),
+a sources table + marks + "Left out" + choices on Molfar's page and in Roleplay's Prompt peek. Roleplay labels
+every part in `assemble()`; drafts by external models (Kimi K2.7 Code, DeepSeek V4 Pro), reviewed and fixed;
+peek port and browser check by a Sonnet subagent. Live test by the user: works; fixed after it: long system
+prompts clipped at 20k hid late inserts (now 200k/50k), the view slid sideways (min-w-0 on the params rows).
+Speed (a Discord player's phone timeouts): lorebook keys by indexOf (1000 entries 10+ s -> 0.6 s), macros and
+regex scripts once per pass (400 messages with 150 scripts 3.3 s -> 1.3 s); bench in `.fork/bench/`.
+Plurals: `t()` reads `{n|one|other}` by `Intl.PluralRules`; the i18n placeholder test works again.
+Plan and UI spec were in `.fork/handoff/inspector-sources/` (git history).
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
 - Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
@@ -50,7 +24,6 @@ Plan: `.fork/handoff/inspector-sources/PLAN.md`; UI spec `UI-SPEC.md`.
 
 ## Open, from 0.9.4-0.9.6
 - `updateCharacter` (Roleplay) rewrites the card's whole studio bag with defaults on the first edit: silent data loss. Goes first in the card editor (0.9.8, `card-editor/PLAN.md` item 5).
-- "1 entries" / "1 global books" plurals in the lorebook UI: the last step of 0.9.7 (remind the user before the push).
 - Presets: the editor's "Use this preset" also makes the preset default (old `usePreset`); "Make default"
   moves chats that rode the old default (existing store behavior). Open for the user.
 - One first reply on NanoGPT GLM 5.2 thinking carried the preset's planning as plain text (no think tags);
@@ -63,6 +36,8 @@ Plan: `.fork/handoff/inspector-sources/PLAN.md`; UI spec `UI-SPEC.md`.
 
 ## Released (details: CHANGELOG, `.fork/release-notes/`, git history)
 Tags are pushed by the user; `release.yml` builds the archives, the APK and the Docker image.
+- 0.9.7 (2026-10-11; Roleplay 4.32.0): where each part of the prompt comes from (inspector and Prompt peek),
+  Molfar's own prompt labeled, fast sends with big lorebooks and preset regex, plurals.
 - 0.9.6 (2026-10-10; Roleplay 4.31.0): presets with options per chat (`meta.presetVars`, `{{#if}}`, section
   conditions, notes, per-character memory, option costs), Marinara import, FRANKENX 1.6 built in
   (`.fork/presets/frankenx/adapt.ts`), a Discord link in the apps page footer. Plan: git history of `.fork/handoff/chat-presets/`.
