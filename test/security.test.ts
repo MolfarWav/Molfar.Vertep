@@ -364,7 +364,7 @@ describe("S5 path traversal", () => {
     for (const evil of ["../pwn", "../../etc/x", "a/b", "x y", ".hidden", "x".repeat(65)]) {
       expect(() => sessionFile(p, evil)).toThrow(/invalid session id/);
     }
-    expect(sessionFile(p, "2024-01-01-abc123")).toMatch(/agent\/sessions\/2024-01-01-abc123\.jsonl$/);
+    expect(sessionFile(p, "2024-01-01-abc123")).toMatch(/agent[\\/]sessions[\\/]2024-01-01-abc123\.jsonl$/);
   });
 
   it("app ids with slashes/dots never resolve (readApp guard) — cross-user probe", async () => {
