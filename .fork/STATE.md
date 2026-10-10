@@ -81,7 +81,9 @@ Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `cl
   Roleplay branch `presets` pushed (head `280b756`).
 - Open for the user: the editor's "Use this preset" still also makes the preset default (old `usePreset`);
   "Make default" moves chats that rode the old default (existing store behavior).
-- LEFT: the user's live test (needs the 4.30.0 base too: engine from `claude/v095`); release (0.9.5 first).
+- 2026-10-10: the 23 changed Roleplay files (`a30f811` 4.29.0 -> `presets` `280b756`) copied into the E: workspace
+  (none had the user's own edits; root manifest untouched). Needs the engine from `claude/v095` or newer.
+- LEFT: the user's live test; release (0.9.5 first).
 
 ## Next
 - 0.9.5 above.
