@@ -289,7 +289,7 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
     <div className="grid min-w-0 gap-3">
       {header}
       {error ? <p className="text-destructive text-sm" role="alert">{error}</p> : null}
-      <div className="grid gap-2">
+      <div className="grid min-w-0 gap-2">
         <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <Source entry={entry} chatId={chatId} />
           <span className="text-muted-foreground min-w-0 truncate font-mono text-xs" title={entry.model}>
@@ -305,7 +305,7 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
           {entry.usage?.cacheWrite ? <span>cache write {tok(entry.usage.cacheWrite)}</span> : null}
         </div>
         {params.length ? (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex min-w-0 flex-wrap gap-1">
             {params.map(([k, v]) => (
               <Chip key={k} title={`${k}: ${paramText(v)}`}>
                 {k}: {paramText(v)}
@@ -329,7 +329,7 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
         </Block>
         <Block kind="tools" title="Tools" tokens={entry.tools.tokens} share={entry.tools.tokens / Math.max(entry.estimate, 1)}>
           {entry.tools.names.length ? (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex min-w-0 flex-wrap gap-1">
               {keyed(entry.tools.names, (n) => n).map(({ item, key }) => (
                 <Chip key={key}>{item}</Chip>
               ))}
