@@ -4,8 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
-1. **0.9.4 lorebooks (Roleplay 4.29.0): built, in the user's live test.** `.fork/handoff/v094/PLAN.md`.
-   On the user's word: merge `lore-v094` into the Roleplay fork main.
+1. **0.9.4 lorebooks: RELEASED 2026-10-10 (Roleplay 4.29.0).** Leftovers: "1 entries" / "1 global books" plurals.
 2. **0.9.5: what 0.9.2 left open.** `.fork/handoff/v095/PLAN.md` (effective parameters in the chat, a
    live provider run, the Android provider list, backstory depth, the duplicate-key warning, a
    timing-out builder test, older small bugs). Ask the user for its order.

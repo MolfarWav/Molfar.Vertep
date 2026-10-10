@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Now: 0.9.4, deeper lorebooks (Roleplay 4.29.0)
+## 0.9.4, deeper lorebooks: RELEASED 2026-10-10 as Roleplay 4.29.0 (fork main `a30f811`, the user's word)
 Plan, rounds and the user's decisions: `.fork/handoff/v094/PLAN.md`; UI spec `UI-SPEC.md`; Data Bank
 research `data-bank.md`; built-in agent task for workspace skill copies `workspace-agent-task.md`.
 Roleplay clone `.claude/worktrees/rp-memory`, branch `lore-v094` (pushed, not main), release commit
@@ -19,7 +19,7 @@ No engine code changed in 0.9.4: no engine release needed.
 2026-10-10: the branch's 35 changed files were copied into the E: workspace for the user's live test
 (not `data/`, not the root manifest: the app update sets it).
 Live test 2026-10-10 (user): translation preview OK, filters OK, always-on entries now reach the chat. Fixed after it: card saves PATCH only changed fields (a card with emotion images passed the 1 MB app request cap: every edit failed, `body too large`; `49cad3d`), unique new book names; UI `2ff043c`: search in the card's book picker, "With Molfar" (askMolfar, lorebook-craft), bulk By meaning + vector note. Copied to the E: workspace again. Small: "1 entries" / "1 global books" plurals.
-NEXT: the user's live test, then on their word merge `lore-v094` into the fork main (ships 4.29.0).
+Released: `lore-v094` fast-forwarded into the fork main on the user's word ("I trust it, merge and release"). No engine release (no engine code changed); the E: workspace has the code, its root manifest updates with the app update.
 Seen, not fixed: `updateCharacter` rewrites the card's whole studio bag with defaults on the first edit.
 
 ## Next
