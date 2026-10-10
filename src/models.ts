@@ -16,7 +16,7 @@ import { log } from "./logger.js";
 import { llmLogRequest, llmLogResult, llmLogError, llmLogTool } from "./llm-logger.js";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { inspectAssistantMessage, inspectRequest, inspectResult, type InspectorEntry } from "./inspector.js";
-import type { PromptSources } from "./prompt-sources.js";
+import { type PromptSources, systemPartsFor } from "./prompt-sources.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
 import { blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
@@ -1518,6 +1518,11 @@ export class UserModelService {
         ...(context.systemPrompt ? { systemPrompt: context.systemPrompt } : {}),
         messages: context.messages,
         ...(context.tools?.length ? { tools: context.tools } : {}),
+        sources: (() => {
+          const parts = systemPartsFor(context.systemPrompt);
+          return parts ? { parts, omitted: [], vars: [] } : null;
+        })(),
+        labelRoles: true,
       });
       void Promise.resolve(stream.result()).then(
         (m) => inspectAssistantMessage(entry, m),

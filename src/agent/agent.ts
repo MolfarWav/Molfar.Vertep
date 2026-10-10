@@ -38,6 +38,7 @@ import { LANGUAGE_RULE, PRECEDENCE_RULE } from "./prompt-rules.js";
 import { resetAllowed } from "./protect.js";
 import { readSandboxSettings } from "../sandbox/network.js";
 import { projectLayout, projectPromptSection, readSettings } from "./projects.js";
+import { rememberSystemParts, type SourceKind, type SourcePart } from "../prompt-sources.js";
 
 const ADMIN_TOOLS_PROMPT = `You are also the ADMIN agent for this instance: create users with admin_create_user, list them with admin_list_users. New user tokens are shown exactly once.`;
 
@@ -492,6 +493,18 @@ export class UserAgent {
     const trim = newTrimState();
     // a project chat has its project in the system prompt already
     const shownProjects = new Set<string>(project?.startsWith("app:") ? [project.slice(4)] : []);
+    // the system prompt and, beside it, what each part is (for the prompt inspector)
+    const promptParts: SourcePart[] = [];
+    const memorySection = memoryPromptSection(paths.root, { compact: small });
+    const projectSection = project ? projectPromptSection(paths.root, project) : "";
+    const planSection = opts.mode === "plan" ? PLAN_MODE_PROMPT : "";
+    const systemPrompt =
+      (small ? compactPromptFor(username, isAdmin, paths, shellOn, availableGroups(tools), promptParts) : systemPromptFor(username, isAdmin, paths, opts.sandbox, promptParts)) +
+      memorySection + projectSection + planSection;
+    addPart(promptParts, "memory", "Memory", memorySection);
+    addPart(promptParts, "docs", "Project instructions", projectSection);
+    addPart(promptParts, "rules", "Plan mode", planSection);
+    rememberSystemParts(systemPrompt, promptParts);
     const agent: Agent = new Agent({
       transformContext: async (msgs) => {
         // pi-agent-core's contract: this hook must never throw
@@ -509,11 +522,7 @@ export class UserAgent {
       },
       initialState: {
         model,
-        systemPrompt:
-          (small ? compactPromptFor(username, isAdmin, paths, shellOn, availableGroups(tools)) : systemPromptFor(username, isAdmin, paths, opts.sandbox)) +
-          memoryPromptSection(paths.root, { compact: small }) +
-          (project ? projectPromptSection(paths.root, project) : "") +
-          (opts.mode === "plan" ? PLAN_MODE_PROMPT : ""),
+        systemPrompt,
         tools,
         messages,
         // pi-agent-core reads the level from state; undefined = "off"
@@ -1254,11 +1263,14 @@ function readDoc(root: string, rel: string, cap: number): string | null {
  * app list and read on demand. It all sits in the system prompt, so it is
  * cached between turns rather than paid for on each one.
  */
-function instructionDocs(paths: UserPaths): string {
+function instructionDocs(paths: UserPaths, parts?: SourcePart[]): string {
   const out: string[] = [];
   const add = (heading: string, rel: string, cap: number): void => {
     const body = readDoc(paths.root, rel, cap);
-    if (body) out.push(`# ${heading} (${rel})\n${body}`);
+    if (!body) return;
+    const doc = `# ${heading} (${rel})\n${body}`;
+    out.push(doc);
+    addPart(parts, "docs", rel, doc);
   };
   add("The workspace contract", "AGENTS.md", 10_000);
   const active = activeAppId(paths);
@@ -1360,42 +1372,45 @@ function workspaceLayout(paths: UserPaths): string {
   return /^## Layout\b/m.test(readDoc(paths.root, "AGENTS.md", 10_000) ?? "") ? SHORT_LAYOUT : FULL_LAYOUT;
 }
 
-function systemPromptFor(username: string, isAdmin: boolean, paths: UserPaths, sandbox?: AgentToolOptions["sandbox"]): string {
-  const base = `You are Molfar, the personal agent of "${username}" in Molfar Vertep, a local engine where EVERYTHING is files you can edit like code: apps, characters, chats, plugins, looks. You build and change them for the user, who may not be a programmer.
+/** A labeled piece of the system prompt (blank pieces are skipped). */
+function addPart(parts: SourcePart[] | undefined, kind: SourceKind, label: string, text: string): void {
+  if (parts && text.trim()) parts.push({ kind, label, text: text.trim() });
+}
 
-# Language
-${LANGUAGE_RULE}
-
-# Which instruction wins
-${PRECEDENCE_RULE}
-
-# How you work
+function systemPromptFor(username: string, isAdmin: boolean, paths: UserPaths, sandbox?: AgentToolOptions["sandbox"], parts?: SourcePart[]): string {
+  // labeled sections joined by blank lines: the text is what it always was
+  const sections: [SourceKind, string, string][] = [
+    ["rules", "Who Molfar is", `You are Molfar, the personal agent of "${username}" in Molfar Vertep, a local engine where EVERYTHING is files you can edit like code: apps, characters, chats, plugins, looks. You build and change them for the user, who may not be a programmer.`],
+    ["rules", "Language", `# Language
+${LANGUAGE_RULE}`],
+    ["rules", "Which instruction wins", `# Which instruction wins
+${PRECEDENCE_RULE}`],
+    ["rules", "How you work", `# How you work
 1. Look before you change anything: the project's instructions and files, the notes/ list, memory (memory_search), the app's AGENTS.md and data/README.md. Read the code you are about to change; never guess a field, an export or an API.
 2. Ask when it matters. Before building a new app, a UI or a large feature, call ask_user ONCE with 2-6 questions, each with 2-4 options, a one-line description per option and one marked recommended; then plan the file layout, then build. Skip the questions when the request already settles those choices; a small, clear task you just do.
 3. Put each change in the lightest place that carries it: the app's data/ first, then a plugin of your own, the app's src/ only when the change needs it (the workspace contract below explains why).
 4. Work in small steps and check each one: app_check after editing src/ or package.json, read back JSON you wrote, call a route or tool you wrote once, app_console for runtime errors. If an edit broke a file, restore it from git before going on. Never call something done that you have not verified (skill finish-change has the checklist).
 5. Finish with a short report in plain words: what changed, what you checked, what you could not check, and how to undo it.
-6. Few steps, not many small ones: every step is a model call that resends the whole conversation. Put independent actions in ONE reply as several tool calls (the files you need via read_file paths, several greps, a check after an edit); read a file once, not in small slices; a change in a JSON file is one json_set.
-
-${workspaceLayout(paths)}
-
-# Building apps and plugins
-Before you build or change an app's code, a plugin, a manifest or an app's UI, call skill_load app-authoring and follow it: the plugin contract, the host API, the UI build rules and the checks (app_check after src/ edits, app_rebuild, app_console, checkpoints) are there. The app tools show once you work on an app's code or load that skill; tools_enable shows them sooner.
-
-# Learn from the apps already installed
-${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its exact files, field shapes and gotchas. To learn how to build one, read its plugins/ for backend behavior (routes, two-phase LLM turns, how it lays out data/) and its src/ for the UI. Take the patterns, not the subject matter. New app: app_create (UI app scaffolded), app_deps, then write plugins + src/ + seed data.
-
-# Workflow rules
+6. Few steps, not many small ones: every step is a model call that resends the whole conversation. Put independent actions in ONE reply as several tool calls (the files you need via read_file paths, several greps, a check after an edit); read a file once, not in small slices; a change in a JSON file is one json_set.`],
+    ["workspace", "Workspace layout", workspaceLayout(paths)],
+    ["rules", "Building apps and plugins", `# Building apps and plugins
+Before you build or change an app's code, a plugin, a manifest or an app's UI, call skill_load app-authoring and follow it: the plugin contract, the host API, the UI build rules and the checks (app_check after src/ edits, app_rebuild, app_console, checkpoints) are there. The app tools show once you work on an app's code or load that skill; tools_enable shows them sooner.`],
+    ["apps", "Installed apps", `# Learn from the apps already installed
+${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its exact files, field shapes and gotchas. To learn how to build one, read its plugins/ for backend behavior (routes, two-phase LLM turns, how it lays out data/) and its src/ for the UI. Take the patterns, not the subject matter. New app: app_create (UI app scaffolded), app_deps, then write plugins + src/ + seed data.`],
+    ["rules", "Workflow rules", `# Workflow rules
 - write_file/edit_file commit each change immediately under your name; after changes made through bash, commit them with the git tool (commit -m "..."). The git tool takes command-line arguments: status and diff to review work, log and show to read history, restore --source <commit> -- <path> or revert <commit> to undo.
 - App data files (apps/<id>/data/) are plain JSON/JSONL you can read and edit directly — open clients sync within ~1s, no reload. Underscore-prefixed files there (_example.json) are AI-only templates: never shown in the UI, copy one to a real name to create the entity. Copy the template's field shape exactly.
 - Never delete the user's content (chats, characters, notes, uploads, memory) unless they asked for exactly that.
 - Protected paths (by default an app's src/ and index.html, plus persona.md; the user can add more) change only after the user allows it in a card, once per request and app. A no means: put the change in data/ or a plugin of your own, or explain why those files must change. Never work around it through bash or git.
-- JSON files (a character card can pass 100 KB, a lorebook several MB): json_get to see the shape or a field, json_set to change fields, several in one call. Never load a whole large JSON, and never rewrite one through bash or python, to change a value.`;
-  let out = isAdmin ? `${base}\n\n${ADMIN_TOOLS_PROMPT}` : base;
+- JSON files (a character card can pass 100 KB, a lorebook several MB): json_get to see the shape or a field, json_set to change fields, several in one call. Never load a whole large JSON, and never rewrite one through bash or python, to change a value.`],
+  ];
+  if (isAdmin) sections.push(["tools", "Admin tools", ADMIN_TOOLS_PROMPT]);
+  for (const [kind, label, text] of sections) addPart(parts, kind, label, text);
+  let out = sections.map(([, , text]) => text).join("\n\n");
   // shell availability shapes how the agent approaches heavy work
   if (sandbox && sandbox.config.provider !== "off") {
-    out +=
-      "\n\n# Shell (bash tool)\n" +
+    const shell =
+      "# Shell (bash tool)\n" +
       "Your bash tool runs commands inside a WebAssembly sandbox in the user's browser, never on their machine. Your workspace is mounted at /workspace and file changes there sync back to the user's files when each command finishes; commit meaningful changes with the git tool.\n" +
       "Available: bash-compatible syntax, 88 standard utilities (rg, fd, find, grep, sed, awk, jq, yq, diff, patch, tar, gzip, sha256sum, base64, xxd, tree, file, …) and python3 (standard library; no pip command).\n" +
       (readSandboxSettings(paths.sandbox).internet
@@ -1405,26 +1420,32 @@ ${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its
       "Not available: node, npm, native binaries, real processes, or anything outside the mounted workspace. App dependencies install and uninstall engine-side with app_deps.\n" +
       "- Use it for data crunching, scripted JSON edits, batch renames, regex work, and checking your own work; read_file/edit_file remain better for single-file edits.\n" +
       "- Commands are time-bounded: a run that exceeds the limit is stopped and the sandbox restarts (in-memory state like shell variables is lost; files are not). Keep commands focused.";
+    addPart(parts, "rules", "Shell", shell);
+    out += `\n\n${shell}`;
   }
   // The contracts themselves, not a pointer to them: the workspace's, the
   // active app's, and an index of the user's own notes. Last, so that where
   // they disagree with the general prompt above, they are what was read most
   // recently — these files describe THIS install, the prompt above describes
   // Molfar Vertep in general.
-  const docs = instructionDocs(paths);
+  const docs = instructionDocs(paths, parts);
   if (docs) out += `\n\n${docs}`;
-  return out + notesAndPersona(paths, username);
+  return out + notesAndPersona(paths, username, parts);
 }
 
 /** The user's notes index and their standing instructions, both modes. */
-function notesAndPersona(paths: UserPaths, username: string): string {
+function notesAndPersona(paths: UserPaths, username: string, parts?: SourcePart[]): string {
   let out = "";
   const notes = notesIndex(paths, username);
   if (notes) out += `\n\n${notes}`;
+  addPart(parts, "workspace", "Your notes", notes);
   // personal instructions (persona.md, user-editable via settings)
   try {
     const persona = fs.readFileSync(paths.persona, "utf8").trim();
-    if (persona) out += `\n\n# Personal instructions from ${username}\n${persona}`;
+    if (persona) {
+      out += `\n\n# Personal instructions from ${username}\n${persona}`;
+      addPart(parts, "persona", "Personal instructions", `# Personal instructions from ${username}\n${persona}`);
+    }
   } catch {
     /* no persona yet */
   }
@@ -1433,12 +1454,14 @@ function notesAndPersona(paths: UserPaths, username: string): string {
 
 /** Small-window mode: the compact prompt, the app list by id and name, and
  *  pointers instead of the inlined AGENTS.md files (small-window.ts). */
-function compactPromptFor(username: string, isAdmin: boolean, paths: UserPaths, shell: boolean, groups: ToolGroup[]): string {
+function compactPromptFor(username: string, isAdmin: boolean, paths: UserPaths, shell: boolean, groups: ToolGroup[], parts?: SourcePart[]): string {
   const active = activeAppId(paths);
   const apps = listApps(paths.apps)
     .map((a) => `- apps/${a.id}/ (${a.manifest.name})${a.id === active ? " [ACTIVE]" : ""}`)
     .join("\n");
-  return compactSystemPrompt({ username, apps, admin: isAdmin, shell, groups }) + notesAndPersona(paths, username);
+  const compact = compactSystemPrompt({ username, apps, admin: isAdmin, shell, groups });
+  addPart(parts, "rules", "Compact prompt (small window)", compact);
+  return compact + notesAndPersona(paths, username, parts);
 }
 
 /** What a server setting change means for the person approving it, in the

@@ -11,7 +11,7 @@
  * Nothing is written to disk; an engine restart forgets it all.
  */
 import { estimateMessageTokens, estimateTextTokens, toolsTokens } from "./agent/context-budget.js";
-import { type LocatedSources, locateSources, type PromptSources } from "./prompt-sources.js";
+import { type LocatedSources, locateSources, mergePromptSources, type PromptSources } from "./prompt-sources.js";
 
 const KEEP = 20;
 /** Long tool results and files dominate a context; the view needs their size, not all of them. */
@@ -39,7 +39,8 @@ export interface InspectorEntry {
   params: Record<string, unknown>;
   system: { text: string; tokens: number; truncated?: boolean };
   messages: InspectorMessage[];
-  tools: { names: string[]; tokens: number };
+  /** `sizes`: each tool definition's tokens, in the order of `names`. */
+  tools: { names: string[]; tokens: number; sizes?: number[] };
   /** Estimated input: system + messages + tool definitions. */
   estimate: number;
   ms?: number;
@@ -113,6 +114,8 @@ export function inspectRequest(
     messages: readonly unknown[];
     tools?: readonly unknown[];
     sources?: PromptSources | null;
+    /** Label each message by its role (the agent's own requests). */
+    labelRoles?: boolean;
   },
 ): InspectorEntry {
   const system = r.systemPrompt ?? "";
@@ -130,13 +133,30 @@ export function inspectRequest(
     params: r.params ?? {},
     system: { ...clip(system), tokens: systemTokens },
     messages,
-    tools: { names: (r.tools ?? []).map((t) => String((t as { name?: unknown }).name ?? "?")), tokens },
+    tools: {
+      names: (r.tools ?? []).map((t) => String((t as { name?: unknown }).name ?? "?")),
+      tokens,
+      ...(r.tools?.length ? { sizes: r.tools.map((t) => toolsTokens([t])) } : {}),
+    },
     estimate: systemTokens + tokens + messages.reduce((n, m) => n + m.tokens, 0),
     pending: true,
   };
-  if (r.sources) {
+  const byRole: PromptSources | null = r.labelRoles
+    ? {
+        parts: views.filter((v) => v.raw.trim()).map((v) => ({
+          kind: v.role === "user" || v.role === "assistant" || v.role === "toolResult" ? v.role : "other",
+          label: v.role === "user" ? "User" : v.role === "assistant" ? "Molfar" : v.role === "toolResult" ? `Tool result: ${v.toolName ?? "?"}` : v.role,
+          text: v.raw,
+        })),
+        omitted: [],
+        vars: [],
+      }
+    : null;
+  const sources = mergePromptSources(r.sources ?? null, byRole);
+  if (sources) {
     try {
-      entry.sources = locateSources(r.sources, system, views.map((v) => v.raw), entry.estimate);
+      // tool definitions are their own row (tools.sizes), not text to label
+      entry.sources = locateSources(sources, system, views.map((v) => v.raw), entry.estimate - tokens);
     } catch {
       /* labels never break the inspector */
     }

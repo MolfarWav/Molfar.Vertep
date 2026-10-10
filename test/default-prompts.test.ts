@@ -29,6 +29,7 @@ import { EventBus } from "../src/server/ws.js";
 import { SessionService } from "../src/sessions.js";
 import { invalidatePluginCache } from "../src/plugins/runtime.js";
 import * as git from "../src/git.js";
+import { getInspected, listInspected } from "../src/inspector.js";
 
 const BUILTIN = path.join(import.meta.dir, "..", "builtin-skills");
 const CYRILLIC = /[Ѐ-ӿ]/;
@@ -97,6 +98,26 @@ describe("the rules every system prompt carries", () => {
     expect(count(s, LANGUAGE_RULE)).toBe(1);
     expect(count(s, PRECEDENCE_RULE)).toBe(1);
   });
+});
+
+describe("the prompt inspector labels Molfar's own requests", () => {
+  for (const window of [128_000, 16_000]) {
+    it(`every system part is found, messages by role, tools by size (window ${window})`, async () => {
+      fs.writeFileSync(userPaths(dataDir, "mia").persona, "Be brief.");
+      const s = await promptOf({ window });
+      const last = listInspected("mia").find((e) => e.source === "agent")!;
+      const e = getInspected("mia", last.id)!;
+      const src = e.sources!;
+      expect(src.parts.length).toBeGreaterThan(2);
+      expect(src.parts.every((p) => p.located)).toBe(true);
+      expect(src.parts.some((p) => p.kind === "persona")).toBe(true);
+      expect(src.parts.some((p) => p.kind === "user" && p.label === "User")).toBe(true);
+      // the system prompt is covered but for the blank lines between parts
+      const covered = src.spans.filter((x) => x.msg === -1).reduce((n, x) => n + x.end - x.start, 0);
+      expect(s.length - covered).toBeLessThan(200);
+      expect(e.tools.sizes?.length).toBe(e.tools.names.length);
+    });
+  }
 });
 
 describe("the defaults are English", () => {

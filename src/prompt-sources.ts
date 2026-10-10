@@ -184,6 +184,21 @@ export function uncovered(insertions: string[], own: SourcePart[]): string[] {
   return out;
 }
 
+/** Molfar's system prompts and their parts, by the prompt's exact text: the agent
+ *  builds a prompt once per instance, the request site only sees the string. */
+const systemParts = new Map<string, SourcePart[]>();
+const KEEP_PROMPTS = 32;
+
+export function rememberSystemParts(prompt: string, parts: SourcePart[]): void {
+  systemParts.delete(prompt);
+  systemParts.set(prompt, parts);
+  while (systemParts.size > KEEP_PROMPTS) systemParts.delete(systemParts.keys().next().value as string);
+}
+
+export function systemPartsFor(prompt: string | undefined): SourcePart[] | null {
+  return (prompt && systemParts.get(prompt)) || null;
+}
+
 /**
  * Find each part's text in the request. `texts[0]` is the system prompt (may
  * be empty), the rest the messages in order. Parts are searched in order from
