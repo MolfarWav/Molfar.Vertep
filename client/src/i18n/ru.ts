@@ -591,6 +591,7 @@ const dict = {
   "Reasoning off: faster and cheaper; these answers are short structured data.": "Рассуждения выключены: быстрее и дешевле; эти ответы — короткие структурированные данные.",
   "Max output about 2000 tokens; a context window of 16k is plenty.": "Максимальный вывод около 2000 токенов; контекстного окна 16k вполне достаточно.",
   "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "Модель: достаточно быстрой и дешёвой (вроде Flash или mini); выберите её в настройках самого плагина в приложении.",
+  "For example: {names}.": "Например: {names}.",
   "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "Контекстное окно этой модели ({n} токенов) маловато для Мольфара: длинные задачи будут обрезаны.",
   "Recommended settings": "Рекомендуемые настройки",
   "Fill in the recommended values": "Подставить рекомендуемые значения",

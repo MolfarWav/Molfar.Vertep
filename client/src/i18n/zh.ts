@@ -591,6 +591,7 @@ const dict = {
   "Reasoning off: faster and cheaper; these answers are short structured data.": "推理关闭：更快也更便宜；这些回答是简短的结构化数据。",
   "Max output about 2000 tokens; a context window of 16k is plenty.": "最大输出约 2000 token；16k 的上下文窗口完全够用。",
   "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "模型：快速、便宜的（Flash 或 mini 那类）就够了；在应用里插件自身的设置中选择它。",
+  "For example: {names}.": "例如：{names}。",
   "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "该模型的上下文窗口（{n} token）对 Molfar 来说太小：长任务会被截断。",
   "Recommended settings": "推荐设置",
   "Fill in the recommended values": "填入推荐值",

@@ -50,6 +50,13 @@ const DEFAULTS: Record<Key, FieldState> = {
   headers: { on: true, text: "{}" },
 }
 
+/** Named examples for the "Model:" lines. Names age fast: refresh them each release (last 2026-10). */
+const EXAMPLES = {
+  chat: "DeepSeek V4 Pro, GLM 5.3, Kimi K2.7",
+  molfar: "DeepSeek V4 Pro, GLM 5.3, Kimi K2.7 Code",
+  plugins: "DeepSeek V4.1 Flash, GLM 5.3 Flash, Gemini 3.5 Flash",
+}
+
 /** What we suggest per block, for people who do not know these knobs: values the "Fill in" button
  *  puts into the form (nothing is saved until Save), and the lines that explain them. */
 function recommended(block: string, model: ModelDetails): { values: Partial<Record<Key, FieldState>>; lines: string[] } {
@@ -62,7 +69,7 @@ function recommended(block: string, model: ModelDetails): { values: Partial<Reco
         tr("Min P 0.05 with repetition penalty 1.05 keeps replies varied without nonsense."),
         tr("Max output 1000 to 2000 tokens is one long reply; thinking models need more, their reasoning counts too."),
         tr("Context window 32k to 128k: more remembers more, and every reply costs more."),
-        tr("Model: a large model writes best; a thinking variant plans scenes better but answers slower."),
+        `${tr("Model: a large model writes best; a thinking variant plans scenes better but answers slower.")} ${tr("For example: {names}.", { names: EXAMPLES.chat })}`,
       ],
     }
   }
@@ -72,7 +79,7 @@ function recommended(block: string, model: ModelDetails): { values: Partial<Reco
       lines: [
         tr("Context window at least 64k: Molfar's instructions and tools take about 10k, the files it reads take the rest."),
         tr("Reasoning medium; leave temperature off (the provider's default), or 0.3 to 0.7 for steadier code."),
-        tr("Model: one that is good at tool calls; small free models often stop after the first tool."),
+        `${tr("Model: one that is good at tool calls; small free models often stop after the first tool.")} ${tr("For example: {names}.", { names: EXAMPLES.molfar })}`,
       ],
     }
   }
@@ -82,7 +89,7 @@ function recommended(block: string, model: ModelDetails): { values: Partial<Reco
       tr("Temperature 0.2 to 0.3: trackers and memory must answer precisely, not creatively."),
       tr("Reasoning off: faster and cheaper; these answers are short structured data."),
       tr("Max output about 2000 tokens; a context window of 16k is plenty."),
-      tr("Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app."),
+      `${tr("Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.")} ${tr("For example: {names}.", { names: EXAMPLES.plugins })}`,
     ],
   }
 }

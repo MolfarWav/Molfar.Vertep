@@ -591,6 +591,7 @@ const dict = {
   "Reasoning off: faster and cheaper; these answers are short structured data.": "Akıl yürütme kapalı: daha hızlı ve daha ucuz; bu yanıtlar kısa yapılandırılmış verilerdir.",
   "Max output about 2000 tokens; a context window of 16k is plenty.": "Maksimum çıktı yaklaşık 2000 token; 16k bağlam penceresi fazlasıyla yeter.",
   "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "Model: hızlı ve ucuz bir tane (Flash ya da mini türü) yeterli; uygulamadaki eklentinin kendi ayarlarından seçin.",
+  "For example: {names}.": "Örneğin: {names}.",
   "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "Bu modelin bağlam penceresi ({n} token) Molfar için küçük: uzun görevler kesilecek.",
   "Recommended settings": "Önerilen ayarlar",
   "Fill in the recommended values": "Önerilen değerleri doldur",

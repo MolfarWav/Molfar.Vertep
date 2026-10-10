@@ -591,6 +591,7 @@ const dict = {
   "Reasoning off: faster and cheaper; these answers are short structured data.": "推論オフ：より速く安価です。これらの答えは短い構造化データです。",
   "Max output about 2000 tokens; a context window of 16k is plenty.": "最大出力は約2000トークン。コンテキストウィンドウ16kで十分です。",
   "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "モデル：高速で安価なもの（Flashやminiの種類）で十分です。アプリ内のプラグイン自身の設定で選んでください。",
+  "For example: {names}.": "例: {names}。",
   "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "このモデルのコンテキストウィンドウ（{n}トークン）はMolfarには小さすぎます。長いタスクは途中で切れます。",
   "Recommended settings": "推奨設定",
   "Fill in the recommended values": "推奨値を入力",

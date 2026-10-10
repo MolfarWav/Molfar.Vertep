@@ -593,6 +593,7 @@ const en = {
   "Reasoning off: faster and cheaper; these answers are short structured data.": "",
   "Max output about 2000 tokens; a context window of 16k is plenty.": "",
   "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "",
+  "For example: {names}.": "",
   "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "",
   "Recommended settings": "",
   "Fill in the recommended values": "",

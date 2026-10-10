@@ -591,6 +591,7 @@ const dict = {
   "Reasoning off: faster and cheaper; these answers are short structured data.": "추론 끔: 더 빠르고 저렴합니다. 이 답변들은 짧은 구조화 데이터입니다.",
   "Max output about 2000 tokens; a context window of 16k is plenty.": "최대 출력 약 2000 토큰, 컨텍스트 창 16k면 충분합니다.",
   "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "모델: 빠르고 저렴한 것(Flash 또는 mini 종류)이면 충분합니다. 앱의 플러그인 자체 설정에서 선택하세요.",
+  "For example: {names}.": "예: {names}.",
   "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "이 모델의 컨텍스트 창({n} 토큰)은 Molfar에 비해 작습니다. 긴 작업은 중간에 잘립니다.",
   "Recommended settings": "권장 설정",
   "Fill in the recommended values": "권장 값 채우기",

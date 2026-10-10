@@ -591,6 +591,7 @@ const dict = {
   "Reasoning off: faster and cheaper; these answers are short structured data.": "Razonamiento desactivado: más rápido y barato; estas respuestas son datos estructurados cortos.",
   "Max output about 2000 tokens; a context window of 16k is plenty.": "Salida máxima de unos 2000 tokens; una ventana de contexto de 16k es suficiente.",
   "Model: a fast, cheap one (the Flash or mini kind) is enough; choose it in the plugin's own settings in the app.": "Modelo: uno rápido y barato (tipo Flash o mini) es suficiente; elígelo en los ajustes del propio plugin en la app.",
+  "For example: {names}.": "Por ejemplo: {names}.",
   "This model's context window ({n} tokens) is small for Molfar: long tasks will be cut short.": "La ventana de contexto de este modelo ({n} tokens) es pequeña para Molfar: las tareas largas se cortarán.",
   "Recommended settings": "Ajustes recomendados",
   "Fill in the recommended values": "Rellenar los valores recomendados",
