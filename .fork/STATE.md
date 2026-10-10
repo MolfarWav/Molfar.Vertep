@@ -83,7 +83,12 @@ Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `cl
   "Make default" moves chats that rode the old default (existing store behavior).
 - 2026-10-10: the 23 changed Roleplay files (`a30f811` 4.29.0 -> `presets` `280b756`) copied into the E: workspace
   (none had the user's own edits; root manifest untouched). Needs the engine from `claude/v095` or newer.
-- LEFT: the user's live test; release (0.9.5 first).
+- First live test failed: a minute after the copy the engine updated Roleplay to the released 4.30.0
+  (fork main `5279c38`, manifest `source.head`), and the merge put back the 4.30.0 versions of 5 files changed on
+  both sides (store, types, i18n, quick bar, settings view): new components with the old store, nothing worked.
+  Re-copied, verified all 23 against `presets`, the app rebuilt (hot update). Lesson: after copying into a
+  workspace, check the app's manifest `source.head` and re-verify the files after the first engine start.
+- LEFT: the user's live test (again); release.
 
 ## Next
 - 0.9.5 above.
