@@ -219,6 +219,8 @@ export function MarkedText({ text, truncated, spans, parts, active }: {
   const [open, setOpen] = useState(!long)
   const ref = useRef<HTMLDivElement>(null)
   const holdsActive = active != null && !!spans?.some((s) => s.part === active)
+  // the part is in this block but past the text the engine kept for display
+  const pastClip = holdsActive && !spans?.some((s) => s.part === active && s.start < text.length)
 
   useEffect(() => {
     if (holdsActive) setOpen(true)
@@ -266,6 +268,11 @@ export function MarkedText({ text, truncated, spans, parts, active }: {
         <button type="button" className="text-muted-foreground hover:text-foreground w-fit text-xs underline-offset-2 hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? "Collapse" : `Expand (${text.length.toLocaleString("en-US")} characters)`}
         </button>
+      ) : null}
+      {pastClip ? (
+        <p className="text-xs text-amber-700 dark:text-amber-300" role="status">
+          The selected part is in this block, past the text kept for display.
+        </p>
       ) : null}
       {truncated ? <p className="text-muted-foreground text-xs">clipped for display; the token count is for the whole message</p> : null}
     </div>

@@ -14,8 +14,11 @@ import { estimateMessageTokens, estimateTextTokens, toolsTokens } from "./agent/
 import { type LocatedSources, locateSources, mergePromptSources, type PromptSources } from "./prompt-sources.js";
 
 const KEEP = 20;
-/** Long tool results and files dominate a context; the view needs their size, not all of them. */
-const TEXT_MAX = 20_000;
+/** Long tool results and files dominate a context; the view needs their size, not all of them.
+ *  A system prompt is kept far longer: app prompts put their lorebook and plugin inserts there,
+ *  and the sources view must be able to show where they landed. */
+const TEXT_MAX = 50_000;
+const SYSTEM_MAX = 200_000;
 
 export interface InspectorMessage {
   role: string;
@@ -61,8 +64,8 @@ export type InspectorSummary = Omit<InspectorEntry, "system" | "messages" | "out
 
 const byUser = new Map<string, InspectorEntry[]>();
 
-const clip = (text: string): { text: string; truncated?: boolean } =>
-  text.length > TEXT_MAX ? { text: `${text.slice(0, TEXT_MAX)}\n… (${text.length - TEXT_MAX} more characters)`, truncated: true } : { text };
+const clip = (text: string, max = TEXT_MAX): { text: string; truncated?: boolean } =>
+  text.length > max ? { text: `${text.slice(0, max)}\n… (${text.length - max} more characters)`, truncated: true } : { text };
 
 type Block = { type?: string; text?: string; thinking?: string; name?: string; arguments?: unknown; mimeType?: string };
 
@@ -131,7 +134,7 @@ export function inspectRequest(
     model: r.model,
     ...(r.contextWindow ? { contextWindow: r.contextWindow } : {}),
     params: r.params ?? {},
-    system: { ...clip(system), tokens: systemTokens },
+    system: { ...clip(system, SYSTEM_MAX), tokens: systemTokens },
     messages,
     tools: {
       names: (r.tools ?? []).map((t) => String((t as { name?: unknown }).name ?? "?")),

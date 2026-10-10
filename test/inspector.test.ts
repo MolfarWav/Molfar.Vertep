@@ -86,9 +86,13 @@ describe("prompt inspector", () => {
     expect(listInspected("mia")).toHaveLength(20);
     expect(listInspected("mia")[0]?.preview).toBe("m24");
     expect(listInspected("bob")).toEqual([]);
-    const big = inspectRequest("mia", { source: "t", model: "x/y", messages: [{ role: "toolResult", content: [{ type: "text", text: "a".repeat(50_000) }] }] });
+    const big = inspectRequest("mia", { source: "t", model: "x/y", messages: [{ role: "toolResult", content: [{ type: "text", text: "a".repeat(80_000) }] }] });
     expect(big.messages[0]?.truncated).toBe(true);
     expect(big.messages[0]?.tokens).toBeGreaterThan(10_000); // the estimate counts the whole message
+    // a system prompt keeps far more: app prompts carry their lorebook and plugin inserts there
+    const sys = inspectRequest("mia", { source: "t", model: "x/y", systemPrompt: "s".repeat(150_000), messages: [] });
+    expect(sys.system.truncated).toBeUndefined();
+    expect(inspectRequest("mia", { source: "t", model: "x/y", systemPrompt: "s".repeat(250_000), messages: [] }).system.truncated).toBe(true);
   });
 
   it("routes: shell only", async () => {

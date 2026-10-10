@@ -57,7 +57,7 @@ const keyed = <T,>(items: readonly T[], name: (item: T) => string): Array<{ item
 
 function Chip({ children, className, title }: { children: ReactNode; className?: string; title?: string }): ReactNode {
   return (
-    <span title={title} className={cn("bg-muted text-muted-foreground max-w-full truncate rounded-md px-1.5 py-0.5 font-mono text-[11px]", className)}>
+    <span title={title} className={cn("bg-muted text-muted-foreground inline-block max-w-full truncate rounded-md px-1.5 py-0.5 font-mono text-[11px]", className)}>
       {children}
     </span>
   )
