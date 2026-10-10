@@ -30,8 +30,8 @@ The Discord player's timeouts turned out to be a Roleplay that had not finished 
 
 ## Open, from 0.9.4-0.9.6
 - `updateCharacter` studio bag: checked 2026-10-11, edits go through PATCH since 4.29 and send only what changed (the first edit of an imported card sends only that field). The one hole left, a whole-card PUT dropping studio keys the app does not manage, is fixed on the Roleplay branch `quick-fixes` (`721e353`).
-- Presets: the editor's "Use this preset" also makes the preset default (old `usePreset`); "Make default"
-  moves chats that rode the old default (existing store behavior). Open for the user.
+- Presets: "Use this preset" split into "Use in this chat" and "Make default" (user, 2026-10-11; Roleplay
+  `quick-fixes` `398ed9b`, ships with 0.9.8). "Make default" still moves chats that rode the old default (store behavior).
 - One first reply on NanoGPT GLM 5.2 thinking carried the preset's planning as plain text (no think tags);
   the user chose to leave it.
 - Lesson from 0.9.6: after copying Roleplay files into a workspace, check the app's manifest `source.head` and

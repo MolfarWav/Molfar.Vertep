@@ -2,7 +2,9 @@
 
 ## Start here (new session, 2026-10-11)
 - Engine: a worktree `claude/v098-card` from main (v0.9.7 and the closing notes). Roleplay: `.claude/worktrees/rp-memory`
-  (a clone of the fork), a branch from the fork main `fa15553` (4.32.0). Engine code is only needed if export
+  (a clone of the fork): continue on the branch `quick-fixes` (from 4.32.0; pushed, not main): the studio keys fix, the
+  editor header labels and export icon, and the Presets page's "Use in this chat" / "Make default" split. None of it is
+  browser-checked yet (the user: check it with the 0.9.8 UI round); it ships with 0.9.8. Engine code is only needed if export
   or images need it (see "emotion images as files" below).
 - Order: 5 is done (see below); start with the questions at the end of "Structured card" below
   (AskUserQuestion) before building 6, 7, 8 and 4; the user already gave Lorebary's fields (screenshots,
