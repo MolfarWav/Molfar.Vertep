@@ -18,6 +18,7 @@ pieces. 847 tests. UI built and browser-checked by a Sonnet subagent, reviewed b
 No engine code changed in 0.9.4: no engine release needed.
 2026-10-10: the branch's 35 changed files were copied into the E: workspace for the user's live test
 (not `data/`, not the root manifest: the app update sets it).
+Live test 2026-10-10 (user): translation preview OK, filters OK, always-on entries now reach the chat. Fixed after it: card saves PATCH only changed fields (a card with emotion images passed the 1 MB app request cap: every edit failed, `body too large`; `49cad3d`), unique new book names; UI `2ff043c`: search in the card's book picker, "With Molfar" (askMolfar, lorebook-craft), bulk By meaning + vector note. Copied to the E: workspace again. Small: "1 entries" / "1 global books" plurals.
 NEXT: the user's live test, then on their word merge `lore-v094` into the fork main (ships 4.29.0).
 Seen, not fixed: `updateCharacter` rewrites the card's whole studio bag with defaults on the first edit.
 
