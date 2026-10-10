@@ -1,4 +1,4 @@
-// Parameters that belong to a model, not to a preset (0.9.2, .fork/handoff/v092/CONNECTIONS-SPEC.md).
+// Parameters that belong to a model, not to a preset (0.9.2).
 // One entry per model ref in <workspace>/model-params.json, split into blocks by who calls the model:
 // `chat` (an app's chat replies: plugin requests under the key "reply", and API callers), `plugins`
 // (every other plugin call), `plugin:<app>/<plugin>` (one plugin, added on demand) and `molfar` (the

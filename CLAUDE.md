@@ -21,7 +21,7 @@ holds the rules that do not change between tasks; the handoff holds the task.
 
 ## Two workers, no overlap
 - Claude Code changes the engine: this repo.
-- The built-in agent changes the user's workspace (`data/users/<name>/`: apps, plugins, skills, memory). A cloud session cannot see it. For workspace work, write a copy-pasteable task prompt for the built-in agent (example: `.fork/archive/2026-10-batch-1/workspace-agent-task.md`).
+- The built-in agent changes the user's workspace (`data/users/<name>/`: apps, plugins, skills, memory). A cloud session cannot see it. For workspace work, write a copy-pasteable task prompt for the built-in agent (example: `.fork/handoff/v094/workspace-agent-task.md`).
 
 ## Map
 - `src/server/app.ts`: every HTTP route. `src/agent/`: the built-in agent (`agent.ts` system prompt and runs, `tools.ts`, `memory.ts` memory and skills, `projects.ts`, `checkpoints.ts`, `protect.ts` protected paths, `git-cli.ts`, `context-budget.ts` token estimates). `src/models.ts`: every model call. `src/inspector.ts`: last requests per user. `src/paths.ts`: workspace layout, `AGENT_WRITE_DENYLIST`, workspace AGENTS.md text, `DEFAULT_PERSONA`.
@@ -33,7 +33,7 @@ holds the rules that do not change between tasks; the handoff holds the task.
 - Never commit `bun.lock` or `client-agent/bun.lock`: `bun install` rewrites them; `git checkout` them back.
 - A new string in `client/` goes into all 14 `client/src/i18n/*.ts` files (`en.ts` with an empty value) or `test/i18n.test.ts` fails.
 - A new shell-only route: add its path to the lists in `test/security.test.ts` and `test/malicious-plugin.test.ts`.
-- A change to the Roleplay card or lorebook format (fields of `data/characters/<id>/card.json` or `data/lorebooks/<id>.json`, how a book is linked) updates Molfar's card skill in the same change: `.fork/app-skills/roleplay/edit-large-card/SKILL.md` and its copies in the workspaces (later: the format reference in the Roleplay fork, `.fork/handoff/v091/PLAN.md` item 4). An outdated skill sends Molfar exploring the app's code: dozens of calls.
+- A change to the Roleplay card or lorebook format (fields of `data/characters/<id>/card.json` or `data/lorebooks/<id>.json`, how a book is linked) updates, in the same change, the Roleplay fork's `docs/DATA-FORMATS.md` and Molfar's card skill `.skills/edit-large-card/SKILL.md` (copy: `.fork/app-skills/roleplay/edit-large-card/SKILL.md`), and a task for the built-in agent for the user's workspace copies. An outdated skill sends Molfar exploring the app's code: dozens of calls.
 - The agent's system prompt is built once per agent instance: anything that changes what goes into it must `evictAgents` or change the docs/project stamp.
 - Agent write limits live in code, not in the prompt: `AGENT_WRITE_DENYLIST` (never) and `protect.ts` (ask the user first). Memory and skills change only through the confirmed tools.
 - Never a model name in a commit, file or PR. Commit style: `area: what changed, in plain words`, a body saying why, then the attribution lines the harness gives.

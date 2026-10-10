@@ -23,5 +23,12 @@ DATA-FORMATS in the same change (CLAUDE.md).
 - 0.9.4: the Lorebook tab lists the card's books (own book: replace, unlink, open; add others);
   exported cards carry their own book; deleting a card offers to delete its own book
   (`.fork/handoff/v094/PLAN.md`).
-- Emotion images as full-size files with export embedding them back (`.fork/handoff/v093/PLAN.md`,
-  last section; deferred by the user).
+- Emotion images as full-size files with export embedding them back: below.
+
+## From 0.9.3: Later, on the user's word (deferred 2026-10-10: the downscaled size is good enough for now): emotion images as files, full size
+Plugins cannot write binary files and the app serves only its dist/, so expressions live as data URLs
+inside card.json (4 MB sandbox write cap) and must be downscaled. Plan: engine `fs.writeBytes` for
+plugins (images only by magic bytes, inside the app data dir, size cap), an engine route that serves
+those images to the app like the image proxy, Roleplay stores expressions as files
+(`characters/<id>/expressions/*.webp`) with a reference in card.json, old inline ones keep working, PNG/charx
+export embeds them back. A card format change: update `edit-large-card` and DATA-FORMATS with it.
