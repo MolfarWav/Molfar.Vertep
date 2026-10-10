@@ -47,6 +47,8 @@ fork main 4.29.0.
 - 10, 11: being reproduced in a browser (Sonnet subagent). 11 reading so far: assistant-ui's external store
   keeps messages it saw before; the live ids (`m_*`, `live_*`) are swapped for `u<at>`/`a<at>` by
   `reloadCurrent` after every run, so stale siblings stay in its repository.
+- 2026-10-10: the 13 changed Roleplay files (v095 `d8e2ee2` vs 4.29.0) copied into the E: workspace for the
+  user (all were still 4.29.0 there; root manifest untouched). They need the engine from `claude/v095`.
 - 2 (live NanoGPT run) at the end with the user; 3 (Android provider list) needs the phone's error text; 6 left.
 
 ## Next
