@@ -44,9 +44,14 @@ fork main 4.29.0.
   timeout was the environment. Also fixed: the session path test on Windows (12 known Windows failures left).
 - 12 FIXED: stat tile labels hyphenate in the UI language and wrap.
 - 13 CLOSED by the user: Enter on the phone stays a new line.
-- 10, 11: being reproduced in a browser (Sonnet subagent). 11 reading so far: assistant-ui's external store
-  keeps messages it saw before; the live ids (`m_*`, `live_*`) are swapped for `u<at>`/`a<at>` by
-  `reloadCurrent` after every run, so stale siblings stay in its repository.
+- 10 NOT REPRODUCED (browser check, ~260 open/close cycles at 1280 and 390, mouse and touch, after loads,
+  chat switches, hydrates and streaming): closed unless the user sees it.
+- 11 FIXED `befc2c9`: reproduced on every live run (the picker was on the USER message, above Molfar's reply):
+  `reloadCurrent` swapped live ids for `u<at>`/`a<at>` and assistant-ui keeps every id it saw. `keepShownIds`
+  (client-agent/src/runs.ts) keeps the shown ids; edit/regenerate find the run by `runAt`.
+- Browser check round 1 (Sonnet subagent): item 1 passed (dark/light/390, override); Home tiles not clipped but
+  broke mid-word at 1280 -> rows in a narrow column; the preset's thinking budget was marked "model" -> own row.
+  Round 2 (A-D, the fixes) running.
 - 2026-10-10: the 13 changed Roleplay files (v095 `d8e2ee2` vs 4.29.0) copied into the E: workspace for the
   user (all were still 4.29.0 there; root manifest untouched). They need the engine from `claude/v095`.
 - 2 (live NanoGPT run) at the end with the user; 3 (Android provider list) needs the phone's error text; 6 left.
