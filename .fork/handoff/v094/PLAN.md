@@ -43,3 +43,53 @@ Test with a mock chat.
 ## Later, not in 0.9.4
 - Litopys facts/chapters -> lorebook entries export (MemoryBooks idea): needs its own design.
 - `@@activate` / `@@dont_activate` decorators and outlets in the importer: only if the user meets such books.
+
+## Round 1 (2026-10-10): the scanner, done
+Roleplay fork branch `lore-v094` (clone `.claude/worktrees/rp-memory`, from fork main 4.28.0), commit
+`a12512c`, pushed (not main). 823 tests.
+- Item 1: Cyrillic keys match every form of their words through `sameWord` over a word index of the
+  scan window; a multi-word key is a PHRASE (side by side, in order, each word in any form; user's
+  choice 2026-10-10, instead of "any order" above). Words of 3 letters or fewer match exactly.
+  `settings.wordForms` (absent = on), entry `wordFormsOverride`. Other scripts get Unicode word
+  boundaries; Latin and regex keys unchanged. Skills `lorebook-craft`, `card-import`, DATA-FORMATS
+  and `edit-large-card` say: one base form per key. Workspace copies of the skills still to update.
+- Item 3 (data): fired rows carry `via` (key/constant/sticky/vector), `key`, `secondary`, `pass`,
+  `depth`, `probability`, `group`, `score`; `blocked` rows name `reason` (delay, cooldown,
+  recursion_delay, non_recursable, secondary, probability, group + winner) and `detail`; budget
+  cuts are `skipped` with `reason: "budget"`. Probability is rolled once per activation, never in
+  dry runs.
+- Item 2 (engine part): `POST /wi-test {text, books | bookIds, chatId?}`, dry run on the pasted text.
+- Item 4: minActivations deepens the scan (<= ~50 rounds, `minActivationsDepthMax`).
+- Fixed: book caseSensitive/wholeWords/vector threshold never applied (read from the name string);
+  the app adapter dropped unknown/imported entry fields and renumbered uids on every save.
+
+## Added by the user 2026-10-10 (for the UI round)
+- Binding = ONE source of truth on the character (`studio.embeddedLorebookId` +
+  `linkedLorebookIds`): the card's Lorebook tab lists its books (own book: replace / unlink / open;
+  add any other), the book shows a computed "used by" list; `Lorebook.linkedCharacterIds` goes.
+- Rework the lorebook UI: entry list (search, filters, sort, compact rows with keys and status),
+  entry editor (basics first, the rest under "More", hints), phone layout (390 px).
+- Check how a book binds to a chat and how it reaches the prompt; is a "chat book filled from the
+  chat" replaced by Litopys? (findings below).
+- Data Bank: research by an external model (`data-bank.md` in this folder).
+
+## Findings (Sonnet read-only pass + checks by the orchestrator, 2026-10-10)
+Verified in code by the orchestrator: [v] ; from the report only: [r].
+- [v] The scanner never reads `characterFilter`, `characterFilterExclude`, `tagFilter`,
+  `triggerFilters`, `formatTemplate`, `insertionStrategy`, `includeNames` (one grep hit:
+  automationId in the export). The editor offers them and DATA-FORMATS promises them.
+- [r] Positions before_em/after_em/before_an/after_an/before_examples/after_examples all land in
+  `before` (worldInfoBefore). A preset without the worldInfoBefore/After marker drops those entries
+  silently; a marker with its own content replaces the WI text.
+- [r] Group chats scan only global + persona books: the group pseudo-character has no books, the
+  members' books are not in scope (engine.ts groupToCharacter, store.ts scopeBookIds).
+- [r] meta.lorebookIds is PATCHed only when the derived set is non-empty (or an empty chat): unlinking
+  the last book of a chat with messages leaves the old scope firing.
+- [r] Persona books are merged by the engine but not in the client scope, so Litopys and relations
+  (they read meta.lorebookIds) miss them.
+- [r] No per-chat book UI; nothing writes lorebook entries from the chat. Litopys keeps its own
+  per-chat record (chapters, facts, arcs) in data/litopys and injects it through the llmRequest hook:
+  it is the "chat book", but not a lorebook (no keys, no editor). The "Litopys -> entries" export
+  stays in "Later".
+- [r] Card export (PNG/JSON) never writes `character_book`: exported cards lose their book.
+  Deleting a character orphans its embedded book; deleting a book leaves dangling ids on cards.
