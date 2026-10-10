@@ -14,7 +14,16 @@ Plan: `.fork/handoff/inspector-sources/PLAN.md`; UI spec `UI-SPEC.md`.
   system messages were listed twice in an inspector entry.
 - 2 BUILT `e3a75bf`: Molfar's system prompt from labeled sections (byte-identical, checked on full, compact,
   plan), parts looked up by the prompt text (`rememberSystemParts`), history by role, per-tool sizes.
-- 3 (Roleplay labels) and 4 (UI, agent page) drafted by an external code model, in review.
+- 3 BUILT (Roleplay `inspector-sources` `1685451`, pushed, not main): `assemble()` returns `sources` (card, persona,
+  preset sections, lorebook entries with why, Data Bank, author's note, utility, history with regex names, prefill;
+  omitted with reasons; preset choices), the five reply requests send `promptSources`, the peek route returns
+  `sources` + `sourceSpans` (`locateSources` in the plugin), Litopys and dashboard hooks label their inserts.
+  Draft by an external code model (Kimi K2.7 Code); fixed in review: regex names never reached (rx dropped
+  `hits`), history labeled before the budget trim, preset vars as objects, the section loop edit. 871 tests.
+  Engine `cadd33e`: a short part equal to a whole message locates anywhere (history turns after post-history parts).
+- 4 agent page BUILT `5c95a98` (draft DeepSeek V4 Pro after a hung Kimi run; fixed: syntax, the active part index,
+  hooks order, Tailwind v4 alpha classes, Base UI trigger). Roleplay peek dialog + browser check: Sonnet subagent.
+- 5 docs: `app-authoring` documents `promptSources` (`3a6a21c`).
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
 - Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
