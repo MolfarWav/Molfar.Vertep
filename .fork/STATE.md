@@ -72,7 +72,7 @@ fork main 4.29.0.
 Tags are pushed by the user; `release.yml` builds the archives, the APK and the Docker image.
 - 0.9.3 (2026-10-10; Roleplay 4.28.0): six card storefronts, paste-a-link, cards up to 200 MB through
   the engine file route, RisuAI emotion images, card translation. The first v0.9.3 tag sat on the old
-  main and release.yml failed: the user moves the tag to the release commit.
+  main and release.yml failed; the user moved it to `8f9c58f` and the release is out (6 assets).
 - 0.9.2 (2026-10-09; Roleplay 4.27.0): connections and models in one Settings tab with a quick switch,
   parameters on the model (model-params.json), a model per chat, chats that continue each other
   (backstory), Library portraits on the dashboard and in Soul.
