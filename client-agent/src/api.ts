@@ -344,7 +344,7 @@ export interface InspectorSummary {
   /** "provider/id" */
   model: string
   contextWindow?: number
-  tools: { names: string[]; tokens: number }
+  tools: { names: string[]; tokens: number; sizes?: number[] }
   /** estimated input tokens: system + messages + tool definitions */
   estimate: number
   ms?: number
@@ -361,6 +361,13 @@ export interface InspectorEntry extends Omit<InspectorSummary, "messageCount" | 
   system: { text: string; tokens: number; truncated?: boolean }
   messages: InspectorMessage[]
   output?: { text: string; reasoning?: string; toolCalls?: string[] }
+  sources?: {
+    parts: { kind: string; label: string; detail?: string; tokens: number; located: boolean }[]
+    spans: { msg: number; start: number; end: number; part: number }[]
+    omitted: { kind: string; label: string; detail?: string; reason: string; tokens?: number }[]
+    vars: { name: string; value: string; label?: string }[]
+    unlabeled: number
+  }
 }
 
 export const inspectorApi = {

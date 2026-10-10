@@ -9,6 +9,7 @@ import { cn, copyText, shortModelName } from "@/lib/utils"
 import { ArrowLeft, ArrowsClockwise, Check, Copy, MagnifyingGlass, Trash } from "@phosphor-icons/react"
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { inspectorApi, type InspectorEntry, type InspectorSummary } from "./api"
+import { MarkedText, SourcesPanel } from "./inspector-sources"
 import { useAgent } from "./store"
 
 /** A text longer than this starts collapsed. */
@@ -228,12 +229,14 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
   const [entry, setEntry] = useState<InspectorEntry | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<"yes" | "no" | null>(null)
+  const [active, setActive] = useState<number | null>(null)
   const load = useCallback(() => {
     setError(null)
     inspectorApi.get(id).then(setEntry, (e: Error) => setError(e.message))
   }, [id])
   useEffect(() => {
     setEntry(null)
+    setActive(null)
     load()
   }, [load])
   useEffect(() => {
@@ -241,6 +244,14 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
     const t = setTimeout(() => setCopied(null), 1800)
     return () => clearTimeout(t)
   }, [copied])
+  useEffect(() => {
+    if (active == null) return
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") setActive(null)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [active])
 
   const header = (
     <div className="flex flex-wrap items-center gap-2 pr-8">
@@ -301,9 +312,16 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
         {entry.error ? <p className="text-destructive bg-destructive/10 rounded-lg px-3 py-2 text-xs break-words" role="alert">{entry.error}</p> : null}
       </div>
       <ContextBar entry={entry} />
+      <SourcesPanel entry={entry} active={active} onPick={setActive} />
       <div className="grid min-w-0 gap-2">
         <Block kind="system" title="System" tokens={entry.system.tokens} share={entry.system.tokens / Math.max(entry.estimate, 1)}>
-          <Text text={entry.system.text} truncated={entry.system.truncated} />
+          <MarkedText
+            text={entry.system.text}
+            truncated={entry.system.truncated}
+            spans={entry.sources?.spans.filter((s) => s.msg === -1)}
+            parts={entry.sources?.parts}
+            active={active}
+          />
         </Block>
         <Block kind="tools" title="Tools" tokens={entry.tools.tokens} share={entry.tools.tokens / Math.max(entry.estimate, 1)}>
           {entry.tools.names.length ? (
@@ -326,7 +344,13 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
             tokens={m.tokens}
             share={m.tokens / Math.max(entry.estimate, 1)}
           >
-            <Text text={m.text} truncated={m.truncated} />
+            <MarkedText
+              text={m.text}
+              truncated={m.truncated}
+              spans={entry.sources?.spans.filter((s) => s.msg === i)}
+              parts={entry.sources?.parts}
+              active={active}
+            />
           </Block>
         ))}
         <Block kind="assistant" title="Output" calls={entry.output?.toolCalls} tokens={entry.usage?.output}>
