@@ -24,6 +24,13 @@ Plan: `.fork/handoff/inspector-sources/PLAN.md`; UI spec `UI-SPEC.md`.
 - 4 agent page BUILT `5c95a98` (draft DeepSeek V4 Pro after a hung Kimi run; fixed: syntax, the active part index,
   hooks order, Tailwind v4 alpha classes, Base UI trigger). Roleplay peek dialog + browser check: Sonnet subagent.
 - 5 docs: `app-authoring` documents `promptSources` (`3a6a21c`).
+- Discord report 2026-10-10 (Android APK, a heavy third-party preset with regex): "route failed: script execution
+  exceeded the time limit" on send. The sandbox gives every route pass 10 s on every device. Engine `93ae166`: the
+  error names the route's method and path. Roleplay `0490c68`: measured in the real sandbox (`.fork/bench/`),
+  400 messages with 150 regex scripts 3.3 s -> 1.3 s, no regex 1.6 s -> 0.37 s on the desktop (macros skip text
+  without "{{", regex scripts read and filtered once per pass, compiled once, skipped by literal head). Left:
+  150 host file reads per pass (~0.3 s; a bulk read in the engine would cut it), a longer limit on Android only
+  together with this.
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
 - Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
