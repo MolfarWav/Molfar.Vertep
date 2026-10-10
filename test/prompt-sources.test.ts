@@ -60,6 +60,27 @@ describe("prompt sources", () => {
     ]);
   });
 
+  it("a short part behind the cursor locates only as a whole message", () => {
+    // post-history sections are labeled before the history they follow
+    const src = sanitizePromptSources({
+      parts: [
+        { kind: "card", label: "After", text: "Stay in character." },
+        { kind: "history", label: "#1", text: "Hi" },
+        { kind: "note", label: "Inside", text: "ok" },
+      ],
+    })!;
+    const located = locateSources(src, "", ["Hi", "Okay then, ok", "Stay in character."], 30);
+    // the whole-message match moves the cursor back: the next short part is found after it
+    expect(located.spans).toEqual([
+      { msg: 0, start: 0, end: 2, part: 1 },
+      { msg: 1, start: 11, end: 13, part: 2 },
+      { msg: 2, start: 0, end: 18, part: 0 },
+    ]);
+    // a short text that is only part of a message, behind the cursor, stays unlocated
+    const alone = locateSources(sanitizePromptSources({ parts: [{ kind: "card", label: "A", text: "Stay in character." }, { kind: "note", label: "B", text: "ok" }] })!, "", ["Okay then, ok", "Stay in character."], 10);
+    expect(alone.parts.map((p) => p.located)).toEqual([true, false]);
+  });
+
   it("hook insertions: a new message whole, an edited one by its new middle, a system prompt change", () => {
     const before = { systemPrompt: "Rules.", messages: [{ role: "system", content: "Card." }, { role: "user", content: "Hi" }, { role: "assistant", content: "Hello" }] };
     const after = {

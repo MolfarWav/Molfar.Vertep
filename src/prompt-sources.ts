@@ -227,6 +227,11 @@ export function locateSources(src: PromptSources, system: string, messages: stri
     const tokens = p.text ? estimateTextTokens(p.text) : 0;
     let hit = p.text ? findFrom(p.text, cur[0], cur[1], texts.length) : null;
     if (!hit && p.text.length >= SHORT) hit = findFrom(p.text, 0, 0, texts.length);
+    // a short text that is a whole message (a history turn like "Hi") is safe to match anywhere
+    if (!hit && p.text) {
+      const t = texts.findIndex((x, k) => x.trim() === p.text && free(k, x.indexOf(p.text), x.indexOf(p.text) + p.text.length));
+      if (t >= 0) hit = [t, texts[t]!.indexOf(p.text)];
+    }
     parts.push({ kind: p.kind, label: p.label, ...(p.detail ? { detail: p.detail } : {}), tokens, located: !!hit });
     if (!hit) return;
     const [t, at] = hit;
