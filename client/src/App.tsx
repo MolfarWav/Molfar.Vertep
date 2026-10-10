@@ -16,7 +16,7 @@ import { AppUpdateBanner, useAppUpdate, useAppUpdates, type AppUpdates } from ".
 import { UpdatesDialog, useEngineRelease } from "./updates-panel"
 import type { LaunchInfo, Me, StoreApp } from "./types"
 import { StoreDialog, WelcomeApps, useStore } from "./store"
-import { tr, useLocale } from "./i18n/index"
+import { getLocale, tr, useLocale } from "./i18n/index"
 import { DEFAULT_THEME, THEME_KEY, applyStoredTheme, applyTheme, isBuiltinTheme, storedThemeId, type ShellTheme } from "./theme"
 
 type Tab = { id: string; kind: "agent" | "app" | "new"; name: string }
@@ -334,6 +334,8 @@ function Shell(props: { theme: ThemeControl }) {
     const host = window.ChrysalisBridgeHost
     if (!host) return
     host.onShellRequest = (appId, req) => {
+      // a read that changes nothing: apps ask for it while they boot, often in a tab not on screen
+      if (req.op === "locale") return getLocale()
       const now = shellNow.current
       const onScreen = document.visibilityState === "visible" && (now.active?.id === appId || now.pinned?.id === appId)
       if (!onScreen) throw new Error("only the app on screen may do this")
@@ -345,7 +347,7 @@ function Shell(props: { theme: ThemeControl }) {
         return null
       }
       if (req.op === "open-settings") {
-        now.openSettings("api", req.model)
+        now.openSettings(req.tab ?? "api", req.model)
         return null
       }
       if (Date.now() - lastShellDraft.current < 2000) throw new Error("too many requests")

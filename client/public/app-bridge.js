@@ -112,6 +112,10 @@
     openApp: function (id) { return shellCall("open-app", { appId: String(id) }); },
     /** Open the shell's Settings on the connections, on one model's settings when given "<provider>/<model>". */
     openSettings: function (model) { return shellCall("open-settings", model ? { model: String(model) } : {}); },
+    /** Open the shell's Settings on one tab: "api", "models", "memory" or "backup". */
+    openSettingsTab: function (tab) { return shellCall("open-settings", { tab: String(tab) }); },
+    /** The shell's interface language, e.g. "uk" or "en". */
+    locale: function () { return shellCall("locale", {}); },
   });
 
   // ---------- fetch ----------

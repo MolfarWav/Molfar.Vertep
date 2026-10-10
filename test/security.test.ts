@@ -945,14 +945,18 @@ describe("A2 the bridge's second lock (server side)", () => {
     expect(shellRequest(true, { op: "open-app", appId: "notes" })).toEqual({ op: "open-app", appId: "notes" });
     expect(shellRequest(true, { op: "open-settings" })).toEqual({ op: "open-settings" });
     expect(shellRequest(true, { op: "open-settings", model: "nanogpt/deepseek/deepseek-v4-flash", x: 1 })).toEqual({ op: "open-settings", model: "nanogpt/deepseek/deepseek-v4-flash" });
+    expect(shellRequest(true, { op: "open-settings", tab: "memory" })).toEqual({ op: "open-settings", tab: "memory" });
+    expect(shellRequest(true, { op: "locale", x: 1 })).toEqual({ op: "locale" });
     for (const d of [
       { op: "ask-molfar", text: "hi" },
       { op: "apps" },
       { op: "open-settings" },
+      { op: "locale" },
     ]) expect(shellRequest(false, d), "untrusted").toBeNull();
     for (const d of [
       { op: "ask-molfar", text: "   " }, { op: "ask-molfar", text: "x".repeat(4001) }, { op: "ask-molfar", text: 5 },
       { op: "open-app", appId: "../x" }, { op: "open-app" }, { op: "open-settings", model: "no slash" }, { op: "open-settings", model: 5 }, { op: "open-settings", model: "a/" + "b".repeat(300) }, { op: "send-molfar", text: "hi" }, null, "apps",
+      { op: "open-settings", tab: "users" }, { op: "open-settings", tab: "server" }, { op: "open-settings", tab: "memory", model: "a/b" }, { op: "open-settings", tab: 1 },
     ]) expect(shellRequest(true, d), JSON.stringify(d)).toBeNull();
   });
 

@@ -182,6 +182,7 @@
    *  on screen, and Molfar only gets an unsent draft. */
   var SHELL_TEXT_MAX = 4000;
   var SHELL_APP_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
+  var SHELL_SETTINGS_TABS = ["api", "models", "memory", "backup"];
   function shellRequest(trusted, d) {
     if (trusted !== true || !d || typeof d.op !== "string") return null;
     if (d.op === "ask-molfar") {
@@ -189,11 +190,15 @@
     }
     if (d.op === "apps") return { op: "apps" };
     if (d.op === "open-app") return typeof d.appId === "string" && SHELL_APP_ID.test(d.appId) ? { op: "open-app", appId: d.appId } : null;
-    // Settings > API connections, on one model's panel when a "<provider>/<model>" ref is given
+    // Settings > API connections, on one model's panel when a "<provider>/<model>" ref is given; or
+    // (0.9.5) one of the few tabs an app may point at
     if (d.op === "open-settings") {
+      if (d.tab != null) return SHELL_SETTINGS_TABS.indexOf(d.tab) >= 0 && d.model == null ? { op: "open-settings", tab: d.tab } : null;
       if (d.model == null || d.model === "") return { op: "open-settings" };
       return typeof d.model === "string" && d.model.length <= 300 && /^[^\s/]+\/\S+$/.test(d.model) ? { op: "open-settings", model: d.model } : null;
     }
+    // the shell's interface language (0.9.5), so an app can start in it
+    if (d.op === "locale") return { op: "locale" };
     return null;
   }
 
