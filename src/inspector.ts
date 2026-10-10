@@ -11,6 +11,7 @@
  * Nothing is written to disk; an engine restart forgets it all.
  */
 import { estimateMessageTokens, estimateTextTokens, toolsTokens } from "./agent/context-budget.js";
+import { type LocatedSources, locateSources, type PromptSources } from "./prompt-sources.js";
 
 const KEEP = 20;
 /** Long tool results and files dominate a context; the view needs their size, not all of them. */
@@ -48,9 +49,11 @@ export interface InspectorEntry {
   error?: string;
   /** Still waiting for the model. */
   pending?: boolean;
+  /** Where each part of the request came from (prompt-sources.ts), when the caller said. */
+  sources?: LocatedSources;
 }
 
-export type InspectorSummary = Omit<InspectorEntry, "system" | "messages" | "output" | "params"> & {
+export type InspectorSummary = Omit<InspectorEntry, "system" | "messages" | "output" | "params" | "sources"> & {
   messageCount: number;
   preview: string;
 };
@@ -63,7 +66,7 @@ const clip = (text: string): { text: string; truncated?: boolean } =>
 type Block = { type?: string; text?: string; thinking?: string; name?: string; arguments?: unknown; mimeType?: string };
 
 /** A message as text: images and tool calls become short markers. */
-function messageView(m: unknown): InspectorMessage {
+function messageView(m: unknown): InspectorMessage & { raw: string } {
   const msg = m as { role?: string; content?: unknown; toolName?: string };
   const role = msg.role ?? "unknown";
   const calls: string[] = [];
@@ -86,6 +89,7 @@ function messageView(m: unknown): InspectorMessage {
   }
   const c = clip(text);
   return {
+    raw: text,
     role,
     ...c,
     tokens: estimateMessageTokens(m as never),
@@ -108,10 +112,12 @@ export function inspectRequest(
     systemPrompt?: string;
     messages: readonly unknown[];
     tools?: readonly unknown[];
+    sources?: PromptSources | null;
   },
 ): InspectorEntry {
   const system = r.systemPrompt ?? "";
-  const messages = r.messages.map(messageView);
+  const views = r.messages.map(messageView);
+  const messages: InspectorMessage[] = views.map(({ raw: _raw, ...v }) => v);
   const tokens = toolsTokens(r.tools);
   const systemTokens = system ? estimateTextTokens(system) : 0;
   const entry: InspectorEntry = {
@@ -128,6 +134,13 @@ export function inspectRequest(
     estimate: systemTokens + tokens + messages.reduce((n, m) => n + m.tokens, 0),
     pending: true,
   };
+  if (r.sources) {
+    try {
+      entry.sources = locateSources(r.sources, system, views.map((v) => v.raw), entry.estimate);
+    } catch {
+      /* labels never break the inspector */
+    }
+  }
   const list = byUser.get(username) ?? [];
   list.unshift(entry);
   if (list.length > KEEP) list.length = KEEP;

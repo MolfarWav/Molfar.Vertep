@@ -18,6 +18,11 @@ Small leftovers from 0.9.4-0.9.6 (the studio bag overwrite, plurals, preset defa
    changes, history and what the budget cut). Likely: Roleplay's `assemble()` and each llmRequest hook
    tag what they add, the engine keeps the tags for the inspector and strips them before the provider.
    0.9.4's why-rows are the lorebook part's data.
+6a. **HTML blocks and dialogue colors in the chat** (user, 2026-10-10; for later, not 0.9.7): check how
+   model-generated HTML blocks reach and render in a Roleplay chat (example: a reply that draws a sheet of
+   paper with a note on it: what is sanitized, what styles survive, light/dark, the phone). With it,
+   colored dialogue: each character's lines in their own color, which matters most in group chats with
+   several characters (ties into item 4).
 7. **"Reply ready" notification** (user, 2026-10-05): a Settings option, off by default, that pops up
    when a reply is ready while the app is in the background (browser Notifications API; check whether
    the Android service should post it). Plan and spec it first.

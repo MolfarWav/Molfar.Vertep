@@ -16,6 +16,7 @@ import { log } from "./logger.js";
 import { llmLogRequest, llmLogResult, llmLogError, llmLogTool } from "./llm-logger.js";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { inspectAssistantMessage, inspectRequest, inspectResult, type InspectorEntry } from "./inspector.js";
+import type { PromptSources } from "./prompt-sources.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
 import { blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
@@ -200,6 +201,9 @@ export interface GenerateRequest {
   paramsSource?: "model" | "request";
   /** Set by generateInner from model-params.json only (a caller's value is overwritten). */
   modelHeaders?: Record<string, string>;
+  /** Host-only labels for the prompt inspector (prompt-sources.ts): set by the plugin runtime
+   *  from an app's sanitized `promptSources`, never sent to a provider. */
+  promptSources?: PromptSources | null;
 }
 
 export interface GenerateResult {
@@ -329,7 +333,7 @@ const FORMAT_DETECT_TTL = 60_000;
 /** The inspector entry of the generate() call in progress: the request is
  *  recorded where it is built (deep in the provider paths), the outcome where
  *  generate() returns. A retry records a new request in the same slot. */
-const inspecting = new AsyncLocalStorage<{ entry?: InspectorEntry }>();
+const inspecting = new AsyncLocalStorage<{ entry?: InspectorEntry; sources?: PromptSources | null }>();
 
 export class UserModelService {
   readonly models: MutableModels;
@@ -753,7 +757,7 @@ export class UserModelService {
   async generate(req: GenerateRequest, onDelta?: (delta: string) => void, onThinking?: (delta: string) => void): Promise<GenerateResult> {
     const t0 = Date.now();
     const label = req.model ?? "default-model";
-    const slot: { entry?: InspectorEntry } = {};
+    const slot: { entry?: InspectorEntry; sources?: PromptSources | null } = { sources: req.promptSources ?? null };
     try {
       const res = await inspecting.run(slot, () => this.generateWithReasoningFloor(req, onDelta, onThinking));
       llmLogResult(req.source, res.model || label, Date.now() - t0, res);
@@ -784,7 +788,7 @@ export class UserModelService {
     const slot = inspecting.getStore();
     if (!slot) return;
     if (slot.entry?.pending) inspectResult(slot.entry, { error: "retried" });
-    slot.entry = inspectRequest(this.username, r);
+    slot.entry = inspectRequest(this.username, { ...r, sources: slot.sources ?? null });
   }
 
   /** Models that refused a request with reasoning switched off, by ref, and
@@ -1213,7 +1217,8 @@ export class UserModelService {
       contextWindow: model.contextWindow,
       params: genOpts,
       ...(systemPrompt ? { systemPrompt } : {}),
-      messages: req.messages,
+      // the leading system run is in systemPrompt; listing it again counted it twice
+      messages: req.messages.slice(lead),
       ...(allTools.length && hasToolExec ? { tools: allTools } : {}),
     });
 

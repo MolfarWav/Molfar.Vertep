@@ -35,6 +35,7 @@ import { PluginSandbox, sandbox, type SandboxResponse } from "./sandbox.js";
 import type { PluginStoreService } from "./store.js";
 import type { UserModelService, GenerateRequest, GenerateResult } from "../models.js";
 import { log } from "../logger.js";
+import { hookInsertions, mergePromptSources, sanitizePromptSources, uncovered } from "../prompt-sources.js";
 import { assertPublicHost } from "../net-guard.js";
 
 /** Exports the engine calls on its own (routes and tools are dispatched by
@@ -402,7 +403,10 @@ export async function applyLlmRequestHooks(
   if (!deps.llmHooks) return req;
   const hooks = await deps.llmHooks(self).catch(() => [] as LlmRequestHook[]);
   if (!hooks.length) return req;
-  let out = req;
+  // labels stay host-side: a hook neither sees nor rewrites them, it can only add its own
+  const { promptSources: labels, ...bare } = req;
+  let sources = labels ?? null;
+  let out: GenerateRequest = bare;
   for (const { plugin } of hooks) {
     const snapshot = JSON.parse(JSON.stringify(out)) as Record<string, unknown>;
     let patch: Record<string, unknown> | null = null;
@@ -420,9 +424,19 @@ export async function applyLlmRequestHooks(
     }
     if (!Object.keys(applied).length) continue;
     log.info(`[plugin:${self.id}] llm "${key}" patched by ${plugin.id}`);
-    out = { ...out, ...applied } as GenerateRequest;
+    const next = { ...out, ...applied } as GenerateRequest;
+    // what the hook added: its own labels first, the rest under its name (any app, labeled or not)
+    try {
+      const own = sanitizePromptSources(patch.promptSources);
+      const name = plugin.manifest.name || plugin.id;
+      const rest = uncovered(hookInsertions(out, next), own?.parts ?? []).map((text) => ({ kind: "plugin" as const, label: name, text }));
+      sources = mergePromptSources(mergePromptSources(sources, own), rest.length ? { parts: rest, omitted: [], vars: [] } : null);
+    } catch {
+      /* labels never break a generation */
+    }
+    out = next;
   }
-  return out;
+  return sources ? { ...out, promptSources: sources } : out;
 }
 
 function pluginToolsOf(raw: unknown): { name: string; description: string; parameters: Record<string, unknown> }[] | null {
@@ -701,7 +715,10 @@ async function runPassRequests(
     // field — strip it and use it to route live deltas when a sink exists.
     // `wantsTools` likewise: a marker asking for sibling-contributed tools.
     // `turn` labels the generation for llmRequest hooks (sanitizeTurn).
-    const { stream, wantsTools, turn, ...clean } = req as GenerateRequest & { stream?: unknown; wantsTools?: unknown; tools?: unknown; turn?: unknown };
+    // `promptSources` labels the request's parts for the prompt inspector: sanitized here, never sent.
+    const { stream, wantsTools, turn, promptSources, ...clean } = req as GenerateRequest & { stream?: unknown; wantsTools?: unknown; tools?: unknown; turn?: unknown; promptSources?: unknown };
+    const labels = sanitizePromptSources(promptSources);
+    if (labels) (clean as GenerateRequest).promptSources = labels;
     let toolBridge: PluginToolBridge | null = null;
     if (mode !== "tool") {
       toolBridge = pluginToolBridge(plugin, clean, deps);

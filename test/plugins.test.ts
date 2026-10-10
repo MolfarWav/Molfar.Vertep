@@ -428,6 +428,60 @@ export function uiPanel(ctx) {
     expect(seen[0]!.turn).toBeUndefined();
   }, 30_000);
 
+  it("prompt sources ride to the model host-side; hooks never see them, their inserts get labeled", async () => {
+    writePlugin(
+      "asker",
+      { name: "A", version: "1", permissions: ["routes", "llm"], origin: "local" },
+      `export function handleRoute(req, host) {
+        const r = host.llm.results.a;
+        if (r) return { status: 200, json: { text: r.text } };
+        host.llm.request("a", {
+          messages: [{ role: "system", content: "Aria is a bard." }, { role: "user", content: "Hi" }],
+          promptSources: { v: 1, parts: [{ kind: "card", label: "Aria · description", text: "Aria is a bard." }], vars: [{ name: "pov", value: "first" }] },
+        });
+        return { __llmPending: true };
+      }`,
+    );
+    writePlugin(
+      "memo",
+      { name: "Memo", version: "1", permissions: ["hooks", "llm"], origin: "local" },
+      `export function llmRequest(ctx) {
+        const msgs = ctx.request.messages.slice();
+        msgs.splice(1, 0, { role: "system", content: "[Memory] They met at dawn." + (ctx.request.promptSources ? " LEAK" : "") });
+        return {
+          messages: msgs,
+          promptSources: { parts: [{ kind: "memory", label: "Chapter 1", text: "They met at dawn." }] },
+        };
+      }`,
+    );
+    const plugins = discoverPlugins(path.join(dir, "plugins"));
+    const asker = plugins.find((p) => p.id === "asker")!;
+    const base = deps();
+    const seen: Record<string, unknown>[] = [];
+    const fakeModels = {
+      generate: async (req: Record<string, unknown>) => {
+        seen.push(req);
+        return { text: "OK", model: "fake/model", usage: { input: 1, output: 1, cacheRead: 0, cacheWrite: 0, costTotal: 0 } };
+      },
+    };
+    await runPluginRoute(asker, { method: "POST", path: "/go", query: {}, body: {} }, {
+      ...base,
+      models: fakeModels as never,
+      llmHooks: (self) => collectSiblingLlmHooks(plugins, self, base),
+    });
+    const msgs = seen[0]!.messages as { content: string }[];
+    expect(msgs[1]!.content).toBe("[Memory] They met at dawn.");
+    expect(seen[0]!.promptSources).toEqual({
+      parts: [
+        { kind: "card", label: "Aria · description", text: "Aria is a bard." },
+        { kind: "memory", label: "Chapter 1", text: "They met at dawn." },
+        { kind: "plugin", label: "Memo", text: "[Memory]" },
+      ],
+      omitted: [],
+      vars: [{ name: "pov", value: "first" }],
+    });
+  }, 30_000);
+
   it("sanitizeTurn keeps known labels only", () => {
     expect(sanitizeTurn(null)).toBeNull();
     expect(sanitizeTurn([1])).toBeNull();
