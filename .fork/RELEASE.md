@@ -15,14 +15,14 @@ Fork-only. The version line is the fork's own (0.1.0, 0.2.0, ...), independent o
    - Every claim checked against the code or the app's CHANGELOG; nothing that ships later.
    - Written in English (GitHub release pages are English; the user's rule, 2026-10-02).
 6. **Main:** the release is built only from a tag on `main`. Fast-forward main to the release commit: `git push origin HEAD:main` (main must be an ancestor of the branch; merge first if it is not).
-7. **The tag (the user does this, the session proxy cannot push tags):** from a terminal in the engine folder:
+7. **The tag:** the user pushes it, or Claude in a desktop session when the user says to push the release (v0.9.7 was pushed that way; a cloud session's proxy cannot push tags). From a terminal in the engine folder:
    ```
    git fetch origin
    git tag vX.Y.Z origin/main
    git push origin vX.Y.Z
    ```
    Push only the tag. Do NOT create the release in GitHub's "Draft a new release" form: the workflow creates the release itself, and a release that already exists makes it fail.
-8. **The workflow** (`.github/workflows/release.yml`, tags `v*`): checks the tag matches `package.json` and sits on main, builds `Chrysalis-<version>-<target>` archives (names stay upstream's: `self-update.ts` matches `Chrysalis-*`), publishes the release as "Molfar.Vertep X.Y.Z" with the notes file. The Docker image step runs only in the upstream repository. npm publishing runs only when an `NPM_TOKEN` secret exists (the fork has none).
+8. **The workflow** (`.github/workflows/release.yml`, tags `v*`): checks the tag matches `package.json` and sits on main, builds `Molfar-Vertep-<version>-<target>` archives and the Android APK (`self-update.ts` accepts these and the older `Chrysalis-*` names), publishes the release as "Molfar.Vertep X.Y.Z" with the notes file. The Docker image step runs only in the upstream repository. npm publishing runs only when an `NPM_TOKEN` secret exists (the fork has none).
 9. **Verify:** the release page lists the archives; Settings > Server (or the Updates panel) on an older copy offers the new version.
 
 ## One-time setup

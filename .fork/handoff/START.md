@@ -5,7 +5,7 @@ Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
 Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio bag overwrite moved to the card editor (0.9.8), the plurals to the end of 0.9.7.
-3. **Card editor + the user's Persona, likely 0.9.8** (user, 2026-10-10): `.fork/handoff/card-editor/PLAN.md` (first the studio bag overwrite; a card modeled on Lorebary's, keys from the user; the Persona as a real card with a 3-6 question generator; button labels, export
+3. **NEXT: 0.9.8, card editor + the user's Persona** (user, 2026-10-10): `.fork/handoff/card-editor/PLAN.md` (first the studio bag overwrite; a card modeled on Lorebary's, keys from the user; the Persona as a real card with a 3-6 question generator; button labels, export
    icon, export variants that keep emotions and the book, emotion images as full-size files, a pass
    over the extra fields with the user).
 4. **Group chats** do not work for the user (seen 2026-10-10, cause unknown): look into them for 1.0.0.
@@ -14,8 +14,10 @@ Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio ba
 6. **Plugin speed on phones** (from 0.9.7): the sandbox gives every route pass 10 s on every device and a
    phone runs QuickJS several times slower. Left after 0.9.7: Roleplay reads each regex script as its own
    host call (150 files ~0.3 s per pass; a bulk read in the engine would cut it); a longer limit on
-   Android, only together with speed work. Measure first: `.fork/bench/`. Ask the Discord player whose
-   sends timed out for their card or its lorebook size to confirm the 0.9.7 fix.
+   Android, only together with speed work. Measure first: `.fork/bench/`. The Discord player's own cause
+   (2026-10-11) was a Roleplay that had not finished building on their phone; the 0.9.7 speed-ups stand on
+   their own. Worth a look: how a half-built app shows itself (they saw only route timeouts) and whether the
+   shell can say "this app did not finish building" with a rebuild button.
 6a. **HTML blocks and dialogue colors in the chat** (user, 2026-10-10; for later, not 0.9.7): check how
    model-generated HTML blocks reach and render in a Roleplay chat (example: a reply that draws a sheet of
    paper with a note on it: what is sanitized, what styles survive, light/dark, the phone). With it,

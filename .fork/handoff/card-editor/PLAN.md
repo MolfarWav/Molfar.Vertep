@@ -1,7 +1,22 @@
-# Character card editor: plans for later (user, 2026-10-10)
+# Character card editor and the user's Persona: 0.9.8
+
+## Start here (new session, 2026-10-11)
+- Engine: a worktree `claude/v098-card` from main (`bdf8beb`, v0.9.7). Roleplay: `.claude/worktrees/rp-memory`
+  (a clone of the fork), a branch from the fork main `fa15553` (4.32.0). Engine code is only needed if export
+  or images need it (see "emotion images as files" below).
+- Order: 5 (data loss) first, alone, with a test; then ask the user (AskUserQuestion) before designing 6, 7, 8
+  and 4: which Lorebary card keys to take (the user gives them), what the Persona card holds, the
+  questionnaire's 3-6 questions and what it fills in, which export variants matter most (3). Then 1 and 2
+  (small, any time).
+- A card or persona format change updates, in the same change, the Roleplay fork's `docs/DATA-FORMATS.md`,
+  Molfar's `edit-large-card` skill (`.fork/app-skills/roleplay/edit-large-card/SKILL.md`) and a task for the
+  built-in agent for the workspace copies (CLAUDE.md).
+- Tools from 0.9.7 that help: the prompt inspector shows what each card field costs in a real request;
+  `.fork/bench/` times a send in the plugin sandbox (a card's size matters on phones).
+
 
 Roleplay `src/components/views/character-editor.tsx` (header buttons, tabs Core / Dialogue / Advanced /
-Soul / Lorebook / Colors / Sprites / Gallery / Regex / Voice). Not scheduled: the user picks the version.
+Soul / Lorebook / Colors / Sprites / Gallery / Regex / Voice).
 A change to the card format updates `.fork/app-skills/roleplay/edit-large-card/SKILL.md` and
 DATA-FORMATS in the same change (CLAUDE.md).
 

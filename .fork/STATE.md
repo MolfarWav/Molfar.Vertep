@@ -16,6 +16,12 @@ Speed (a Discord player's phone timeouts): lorebook keys by indexOf (1000 entrie
 regex scripts once per pass (400 messages with 150 scripts 3.3 s -> 1.3 s); bench in `.fork/bench/`.
 Plurals: `t()` reads `{n|one|other}` by `Intl.PluralRules`; the i18n placeholder test works again.
 Plan and UI spec were in `.fork/handoff/inspector-sources/` (git history).
+The Discord player's timeouts turned out to be a Roleplay that had not finished building on their phone
+(2026-10-11); the speed work stays (measured, and it removed real 10 s cases). CLOSED.
+
+## Next: 0.9.8, the card editor and the user's Persona
+`.fork/handoff/card-editor/PLAN.md` ("Start here"): the studio bag data loss first, then the user's answers
+(Lorebary card keys, the Persona card, the questionnaire, export variants) before any design.
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
 - Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
