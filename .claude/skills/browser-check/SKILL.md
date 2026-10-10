@@ -47,7 +47,7 @@ Run it with `cd $W && bun t.mjs`.
 - Controlled checkboxes: `.click()` and wait, not `.check()`.
 
 ## 4. Stop
-`.claude/skills/browser-check/stop.sh $W` stops the engine and the mock by PID. Never `pkill -f src/index.ts`: it matches your own shell.
+`.claude/skills/browser-check/stop.sh $W` stops the engine and the mock by PID (on Windows also whatever still listens on their ports, through taskkill). Never `pkill -f src/index.ts`: it matches your own shell.
 
 ## Traps
 - `/v1/models` without `?all=1` lists only shown models; start.sh writes `models-shown.json` so the mock is the only one.

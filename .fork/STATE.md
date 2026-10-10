@@ -29,7 +29,7 @@ The Discord player's timeouts turned out to be a Roleplay that had not finished 
   them on GitHub (auto mode blocks remote branch deletion). `claude/upstream-context-fixes` stays.
 
 ## Open, from 0.9.4-0.9.6
-- `updateCharacter` (Roleplay) rewrites the card's whole studio bag with defaults on the first edit: silent data loss. Goes first in the card editor (0.9.8, `card-editor/PLAN.md` item 5).
+- `updateCharacter` studio bag: checked 2026-10-11, edits go through PATCH since 4.29 and send only what changed (the first edit of an imported card sends only that field). The one hole left, a whole-card PUT dropping studio keys the app does not manage, is fixed on the Roleplay branch `quick-fixes` (`721e353`).
 - Presets: the editor's "Use this preset" also makes the preset default (old `usePreset`); "Make default"
   moves chats that rode the old default (existing store behavior). Open for the user.
 - One first reply on NanoGPT GLM 5.2 thinking carried the preset's planning as plain text (no think tags);
@@ -87,9 +87,8 @@ Tags are pushed by the user; `release.yml` builds the archives, the APK and the 
 - Workspace work (apps, plugins, skills, memory) belongs to the built-in agent; for it write a copy-pasteable prompt (example: `.fork/handoff/v094/workspace-agent-task.md`).
 
 ## Open, known, not fixed
-- Roleplay typecheck fails on one line, `src/components/extensions/plugin-panel.tsx:88` (Base UI Select `v` may be null; workspace code). Fix it only after both machines took 4.19.1, or the first update conflicts.
 - Workspace `data/_debug/` still exists on the desktop.
-- 13 engine tests fail on Windows (shell, 0600 modes, self-update) and on main too.
+- 12 engine tests fail on Windows (shell, 0600 modes, self-update, the source watcher) and on main too.
 - Fixing a syntax error may not hot-apply (`runtime.ts` `apply` re-runs only modules that were live); a guess from reading, untested. The runtime part of the deleted-module fix is not checked in a browser.
 - Not tested on Windows: the profile import's folder swap (fails safe on locked files).
 - The workspace has no backup off the user's disk (no remote).
@@ -103,7 +102,7 @@ Tags are pushed by the user; `release.yml` builds the archives, the APK and the 
 - Browser checks: skill `browser-check` (`.claude/skills/browser-check/`). Real model runs need a mock OpenAI-compatible server (the skill has one).
 - Launcher: edit `Molfar-Vertep.bat` as ASCII with CRLF line endings (`.gitattributes` has `*.bat -text`); `shift` moves `%0`; no paths inside `( )` blocks (a `)` in a folder name ends the block); test with a separate `LOCALAPPDATA` and a pre-made `shortcut-asked` marker, or the test puts a shortcut on the real desktop. The laptop's `D:\ROLEPlay\Chrysalis.bat` is an old external copy (newest `claude/*`); an untracked `start-chrysalis.bat` in the desktop repo root is an old copy too.
 - Known Windows-only test failures (13, 2026-10-02): file mode 0600 (credential relocation x3, home flow), sandbox shell prelude git, app foundation source watcher, S5 session id path separators, installing a release x6 (`tar`). CI on Linux is the reference.
-- `browser-check` `pw.mjs` finds only Linux Chromium and `stop.sh` kills Git Bash PIDs, not the Windows ones: on Windows the subagents drove the local Chrome with `playwright-core` themselves. Worth fixing.
+- `browser-check` on Windows: `pw.mjs` finds the installed Chrome or Edge; `stop.sh` also stops what listens on the engine and mock ports (taskkill), since killing the Git Bash PID can leave bun.exe running (fixed 2026-10-11).
 - Tags are pushed by the user from a terminal (the session proxy cannot push tags); `release.yml` creates the GitHub release itself (title "Molfar.Vertep X.Y.Z", body from `.fork/release-notes/X.Y.Z.md`, Docker image to ghcr.io/molfarwav). Release assets keep upstream's `Chrysalis-*` names (`self-update.ts` matches them).
 - `APP_API_VERSION` (1.0.2, `src/install.ts`): what app `engine` ranges are checked against; raise it only when an upstream merge changes the app contract.
 

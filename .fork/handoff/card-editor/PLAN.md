@@ -4,7 +4,7 @@
 - Engine: a worktree `claude/v098-card` from main (v0.9.7 and the closing notes). Roleplay: `.claude/worktrees/rp-memory`
   (a clone of the fork), a branch from the fork main `fa15553` (4.32.0). Engine code is only needed if export
   or images need it (see "emotion images as files" below).
-- Order: 5 (data loss) first, alone, with a test; then the questions at the end of "Structured card" below
+- Order: 5 is done (see below); start with the questions at the end of "Structured card" below
   (AskUserQuestion) before building 6, 7, 8 and 4; the user already gave Lorebary's fields (screenshots,
   catalog below); what the Persona card holds, the
   questionnaire's 3-6 questions and what it fills in, which export variants matter most (3). Then 1 and 2
@@ -115,7 +115,13 @@ SillyTavern/RisuAI carry readable text, and the prompt inspector shows the compi
   text only. Decide with the user.
 - Card format change: DATA-FORMATS, `edit-large-card`, a built-in agent task (CLAUDE.md rule).
 
-### Questions for the user before building
+### Decided by the user (2026-10-11)
+- Compile the profile into `description`/`personality` on save (the recommended way): yes.
+- No Lorebary spectrum: the Soul tab already has the spectra we took from Lorebary; drop `spectrum` from the
+  profile and the "Links to what exists / Soul" item.
+- Sexuality: an optional block, switched on per card.
+
+### Questions for the user before building (1, 4, 5 answered above)
 1. Compile into `description`/`personality` (recommended) or assemble the profile at prompt time?
 2. The first field set above: confirm, add, cut.
 3. Pickers and swatches now or later (recommended later)?
@@ -131,7 +137,7 @@ A change to the card format updates `.fork/app-skills/roleplay/edit-large-card/S
 DATA-FORMATS in the same change (CLAUDE.md).
 
 ## From the user's screenshot (2026-10-10)
-1. Header buttons need labels: every icon button (favourite star, translate, version history, copy
+1. DONE (`721e353`, not browser-checked yet: check it with the 0.9.8 UI round). Header buttons need labels: every icon button (favourite star, translate, version history, copy
    card id, export) gets a visible label or at least a tooltip saying what it does.
 2. The export button shows a download arrow pointing the wrong way for "export": use an export icon.
 3. Export loses the emotions: a card with emotion sprites exports as a plain PNG. Offer several
@@ -159,8 +165,9 @@ those images to the app like the image proxy, Roleplay stores expressions as fil
 export embeds them back. A card format change: update `edit-large-card` and DATA-FORMATS with it.
 
 ## Added 2026-10-10 (user): likely 0.9.8, with the persona
-5. Data loss first: `updateCharacter` (Roleplay) rewrites the card's whole studio bag with defaults on
-   the first edit. Fix and test it before anything else in this version.
+5. DONE 2026-10-11: edits already sent only changed fields (PATCH since 4.29); the whole-card PUT now keeps
+   studio keys the app does not manage (Roleplay `quick-fixes` `721e353`, tested). Items 1 and 2 (tooltips,
+   labels, the export icon) are in the same commit.
 6. A structured card modeled on Lorebary's: see "Structured card" above (draft, questions open).
 7. The user's Persona gets a real card too (today it is one field): update its format and editor.
 8. In the Persona tab: generate the user's persona card from a short questionnaire (3-6 questions).
