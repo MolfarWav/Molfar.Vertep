@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 0.9.7: RELEASED to main 2026-10-11 (Roleplay 4.32.0 on the fork main); the tag v0.9.7 is the user's
+## 0.9.7: RELEASED 2026-10-11 (tag v0.9.7 pushed on the user's word, release built with 6 assets; Roleplay 4.32.0 on the fork main `fa15553`)
 The prompt inspector with sources: apps send a host-only `promptSources` (`src/prompt-sources.ts`: sanitize,
 hook diff, locate), hook inserts are labeled for any app, Molfar's own prompt by section (byte-identical text),
 a sources table + marks + "Left out" + choices on Molfar's page and in Roleplay's Prompt peek. Roleplay labels
