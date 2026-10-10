@@ -106,7 +106,7 @@ The user brings a Hermes write-up; plan it together then. A lorebook format chan
   stay ~512-640 px); what does not fit is named in a note.
 - Expressions follow Ukrainian and Russian replies (`6194bba`).
 
-## After 0.9.3 (user, 2026-10-09): emotion images as files, full size
+## Later, on the user's word (deferred 2026-10-10: the downscaled size is good enough for now): emotion images as files, full size
 Plugins cannot write binary files and the app serves only its dist/, so expressions live as data URLs
 inside card.json (4 MB sandbox write cap) and must be downscaled. Plan: engine `fs.writeBytes` for
 plugins (images only by magic bytes, inside the app data dir, size cap), an engine route that serves
