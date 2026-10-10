@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.6 (2026-10-10)
+
+- Roleplay 4.31.0 through app updates: presets offer options you pick for each chat (one or several, with the tokens each adds) and switches for whole blocks, in a Preset panel in the chat and a short step when a chat starts, remembered per character; switching the preset in a chat changes only that chat, with a muted line saying what changed; Marinara presets import with their options; FRANKENX 1.6 ships as a ready preset, adapted to the app.
+- A Discord link beside GitHub at the bottom of the apps page.
+
 ## 0.9.5 (2026-10-10)
 
 - Roleplay 4.30.0 through app updates: the chat header's model tab shows the temperature, max output, reasoning and thinking budget a reply is sent with, each marked as the model's, the preset's or the provider's default; a chat that continues a chain of earlier chats gets their stories as backstory (up to three back, one budget); the preset's context size and max output show the model's numbers when the model sets them; the app starts in the shell's language; the embeddings and backup settings point to the shell's Settings.

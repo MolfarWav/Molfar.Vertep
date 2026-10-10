@@ -64,7 +64,7 @@ fork main 4.29.0.
 ## 0.9.6 (started 2026-10-10): presets with choices per chat, Marinara import, FRANKENX built in
 Plan, the user's decisions, data formats: `.fork/handoff/chat-presets/PLAN.md`; UI spec `UI-SPEC.md`.
 Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `claude/v095`); Roleplay clone
-`.claude/worktrees/rp-memory`, branch `presets` (from `v095`, so on top of the prepared 4.30.0). No engine code.
+`.claude/worktrees/rp-memory`, branch `presets` (from `v095`, on top of 4.30.0).
 - BUILT (Roleplay): picks per chat (`meta.presetVars`), `{{name}}` / `{{var:name}}` / `{{#if}}`, section
   conditions `name` / `!name`, `POST /chats/:id/preset` with notes (`meta.presetNotes`), per-character memory
   (`meta.presetAt`, `GET /preset-memory/:charId`), option costs (`POST /preset-costs/:id`), Marinara importer,
@@ -86,7 +86,11 @@ Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `cl
   both sides (store, types, i18n, quick bar, settings view): new components with the old store, nothing worked.
   Re-copied, verified all 23 against `presets`, the app rebuilt (hot update). Lesson: after copying into a
   workspace, check the app's manifest `source.head` and re-verify the files after the first engine start.
-- LEFT: the user's live test (again); release.
+- Live test passed (user, 2026-10-10); the quick bar's Choices/Edit became real buttons (contrast measured AA
+  on both themes, `e598981`).
+- Engine: a Discord link beside GitHub in the apps page footer (`651af31`, the user's invite), the one engine change.
+- RELEASE (user's word "можна випускати разом з пресетом"): Roleplay 4.31.0 on the fork's main (`4cb3a8d`);
+  engine 0.9.6 (package.json, CHANGELOG, `.fork/release-notes/0.9.6.md`), main merged in. Left: the tag v0.9.6 (the user).
 ## Next
 - 0.9.5 above.
 - Plans for later, the user picks the version: the card editor (`.fork/handoff/card-editor/PLAN.md`,
