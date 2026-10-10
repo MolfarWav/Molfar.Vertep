@@ -32,3 +32,11 @@ plugins (images only by magic bytes, inside the app data dir, size cap), an engi
 those images to the app like the image proxy, Roleplay stores expressions as files
 (`characters/<id>/expressions/*.webp`) with a reference in card.json, old inline ones keep working, PNG/charx
 export embeds them back. A card format change: update `edit-large-card` and DATA-FORMATS with it.
+
+## Added 2026-10-10 (user): likely 0.9.8, with the persona
+5. Data loss first: `updateCharacter` (Roleplay) rewrites the card's whole studio bag with defaults on
+   the first edit. Fix and test it before anything else in this version.
+6. A new card layout modeled on Lorebary's character card: adapt it as the prototype for ours. Ask the
+   user which keys (fields) to take before designing.
+7. The user's Persona gets a real card too (today it is one field): update its format and editor.
+8. In the Persona tab: generate the user's persona card from a short questionnaire (3-6 questions).

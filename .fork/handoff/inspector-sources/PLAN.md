@@ -89,3 +89,5 @@ per-tool tokens.
    browser-checked by a Sonnet subagent (dark, light, 390).
 5. Docs: `builtin-skills/app-authoring` (the contract), Roleplay `docs/DATA-FORMATS.md` if it lists
    request fields; release notes; live test by the user; release 0.9.7 + Roleplay 4.32.0 on the user's word.
+6. Last before the release (user, 2026-10-10): the lorebook UI's plurals, "1 entries" / "1 global books"
+   (Roleplay). Remind the user before pushing that this should be fixed in this patch.

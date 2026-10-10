@@ -22,8 +22,8 @@ Plan: `.fork/handoff/inspector-sources/PLAN.md`; UI spec `UI-SPEC.md`.
   them on GitHub (auto mode blocks remote branch deletion). `claude/upstream-context-fixes` stays.
 
 ## Open, from 0.9.4-0.9.6
-- `updateCharacter` (Roleplay) rewrites the card's whole studio bag with defaults on the first edit: silent data loss.
-- "1 entries" / "1 global books" plurals in the lorebook UI.
+- `updateCharacter` (Roleplay) rewrites the card's whole studio bag with defaults on the first edit: silent data loss. Goes first in the card editor (0.9.8, `card-editor/PLAN.md` item 5).
+- "1 entries" / "1 global books" plurals in the lorebook UI: the last step of 0.9.7 (remind the user before the push).
 - Presets: the editor's "Use this preset" also makes the preset default (old `usePreset`); "Make default"
   moves chats that rode the old default (existing store behavior). Open for the user.
 - One first reply on NanoGPT GLM 5.2 thinking carried the preset's planning as plain text (no think tags);
