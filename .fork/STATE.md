@@ -7,7 +7,14 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 
 ## 0.9.7 (started 2026-10-10): the prompt inspector with sources
 Engine branch `claude/v097-inspector` (worktree `.claude/worktrees/v097`, from main `95ec2a1` = v0.9.6); Roleplay
-clone `.claude/worktrees/rp-memory` on the fork main `4cb3a8d` (4.31.0). Plan: `.fork/handoff/inspector-sources/PLAN.md`.
+clone `.claude/worktrees/rp-memory`, branch `inspector-sources` from the fork main `4cb3a8d` (4.31.0).
+Plan: `.fork/handoff/inspector-sources/PLAN.md`; UI spec `UI-SPEC.md`.
+- 1 BUILT `8784088`: `src/prompt-sources.ts` (sanitize, hook diff, locate), runtime strips `promptSources` and
+  labels hook inserts for any app, inspector keeps `sources` (labels + ranges). Fixed on the way: the leading
+  system messages were listed twice in an inspector entry.
+- 2 BUILT `e3a75bf`: Molfar's system prompt from labeled sections (byte-identical, checked on full, compact,
+  plan), parts looked up by the prompt text (`rememberSystemParts`), history by role, per-tool sizes.
+- 3 (Roleplay labels) and 4 (UI, agent page) drafted by an external code model, in review.
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
 - Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
