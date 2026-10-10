@@ -63,6 +63,20 @@ fork main 4.29.0.
   user (all were still 4.29.0 there; root manifest untouched). They need the engine from `claude/v095`.
 - 2 (live NanoGPT run) at the end with the user; 3 (Android provider list) needs the phone's error text; 6 left.
 
+## 0.9.6 (started 2026-10-10): presets with choices per chat, Marinara import, FRANKENX built in
+Plan, the user's decisions, data formats: `.fork/handoff/chat-presets/PLAN.md`; UI spec `UI-SPEC.md`.
+Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `claude/v095`); Roleplay clone
+`.claude/worktrees/rp-memory`, branch `presets` (from `v095`, so on top of the prepared 4.30.0). No engine code.
+- BUILT (Roleplay): picks per chat (`meta.presetVars`), `{{name}}` / `{{var:name}}` / `{{#if}}`, section
+  conditions `name` / `!name`, `POST /chats/:id/preset` with notes (`meta.presetNotes`), per-character memory
+  (`meta.presetAt`, `GET /preset-memory/:charId`), option costs (`POST /preset-costs/:id`), Marinara importer,
+  `choice` and toggle variables, FRANKENX 1.6 adapted and shipped read-only (`data/presets/frankenx.json` +
+  update template `_frankenx.json`; built by `.fork/presets/frankenx/adapt.ts` from the user's export on G:),
+  DATA-FORMATS.md, preset-craft skill. 865 tests.
+- IN PROGRESS: UI (chat Preset panel, new-chat step, notes in the chat, choice editor) by a Sonnet subagent,
+  then the orchestrator's review and the browser check screenshots.
+- LEFT: the user's live test; release as engine 0.9.6? (no engine code: maybe Roleplay 4.31.0 only).
+
 ## Next
 - 0.9.5 above.
 - Plans for later, the user picks the version: the card editor (`.fork/handoff/card-editor/PLAN.md`,
