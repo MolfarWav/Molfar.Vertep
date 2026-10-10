@@ -1,7 +1,7 @@
 # Character card editor and the user's Persona: 0.9.8
 
 ## Start here (new session, 2026-10-11)
-- Engine: a worktree `claude/v098-card` from main (`bdf8beb`, v0.9.7). Roleplay: `.claude/worktrees/rp-memory`
+- Engine: a worktree `claude/v098-card` from main (v0.9.7 and the closing notes). Roleplay: `.claude/worktrees/rp-memory`
   (a clone of the fork), a branch from the fork main `fa15553` (4.32.0). Engine code is only needed if export
   or images need it (see "emotion images as files" below).
 - Order: 5 (data loss) first, alone, with a test; then ask the user (AskUserQuestion) before designing 6, 7, 8
