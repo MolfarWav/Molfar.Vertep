@@ -44,7 +44,15 @@ Exports the engine calls:
 - `appTools(host)` → `{ tools }`: model tools for sibling generations that request them (permission `tools`).
 - `llmRequest(ctx, host)` → a patch over a sibling plugin's model request
   (`ctx.request` is a JSON snapshot; permissions `hooks` + `llm`). Manifest
-  `priority`: lower runs first, higher wins conflicts.
+  `priority`: lower runs first, higher wins conflicts. The engine labels what a hook
+  adds with the plugin's name in the prompt inspector; return
+  `promptSources: { parts: [{ kind, label, text }] }` beside the patch for finer labels.
+
+Prompt inspector labels: a `genReq` may carry `promptSources: { v: 1, parts: [{ kind, label,
+detail?, text }], omitted: [{ kind, label, reason, tokens? }], vars: [{ name, value }] }`, where each
+`text` is exactly as it appears in the request (the engine finds it there). Host-only: it never
+reaches the model, hooks never see it, older engines ignore it. Kinds: card, persona, preset,
+lorebook, example, databank, note, history, group, memory, dashboard, utility, prefill, plugin, other.
 
 Model and network calls are two-phase and stateless: on pass A call
 `host.llm.request(key, genReq)` and return `{ __llmPending: true }`, writing
