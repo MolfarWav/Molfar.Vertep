@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
+  <title>Кодекс · Бібліотека · Vertep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kurale&family=Noto+Serif:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c11;
+      --deeper: #07080b;
+      --panel: #0e1016;
+      --raised: #12141c;
+      --text: #f0e9dc;
+      --muted: #a9b1c4;
+      --faint: #6f7689;
+      --line: #2a2f3d;
+      --accent: #e2213a;
+      --cta: #39d5ff;
+      --cta-text: #07080b;
+      --success: #7fd18b;
+      --warning: #e3b341;
+      --danger: #f2777a;
+      --badge-stale: #5e4a3b;
+      --badge-long: #3b4a5e;
+      --badge-edited: #5e5f3b;
+      --type-event: #7c6fae;
+      --type-omen: #b4865b;
+      --type-lasting: #5b9c7a;
+      --type-relation: #c36a7c;
+      --type-world: #4c7c9c;
+      --type-plan: #b2a05a;
+    }
+
+    body.light {
+      --bg: #f6f1e7;
+      --deeper: #ebe4d6;
+      --panel: #fffaf0;
+      --raised: #fcf6ea;
+      --text: #1d1a16;
+      --muted: #5d5648;
+      --faint: #8d8472;
+      --line: #ddd3c2;
+      --accent: #e2213a;
+      --cta: #39d5ff;
+      --cta-text: #07080b;
+      --success: #388e4b;
+      --warning: #b88a1d;
+      --danger: #c43d40;
+      --badge-stale: #b29e82;
+      --badge-long: #9bb4c4;
+      --badge-edited: #b4b296;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Serif', Georgia, serif;
+      font-size: 15px;
+      line-height: 1.5;
+      transition: background 0.25s, color 0.25s;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      max-width: 1400px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ornament divider */
+    .divider-ornament {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--faint);
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      margin: 8px 0 4px;
+    }
+    .divider-ornament::before,
+    .divider-ornament::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line), transparent);
+    }
+    .divider-ornament .ornament {
+      font-family: 'Kurale', serif;
+      font-size: 1.2rem;
+      color: var(--accent);
+      background: var(--raised);
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    /* top bar */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 10px 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .brand {
+      font-family: 'Kurale', serif;
+      font-size: 1.6rem;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-right: 8px;
+      cursor: default;
+    }
+    .chat-picker {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .chat-picker select {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-family: system-ui, sans-serif;
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+      padding-right: 6px;
+    }
+    .chat-picker .arrow {
+      color: var(--faint);
+      font-size: 0.7rem;
+    }
+    .toggle-btn {
+      margin-left: auto;
+      background: var(--raised);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: 6px 14px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .toggle-btn:hover { border-color: var(--cta); color: var(--cta); }
+
+    /* layout */
+    .main-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .chapters-strip {
+      width: 100%;
+      overflow-x: auto;
+      display: flex;
+      gap: 12px;
+      padding: 6px 2px 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--line) transparent;
+    }
+    .chapter-card {
+      flex: 0 0 240px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      transition: 0.2s;
+      position: relative;
+    }
+    .chapter-card:hover { border-color: var(--faint); }
+    .chapter-label {
+      font-family: 'Kurale', serif;
+      font-size: 1.2rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .chapter-range {
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      color: var(--faint);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .chapter-text {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .chapter-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .badge {
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--raised);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    .badge-stale { color: #d4b28c; border-color: var(--badge-stale); }
+    .badge-long { color: #a3c2d9; border-color: var(--badge-long); }
+    .badge-edited { color: #d9d2a0; border-color: var(--badge-edited); }
+
+    .main-content {
+      display: flex;
+      flex: 1;
+      gap: 16px;
+    }
+    .codex-grid {
+      flex: 2.2;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    .proposals-column {
+      flex: 0.8;
+      min-width: 240px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+      height: fit-content;
+    }
+
+    /* character card */
+    .char-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 16px;
+      transition: 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .char-card:hover { border-color: var(--faint); }
+    .arch-portrait {
+      width: 70px;
+      height: 70px;
+      border-radius: 50% 50% 45% 45% / 60% 60% 25% 25%;
+      background: linear-gradient(145deg, var(--raised), #1e1a2a);
+      border: 2px solid var(--accent);
+      margin-bottom: 4px;
+      align-self: center;
+      box-shadow: 0 0 12px rgba(226,33,58,0.3);
+    }
+    .char-name {
+      font-family: 'Kurale', serif;
+      font-size: 1.5rem;
+      text-align: center;
+      color: var(--text);
+    }
+    .char-subtitle {
+      font-size: 0.7rem;
+      text-align: center;
+      color: var(--faint);
+      font-family: system-ui, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .char-section {
+      margin-top: 6px;
+    }
+    .char-section h4 {
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--faint);
+      margin-bottom: 5px;
+    }
+    .char-facts-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .char-facts-list li {
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-left: 2px solid var(--cta);
+      padding-left: 8px;
+      line-height: 1.3;
+    }
+    .char-facts-list li.key {
+      border-left-color: var(--accent);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .char-knows {
+      font-size: 0.75rem;
+      color: var(--faint);
+      background: var(--raised);
+      border-radius: 12px;
+      padding: 8px;
+    }
+
+    /* world card */
+    .world-card {
+      background: linear-gradient(145deg, var(--raised), var(--panel));
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 16px;
+      grid-column: span 2;
+    }
+
+    /* actions row inside fact/chapter */
+    .fact-actions, .chapter-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      opacity: 0.55;
+      transition: opacity 0.2s;
+    }
+    .fact-row:hover .fact-actions, .chapter-card:hover .chapter-actions {
+      opacity: 1;
+    }
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      padding: 2px 7px;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
+    .icon-btn:hover { border-color: var(--cta); color: var(--cta); }
+    .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+    .icon-btn.accent:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* fact row */
+    .fact-row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      background: var(--raised);
+      border: 1px solid var(--line);
+      margin-bottom: 6px;
+    }
+    .fact-text {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.35;
+    }
+    .fact-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.65rem;
+      color: var(--faint);
+    }
+    .meta-label { background: var(--panel); padding: 1px 6px; border-radius: 10px; }
+    .fact-state {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .state-pinned { color: var(--accent); }
+    .state-proposed { color: var(--warning); }
+    .state-active { color: var(--success); }
+    .state-removed { color: var(--danger); }
+    .state-replaced { color: var(--faint); text-decoration: line-through; }
+
+    /* proposals */
+    .proposal-item {
+      background: var(--raised);
+      border-left: 3px solid var(--warning);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .proposal-type {
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      color: var(--warning);
+      text-transform: uppercase;
+    }
+    .proposal-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 6px 0 10px;
+    }
+    .proposal-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .accept-btn {
+      background: transparent;
+      border: 1px solid var(--success);
+      color: var(--success);
+      border-radius: 16px;
+      padding: 4px 12px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+    .reject-btn {
+      background: transparent;
+      border: 1px solid var(--danger);
+      color: var(--danger);
+      border-radius: 16px;
+      padding: 4px 12px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      cursor: pointer;
+    }
+
+    /* worker line */
+    .worker-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      font-family: system-ui, sans-serif;
+      font-size: 0.75rem;
+      color: var(--muted);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 40px;
+      padding: 8px 18px;
+    }
+    .worker-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      display: inline-block;
+    }
+    .worker-error {
+      color: var(--danger);
+      font-weight: 500;
+    }
+
+    /* bridge button */
+    .bridge-btn {
+      background: var(--raised);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .bridge-list {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .bridge-list.show { display: flex; }
+
+    /* drawer */
+    .drawer {
+      width: 360px;
+      background: var(--deeper);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      margin-top: 8px;
+    }
+    .drawer-title {
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--faint);
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    /* modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(2px);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--raised);
+      border: 1px solid var(--accent);
+      border-radius: 24px;
+      padding: 24px;
+      max-width: 420px;
+      width: 90%;
+      color: var(--text);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .modal h3 {
+      font-family: 'Kurale', serif;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .modal p { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
+    .pinned-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .pinned-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text);
+    }
+    .modal-btns {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .modal-cancel {
+      background: transparent;
+      border: 1px solid var(--faint);
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+    .modal-replace {
+      background: var(--accent);
+      border: none;
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    @media (max-width: 420px) {
+      body { padding: 8px; }
+      .main-content { flex-direction: column; }
+      .proposals-column { min-width: auto; }
+      .world-card { grid-column: span 1; }
+      .drawer { width: 100%; }
+      .chapter-card { flex: 0 0 190px; }
+      .fact-actions, .chapter-actions { opacity: 1; }
+    }
+  </style>
+</head>
+<body class="dark">
+  <div class="app">
+    <!-- top bar -->
+    <div class="top-bar">
+      <span class="brand">Кодекс</span>
+      <div class="chat-picker">
+        <span>Чат:</span>
+        <select id="chatSelect">
+          <option value="lantern">Lantern Crossroads</option>
+          <option value="ember">Ember’s road</option>
+          <option value="bram">Bram’s hollow</option>
+          <option value="ember2">Ember: side chat</option>
+        </select>
+        <span class="arrow">▼</span>
+      </div>
+      <button class="toggle-btn" id="themeToggle">🌙 Тема</button>
+    </div>
+
+    <!-- worker status -->
+    <div class="worker-line">
+      <span><span class="worker-dot"></span> Останній запуск 2 хв тому</span>
+      <span>сцена повід. 32-48 · гаразд</span>
+      <span class="worker-error" id="rateLimitMsg">Ember’s road: 429 rate limit</span>
+      <button class="bridge-btn" id="bridgeBtn">Міст між чатами</button>
+      <div class="bridge-list" id="bridgeList">
+        <span>Crossroads → Ember’s road: 4 факти, 1 розділ</span>
+        <span>Crossroads → Bram’s hollow: 2 факти</span>
+      </div>
+    </div>
+
+    <!-- chapters strip -->
+    <div class="chapters-strip" id="chaptersStrip">
+      <!-- filled by js -->
+    </div>
+
+    <div class="main-content">
+      <!-- codex grid -->
+      <div class="codex-grid" id="codexGrid">
+        <!-- filled by js -->
+      </div>
+      <!-- proposals side column -->
+      <div class="proposals-column" id="proposalsColumn">
+        <div class="divider-ornament"><span class="ornament">❖</span> Пропозиції <span class="ornament">❖</span></div>
+        <!-- filled by js -->
+      </div>
+    </div>
+
+    <!-- drawer -->
+    <div class="drawer" id="chatDrawer">
+      <div class="drawer-title">Панель у чаті · Lantern Crossroads</div>
+      <div id="drawerContent" style="font-size:0.8rem;"></div>
+    </div>
+  </div>
+
+  <!-- modal for pin limit -->
+  <div class="modal-overlay" id="pinModal">
+    <div class="modal">
+      <h3>Ліміт закріплених</h3>
+      <p>Закріплено 5 з 5 для Mira. Відкріпіть одну, щоб закріпити цю. Відкріплена нотатка лишається в Бібліотеці й повернеться, коли сцена її торкнеться.</p>
+      <div class="pinned-list" id="pinnedList"></div>
+      <div class="modal-btns">
+        <button class="modal-cancel" id="modalCancel">Скасувати</button>
+        <button class="modal-replace" id="modalReplace">Замінити</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ----- data -----
+      const chaptersData = [
+        { label: "The First Oath", range: "повід. 12-31", text: "Mira and Ember met under the burnt arch. Bram refused the lantern path. A small crow watched them from the well.", badges: ["Застаріло"], actions: ["Редагувати","Закріпити","Зняти","Видалити"] },
+        { label: "Ember’s Road", range: "повід. 32-48", text: "Ember shifted the road signs. Mira learned the toll of three names. Bram hid a key in his sleeve.", badges: ["Частина довгої сцени"], actions: ["Редагувати","Відкріпити","Зняти","Видалити"] },
+        { label: "Lantern Debt", range: "повід. 49-61", text: "The lantern keeper spoke: ‘Every flame returns.’ Mira lost an hour of memory. Ember collected two silver threads.", badges: ["Відредаговано"], actions: ["Редагувати","Закріпити","Зняти","Видалити"] },
+        { label: "Bram’s Confession", range: "повід. 62-74", text: "Bram named the crossroads as his birthplace. A cold wind carried the smell of old linens.", badges: [], actions: ["Редагувати","Закріпити","Зняти","Видалити"] }
+      ];
+
+      const factsData = [
+        { id: 'f1', text: "Mira can hear the lantern’s hum before dawn.", about: "Mira", knows: "Усі", type: "прикмета", weight: "побутове", state: "закріплено" },
+        { id: 'f2', text: "Ember’s left hand is made of cold ash since the ritual.", about: "Ember", knows: "Mira, Bram", type: "постійна зміна", weight: "ключове", state: "закріплено" },
+        { id: 'f3', text: "Bram keeps a brass key under his tongue.", about: "Bram", knows: "Усі", type: "подія", weight: "побутове", state: "пропонується закріпити" },
+        { id: 'f4', text: "The crossroads moves ten paces north every full moon.", about: "Світ", knows: "Mira", type: "світ", weight: "важливе", state: "чинний" },
+        { id: 'f5', text: "Ember owes Mira a silver thread, still uncounted.", about: "Ember, Mira", knows: "Bram", type: "стосунки", weight: "важливе", state: "чинний" },
+        { id: 'f6', text: "Bram plans to open the old well after rain.", about: "Bram", knows: "Mira", type: "план", weight: "побутове", state: "знятий" },
+        { id: 'f7', text: "The lantern keeper can be summoned by burning rosemary.", about: "Світ", knows: "Усі", type: "світ", weight: "ключове", state: "закріплено" },
+        { id: 'f8', text: "Mira’s shadow sometimes points toward Ember’s road.", about: "Mira", knows: "Ember", type: "прикмета", weight: "важливе", state: "замінений" },
+        { id: 'f9', text: "Ember betrayed no one at the last crossing.", about: "Ember", knows: "Bram", type: "подія", weight: "побутове", state: "чинний" },
+        { id: 'f10', text: "Bram’s coat is lined with pages from a burned hymn book.", about: "Bram", knows: "Усі", type: "постійна зміна", weight: "важливе", state: "закріплено" },
+        { id: 'f11', text: "The road signs whisper names of those who will return.", about: "Світ", knows: "Mira, Bram", type: "прикмета", weight: "побутове", state: "чинний" },
+        { id: 'f12', text: "Mira intends to trade her memory of the oath for a way north.", about: "Mira", knows: "Ember", type: "план", weight: "ключове", state: "пропонується закріпити" }
+      ];
+
+      const proposalsData = [
+        { type: "Злити два факти", desc: "Злити ф1 (lantern hum) та ф7 (rosemary summon) у один світовий факт.", actions: true },
+        { type: "Зняти факт", desc: "Зняти ф6 (Bram plans to open the well) як застарілий.", actions: true },
+        { type: "Переписати факт", desc: "Переписати ф8 (Mira’s shadow) — зараз стосується Ember’s road.", actions: true },
+        { type: "Закріпити ключовий факт", desc: "Закріпити ф12 (Mira intends to trade) як ключове.", actions: true }
+      ];
+
+      const characterCards = [
+        { name: "Mira", portrait: true, subtitle: "charlatan & listener", pinned: ["Mira can hear the lantern’s hum before dawn.", "Mira’s shadow sometimes points to Ember’s road."], traits: ["стійка", "хитра", "збирає нитки"], lasting: ["Mira lost an hour of memory at the lantern."], knows: "знає про інших: Ember — оголена амбіція; Bram — тримає ключ під язиком." },
+        { name: "Ember", portrait: true, subtitle: "ash-bound cartographer", pinned: ["Ember’s left hand is made of cold ash since the ritual.", "Ember owes Mira a silver thread."], traits: ["тиха", "вперта", "малює карти доріг"], lasting: ["Ember’s road signs move on their own."], knows: "знає про інших: Mira — боїться світанку; Bram — народився на перехресті." },
+        { name: "Bram", portrait: true, subtitle: "key-eater, well-singer", pinned: ["Bram keeps a brass key under his tongue.", "Bram’s coat is lined with hymn pages."], traits: ["обережний", "спостережливий", "має старовинний сміх"], lasting: ["Bram confessed the crossroads as his birthplace."], knows: "знає про інших: Ember — зрадниця, що не зрадила; Mira — чує гул ліхтаря." },
+        { name: "Світ", portrait: false, subtitle: "Lantern Crossroads", pinned: ["The crossroads moves ten paces north every full moon.", "The lantern keeper can be summoned by burning rosemary."], traits: ["перехрестя змінюється", "старий колодязь"], lasting: ["Кожен вогонь повертається."], knows: "знає про інших: усі троє лишили слід." }
+      ];
+
+      const chatPickerOptions = [
+        { chat: 'lantern', label: "Lantern Crossroads", error: false },
+        { chat: 'ember', label: "Ember’s road", error: true },
+        { chat: 'bram', label: "Bram’s hollow", error: false },
+        { chat: 'ember2', label: "Ember: side chat", error: false }
+      ];
+
+      // ----- render helpers -----
+      function actionButtons(actions, factId) {
+        return `<div class="fact-actions">${actions.map(a => {
+          const cls = a === 'Видалити' ? 'danger' : (a === 'Закріпити' ? 'accent' : '');
+          return `<button class="icon-btn ${cls}" data-action="${a}" data-factid="${factId || ''}">${a}</button>`;
+        }).join('')}</div>`;
+      }
+
+      function renderChapters() {
+        const strip = document.getElementById('chaptersStrip');
+        strip.innerHTML = chaptersData.map(ch => `
+          <div class="chapter-card">
+            <div class="chapter-label">${ch.label}</div>
+            <div class="chapter-range">${ch.range}</div>
+            <div class="chapter-text">${ch.text}</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px;">${ch.badges.map(b => {
+              let cls = '';
+              if (b === 'Застаріло') cls = 'badge-stale';
+              if (b === 'Частина довгої сцени') cls = 'badge-long';
+              if (b === 'Відредаговано') cls = 'badge-edited';
+              return `<span class="badge ${cls}">${b}</span>`;
+            }).join('')}</div>
+            ${actionButtons(ch.actions, 'chapter')}
+          </div>`).join('');
+      }
+
+      function renderCodexGrid() {
+        const grid = document.getElementById('codexGrid');
+        grid.innerHTML = characterCards.map(c => `
+          <div class="char-card ${c.name === 'Світ' ? 'world-card' : ''}">
+            ${c.portrait ? `<div class="arch-portrait"></div>` : ''}
+            <div class="char-name">${c.name}</div>
+            <div class="char-subtitle">${c.subtitle}</div>
+            <div class="char-section">
+              <h4>Закріплені факти</h4>
+              <ul class="char-facts-list">
+                ${c.pinned.map((p, i) => `<li class="${i===0 && c.name!=='Світ' ? 'key' : ''}">${p}</li>`).join('')}
+              </ul>
+            </div>
+            <div class="char-section">
+              <h4>Риси</h4>
+              <div style="display:flex; flex-wrap:wrap; gap:6px;">${c.traits.map(t => `<span class="badge">${t}</span>`).join('')}</div>
+            </div>
+            <div class="char-section">
+              <h4>Постійні зміни</h4>
+              <div style="font-size:0.8rem; color:var(--muted);">${c.lasting}</div>
+            </div>
+            <div class="char-knows">${c.knows}</div>
+          </div>`).join('');
+      }
+
+      function renderProposals() {
+        const col = document.getElementById('proposalsColumn');
+        const html = proposalsData.map((p, idx) => `
+          <div class="proposal-item">
+            <div class="proposal-type">${p.type}</div>
+            <div class="proposal-desc">${p.desc}</div>
+            <div class="proposal-actions">
+              <button class="accept-btn">Прийняти</button>
+              <button class="reject-btn">Відхилити</button>
+            </div>
+          </div>`).join('');
+        col.innerHTML = `<div class="divider-ornament"><span class="ornament">❖</span> Пропозиції <span class="ornament">❖</span></div>` + html;
+      }
+
+      function renderDrawer() {
+        const drawer = document.getElementById('drawerContent');
+        const chatLabel = document.querySelector('#chatSelect').selectedOptions[0]?.textContent || 'Lantern Crossroads';
+        const factsForChat = factsData.slice(0, 6).map(f => `<div style="margin-bottom:6px;"><span>${f.text}</span> <span class="fact-state state-${f.state}">${f.state}</span></div>`).join('');
+        drawer.innerHTML = `<div style="margin-bottom:12px;"><strong>${chatLabel}</strong> · факти, відомості</div>${factsForChat}`;
+      }
+
+      function renderPinnedModalList() {
+        const pinnedFacts = factsData.filter(f => f.state === 'закріплено' || f.state === 'пропонується закріпити').slice(0,5);
+        const list = document.getElementById('pinnedList');
+        list.innerHTML = pinnedFacts.map((f, idx) => `
+          <label class="pinned-option">
+            <input type="radio" name="pinnedChoice" value="${f.id}" ${idx===0 ? 'checked' : ''}> ${f.text}
+          </label>`).join('');
+      }
+
+      // event delegation for icon buttons (mock)
+      document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.icon-btn');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        if (action === 'Закріпити') {
+          e.preventDefault();
+          renderPinnedModalList();
+          document.getElementById('pinModal').classList.add('show');
+        } else {
+          alert(`Дія: ${action} (демо)`);
+        }
+      });
+
+      // modal actions
+      document.getElementById('modalCancel').addEventListener('click', () => {
+        document.getElementById('pinModal').classList.remove('show');
+      });
+      document.getElementById('modalReplace').addEventListener('click', () => {
+        alert('Замінено (демо)');
+        document.getElementById('pinModal').classList.remove('show');
+      });
+
+      // bridge toggle
+      document.getElementById('bridgeBtn').addEventListener('click', () => {
+        document.getElementById('bridgeList').classList.toggle('show');
+      });
+
+      // theme toggle
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        document.body.classList.toggle('light');
+        document.getElementById('themeToggle').textContent = document.body.classList.contains('light') ? '☀️ Тема' : '🌙 Тема';
+      });
+
+      // chat select update
+      document.getElementById('chatSelect').addEventListener('change', () => {
+        const val = document.getElementById('chatSelect').value;
+        const option = chatPickerOptions.find(o => o.chat === val);
+        const errorSpan = document.getElementById('rateLimitMsg');
+        if (option?.error) {
+          errorSpan.textContent = 'Ember’s road: 429 rate limit';
+        } else {
+          errorSpan.textContent = '';
+        }
+        renderDrawer();
+      });
+
+      // initial render
+      renderChapters();
+      renderCodexGrid();
+      renderProposals();
+      renderDrawer();
+      renderPinnedModalList();
+    })();
+  </script>
+</body>
+</html>

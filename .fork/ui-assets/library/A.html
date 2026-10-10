@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.2">
+  <title>Хроніка · Library · Vertep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kurale&family=Noto+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c11;
+      --bg-deep: #07080b;
+      --panel: #0e1016;
+      --raised: #12141c;
+      --text: #f0e9dc;
+      --muted: #a9b1c4;
+      --faint: #6f7689;
+      --line: #2a2f3d;
+      --accent: #e2213a;
+      --cta: #39d5ff;
+      --cta-text: #07080b;
+      --success: #7fd18b;
+      --warning: #e3b341;
+      --danger: #f2777a;
+      --badge-red: #e7606b;
+      --badge-blue: #63b3ed;
+      --badge-amber: #ecc94b;
+      --badge-green: #68d391;
+      --badge-purple: #b794f4;
+      --badge-cyan: #4fd1c5;
+      --badge-soft: #7f8ea3;
+      --timeline-pin: #e2213a;
+      --shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    body.light {
+      --bg: #f6f1e7;
+      --bg-deep: #efe8da;
+      --panel: #fffaf0;
+      --raised: #fdf6e6;
+      --text: #1d1a16;
+      --muted: #5d5648;
+      --faint: #8a7f6d;
+      --line: #ddd3c2;
+      --accent: #b51f32;
+      --cta: #0e9ec9;
+      --cta-text: #fdfdfd;
+      --success: #2f7a3d;
+      --warning: #b37b1e;
+      --danger: #c83e4d;
+      --badge-red: #b3484f;
+      --badge-blue: #397bbf;
+      --badge-amber: #b4861f;
+      --badge-green: #377c4b;
+      --badge-purple: #735ab8;
+      --badge-cyan: #248f8a;
+      --badge-soft: #6c7a8e;
+      --shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Serif', Georgia, serif;
+      font-size: 15px;
+      line-height: 1.5;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    h1, h2, h3, .kurale {
+      font-family: 'Kurale', 'Noto Serif', serif;
+      letter-spacing: 0.02em;
+    }
+
+    .ui-label, .btn, .badge, .fact-type, .chip, .worker {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.01em;
+    }
+
+    .app {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 12px 16px 28px;
+    }
+
+    /* top bar */
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .chat-picker {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .chat-chip {
+      background: var(--raised);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      padding: 8px 14px;
+      border-radius: 30px;
+      font-weight: 500;
+      white-space: nowrap;
+      cursor: default;
+    }
+    .chat-chip.active {
+      background: var(--accent);
+      color: #f0e9dc;
+      border-color: transparent;
+    }
+    .worker-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .worker-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success);
+      display: inline-block;
+    }
+    .worker-dot.error {
+      background: var(--danger);
+    }
+    .toggle-btn {
+      background: var(--raised);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 24px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    /* layout rows */
+    .main-grid {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    .timeline-col {
+      flex: 3;
+      min-width: 0;
+    }
+    .right-rail {
+      flex: 1.2;
+      min-width: 230px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px 14px;
+      position: sticky;
+      top: 12px;
+    }
+
+    /* ornament divider */
+    .ornament {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--accent);
+      margin: 18px 0 8px;
+    }
+    .ornament .line { height: 1px; background: var(--line); flex: 1; }
+    .ornament svg { width: 32px; height: 12px; fill: var(--accent); opacity: 0.7; }
+
+    /* timeline */
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      background: var(--line);
+      background: linear-gradient(var(--accent) 0%, var(--accent) 8%, var(--line) 60%, var(--line));
+    }
+    .chapter-block {
+      position: relative;
+      margin-bottom: 28px;
+    }
+    .chapter-pin {
+      position: absolute;
+      left: -24px;
+      top: 6px;
+      width: 14px;
+      height: 14px;
+      background: var(--timeline-pin);
+      border: 3px solid var(--panel);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .chapter-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px 12px;
+      box-shadow: var(--shadow);
+    }
+    .chapter-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: baseline;
+    }
+    .chapter-title {
+      font-size: 1.5rem;
+      line-height: 1.2;
+      color: var(--text);
+    }
+    .chapter-range {
+      color: var(--faint);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .chapter-text {
+      color: var(--muted);
+      margin: 8px 0 10px;
+      font-size: 15px;
+    }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 16px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      background: var(--raised);
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+    .badge.stale { background: #3a2b2c; color: var(--danger); border-color: #5c383b; }
+    .badge.long { background: #2c2f3a; color: var(--badge-blue); border-color: #3e4a63; }
+    .badge.edited { background: #31312b; color: var(--warning); border-color: #59552e; }
+
+    /* fact rows inside chapter */
+    .fact-row {
+      background: var(--raised);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 10px;
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 10px;
+      transition: background 0.15s;
+    }
+    .fact-row:hover { background: #151923; }
+    body.light .fact-row:hover { background: #f5ecd9; }
+    .fact-sentence {
+      flex: 1 1 200px;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .fact-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .fact-type {
+      background: var(--badge-soft);
+      color: var(--bg-deep);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 10px;
+      text-transform: lowercase;
+    }
+    .fact-type.подія { background: var(--badge-blue); }
+    .fact-type.прикмета { background: var(--badge-amber); }
+    .fact-type.постійна { background: var(--badge-green); }
+    .fact-type.стосунки { background: var(--badge-purple); }
+    .fact-type.світ { background: var(--badge-cyan); }
+    .fact-type.план { background: var(--badge-soft); }
+    .fact-weight {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .fact-weight.ключове {
+      background: var(--accent);
+      color: #fff2f2;
+      border-color: transparent;
+      font-weight: 700;
+    }
+    .fact-state {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: #202631;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .fact-state.закріплено { background: #3b1f24; color: #f0a8ac; border: 1px solid #a33a43; }
+    .fact-state.пропонується { background: #332b1c; color: var(--warning); }
+    .fact-state.чинний { background: #1f3b26; color: var(--success); }
+    .fact-state.знятий { background: #2d2f36; color: var(--faint); text-decoration: line-through; }
+    .fact-state.замінений { background: #2d1f2a; color: var(--badge-purple); }
+    .fact-actions {
+      display: flex;
+      gap: 4px 8px;
+      flex-wrap: wrap;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .fact-row:hover .fact-actions {
+      opacity: 1;
+    }
+    .action-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 4px;
+      border-radius: 6px;
+    }
+    .action-btn:hover {
+      color: var(--cta);
+      background: var(--line);
+    }
+    .action-btn svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+    }
+    /* mobile always visible */
+    @media (max-width: 420px) {
+      .fact-actions { opacity: 1; }
+    }
+
+    /* right rail characters */
+    .char-card {
+      background: var(--raised);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+    }
+    .char-name {
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    .char-count {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .lasting-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--faint);
+      margin-top: 8px;
+    }
+    .lasting-item {
+      font-size: 13px;
+      padding: 4px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+
+    /* tabs panel */
+    .tabs-panel {
+      margin-top: 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .tabs-header {
+      display: flex;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 8px 4px;
+      font-family: system-ui;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+    .bridge-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      background: var(--raised);
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-top: 10px;
+      color: var(--muted);
+    }
+
+    /* drawer */
+    .drawer {
+      max-width: 360px;
+      margin: 28px 0 0 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .drawer h3 {
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    /* modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 16px;
+    }
+    .modal {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      max-width: 480px;
+      width: 100%;
+      color: var(--text);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    .modal p {
+      margin: 12px 0;
+      color: var(--muted);
+    }
+    .pinned-list {
+      list-style: none;
+      margin: 14px 0;
+    }
+    .pinned-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .modal-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    .btn {
+      border: none;
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn.cancel { background: var(--raised); color: var(--muted); border: 1px solid var(--line); }
+    .btn.replace { background: var(--accent); color: #fff; }
+    .btn.secondary { background: var(--line); color: var(--text); }
+    .hidden { display: none; }
+
+    @media (max-width: 420px) {
+      .main-grid { flex-direction: column; }
+      .right-rail { position: static; width: 100%; }
+      .timeline { padding-left: 20px; }
+      .chapter-pin { left: -20px; }
+      .chat-picker { display: none; } /* still show top bar with worker */
+      .topbar { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="appRoot">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="chat-picker ui-label">
+      <span class="chat-chip active">Mira & Ember</span>
+      <span class="chat-chip">Ember & Bram</span>
+      <span class="chat-chip">Crossroads group</span>
+      <span class="chat-chip">Private Mira</span>
+    </div>
+    <div class="worker-line"><span class="worker-dot"></span> Останній запуск 2 хв тому · сцена повід. 32-48 · гаразд</div>
+    <button class="toggle-btn" id="themeToggle">🌓 Тема</button>
+  </div>
+
+  <!-- MAIN GRID: left timeline + right rail -->
+  <div class="main-grid">
+    <div class="timeline-col">
+      <div class="ornament">
+        <span class="line"></span>
+        <svg viewBox="0 0 24 12"><path d="M2 6l4-3v2h12V3l4 3-4 3v-2H6v2z"/></svg>
+        <span class="line"></span>
+      </div>
+
+      <div class="timeline" id="timelineContainer"><!-- chapters injected --></div>
+
+      <!-- TABS: proposals / bridges -->
+      <div class="tabs-panel" id="tabsPanel">
+        <div class="tabs-header">
+          <button class="tab-btn active" data-tab="proposals">Пропозиції</button>
+          <button class="tab-btn" data-tab="bridges">Мости</button>
+        </div>
+        <div id="proposalsTab">
+          <div class="bridge-item">📋 Злити два факти: "Mira lost her lantern" + "Ember found a key in the snow" <span style="margin-left:auto"><button class="btn cancel">Прийняти</button> <button class="btn secondary">Відхилити</button></span></div>
+          <div class="bridge-item">🔄 Переписати факт: "Bram distrusts the Crossroads" → "Bram distrusts only the northern gate" <span style="margin-left:auto"><button class="btn cancel">Прийняти</button> <button class="btn secondary">Відхилити</button></span></div>
+          <div class="bridge-item">🚩 Закріпити ключовий факт: "The Lantern Crossroads shifts at dusk" <span style="margin-left:auto"><button class="btn cancel">Прийняти</button> <button class="btn secondary">Відхилити</button></span></div>
+        </div>
+        <div id="bridgesTab" class="hidden">
+          <div class="bridge-item">Crossroads → Ember's road: 4 факти, 1 розділ</div>
+          <div class="bridge-item">Mira → Bram's hut: 2 факти, 0 розділів</div>
+          <div class="bridge-item">Group chat → Private Mira: 3 факти, 1 розділ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT RAIL: characters -->
+    <aside class="right-rail" id="characterRail">
+      <h2 class="kurale" style="margin-bottom:12px;">Дійові особи</h2>
+      <!-- injected -->
+    </aside>
+  </div>
+
+  <!-- COMPACT DRAWER: Панель у чаті -->
+  <div class="drawer" id="chatDrawer">
+    <h3 class="kurale">Панель у чаті · Mira & Ember</h3>
+    <div id="drawerContent"></div>
+  </div>
+</div>
+
+<!-- MODAL for pinned limit -->
+<div class="modal-overlay hidden" id="pinModalOverlay">
+  <div class="modal">
+    <h3 class="kurale">Ліміт закріплених</h3>
+    <p>Закріплено 5 з 5 для Mira. Відкріпіть одну, щоб закріпити цю. Відкріплена нотатка лишається в Бібліотеці й повернеться, коли сцена її торкнеться.</p>
+    <ul class="pinned-list" id="pinnedList"></ul>
+    <div class="modal-btns">
+      <button class="btn cancel" onclick="closePinModal()">Скасувати</button>
+      <button class="btn replace" onclick="closePinModal()">Замінити</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    const chapters = [
+      {
+        title: "Сніг у брами",
+        range: "повід. 12-31",
+        badges: ["Застаріло", "Частина довгої сцени"],
+        text: "Mira arrived at the Lantern Crossroads and met Ember under the first snowfall. Ember traded a brass compass for a charmed nail, and they discovered the north gate was already open.",
+        facts: [
+          { id: 'f1', sentence: "Mira traded her brass compass to Ember.", about: "Mira", knows: "Mira, Ember", type: "подія", weight: "важливе", state: "чинний" },
+          { id: 'f2', sentence: "The north gate of the Crossroads opens without a key after dusk.", about: "Світ", knows: "Усі", type: "світ", weight: "ключове", state: "закріплено" },
+          { id: 'f3', sentence: "Ember carries a charmed nail from Mira.", about: "Ember", knows: "Mira, Ember", type: "прикмета", weight: "побутове", state: "знятий" }
+        ]
+      },
+      {
+        title: "Танок вогнів",
+        range: "повід. 32-51",
+        badges: ["Відредаговано"],
+        text: "Bram lit a whitefire lantern at the crossroads and it burned blue. Ember recognized the blue flame from her mother's stories, but the road to Ember's home showed two overlapping paths.",
+        facts: [
+          { id: 'f4', sentence: "Bram lit a whitefire lantern that burned blue at the Crossroads.", about: "Bram", knows: "Усі", type: "подія", weight: "важливе", state: "пропонується закріпити" },
+          { id: 'f5', sentence: "Ember's mother used blue flame to mark safe paths.", about: "Ember", knows: "Ember, Bram", type: "прикмета", weight: "побутове", state: "чинний" },
+          { id: 'f6', sentence: "The road to Ember's home now shows two overlapping tracks.", about: "Світ", knows: "Mira, Ember", type: "постійна зміна", weight: "ключове", state: "закріплено" },
+          { id: 'f7', sentence: "Mira decided to follow the left track as a test.", about: "Mira", knows: "Mira, Ember, Bram", type: "план", weight: "важливе", state: "чинний" }
+        ]
+      },
+      {
+        title: "Червона нитка",
+        range: "повід. 52-74",
+        badges: ["Частина довгої сцени"],
+        text: "They found a red thread tied to a milestone near the fork. Bram cut the thread and the left track vanished; Ember said it meant the Crossroads remembered them.",
+        facts: [
+          { id: 'f8', sentence: "Someone tied a red thread to the milestone at the fork.", about: "Світ", knows: "Усі", type: "світ", weight: "важливе", state: "чинний" },
+          { id: 'f9', sentence: "Bram cut the red thread and the left track disappeared.", about: "Bram", knows: "Усі", type: "подія", weight: "важливе", state: "замінений" },
+          { id: 'f10', sentence: "Ember believes the Crossroads now knows their names.", about: "Світ", knows: "Ember, Mira", type: "стосунки", weight: "побутове", state: "знятий" },
+          { id: 'f11', sentence: "Mira intends to ask the next traveler about red threads.", about: "Mira", knows: "Mira", type: "план", weight: "побутове", state: "чинний" },
+          { id: 'f12', sentence: "The Lantern Crossroads shifts subtly at dusk and dawn.", about: "Світ", knows: "Усі", type: "світ", weight: "ключове", state: "закріплено" }
+        ]
+      }
+    ];
+
+    const characters = [
+      {
+        name: "Mira",
+        pinnedCount: 5,
+        totalFacts: 12,
+        lasting: ["Her lantern now burns with a faint blue edge", "She traded her compass but kept the charm nail"]
+      },
+      {
+        name: "Ember",
+        pinnedCount: 3,
+        totalFacts: 9,
+        lasting: ["Knows the blue flame path", "Feels the Crossroads remembers her"]
+      },
+      {
+        name: "Bram",
+        pinnedCount: 2,
+        totalFacts: 7,
+        lasting: ["Cut the red thread", "Distrusts only the northern gate"]
+      }
+    ];
+
+    function renderTimeline() {
+      const container = document.getElementById('timelineContainer');
+      container.innerHTML = '';
+      chapters.forEach((ch, idx) => {
+        const block = document.createElement('div');
+        block.className = 'chapter-block';
+        const pin = document.createElement('div');
+        pin.className = 'chapter-pin';
+        block.appendChild(pin);
+        const card = document.createElement('div');
+        card.className = 'chapter-card';
+        const header = document.createElement('div');
+        header.className = 'chapter-header';
+        header.innerHTML = `<span class="chapter-title kurale">${ch.title}</span><span class="chapter-range ui-label">${ch.range}</span>`;
+        const badges = document.createElement('div');
+        badges.className = 'badge-row';
+        ch.badges.forEach(b => {
+          const span = document.createElement('span');
+          span.className = 'badge';
+          if (b.includes('Застаріло')) span.classList.add('stale');
+          if (b.includes('довгої')) span.classList.add('long');
+          if (b.includes('Відредаговано')) span.classList.add('edited');
+          span.textContent = b;
+          badges.appendChild(span);
+        });
+        const text = document.createElement('p');
+        text.className = 'chapter-text';
+        text.textContent = ch.text;
+        card.appendChild(header); card.appendChild(badges); card.appendChild(text);
+        ch.facts.forEach(f => {
+          const row = document.createElement('div');
+          row.className = 'fact-row';
+          row.innerHTML = `
+            <span class="fact-sentence">${f.sentence}</span>
+            <span class="fact-meta">
+              <span class="fact-type ${f.type}">${f.type}</span>
+              <span class="fact-weight ${f.weight==='ключове'?'ключове':''}">${f.weight}</span>
+              <span class="fact-state ${f.state.replace(/\s/g,'_')}">${f.state}</span>
+            </span>
+            <span class="fact-actions">
+              <button class="action-btn" data-fact-id="${f.id}" data-action="edit"><svg viewBox="0 0 16 16"><path d="M2 12l1-4 10-10 2 2-10 10zM11 2l3 3"/></svg>Редагувати</button>
+              <button class="action-btn" data-fact-id="${f.id}" data-action="pin"><svg viewBox="0 0 16 16"><path d="M8 2v9M5 7l3 3 3-3M4 12h8"/></svg>Закріпити</button>
+              <button class="action-btn" data-fact-id="${f.id}" data-action="toggle"><svg viewBox="0 0 16 16"><path d="M4 6h8M4 10h8"/></svg>Відкріпити</button>
+              <button class="action-btn" data-fact-id="${f.id}" data-action="delete"><svg viewBox="0 0 16 16"><path d="M3 4h10M6 4V2h4v2M5 6v8M11 6v8"/></svg>Видалити</button>
+            </span>`;
+          card.appendChild(row);
+        });
+        block.appendChild(card);
+        container.appendChild(block);
+      });
+    }
+
+    function renderCharacters() {
+      const rail = document.getElementById('characterRail');
+      let html = '';
+      characters.forEach((c, i) => {
+        html += `<div class="char-card"><div class="char-name kurale">${c.name}</div>
+          <div class="char-count ui-label">закріплено: ${c.pinnedCount} · фактів: ${c.totalFacts}</div>
+          <div class="lasting-title">Постійні зміни</div>`;
+        c.lasting.forEach(l => html += `<div class="lasting-item">• ${l}</div>`);
+        html += `</div>`;
+      });
+      rail.innerHTML = `<h2 class="kurale" style="margin-bottom:12px;">Дійові особи</h2>` + html;
+    }
+
+    function renderDrawer() {
+      const drawerContent = document.getElementById('drawerContent');
+      drawerContent.innerHTML = `
+        <div class="fact-row"><span class="fact-sentence">Mira traded her brass compass to Ember.</span><span class="fact-actions"><button class="action-btn">✎ Редагувати</button><button class="action-btn">📌 Закріпити</button><button class="action-btn">↩ Відкріпити</button><button class="action-btn">🗑 Видалити</button></span></div>
+        <div class="fact-row"><span class="fact-sentence">The north gate opens after dusk.</span><span class="fact-actions" style="display:inline-flex;"><button class="action-btn">✎</button><button class="action-btn">📌</button><button class="action-btn">↩</button><button class="action-btn">🗑</button></span></div>
+        <div class="fact-row"><span class="fact-sentence">Bram cut the red thread.</span><span class="fact-actions"><button class="action-btn">✎</button><button class="action-btn">📌</button><button class="action-btn">↩</button><button class="action-btn">🗑</button></span></div>`;
+    }
+
+    function openPinModal(factId) {
+      const overlay = document.getElementById('pinModalOverlay');
+      overlay.classList.remove('hidden');
+      const list = document.getElementById('pinnedList');
+      list.innerHTML = '';
+      const pinned = [
+        "The north gate opens without a key after dusk",
+        "The Lantern Crossroads shifts at dusk and dawn",
+        "The road to Ember's home shows two overlapping tracks",
+        "Mira remembers the blue flame",
+        "Bram never enters before Mira"
+      ];
+      pinned.forEach(p => {
+        const li = document.createElement('li');
+        li.innerHTML = `<label><input type="radio" name="pinnedReplace"> ${p}</label>`;
+        list.appendChild(li);
+      });
+    }
+    window.openPinModal = openPinModal;
+    window.closePinModal = function() { document.getElementById('pinModalOverlay').classList.add('hidden'); };
+    document.getElementById('pinModalOverlay').addEventListener('click', (e) => { if(e.target === e.currentTarget) closePinModal(); });
+
+    // Delegate action buttons
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.action-btn');
+      if (!btn) return;
+      const action = btn.getAttribute('data-action');
+      if (action === 'pin') {
+        openPinModal(btn.getAttribute('data-fact-id'));
+      } else {
+        // simple feedback for other actions
+        btn.style.outline = '1px solid var(--accent)';
+        setTimeout(()=> btn.style.outline = 'none', 200);
+      }
+    });
+
+    // Tabs
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.getAttribute('data-tab');
+        document.getElementById('proposalsTab').classList.toggle('hidden', tab !== 'proposals');
+        document.getElementById('bridgesTab').classList.toggle('hidden', tab !== 'bridges');
+      });
+    });
+
+    // Theme toggle
+    const toggle = document.getElementById('themeToggle');
+    toggle.addEventListener('click', () => {
+      document.body.classList.toggle('light');
+    });
+
+    // initialize
+    renderTimeline();
+    renderCharacters();
+    renderDrawer();
+  })();
+</script>
+</body>
+</html>

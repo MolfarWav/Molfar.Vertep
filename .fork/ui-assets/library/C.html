@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
+    <title>Vertep · Library · Реєстр</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kurale&family=Noto+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b0c11;
+            --deep: #07080b;
+            --panel: #0e1016;
+            --raised: #12141c;
+            --text: #f0e9dc;
+            --muted: #a9b1c4;
+            --faint: #6f7689;
+            --line: #2a2f3d;
+            --accent: #e2213a;
+            --cta: #39d5ff;
+            --cta-text: #07080b;
+            --success: #7fd18b;
+            --warning: #e3b341;
+            --danger: #f2777a;
+            --font-head: 'Kurale', serif;
+            --font-body: 'Noto Serif', serif;
+            --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            --radius: 10px;
+            --shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            --transition: 0.18s ease;
+        }
+
+        body.light {
+            --bg: #f6f1e7;
+            --deep: #e7dfd0;
+            --panel: #fffaf0;
+            --raised: #ffffff;
+            --text: #1d1a16;
+            --muted: #5d5648;
+            --faint: #8b8170;
+            --line: #ddd3c2;
+            --cta-text: #07080b;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-body);
+            font-size: 15px;
+            line-height: 1.5;
+            transition: background var(--transition), color var(--transition);
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, .chat-title, .fact-who-name, .chapter-label, .badge {
+            font-family: var(--font-head);
+            font-weight: 400;
+        }
+
+        .app {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Ornament divider */
+        .ornament {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--faint);
+            font-size: 13px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin: 18px 0 8px;
+        }
+        .ornament::before, .ornament::after {
+            content: "";
+            flex: 1;
+            max-width: 260px;
+            height: 12px;
+            background: url("data:image/svg+xml,%3Csvg width='120' height='14' viewBox='0 0 120 14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2,7 L20,1 L38,7 L20,13 Z M50,2 L68,7 L50,12 Z M88,1 L106,7 L88,13 Z' fill='none' stroke='%23a9b1c4' stroke-width='0.8'/%3E%3C/svg%3E") center/cover no-repeat;
+            opacity: 0.4;
+        }
+        body.light .ornament::before, body.light .ornament::after {
+            background-image: url("data:image/svg+xml,%3Csvg width='120' height='14' viewBox='0 0 120 14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2,7 L20,1 L38,7 L20,13 Z M50,2 L68,7 L50,12 Z M88,1 L106,7 L88,13 Z' fill='none' stroke='%235d5648' stroke-width='0.8'/%3E%3C/svg%3E");
+        }
+
+        /* Top bar */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 10px 16px;
+            box-shadow: var(--shadow);
+        }
+        .brand {
+            font-size: 22px;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+        .dark-toggle {
+            background: var(--raised);
+            border: 1px solid var(--line);
+            color: var(--text);
+            padding: 8px 14px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            transition: all var(--transition);
+        }
+        .dark-toggle:hover { border-color: var(--cta); color: var(--cta); }
+
+        /* Main two-pane layout */
+        .two-pane {
+            display: flex;
+            gap: 16px;
+            flex: 1;
+            min-height: 650px;
+        }
+        .left-pane {
+            width: 280px;
+            flex-shrink: 0;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: var(--shadow);
+        }
+        .left-pane h3 {
+            color: var(--muted);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .chat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+        .chat-item {
+            background: var(--raised);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 12px 14px;
+            cursor: default;
+            transition: border-color var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .chat-item:hover { border-color: var(--faint); }
+        .chat-title {
+            font-size: 17px;
+            color: var(--text);
+        }
+        .chat-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-ok { background: var(--success); }
+        .dot-warn { background: var(--warning); }
+        .dot-error { background: var(--danger); }
+
+        /* Right pane */
+        .right-pane {
+            flex: 1;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            box-shadow: var(--shadow);
+            min-width: 0;
+        }
+        .tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 8px;
+        }
+        .tab {
+            background: transparent;
+            border: 1px solid var(--line);
+            color: var(--muted);
+            padding: 8px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            letter-spacing: 0.3px;
+            transition: all var(--transition);
+        }
+        .tab.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(226,33,58,0.4);
+        }
+        .tab:hover:not(.active) { border-color: var(--faint); color: var(--text); }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .filter-bar select, .filter-bar input {
+            background: var(--raised);
+            border: 1px solid var(--line);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            min-width: 130px;
+        }
+        .filter-bar input::placeholder { color: var(--faint); }
+
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 560px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .row {
+            background: var(--raised);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 14px;
+            transition: background var(--transition);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .row:hover { background: #1a1d27; }
+        body.light .row:hover { background: #f8f0e2; }
+
+        .row-main {
+            flex: 1;
+            min-width: 200px;
+        }
+        .row-title {
+            font-family: var(--font-head);
+            font-size: 17px;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+        .row-sub {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 30px;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            font-family: var(--font-ui);
+            text-transform: uppercase;
+            border: 1px solid var(--line);
+            background: #1a1e28;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+        body.light .badge { background: #f1e8da; color: #4a4235; }
+        .badge-key { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 700; }
+        .badge-pinned { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .badge-fact-type-event { background: #3d405b; color: #d9d9f0; }
+        .badge-fact-type-omen { background: #414d3b; color: #dcedc8; }
+        .badge-fact-type-world { background: #2f3e46; color: #c5e3ec; }
+        .badge-fact-type-relation { background: #543847; color: #f4d1de; }
+        .badge-fact-type-constant { background: #4a3e2b; color: #f2e2c0; }
+        .badge-fact-type-plan { background: #264653; color: #bde0fe; }
+        .badge-weight-domestic { background: #4d4d4d; color: #e8e8e8; }
+        .badge-weight-important { background: #77510b; color: #ffe9a8; }
+        .badge-weight-key { background: var(--accent); color: white; font-weight: bold; }
+        .badge-state-active { color: var(--success); border-color: var(--success); }
+        .badge-state-pinned { background: var(--accent); color: white; }
+        .badge-state-removed { color: var(--danger); border-color: var(--danger); text-decoration: line-through; }
+        .badge-state-replaced { color: var(--warning); border-color: var(--warning); }
+        .badge-state-proposed { color: var(--cta); border-color: var(--cta); }
+
+        /* Inline actions */
+        .row-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .action-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--muted);
+            padding: 4px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all var(--transition);
+            white-space: nowrap;
+        }
+        .action-btn:hover {
+            border-color: var(--faint);
+            color: var(--text);
+        }
+        .action-btn.danger:hover { color: var(--danger); }
+        .action-btn.pin:hover { color: var(--warning); }
+        @media (hover: hover) {
+            .row-actions .action-btn { opacity: 0; }
+            .row:hover .row-actions .action-btn, .row:focus-within .row-actions .action-btn { opacity: 1; }
+        }
+        @media (max-width: 420px) {
+            .row-actions .action-btn { opacity: 1; }
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.65);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 16px;
+        }
+        .modal {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            max-width: 520px;
+            width: 100%;
+            padding: 24px;
+            color: var(--text);
+        }
+        .modal h2 { font-size: 22px; margin-bottom: 8px; }
+        .modal p { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+        .pinned-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+        .pinned-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--raised);
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+        }
+        .pinned-option input { accent-color: var(--accent); }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .btn {
+            background: var(--raised);
+            border: 1px solid var(--line);
+            color: var(--text);
+            padding: 8px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-family: var(--font-ui);
+            font-size: 13px;
+            transition: all var(--transition);
+        }
+        .btn.replace { background: var(--cta); color: var(--cta-text); border-color: var(--cta); font-weight: 600; }
+        .btn:hover { border-color: var(--faint); }
+
+        /* Chat drawer */
+        .chat-drawer {
+            background: var(--deep);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            max-width: 360px;
+            width: 100%;
+            margin-top: 4px;
+            box-shadow: var(--shadow);
+        }
+        .chat-drawer h4 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+        .drawer-fact {
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--line);
+        }
+
+        /* Worker line */
+        .worker-line {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: var(--muted);
+            background: var(--raised);
+            padding: 8px 14px;
+            border-radius: 30px;
+            border: 1px solid var(--line);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 720px) {
+            .two-pane { flex-direction: column; }
+            .left-pane { width: 100%; }
+        }
+        @media (max-width: 420px) {
+            .app { padding: 10px; }
+            .right-pane { padding: 12px; }
+            .filter-bar select, .filter-bar input { min-width: 100%; }
+            .row { flex-direction: column; align-items: stretch; }
+            .row-actions { justify-content: flex-start; }
+        }
+    </style>
+</head>
+<body>
+<div class="app" id="app">
+    <!-- Top bar -->
+    <div class="topbar">
+        <span class="brand">Vertep</span>
+        <button class="dark-toggle" id="darkToggleBtn">Світло / Тінь</button>
+    </div>
+
+    <!-- Ornament -->
+    <div class="ornament">‎</div>
+
+    <!-- Two-pane main -->
+    <div class="two-pane">
+        <!-- LEFT CHAT LIST -->
+        <aside class="left-pane">
+            <h3>Чати</h3>
+            <div class="chat-list" id="chatList">
+                <div class="chat-item" data-chat="crossroads">
+                    <span class="chat-title">Lantern Crossroads</span>
+                    <div class="chat-meta"><span class="status-dot dot-ok"></span> 12 фактів · 3 розділи</div>
+                    <div class="chat-meta" style="color:var(--faint)">Mira, Ember, Bram</div>
+                </div>
+                <div class="chat-item" data-chat="ember-road">
+                    <span class="chat-title">Ember's road</span>
+                    <div class="chat-meta"><span class="status-dot dot-warn"></span> 429 rate limit</div>
+                    <div class="chat-meta" style="color:var(--faint)">Ember, Mira</div>
+                </div>
+                <div class="chat-item" data-chat="bram-camp">
+                    <span class="chat-title">Bram's camp</span>
+                    <div class="chat-meta"><span class="status-dot dot-ok"></span> 7 фактів</div>
+                    <div class="chat-meta" style="color:var(--faint)">Bram, Mira, Ember</div>
+                </div>
+                <div class="chat-item" data-chat="market-square">
+                    <span class="chat-title">Market square</span>
+                    <div class="chat-meta"><span class="status-dot dot-ok"></span> 5 фактів</div>
+                    <div class="chat-meta" style="color:var(--faint)">Mira, Світ</div>
+                </div>
+            </div>
+            <div class="worker-line" style="margin-top:auto;">Останній запуск 2 хв тому · сцена повід. 32-48 · гаразд</div>
+            <button class="btn" id="bridgeBtn" style="margin-top:8px;">Міст між чатами</button>
+            <div id="bridgeList" style="display:none; font-size:12px; color:var(--muted);">
+                Crossroads → Ember's road: 4 факти, 1 розділ
+            </div>
+        </aside>
+
+        <!-- RIGHT PANE with tabs -->
+        <section class="right-pane" id="rightPane">
+            <div class="tabs" id="tabsContainer">
+                <button class="tab active" data-tab="chapters">Розділи</button>
+                <button class="tab" data-tab="facts">Факти</button>
+                <button class="tab" data-tab="proposals">Пропозиції</button>
+                <button class="tab" data-tab="activity">Активність</button>
+            </div>
+
+            <!-- Filter bar (visible only for facts tab, but static for demo) -->
+            <div class="filter-bar" id="filterBar">
+                <input type="search" placeholder="Пошук фактів..." id="searchInput">
+                <select id="typeFilter"><option>Тип</option><option>подія</option><option>прикмета</option><option>постійна зміна</option><option>стосунки</option><option>світ</option><option>план</option></select>
+                <select id="weightFilter"><option>Вага</option><option>побутове</option><option>важливе</option><option>ключове</option></select>
+                <select id="whoFilter"><option>Про кого</option><option>Mira</option><option>Ember</option><option>Bram</option><option>Світ</option></select>
+                <select id="stateFilter"><option>Стан</option><option>закріплено</option><option>пропонується закріпити</option><option>чинний</option><option>знятий</option><option>замінений</option></select>
+            </div>
+
+            <!-- Chapters tab content -->
+            <div class="tab-content" id="content-chapters">
+                <div class="list-container" id="chapterContainer"></div>
+            </div>
+            <!-- Facts tab content -->
+            <div class="tab-content" id="content-facts" style="display:none;">
+                <div class="list-container" id="factContainer"></div>
+            </div>
+            <!-- Proposals tab -->
+            <div class="tab-content" id="content-proposals" style="display:none;">
+                <div class="list-container" id="proposalContainer"></div>
+            </div>
+            <!-- Activity tab -->
+            <div class="tab-content" id="content-activity" style="display:none;">
+                <div class="list-container" id="activityContainer"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Compact chat drawer -->
+    <div class="chat-drawer" id="chatDrawer">
+        <h4>Панель у чаті · Lantern Crossroads</h4>
+        <div id="drawerFacts"></div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="pinModal" style="display:none;">
+    <div class="modal">
+        <h2>Ліміт закріплених</h2>
+        <p>Закріплено 5 з 5 для Mira. Відкріпіть одну, щоб закріпити цю. Відкріплена нотатка лишається в Бібліотеці й повернеться, коли сцена її торкнеться.</p>
+        <div class="pinned-list" id="pinnedListContainer"></div>
+        <div class="modal-actions">
+            <button class="btn" id="cancelPinBtn">Скасувати</button>
+            <button class="btn replace" id="replacePinBtn">Замінити</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // Dark/light toggle
+        const darkToggleBtn = document.getElementById('darkToggleBtn');
+        darkToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light');
+        });
+
+        // Mock data
+        const chaptersData = [
+            { label: "Тінь на роздоріжжі", range: "повід. 12-31", desc: "Mira reached the Lantern Crossroads with a warning from Ember. Bram arrived with the old map, but the seals were already broken. The lantern keeper recognized Mira's mark and asked for the toll of a memory. Ember stayed behind to delay the pursuers.", badges: ["Застаріло"] },
+            { label: "Довга ніч", range: "повід. 32-48", desc: "The group split at the broken arch. Mira traded a childhood name for the direction of the Ember road. Bram found fresh ash and a silver thread. Ember reappeared with a burn that glowed in moonlight. The crossroads whispered a third path.", badges: ["Частина довгої сцени", "Відредаговано"] },
+            { label: "Міст до золи", range: "повід. 49-61", desc: "Mira crossed into the ashen field and planted the iron nail. Bram argued about the weight of old oaths. Ember touched the standing stone and said it was still warm. The lantern keeper warned that the next toll would not be negotiable.", badges: ["Відредаговано"] }
+        ];
+
+        const factsData = [
+            { id:1, text:"Mira carries a brass compass whose needle points to the last promise made in the Crossroads.", who:"Mira", knows:"Ember", type:"прикмета", weight:"важливе", state:"чинний" },
+            { id:2, text:"The Lantern Crossroads remembers every road walked under a vow of silence.", who:"Світ", knows:"Усі", type:"світ", weight:"ключове", state:"закріплено" },
+            { id:3, text:"Ember's left hand is cold since the night at the broken arch.", who:"Ember", knows:"Mira, Bram", type:"постійна зміна", weight:"важливе", state:"чинний" },
+            { id:4, text:"Bram owes the Crossroads one unspoken name from his past life.", who:"Bram", knows:"Mira, Ember", type:"план", weight:"ключове", state:"пропонується закріпити" },
+            { id:5, text:"The silver thread found near the arch belongs to the toll collector's coat.", who:"Світ", knows:"Bram", type:"подія", weight:"побутове", state:"чинний" },
+            { id:6, text:"Mira and Ember briefly shared a vision of a bridge made of ash.", who:"Mira, Ember", knows:"Усі", type:"стосунки", weight:"важливе", state:"чинний" },
+            { id:7, text:"The standing stone in the ashen field has a hidden inscription that only Mira can read.", who:"Світ", knows:"Mira", type:"прикмета", weight:"ключове", state:"закріплено" },
+            { id:8, text:"Ember swore to return the silver thread before the next full moon.", who:"Ember", knows:"Mira", type:"план", weight:"побутове", state:"чинний" },
+            { id:9, text:"The Crossroads toll collector has not slept for seven years.", who:"Світ", knows:"Bram, Mira", type:"світ", weight:"важливе", state:"чинний" },
+            { id:10, text:"Bram's old oath to the lantern keeper prevents him from crossing the arch at noon.", who:"Bram", knows:"Ember", type:"стосунки", weight:"ключове", state:"закріплено" },
+            { id:11, text:"Mira traded a childhood name for the direction of Ember's road.", who:"Mira", knows:"Bram, Ember", type:"подія", weight:"важливе", state:"знятий" },
+            { id:12, text:"The ash of the burned map formed a path that lasted only till dawn.", who:"Світ", knows:"Усі", type:"прикмета", weight:"побутове", state:"замінений" }
+        ];
+
+        const proposalsData = [
+            { id:'p1', title:"Злити два факти", desc:"Об'єднати 'срібна нитка' з 'стоячий камінь' в один ключовий факт.", actions:true },
+            { id:'p2', title:"Зняти факт", desc:"Факт про дитяче ім'я Mira більше не чинний — зняти з реєстру.", actions:true },
+            { id:'p3', title:"Переписати факт", desc:"Замінити 'замінений' факт про мапу на новий: 'попіл склався у сходи до Ember road'.", actions:true },
+            { id:'p4', title:"Закріпити ключовий факт", desc:"Факт про стоячий камінь — закріпити поверх наявних 5.", actions:true }
+        ];
+
+        const activityLog = [
+            "added f12 · попіл мапи став шляхом",
+            "proposed merge p3 · переписати факт про мапу",
+            "rebuilt c2 · Довга ніч · range 32-48",
+            "pinned f7 · стоячий камінь · вага ключове"
+        ];
+
+        // Render chapters
+        function renderChapters() {
+            const container = document.getElementById('chapterContainer');
+            container.innerHTML = chaptersData.map(ch => `
+                <div class="row">
+                    <div class="row-main">
+                        <div class="row-title">${ch.label}</div>
+                        <div class="row-sub">${ch.range}</div>
+                        <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:4px;">
+                            ${ch.badges.map(b => `<span class="badge">${b}</span>`).join('')}
+                        </div>
+                        <div style="font-size:14px; margin-top:8px; color:var(--muted);">${ch.desc}</div>
+                    </div>
+                    <div class="row-actions">
+                        <button class="action-btn">✎ Редагувати</button>
+                        <button class="action-btn">📌 Закріпити</button>
+                        <button class="action-btn">↺ Відновити</button>
+                        <button class="action-btn danger">🗑 Видалити</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render facts
+        function renderFacts() {
+            const container = document.getElementById('factContainer');
+            container.innerHTML = factsData.map(f => `
+                <div class="row" data-fact-id="${f.id}">
+                    <div class="row-main">
+                        <div style="font-family:var(--font-body); font-size:15px;">${f.text}</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+                            <span class="badge">Про кого: ${f.who}</span>
+                            <span class="badge">Хто знає: ${f.knows}</span>
+                            <span class="badge badge-fact-type-${f.type}">${f.type}</span>
+                            <span class="badge badge-weight-${f.weight}">${f.weight}</span>
+                            <span class="badge badge-state-${f.state}">${f.state}</span>
+                        </div>
+                    </div>
+                    <div class="row-actions">
+                        <button class="action-btn">✎ Редагувати</button>
+                        <button class="action-btn pin">📌 Закріпити</button>
+                        <button class="action-btn">↺ Зняти</button>
+                        <button class="action-btn danger">🗑 Видалити</button>
+                    </div>
+                </div>
+            `).join('');
+            // attach pin events
+            document.querySelectorAll('#factContainer .pin').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPinModal();
+                });
+            });
+        }
+
+        // Open pin modal with 5 pinned facts
+        function openPinModal() {
+            const list = document.getElementById('pinnedListContainer');
+            const fivePinned = factsData.filter(f => f.state === 'закріплено').slice(0,5);
+            list.innerHTML = fivePinned.map(f => `
+                <label class="pinned-option">
+                    <input type="radio" name="pinnedChoice" value="${f.id}">
+                    <span>${f.text}</span>
+                </label>
+            `).join('');
+            document.getElementById('pinModal').style.display = 'flex';
+        }
+
+        // Modal close
+        document.getElementById('cancelPinBtn').addEventListener('click', () => {
+            document.getElementById('pinModal').style.display = 'none';
+        });
+        document.getElementById('replacePinBtn').addEventListener('click', () => {
+            alert('Замінено закріплений факт (демонстрація).');
+            document.getElementById('pinModal').style.display = 'none';
+        });
+
+        // Proposals render
+        function renderProposals() {
+            const container = document.getElementById('proposalContainer');
+            container.innerHTML = proposalsData.map(p => `
+                <div class="row">
+                    <div class="row-main">
+                        <div class="row-title">${p.title}</div>
+                        <div class="row-sub">${p.desc}</div>
+                    </div>
+                    <div class="row-actions">
+                        <button class="action-btn">✓ Прийняти</button>
+                        <button class="action-btn danger">✗ Відхилити</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Activity render
+        function renderActivity() {
+            const container = document.getElementById('activityContainer');
+            container.innerHTML = activityLog.map(log => `
+                <div class="row" style="font-family:var(--font-ui); font-size:13px;">
+                    <span style="color:var(--cta);">worker</span>&nbsp; ${log}
+                </div>
+            `).join('');
+        }
+
+        // Drawer facts for one chat
+        function renderDrawer() {
+            const drawer = document.getElementById('drawerFacts');
+            drawer.innerHTML = factsData.slice(0,5).map(f => `<div class="drawer-fact">• ${f.text}</div>`).join('');
+        }
+
+        // Tabs switching
+        const tabs = document.querySelectorAll('.tab');
+        const contentMap = {
+            chapters: document.getElementById('content-chapters'),
+            facts: document.getElementById('content-facts'),
+            proposals: document.getElementById('content-proposals'),
+            activity: document.getElementById('content-activity')
+        };
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                Object.values(contentMap).forEach(c => c.style.display = 'none');
+                const target = tab.dataset.tab;
+                contentMap[target].style.display = 'block';
+            });
+        });
+
+        // Bridge button
+        document.getElementById('bridgeBtn').addEventListener('click', () => {
+            const bridgeList = document.getElementById('bridgeList');
+            bridgeList.style.display = bridgeList.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Initial render
+        renderChapters();
+        renderFacts();
+        renderProposals();
+        renderActivity();
+        renderDrawer();
+
+        // Search and filters demonstration (simple filtering)
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const q = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#factContainer .row');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(q) ? '' : 'none';
+            });
+        });
+        document.getElementById('typeFilter').addEventListener('change', () => filterFacts());
+        document.getElementById('weightFilter').addEventListener('change', () => filterFacts());
+        document.getElementById('whoFilter').addEventListener('change', () => filterFacts());
+        document.getElementById('stateFilter').addEventListener('change', () => filterFacts());
+
+        function filterFacts() {
+            const type = document.getElementById('typeFilter').value;
+            const weight = document.getElementById('weightFilter').value;
+            const who = document.getElementById('whoFilter').value;
+            const state = document.getElementById('stateFilter').value;
+            const rows = document.querySelectorAll('#factContainer .row');
+            rows.forEach(row => {
+                const id = parseInt(row.dataset.factId);
+                const fact = factsData.find(f => f.id === id);
+                if (!fact) return;
+                let show = true;
+                if (type !== 'Тип' && fact.type !== type) show = false;
+                if (weight !== 'Вага' && fact.weight !== weight) show = false;
+                if (who !== 'Про кого' && !fact.who.includes(who)) show = false;
+                if (state !== 'Стан' && fact.state !== state) show = false;
+                row.style.display = show ? '' : 'none';
+            });
+        }
+    })();
+</script>
+</body>
+</html>

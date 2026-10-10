@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Library · Нитки · Lantern Crossroads</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kurale&family=Noto+Serif:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c11;
+      --bg-deeper: #07080b;
+      --panel: #0e1016;
+      --raised: #12141c;
+      --text: #f0e9dc;
+      --muted: #a9b1c4;
+      --faint: #6f7689;
+      --line: #2a2f3d;
+      --accent: #e2213a;
+      --cta: #39d5ff;
+      --cta-text: #07080b;
+      --success: #7fd18b;
+      --warning: #e3b341;
+      --danger: #f2777a;
+      --font-head: 'Kurale', 'Noto Serif', serif;
+      --font-prose: 'Noto Serif', serif;
+      --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --badge-event: #4b6e8c;
+      --badge-omen: #7a6c9e;
+      --badge-change: #8c5f5a;
+      --badge-rel: #5f7f6b;
+      --badge-world: #6d6880;
+      --badge-plan: #b07d4f;
+      --divider-ornament: url("data:image/svg+xml,%3Csvg width='40' height='12' viewBox='0 0 40 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6 L8 2 L12 6 L16 2 L20 6 L24 2 L28 6 L32 2 L36 6' stroke='%23e2213a' fill='none' stroke-width='1.2' /%3E%3Ccircle cx='2' cy='6' r='1.4' fill='%23e2213a'/%3E%3Ccircle cx='38' cy='6' r='1.4' fill='%23e2213a'/%3E%3C/svg%3E");
+      --divider-ornament-light: url("data:image/svg+xml,%3Csvg width='40' height='12' viewBox='0 0 40 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6 L8 2 L12 6 L16 2 L20 6 L24 2 L28 6 L32 2 L36 6' stroke='%23c81e2e' fill='none' stroke-width='1.2' /%3E%3Ccircle cx='2' cy='6' r='1.4' fill='%23c81e2e'/%3E%3Ccircle cx='38' cy='6' r='1.4' fill='%23c81e2e'/%3E%3C/svg%3E");
+      --shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    body.light-theme {
+      --bg: #f6f1e7;
+      --bg-deeper: #eee7da;
+      --panel: #fffaf0;
+      --raised: #fff3dd;
+      --text: #1d1a16;
+      --muted: #5d5648;
+      --faint: #857c6a;
+      --line: #ddd3c2;
+      --shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      --divider-ornament: var(--divider-ornament-light);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-prose);
+      font-size: 15.5px;
+      line-height: 1.5;
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+      margin: 0;
+      padding: 0 16px 40px;
+    }
+
+    h1, h2, h3, .chapter-label, .node-label {
+      font-family: var(--font-head);
+      font-weight: 400;
+      letter-spacing: 0.4px;
+    }
+
+    button, .ui-label {
+      font-family: var(--font-ui);
+      font-size: 12.5px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 0 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .app-title {
+      font-size: 1.9rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .app-title small {
+      font-family: var(--font-ui);
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.3px;
+    }
+
+    .theme-toggle {
+      background: var(--raised);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+    .main-grid {
+      display: flex;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 24px auto 0;
+      align-items: flex-start;
+    }
+
+    .library-main {
+      flex: 2;
+      min-width: 0;
+    }
+
+    .chat-canvas-panel {
+      flex: 1.2;
+      min-width: 320px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px 16px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 16px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+
+    .canvas-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .bridge-button {
+      background: var(--cta);
+      color: var(--cta-text);
+      border: none;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .bridge-button.active-mode {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+    .legend span::before {
+      content: "●";
+      color: var(--accent);
+      margin-right: 4px;
+    }
+
+    .svg-wrap {
+      background: var(--bg-deeper);
+      border-radius: 18px;
+      padding: 8px;
+    }
+
+    svg.network-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: transparent;
+    }
+
+    .chat-node {
+      cursor: pointer;
+    }
+    .chat-node circle {
+      fill: var(--raised);
+      stroke: var(--accent);
+      stroke-width: 2;
+      transition: fill 0.2s, stroke 0.2s;
+    }
+    .chat-node:hover circle,
+    .chat-node.selected circle {
+      fill: var(--accent);
+      stroke: #fff;
+    }
+    .chat-node text {
+      fill: var(--text);
+      font-family: var(--font-head);
+      font-size: 13px;
+      pointer-events: none;
+    }
+    .bridge-line {
+      stroke: var(--line);
+      stroke-width: 2.2;
+      stroke-dasharray: 5 5;
+      opacity: 0.7;
+    }
+    .bridge-line.active-bridge {
+      stroke: var(--cta);
+    }
+
+    .right-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 18px 16px;
+      margin-top: 18px;
+      min-height: 200px;
+    }
+    .panel-title {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 24px 0 16px;
+    }
+    .divider::before, .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+    .divider .ornament {
+      width: 40px;
+      height: 14px;
+      background-image: var(--divider-ornament);
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .chapter-card {
+      background: var(--raised);
+      border-left: 4px solid var(--accent);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      transition: background 0.2s;
+    }
+    .chapter-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .chapter-label {
+      font-size: 1.2rem;
+    }
+    .chapter-range {
+      font-family: var(--font-ui);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .badge {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: #2f3542;
+      color: var(--muted);
+    }
+    .badge.outdated { background: #3a2f2a; color: var(--warning); }
+    .badge.long-scene { background: #1f3a44; color: var(--cta); }
+    .badge.edited { background: #2b3b2b; color: var(--success); }
+
+    .chapter-summary {
+      margin-top: 8px;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .fact-actions {
+      display: flex;
+      gap: 8px;
+      opacity: 0.18;
+      transition: opacity 0.2s;
+    }
+    .fact-row:hover .fact-actions,
+    .chapter-card:hover .fact-actions {
+      opacity: 1;
+    }
+    @media (max-width: 420px) {
+      .fact-actions { opacity: 1; }
+    }
+
+    .icon-btn {
+      background: none;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      border-radius: 14px;
+      padding: 2px 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 11.5px;
+      transition: 0.15s;
+    }
+    .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .fact-list {
+      margin-top: 8px;
+    }
+    .fact-row {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      transition: border 0.2s;
+    }
+    .fact-row.pinned-fact { border-left: 4px solid var(--accent); }
+    .fact-text {
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .fact-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .fact-chip {
+      font-family: var(--font-ui);
+      font-size: 11px;
+      background: #262b36;
+      padding: 2px 8px;
+      border-radius: 12px;
+      color: var(--muted);
+    }
+    .fact-chip.type-event { background: var(--badge-event); color: white; }
+    .fact-chip.type-omen { background: var(--badge-omen); color: white; }
+    .fact-chip.type-change { background: var(--badge-change); color: white; }
+    .fact-chip.type-rel { background: var(--badge-rel); color: white; }
+    .fact-chip.type-world { background: var(--badge-world); color: white; }
+    .fact-chip.type-plan { background: var(--badge-plan); color: white; }
+    .fact-chip.weight-key { background: var(--accent); color: white; font-weight: bold; }
+    .fact-chip.state-pinned { background: var(--accent); color: white; }
+    .fact-chip.state-proposed { background: var(--warning); color: #1d1a16; }
+    .fact-chip.state-active { background: var(--success); color: #0b0c11; }
+    .fact-chip.state-removed { background: #3a3f4a; color: #bbb; text-decoration: line-through; }
+    .fact-chip.state-replaced { background: #5a3a6b; color: #f0e9dc; }
+
+    .proposal-card {
+      background: var(--bg-deeper);
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .proposal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .accept-btn, .reject-btn {
+      border: none;
+      padding: 6px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .accept-btn { background: var(--success); color: #0b0c11; }
+    .reject-btn { background: var(--danger); color: #1d1a16; }
+
+    .worker-line {
+      background: var(--raised);
+      border-radius: 20px;
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      font-family: var(--font-ui);
+      font-size: 12.5px;
+      color: var(--muted);
+      margin: 20px 0 10px;
+    }
+    .worker-ok { color: var(--success); }
+    .worker-error { color: var(--danger); font-weight: 600; }
+
+    .chat-picker {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 12px 0 18px;
+    }
+    .chat-pill {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 6px 14px;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      color: var(--muted);
+    }
+    .chat-pill.active {
+      border-color: var(--accent);
+      background: var(--raised);
+      color: var(--text);
+    }
+
+    .compact-chat-panel {
+      max-width: 420px;
+      margin-top: 28px;
+      background: var(--bg-deeper);
+      border-radius: 22px;
+      padding: 16px;
+      border: 1px solid var(--line);
+    }
+    .compact-chat-panel h3 {
+      font-size: 1.4rem;
+    }
+
+    .bridge-list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 8px 0 12px;
+    }
+    .bridge-item {
+      background: var(--raised);
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 12px;
+      color: var(--cta);
+    }
+
+    /* modal */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+    }
+    .modal-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      max-width: 460px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .modal-title {
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .pinned-choice-list { margin: 16px 0; }
+    .radio-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 780px) {
+      .main-grid { flex-direction: column; }
+      .chat-canvas-panel { position: static; max-height: none; width: 100%; }
+    }
+    @media (max-width: 420px) {
+      body { padding: 0 8px 20px; }
+      .top-bar { flex-wrap: wrap; gap: 10px; }
+      .fact-actions { opacity: 1; }
+      .chat-node text { font-size: 11px; }
+    }
+  </style>
+</head>
+<body class="dark-theme">
+  <header class="top-bar">
+    <div class="app-title">Бібліотека <small>Нитки · Lantern Crossroads</small></div>
+    <button class="theme-toggle" id="themeToggle">Темна / Світла</button>
+  </header>
+
+  <div class="main-grid">
+    <!-- LIBRARY MAIN -->
+    <section class="library-main">
+      <div class="worker-line">
+        <span>Останній запуск 2 хв тому · сцена повід. 32-48 · <span class="worker-ok">гаразд</span></span>
+        <span>Mira chat: <span class="worker-error">429 rate limit</span></span>
+      </div>
+
+      <div class="chat-picker">
+        <span class="ui-label">Чатові нитки:</span>
+        <button class="chat-pill active" data-chat="lantern">Lantern Crossroads</button>
+        <button class="chat-pill" data-chat="ember">Ember’s road</button>
+        <button class="chat-pill" data-chat="bram">Bram’s watch</button>
+        <button class="chat-pill" data-chat="mira">Mira’s vigil</button>
+      </div>
+
+      <!-- CHAPTERS -->
+      <div class="divider"><div class="ornament"></div></div>
+      <h2>Розділи</h2>
+      <div id="chaptersContainer">
+        <!-- injected by JS -->
+      </div>
+
+      <!-- FACTS -->
+      <div class="divider"><div class="ornament"></div></div>
+      <h2>Факти</h2>
+      <div id="factsContainer"></div>
+
+      <!-- PROPOSALS -->
+      <div class="divider"><div class="ornament"></div></div>
+      <h2>Пропозиції</h2>
+      <div id="proposalsContainer"></div>
+
+      <!-- BRIDGE BUTTON + LIST -->
+      <div class="divider"><div class="ornament"></div></div>
+      <button class="bridge-button" id="bridgeToggleBtn">Протягнути міст</button>
+      <div class="bridge-list" id="bridgeList">
+        <span class="bridge-item">Crossroads → Ember's road: 4 факти, 1 розділ</span>
+        <span class="bridge-item">Crossroads → Bram's watch: 3 факти</span>
+        <span class="bridge-item">Mira's vigil → Crossroads: 2 факти</span>
+      </div>
+      <p id="bridgeModeHint" class="hidden" style="margin-top:6px;color:var(--cta);">Режим моста: клікніть по вузлу, щоб з'єднати.</p>
+
+      <!-- COMPACT CHAT PANEL -->
+      <div class="compact-chat-panel" id="compactChatPanel">
+        <h3>Панель у чаті · Lantern Crossroads</h3>
+        <div style="font-size:14px;margin:10px 0;">Ті самі факти для цього чату:</div>
+        <div id="compactFacts"></div>
+      </div>
+    </section>
+
+    <!-- SVG NETWORK PANEL -->
+    <aside class="chat-canvas-panel" id="networkPanel">
+      <div class="canvas-toolbar">
+        <button class="bridge-button" id="bridgeToolbarToggle">Протягнути міст</button>
+        <div class="legend"><span>розмір = к-ть фактів</span><span>лінії = мости</span></div>
+      </div>
+      <div class="svg-wrap">
+        <svg class="network-svg" id="networkSvg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <!-- Right side panel for selected chat -->
+      <div class="right-panel" id="nodeDetailPanel">
+        <div class="panel-title">Lantern Crossroads</div>
+        <div id="nodeChapterFacts"><em>Оберіть вузол на полотні.</em></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay hidden" id="pinModal">
+    <div class="modal-card">
+      <div class="modal-title">Ліміт закріплених</div>
+      <p style="margin-bottom: 10px;">Закріплено 5 з 5 для Mira. Відкріпіть одну, щоб закріпити цю. Відкріплена нотатка лишається в Бібліотеці й повернеться, коли сцена її торкнеться.</p>
+      <div class="pinned-choice-list" id="pinnedRadioList"></div>
+      <div class="modal-actions">
+        <button class="icon-btn" id="cancelPinBtn">Скасувати</button>
+        <button class="icon-btn" id="replacePinBtn" style="background:var(--cta);color:var(--cta-text);">Замінити</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ---------- DATA ----------
+      const chaptersData = [
+        { label: 'Повернення ліхтарника', range: 'повід. 12-31', badges: ['Відредаговано'], summary: 'Mira повертається до Crossroads після зникнення. Ліхтарі починають блимати синхронно. Ember згадує стару присягу.' },
+        { label: 'Шлях попелу', range: 'повід. 45-78', badges: ['Частина довгої сцени'], summary: 'Bram стикається з примарою біля старої вежі. Попіл падає вночі, але не лишає слідів.' },
+        { label: 'Сплетіння ниток', range: 'повід. 89-122', badges: ['Застаріло'], summary: 'Троє персонажів зустрічаються в центрі міста. Кожен отримує частину спільного видіння.' },
+        { label: 'Міст Ембер', range: 'повід. 130-155', badges: [], summary: 'Ember проводить міст між своїм шляхом і Crossroads. З’являються перші спільні факти.' }
+      ];
+
+      const factsData = [
+        { text: 'The lantern at Crossroads never casts the same shadow twice.', about: 'Світ', whoKnows: 'Усі', type: 'прикмета', weight: 'важливе', state: 'закріплено', pinnedBy: 'Mira' },
+        { text: 'Mira saw the gatekeeper smile for the first time.', about: 'Mira', whoKnows: 'Ember', type: 'подія', weight: 'побутове', state: 'чинний' },
+        { text: 'Ember’s coat still smells of wet ashes from the vigil.', about: 'Ember', whoKnows: 'Mira, Bram', type: 'прикмета', weight: 'побутове', state: 'чинний' },
+        { text: 'Bram cannot sleep under a new moon since the watch.', about: 'Bram', whoKnows: 'Усі', type: 'постійна зміна', weight: 'важливе', state: 'закріплено' },
+        { text: 'A covenant binds Mira and Ember through the lantern flame.', about: 'Mira, Ember', whoKnows: 'Mira, Ember', type: 'стосунки', weight: 'ключове', state: 'закріплено' },
+        { text: 'The road to Ember’s home shortens by three steps at dusk.', about: 'Світ', whoKnows: 'Ember', type: 'світ', weight: 'важливе', state: 'пропонується закріпити' },
+        { text: 'Bram plans to reopen the old watchtower before winter.', about: 'Bram', whoKnows: 'Bram', type: 'план', weight: 'побутове', state: 'чинний' },
+        { text: 'The White Crow of Lantern Crossroads has been silent for a week.', about: 'Світ', whoKnows: 'Усі', type: 'подія', weight: 'важливе', state: 'чинний' },
+        { text: 'Mira’s left hand now bears a faint crossroad mark.', about: 'Mira', whoKnows: 'Ember, Bram', type: 'постійна зміна', weight: 'ключове', state: 'закріплено' },
+        { text: 'Ember proposed to merge two old lantern myths.', about: 'Ember', whoKnows: 'Усі', type: 'план', weight: 'побутове', state: 'знятий' },
+        { text: 'Bram replaced his silver dagger with a charred branch.', about: 'Bram', whoKnows: 'Mira', type: 'постійна зміна', weight: 'важливе', state: 'замінений' },
+        { text: 'The Crossroads remembers every promise spoken after midnight.', about: 'Світ', whoKnows: 'Ember, Bram', type: 'світ', weight: 'ключове', state: 'закріплено' },
+        { text: 'A new star appears above the lantern every solstice.', about: 'Світ', whoKnows: 'Усі', type: 'прикмета', weight: 'побутове', state: 'чинний' },
+        { text: 'Mira believes Ember’s road is a living thread.', about: 'Ember', whoKnows: 'Mira', type: 'стосунки', weight: 'важливе', state: 'чинний' },
+        { text: 'The gatekeeper once traded a year for a single question.', about: 'Світ', whoKnows: 'Bram', type: 'подія', weight: 'важливе', state: 'пропонується закріпити' },
+        { text: 'Bram and Mira met at the lantern during the last storm.', about: 'Bram, Mira', whoKnows: 'Усі', type: 'подія', weight: 'побутове', state: 'чинний' }
+      ];
+
+      const proposalsData = [
+        { action: 'Злити два факти', detail: 'Об’єднати “Mira’s left hand...” та “Covenant binds...” в один ключовий факт.' },
+        { action: 'Зняти факт', detail: 'Факт “Ember proposed to merge...” зняти через застарілість.' },
+        { action: 'Переписати факт', detail: 'Переписати “The gatekeeper once traded...” уточнивши деталі угоди.' },
+        { action: 'Закріпити ключовий факт', detail: 'Закріпити “The Crossroads remembers every promise...” після схвалення.' }
+      ];
+
+      const chars = ['Mira', 'Ember', 'Bram'];
+
+      // ---------- THEME TOGGLE ----------
+      const root = document.body;
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        root.classList.toggle('light-theme');
+        root.classList.toggle('dark-theme');
+      });
+
+      // ---------- HELPERS ----------
+      function actionsRow(prefix) {
+        return `<div class="actions-row fact-actions">
+          <button class="icon-btn" data-action="edit" data-target="${prefix}">✎ Редагувати</button>
+          <button class="icon-btn" data-action="pin" data-target="${prefix}">📌 Закріпити</button>
+          <button class="icon-btn" data-action="unpin" data-target="${prefix}">🔓 Відкріпити</button>
+          <button class="icon-btn" data-action="hide" data-target="${prefix}">✕ Зняти</button>
+          <button class="icon-btn" data-action="restore" data-target="${prefix}">↺ Відновити</button>
+          <button class="icon-btn" data-action="delete" data-target="${prefix}">🗑 Видалити</button>
+        </div>`;
+      }
+
+      function renderChapters() {
+        const cont = document.getElementById('chaptersContainer');
+        cont.innerHTML = chaptersData.map((ch, i) => {
+          const badges = ch.badges.map(b => `<span class="badge ${b==='Застаріло'?'outdated':b==='Частина довгої сцени'?'long-scene':'edited'}">${b}</span>`).join(' ');
+          return `<div class="chapter-card" data-chapter-idx="${i}">
+            <div class="chapter-header"><span class="chapter-label">${ch.label}</span><span class="chapter-range">${ch.range}</span> ${badges}</div>
+            <p class="chapter-summary">${ch.summary}</p>
+            <div class="actions-row fact-actions">
+              <button class="icon-btn" data-action="edit" data-target="chapter-${i}">✎ Редагувати</button>
+              <button class="icon-btn" data-action="pin" data-target="chapter-${i}">📌 Закріпити</button>
+              <button class="icon-btn" data-action="hide" data-target="chapter-${i}">✕ Зняти</button>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      function renderFacts() {
+        const cont = document.getElementById('factsContainer');
+        cont.innerHTML = factsData.map((f, i) => {
+          const stateClassMap = {
+            'закріплено': 'state-pinned',
+            'пропонується закріпити': 'state-proposed',
+            'чинний': 'state-active',
+            'знятий': 'state-removed',
+            'замінений': 'state-replaced'
+          };
+          const typeClassMap = {
+            'подія': 'type-event', 'прикмета': 'type-omen', 'постійна зміна': 'type-change',
+            'стосунки': 'type-rel', 'світ': 'type-world', 'план': 'type-plan'
+          };
+          return `<div class="fact-row ${f.state==='закріплено'?'pinned-fact':''}" data-fact-idx="${i}">
+            <div class="fact-text">${f.text}</div>
+            <div class="fact-meta">
+              <span class="fact-chip type-${f.type} ${typeClassMap[f.type]||''}">${f.type}</span>
+              <span class="fact-chip">Про кого: ${f.about}</span>
+              <span class="fact-chip">Хто знає: ${f.whoKnows}</span>
+              <span class="fact-chip weight-${f.weight==='ключове'?'key':''}">${f.weight}</span>
+              <span class="fact-chip ${stateClassMap[f.state]||''}">${f.state}</span>
+            </div>
+            ${actionsRow(`fact-${i}`)}
+          </div>`;
+        }).join('');
+      }
+
+      function renderProposals() {
+        const cont = document.getElementById('proposalsContainer');
+        cont.innerHTML = proposalsData.map((p, i) => `
+          <div class="proposal-card">
+            <div style="font-weight:600;color:var(--accent);">${p.action}</div>
+            <div style="color:var(--muted);">${p.detail}</div>
+            <div class="proposal-actions">
+              <button class="accept-btn" data-proposal-accept="${i}">Прийняти</button>
+              <button class="reject-btn" data-proposal-reject="${i}">Відхилити</button>
+            </div>
+          </div>`).join('');
+      }
+
+      function renderCompactFacts(chatName) {
+        const cont = document.getElementById('compactFacts');
+        if (!chatName) chatName = 'Lantern Crossroads';
+        cont.innerHTML = factsData.slice(0, 6).map(f => `<div style="font-size:13px;margin-bottom:6px;">• ${f.text}</div>`).join('');
+      }
+
+      // ---------- NETWORK SVG ----------
+      const svg = document.getElementById('networkSvg');
+      const nodePositions = {
+        lantern: {x: 80, y: 150}, ember: {x: 250, y: 50}, bram: {x: 310, y: 200}, mira: {x: 150, y: 240}
+      };
+      const nodes = [
+        { id: 'lantern', label: 'Lantern Crossroads', factCount: 7 },
+        { id: 'ember', label: 'Ember’s road', factCount: 4 },
+        { id: 'bram', label: 'Bram’s watch', factCount: 5 },
+        { id: 'mira', label: 'Mira’s vigil', factCount: 6 }
+      ];
+      const bridges = [
+        { from: 'lantern', to: 'ember', active: true },
+        { from: 'lantern', to: 'bram', active: true },
+        { from: 'lantern', to: 'mira', active: true },
+        { from: 'ember', to: 'bram', active: false }
+      ];
+
+      function drawNetwork() {
+        svg.innerHTML = '';
+        // bridge lines
+        bridges.forEach(b => {
+          const from = nodePositions[b.from];
+          const to = nodePositions[b.to];
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', from.x); line.setAttribute('y1', from.y);
+          line.setAttribute('x2', to.x); line.setAttribute('y2', to.y);
+          line.setAttribute('class', `bridge-line ${b.active ? 'active-bridge' : ''}`);
+          svg.appendChild(line);
+        });
+        // nodes
+        nodes.forEach(n => {
+          const pos = nodePositions[n.id];
+          const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          g.setAttribute('class', 'chat-node');
+          g.setAttribute('data-chat-id', n.id);
+          g.setAttribute('cursor', 'pointer');
+          g.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectNode(n.id);
+          });
+          const circ = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circ.setAttribute('cx', pos.x); circ.setAttribute('cy', pos.y);
+          circ.setAttribute('r', 18 + n.factCount * 3);
+          g.appendChild(circ);
+          const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          txt.setAttribute('x', pos.x); txt.setAttribute('y', pos.y + 4);
+          txt.setAttribute('text-anchor', 'middle');
+          txt.textContent = n.label;
+          g.appendChild(txt);
+          svg.appendChild(g);
+        });
+      }
+
+      function selectNode(chatId) {
+        document.querySelectorAll('.chat-node').forEach(el => {
+          el.classList.toggle('selected', el.getAttribute('data-chat-id') === chatId);
+        });
+        const node = nodes.find(n => n.id === chatId);
+        const panel = document.getElementById('nodeDetailPanel');
+        if (node) {
+          let html = `<div class="panel-title">${node.label}</div>`;
+          const chatFacts = factsData.slice(0, 4);
+          html += `<div style="margin-bottom:8px;">Факти: ${chatFacts.map(f => `<div style="margin:4px 0;">• ${f.text}</div>`).join('')}</div>`;
+          html += chaptersData.slice(0, 2).map(ch => `<div class="chapter-card"><span class="chapter-label">${ch.label}</span><p>${ch.summary}</p></div>`).join('');
+          panel.innerHTML = html;
+        }
+      }
+
+      // bridge toggle mode hint
+      let bridgeMode = false;
+      const bridgeToggleBtn = document.getElementById('bridgeToggleBtn');
+      const bridgeToolbarToggle = document.getElementById('bridgeToolbarToggle');
+      const bridgeModeHint = document.getElementById('bridgeModeHint');
+      function toggleBridgeMode() {
+        bridgeMode = !bridgeMode;
+        bridgeToggleBtn.classList.toggle('active-mode', bridgeMode);
+        bridgeToolbarToggle.classList.toggle('active-mode', bridgeMode);
+        bridgeModeHint.classList.toggle('hidden', !bridgeMode);
+      }
+      bridgeToggleBtn.addEventListener('click', toggleBridgeMode);
+      bridgeToolbarToggle.addEventListener('click', toggleBridgeMode);
+
+      // ---------- MODAL FOR PIN LIMIT ----------
+      const pinModal = document.getElementById('pinModal');
+      const cancelPinBtn = document.getElementById('cancelPinBtn');
+      const replacePinBtn = document.getElementById('replacePinBtn');
+      const pinnedRadioList = document.getElementById('pinnedRadioList');
+
+      function openPinLimitModal(factId) {
+        pinnedRadioList.innerHTML = '';
+        const pinnedFacts = factsData.filter(f => f.state === 'закріплено');
+        pinnedFacts.forEach((pf, idx) => {
+          const row = document.createElement('div');
+          row.className = 'radio-row';
+          row.innerHTML = `<input type="radio" name="pinnedChoice" value="${idx}" ${idx===0?'checked':''}> <span>${pf.text}</span>`;
+          pinnedRadioList.appendChild(row);
+        });
+        pinModal.classList.remove('hidden');
+      }
+      cancelPinBtn.addEventListener('click', () => pinModal.classList.add('hidden'));
+      replacePinBtn.addEventListener('click', () => {
+        pinModal.classList.add('hidden');
+        // simple feedback: just close
+      });
+
+      // global click delegation for icon buttons
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.icon-btn, .accept-btn, .reject-btn');
+        if (!btn) return;
+        if (btn.hasAttribute('data-action') && btn.getAttribute('data-action') === 'pin') {
+          const target = btn.getAttribute('data-target');
+          openPinLimitModal(target);
+          e.preventDefault();
+        }
+      });
+
+      // chat pills update compact panel
+      document.querySelectorAll('.chat-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+          document.querySelectorAll('.chat-pill').forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          const chatName = pill.textContent.trim();
+          renderCompactFacts(chatName);
+        });
+      });
+
+      // initial render
+      renderChapters();
+      renderFacts();
+      renderProposals();
+      renderCompactFacts('Lantern Crossroads');
+      drawNetwork();
+      selectNode('lantern');
+    })();
+  </script>
+</body>
+</html>

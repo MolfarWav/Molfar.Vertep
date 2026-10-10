@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="uk" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roleplay: вигляд чату (макети)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kurale&family=Inter:wght@400;500;600&family=Noto+Sans:ital,wght@0,400;0,600;1,400&family=Noto+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ───────── tokens: dark = theme "Vertep" from seed.ts; light = matching linen palette ───────── */
+:root[data-theme=dark], .frame[data-theme=dark]{
+  --bg:#07080b; --ui:#0b0c11; --card:#0b0c11; --user:#12141c; --line:#2a2f3d;
+  --text:#f0e9dc; --it:#a9b1c4; --q:#538796; --muted:#8d93a6; --accent:#e2213a; --cta:#39d5ff;
+  --plate:#b3162d; --pop:#10121a; --hov:#1a1d28; --ok:#3fbf73; --gold:#d9a441;
+  --userbub:#10303a; --shadow:rgba(0,0,0,.55); --page:#030406; --ornA:#c2182f; --ornB:#6f6a5e;
+}
+:root[data-theme=light], .frame[data-theme=light]{
+  --bg:#f5f0e6; --ui:#fbf8f2; --card:#fbf8f2; --user:#ebe4d4; --line:#d6cdba;
+  --text:#1e1a15; --it:#4f5568; --q:#1b5f73; --muted:#62594b; --accent:#b3162d; --cta:#0a6a85;
+  --plate:#b3162d; --pop:#fffdf8; --hov:#efe8d8; --ok:#1a7f45; --gold:#7d5200;
+  --userbub:#d3e9ef; --shadow:rgba(60,45,20,.25); --page:#e8e1d2; --ornA:#b3162d; --ornB:#9a917f;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--text);font:14px/1.5 Inter,system-ui,sans-serif;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--cta);outline-offset:2px}
+
+/* ───────── page chrome ───────── */
+.top{max-width:1300px;margin:0 auto;padding:18px 20px 0}
+.top h1{margin:0 0 2px;font:400 22px Kurale,Georgia,serif}
+.top .sub{margin:0 0 14px;color:var(--muted);font-size:13px}
+.bar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin-bottom:14px}
+.tabs,.seg{display:flex;gap:0;border:1px solid var(--line)}
+.tabs button,.seg button{border:0;background:transparent;padding:8px 14px;font-size:13px;color:var(--muted);border-right:1px solid var(--line)}
+.tabs button:last-child,.seg button:last-child{border-right:0}
+.tabs button[aria-selected=true],.seg button[aria-pressed=true]{background:var(--text);color:var(--bg);font-weight:600}
+.bar label{font-size:12px;color:var(--muted);margin-right:6px}
+.desc{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;margin-bottom:18px}
+@media (max-width:900px){.desc{grid-template-columns:1fr}}
+.desc h2{margin:0 0 6px;font:400 19px Kurale,Georgia,serif}
+.desc p{margin:0;max-width:70ch}
+.desc h3{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.desc ul{margin:0;padding-left:18px}
+.desc li{margin-bottom:3px}
+.stagewrap{overflow-x:auto;padding:0 20px 40px}
+.stagewrap .frame{margin:0 auto}
+.legend{max-width:1300px;margin:0 auto;padding:0 20px 8px;color:var(--muted);font-size:12px}
+
+/* ───────── frame (the app window): container queries follow the FRAME width, not the page ───────── */
+.frame{position:relative;border:1px solid var(--line);background:var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,sans-serif;overflow:hidden;border-radius:6px;container:f/inline-size;box-shadow:0 10px 40px var(--shadow)}
+.app{display:grid;grid-template-columns:48px minmax(0,1fr) 272px;height:100%}
+@container f (max-width:1023px){.app{grid-template-columns:minmax(0,1fr)}.rail,.strip{display:none}}
+.chat{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;height:100%;background:var(--bg)}
+.scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+svg.i{flex:none;display:block}
+.av{--s:36px;width:var(--s);height:var(--s);flex:none;display:grid;place-items:center;overflow:hidden;
+  background:linear-gradient(145deg,hsl(var(--h) 36% 32%),hsl(calc(var(--h) + 30) 42% 15%));color:#f4ede0;font:400 calc(var(--s)*.46)/1 Kurale,Georgia,serif}
+.av.circle{border-radius:50%}.av.sq{border-radius:3px}
+svg.sil{display:block;width:100%;height:100%}
+
+/* rail */
+.rail{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0;background:var(--ui);border-right:1px solid var(--line)}
+.rail .lg{width:28px;height:28px;margin-bottom:8px;display:grid;place-items:center;font:400 15px Kurale;background:var(--accent);color:#fff;border-radius:3px}
+.rail .rb{position:relative;width:34px;height:34px;display:grid;place-items:center;color:var(--muted);background:none;border:0;border-radius:3px}
+.rail .rb.on{color:var(--cta);background:var(--hov)}
+.rail .rb.on::before{content:"";position:absolute;left:-7px;top:7px;bottom:7px;width:2px;background:var(--accent)}
+
+/* dashboard strip placeholder (272 px, same sections as dash-strip.tsx) */
+.strip{display:flex;flex-direction:column;background:var(--card);border-left:1px solid var(--line);min-height:0}
+.strip .sh{height:44px;flex:none;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--line)}
+.strip .sh b{font:400 15px Kurale}
+.strip .sh .ago{font:11px "JetBrains Mono",ui-monospace,monospace;color:var(--muted);display:flex;gap:6px;align-items:center}
+.strip .sb{flex:1;overflow:hidden}
+:is(.strip,.dashpop) .sec{padding:10px 12px;border-bottom:1px solid var(--line)}
+:is(.strip,.dashpop) .nm2{display:flex;justify-content:space-between;align-items:center;font:400 16px Kurale}
+:is(.strip,.dashpop) .tag{font-size:10px;border:1px solid var(--line);padding:1px 6px;color:var(--muted)}
+:is(.strip,.dashpop) .cn{text-align:center}:is(.strip,.dashpop) .cn b{display:block;font:400 16px Kurale;color:var(--gold)}:is(.strip,.dashpop) .cn span{font-size:11.5px;color:var(--muted)}
+.sbar{display:grid;grid-template-columns:62px 1fr 28px;gap:8px;align-items:center;font-size:11.5px;color:var(--muted);margin:5px 0}
+.sbar i{position:relative;height:6px;background:var(--hov)}
+.sbar i::before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line)}
+.sbar i u{position:absolute;top:0;bottom:0;background:var(--cta)}
+.sbar i u.n{background:var(--accent)}
+.sbar em{font-style:normal;font:11px "JetBrains Mono",ui-monospace,monospace;text-align:right}
+:is(.strip,.dashpop) .lab{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+:is(.strip,.dashpop) .th{font-size:12px;display:flex;gap:6px;margin:3px 0}:is(.strip,.dashpop) .th::before{content:"";width:5px;height:5px;margin-top:6px;background:var(--accent);flex:none}
+:is(.strip,.dashpop) .btn{display:block;width:calc(100% - 24px);margin:10px 12px;padding:7px;border:1px solid var(--line);background:none;text-align:center;font-size:12.5px}
+.strip .ft{flex:none;border-top:1px solid var(--line);padding:8px 12px;font-size:11.5px;color:var(--muted)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none;box-shadow:0 0 0 0 var(--ok);animation:pulse 2.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 55%,transparent)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+
+@container f (max-width:1023px){.rail,.strip{display:none}}
+/* shared bits: text roles, chips, buttons, popovers */
+.nc{color:hsl(var(--h) 55% 62%)}.frame[data-theme=light] .nc{color:hsl(var(--h) 62% 28%)}.nc.u,.frame[data-theme=light] .nc.u{color:var(--q)}
+.act{color:var(--it);font-style:italic}
+.sp{color:var(--q)}
+.live{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:var(--muted)}
+.live .dot{transform:translateY(-1px)}
+.live .sp{color:var(--q)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:12px;padding:3px 9px;border-radius:3px}
+.chip:hover{color:var(--text)}
+.ib{width:32px;height:32px;display:inline-grid;place-items:center;background:none;border:0;color:var(--muted);border-radius:4px;flex:none}
+.ib:hover{color:var(--text);background:var(--hov)}
+@container f (max-width:600px){.ib{width:36px;height:36px}}
+.pw{position:relative;display:inline-block}
+.pop{position:absolute;z-index:40;top:calc(100% + 6px);min-width:224px;background:var(--pop);color:var(--text);border:1px solid var(--line);border-radius:6px;box-shadow:0 14px 34px var(--shadow);padding:4px;font:13px/1.4 Inter,sans-serif;text-align:left}
+.pop[hidden]{display:none}
+.pop.r{right:0}.pop.l{left:0}.pop.up{top:auto;bottom:calc(100% + 6px)}
+.mi{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;background:none;border:0;border-radius:4px;color:var(--text);text-align:left;font-size:13px;white-space:nowrap}
+.mi:hover,.mi:focus-visible{background:var(--hov)}
+.mi svg{color:var(--muted)}
+.mi.danger,.mi.danger svg{color:var(--accent)}
+.mh{padding:7px 10px 3px;font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.sep{height:1px;margin:4px 0;background:var(--line)}
+.details{width:288px;padding:12px 14px}
+.details h4{margin:0 0 8px;font:400 15px Kurale}
+.details dl{margin:0;display:grid;grid-template-columns:84px 1fr;gap:5px 10px;font-size:12.5px}
+.details dt{color:var(--muted)}.details dd{margin:0}
+.details .cb{height:5px;background:var(--hov);margin-top:4px}.details .cb i{display:block;height:100%;width:19%;background:var(--cta)}
+.details p{margin:10px 0 6px;font-size:11.5px;color:var(--muted)}
+.dashpop{width:256px;padding:0;max-height:430px;overflow:auto}
+.hd{display:flex;align-items:center;gap:10px;height:54px;flex:none;padding:0 10px;position:relative;z-index:20}
+.hd .ttl{min-width:0;line-height:1.25}.hd .ttl b{display:block;font:400 16px Kurale;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hd .ttl small{font-size:11.5px;color:var(--muted)}
+.hd .sp1{flex:1}
+.dashbtn{display:none}
+@container f (max-width:1023px){.dashbtn{display:inline-flex}}
+.tools{display:flex;gap:2px;align-items:center}
+.tb{display:inline-flex;gap:6px;align-items:center;height:28px;padding:0 8px;background:none;border:0;border-radius:4px;color:var(--muted);font-size:12px}
+.tb:hover{color:var(--text);background:var(--hov)}
+.comp{position:relative;display:flex;align-items:flex-end;gap:8px;padding:10px 12px;flex:none}
+.comp .inp{flex:1;min-width:0;resize:none;height:40px;padding:9px 12px;font:14px/1.5 Inter,sans-serif;color:var(--text);background:var(--user);border:1px solid var(--line);border-radius:4px}
+.comp .inp::placeholder{color:var(--muted);opacity:1}
+.cbtn{width:40px;height:40px;flex:none;display:grid;place-items:center;border:1px solid var(--line);background:var(--ui);color:var(--text);border-radius:4px}
+.cbtn:hover{background:var(--hov)}
+.cbtn.send{background:var(--cta);border-color:var(--cta);color:#04141a}
+:root[data-theme=light] .cbtn.send, .frame[data-theme=light] .cbtn.send{color:#fff}
+.plusmenu{min-width:236px}
+@container f (min-width:700px){.plusmenu{display:grid;grid-template-columns:repeat(3,auto);gap:0 4px;min-width:0;padding:6px}.plusmenu .sep{width:1px;height:auto;margin:4px 2px}.plusmenu{grid-template-columns:auto 1px auto 1px auto}}
+
+/* ═════════ A · Book page ═════════ */
+.va .hd{border-bottom:1px solid var(--line)}
+.va .hd .ttl b{font-size:17px}
+.va .scroll{padding:30px 22px 26px}
+.va .col{max-width:700px;margin:0 auto}
+.va .scene{display:flex;align-items:center;gap:16px;margin:0 0 28px;font:12px Kurale;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-align:center}
+.va .scene::before,.va .scene::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line))}
+.va .scene::after{background:linear-gradient(270deg,transparent,var(--line))}
+.va .msg{position:relative;display:grid;grid-template-columns:40px minmax(0,1fr);column-gap:20px;padding:2px 0}
+.va .por{padding-top:2px}.va .mini{display:none}
+.va .msg.user .por{visibility:hidden}
+.va .msg.user .body{border-left:1px solid var(--line);padding-left:20px;margin-left:-21px}
+.va .nm{display:flex;align-items:center;gap:10px;margin-bottom:6px;min-height:22px;font:12px Kurale;letter-spacing:.16em;text-transform:uppercase}
+.va .nm time{font:11px Inter;letter-spacing:0;text-transform:none;color:var(--muted)}
+.va .nm .meta{margin-left:auto;font:11px Inter;letter-spacing:0;text-transform:none;color:var(--muted);opacity:0;transition:opacity .15s;white-space:nowrap}
+.va .msg:hover .meta,.va .msg:focus-within .meta,.va .msg.on .meta{opacity:1}
+.va .msg.user .nm{color:var(--q)}
+.va .prose{font:400 17px/1.8 "Noto Serif",Georgia,serif;text-wrap:pretty}
+.va .prose p{margin:0 0 .8em}
+.va .msg.dropcap .prose p:first-child::first-letter{float:left;font:400 3.5em/.8 Kurale,Georgia,serif;color:var(--accent);padding:.07em .1em 0 0}
+.va .chip.thk{margin:0 0 10px}
+.va .tools{margin:0 0 0 -8px;opacity:0;transition:opacity .15s;height:30px}
+.va .msg:hover .tools,.va .msg:focus-within .tools,.va .msg.on .tools{opacity:1}
+.va .div{display:flex;align-items:center;justify-content:center;gap:10px;margin:18px 0 20px 60px}
+.va .div::before,.va .div::after{content:"";flex:1;max-width:120px;height:1px;background:linear-gradient(90deg,transparent,var(--line))}
+.va .div::after{background:linear-gradient(270deg,transparent,var(--line))}
+.va .div i{width:7px;height:7px;transform:rotate(45deg);border:1px solid var(--accent);display:block;position:relative}
+.va .div i::after{content:"";position:absolute;inset:1.5px;background:var(--accent)}
+.va .live{margin:6px 0 0 60px;font:italic 13.5px "Noto Serif",Georgia,serif}
+.va .comp{padding:10px 22px 14px}
+.va .comp .inp{background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;font:italic 16px "Noto Serif",Georgia,serif;padding:8px 4px}
+.va .cbtn{border-radius:50%}
+.va .cbtn.send{border-radius:50%}
+@container f (max-width:600px){
+  .va .scroll{padding:22px 16px 20px}
+  .va .msg{grid-template-columns:minmax(0,1fr)}
+  .va .por{display:none}.va .mini{display:inline-grid}
+  .va .msg.user .body{margin-left:0;padding-left:14px}
+  .va .prose{font-size:16.5px;line-height:1.75}
+  .va .div,.va .live{margin-left:0}
+  .va .nm .meta{display:none}
+  .va .tools .lbl{display:none}
+  .va .comp{padding:8px 12px 12px}
+}
+
+/* ═════════ B · Vertep stage ═════════ */
+.vb .hd{background:var(--ui);border-bottom:1px solid var(--line)}
+.vb .hd::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:6px;background:var(--orn) repeat-x center/auto 6px;opacity:.55}
+.vb .scroll{padding:26px 24px 24px;background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 60%),var(--bg)}
+.vb .col{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.vb .scene{display:flex;align-items:center;gap:14px;text-align:center}
+.vb .scene .band{flex:1;height:10px;background:var(--orn) repeat-x center/auto 10px;opacity:.8}
+.vb .scene b{display:block;font:400 19px Kurale;letter-spacing:.02em}
+.vb .scene small{display:block;font-size:12px;color:var(--muted);font-style:italic}
+.vb .turn{position:relative;display:flex;gap:14px;max-width:88%}
+.vb .turn.user{margin-left:auto;max-width:62%}
+.vb .arch{width:58px;height:74px;flex:none;border-radius:29px 29px 2px 2px;border:1px solid var(--line);padding:3px;background:var(--ui);position:relative}
+.vb .arch::before{content:"";position:absolute;left:-1px;right:-1px;bottom:-5px;height:5px;background:var(--orn) repeat-x center/auto 5px;opacity:.9}
+.vb .arch>div{width:100%;height:100%;border-radius:26px 26px 0 0;overflow:hidden}
+.vb .panel{position:relative;flex:1;min-width:0;border:1px solid var(--line);background:var(--card);padding:10px 16px 14px;border-radius:2px}
+.vb .turn.user .panel{background:var(--user);border-left:2px solid var(--cta)}
+.vb .panel::before{content:"";position:absolute;left:-1px;right:-1px;top:-1px;height:5px;background:var(--orn) repeat-x center/auto 5px;opacity:.45}
+.vb .turn.user .panel::before{display:none}
+.vb .nm{display:flex;align-items:baseline;gap:10px;margin:2px 0 6px}
+.vb .nm b{font:400 17px Kurale}
+.vb .nm .role{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.vb .nm time{margin-left:auto;font-size:11px;color:var(--muted)}
+.vb .turn.user .nm{justify-content:flex-end}.vb .turn.user .nm time{margin-left:0}
+.vb .prose{font:400 15px/1.7 "Noto Sans",Inter,sans-serif}
+.vb .prose p{margin:0 0 .6em}.vb .prose p:last-child{margin-bottom:0}
+.vb .chip.thk{margin:2px 0 8px}
+.vb .tools{position:absolute;top:-15px;right:10px;padding:2px;background:var(--pop);border:1px solid var(--line);border-radius:4px;opacity:0;transition:opacity .15s;z-index:5}
+.vb .turn:hover .tools,.vb .turn:focus-within .tools,.vb .turn.on .tools{opacity:1}
+.vb .foot{display:flex;justify-content:flex-end;margin-top:8px;font-size:11px;color:var(--muted);gap:10px;align-items:center}
+.vb .live{align-items:center;gap:10px;margin:-6px 0 0 72px;padding:6px 10px;border:1px dashed var(--line);font-size:12.5px;background:color-mix(in srgb,var(--ui) 70%,transparent)}
+.vb .comp{background:var(--ui);border-top:1px solid var(--line);padding:14px 16px 12px}
+.vb .comp::before{content:"";position:absolute;left:0;right:0;top:-1px;height:5px;background:var(--orn) repeat-x center/auto 5px;opacity:.55}
+.vb .comp .inp,.vb .cbtn{border-radius:0}
+@container f (max-width:600px){
+  .vb .scroll{padding:20px 12px}
+  .vb .turn{max-width:100%}.vb .turn.user{max-width:86%}
+  .vb .arch{width:40px;height:52px;border-radius:20px 20px 2px 2px}.vb .arch>div{border-radius:17px 17px 0 0}
+  .vb .turn{gap:10px}
+  .vb .live{margin-left:0}
+  .vb .tools{opacity:0}
+  .vb .nm .role{display:none}
+  .vb .scene b{font-size:16px}
+}
+
+/* ═════════ C · Messenger ═════════ */
+.vc .hd{background:var(--ui);border-bottom:1px solid var(--line)}
+.vc .hd .ttl b{font:600 15px Inter}
+.vc .scroll{padding:14px 12px 10px}
+.vc .col{max-width:660px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.vc .daysep{align-self:center;font-size:11.5px;color:var(--muted);background:var(--user);padding:3px 12px;border-radius:12px;margin:2px 0 4px}
+.vc .g{display:grid;grid-template-columns:30px minmax(0,1fr);column-gap:8px;align-items:end;max-width:86%}
+.vc .g.user{grid-template-columns:minmax(0,1fr);margin-left:auto;max-width:82%;justify-items:end}
+.vc .stack{display:flex;flex-direction:column;gap:3px;align-items:flex-start;min-width:0}
+.vc .g.user .stack{align-items:flex-end}
+.vc .who{font-size:12px;font-weight:600;margin:0 0 2px 10px;color:hsl(var(--h) 55% 62%)}
+:root[data-theme=light] .vc .who,.frame[data-theme=light] .who{color:hsl(var(--h) 60% 30%)}
+.vc .bub{background:var(--user);border:1px solid var(--line);padding:8px 12px;border-radius:14px 14px 14px 4px;font:400 14.5px/1.55 "Noto Sans",Inter,sans-serif;text-align:left;cursor:pointer;color:var(--text)}
+.vc .bub+.bub{border-radius:4px 14px 14px 4px}
+.vc .bub:last-of-type{border-radius:4px 14px 14px 4px}
+.vc .stack>.bub:first-of-type:last-of-type{border-radius:14px 14px 14px 4px}
+.vc .g.user .bub{background:var(--userbub);border-color:transparent;border-radius:14px 14px 4px 14px}
+.frame[data-theme=dark].vc .g.user .sp{color:#7fbfd0}
+.vc .g.user .bub p{margin:0 0 4px}.vc .g.user .bub p:last-child{margin:0}
+.vc .chip.thk{margin:0 0 3px 6px;border-radius:12px}
+.vc .foot{max-height:0;opacity:0;overflow:hidden;transition:max-height .18s,opacity .18s;display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--muted);margin-left:6px}
+.vc .g.user .foot{margin:0 6px 0 0;justify-content:flex-end}
+.vc .g.on .foot,.vc .g:focus-within .foot{max-height:80px;opacity:1;margin-top:3px;overflow:visible}
+.vc .foot .tools{margin-left:-4px}
+.vc .live{align-self:center;background:var(--user);border-radius:12px;padding:5px 12px;font-size:12px;max-width:94%;align-items:center;margin-top:4px}
+.vc .comp{background:var(--ui);border-top:1px solid var(--line);padding:8px 10px 10px}
+.vc .comp .inp{border-radius:20px;padding:9px 16px}
+.vc .cbtn{border-radius:50%}
+@container f (max-width:600px){
+  .vc .scroll{padding:12px 8px 8px}
+  .vc .g{max-width:92%}.vc .g.user{max-width:88%}
+  .vc .bub{font-size:15px}
+}
+
+/* ═════════ D · Visual novel ═════════ */
+.vd .hd{position:absolute;top:0;left:0;right:0;background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 92%,transparent),transparent);height:56px;padding-top:2px}
+.vd .stage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(250px,40%) minmax(0,1fr);position:relative}
+.vd .pp{position:relative;overflow:hidden;border-right:1px solid var(--line);background:var(--ui)}
+.vd .pp .big{position:absolute;inset:0}
+.vd .pp .big svg{width:100%;height:100%}
+.vd .pp::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,color-mix(in srgb,var(--bg) 75%,transparent));pointer-events:none}
+.vd .pname{display:none}
+.vd .cast{position:absolute;left:12px;bottom:12px;display:flex;gap:8px;z-index:2}
+.vd .cast .av{outline:2px solid var(--line);outline-offset:1px;opacity:.7}
+.vd .cast .av.on{outline-color:var(--accent);opacity:1}
+.vd .hist{overflow-y:auto;padding:62px 18px 14px;display:flex;flex-direction:column;gap:7px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.vd .hl{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start;padding:7px 10px;border:1px solid transparent;border-left:2px solid var(--line);background:var(--ui);text-align:left;width:100%;cursor:pointer}
+.vd .hl:hover{border-color:var(--line);border-left-color:var(--accent)}
+.vd .hl.user{border-left-color:var(--q);background:var(--user)}
+.vd .hl b{display:block;font:600 11.5px Inter;margin-bottom:1px}
+.vd .hl .t{font:13px/1.45 "Noto Sans",Inter,sans-serif;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vd .hl.open .t{-webkit-line-clamp:unset;display:block}
+.vd .hl .t .act{color:var(--it)}
+.vd .htime{color:var(--muted);font-weight:400;margin-left:6px}
+.vd .scn{align-self:center;font-size:11.5px;color:var(--muted);letter-spacing:.06em;margin:2px 0}
+.vd .dlg{position:relative;flex:none;margin:20px 16px 0;border:1px solid var(--line);background:color-mix(in srgb,var(--ui) 94%,transparent);padding:20px 20px 10px;box-shadow:0 -10px 30px color-mix(in srgb,var(--bg) 60%,transparent)}
+.vd .dlg::before{content:"";position:absolute;left:-1px;right:-1px;top:-1px;height:5px;background:var(--orn) repeat-x center/auto 5px;opacity:.5}
+.vd .plate{position:absolute;top:-15px;left:18px;display:flex;align-items:center;gap:10px;background:var(--plate);color:#fff;padding:3px 14px;font:400 16px Kurale;letter-spacing:.02em;border-radius:2px}
+.vd .plate small{font:11px Inter;opacity:.9}
+.vd .dtxt{font:400 16.5px/1.7 "Noto Sans",Inter,sans-serif;max-height:196px;overflow-y:auto;padding-right:6px}
+.vd .dtxt p{margin:0 0 .5em}
+.vd .chip.thk{margin:2px 0 8px}
+.vd .dact{display:flex;align-items:center;gap:2px;justify-content:flex-end;margin-top:2px}
+.vd .dact .nx{margin-right:auto;color:var(--accent);font-size:12px;letter-spacing:.1em;animation:bl 1.4s infinite}
+@keyframes bl{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.vd .dact .nx{animation:none}}
+.vd .live{padding:6px 18px 0;margin:2px 0 0;align-items:center;flex:none;font-size:12.5px}
+.vd .comp{padding:6px 16px 12px}
+@container f (max-width:600px){
+  .vd .stage{grid-template-columns:minmax(0,1fr);grid-template-rows:150px minmax(0,1fr)}
+  .vd .pp .big{right:auto;width:116px;border-right:1px solid var(--line)}
+  .vd .pp::after{display:none}
+  .vd .hd .av,.vd .hd .ttl{display:none}
+  .vd .pname{display:block;position:absolute;left:132px;bottom:44px}
+  .vd .pname b{display:block;font:400 20px Kurale}.vd .pname small{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .vd .pp{border-right:0;border-bottom:1px solid var(--line)}
+  .vd .pp .big svg{object-fit:cover}
+  .vd .hist{padding:8px 10px}
+  .vd .dlg{margin:16px 10px 0;padding:18px 14px 8px}
+  .vd .dtxt{font-size:15px;max-height:150px}
+  .vd .live{padding:6px 12px 0;font-size:12px}
+  .vd .cast{bottom:8px;left:132px}.vd .cast .av{--s:24px}
+  .vd .comp{padding:6px 10px 10px}
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Roleplay: вигляд чату</h1>
+  <p class="sub">Чотири напрями на одній вигаданій сцені. Нічого з застосунку не змінено. Перемикайте варіант, тему та ширину вікна; стрілки, наведення й кліки працюють.</p>
+  <div class="bar">
+    <div class="tabs" role="tablist" aria-label="Варіант"></div>
+    <div><label>Тема</label><span class="seg" id="segT"><button data-t="dark">Темна</button><button data-t="light">Світла</button></span></div>
+    <div><label>Ширина</label><span class="seg" id="segW"><button data-w="1280">1280</button><button data-w="390">390</button></span></div>
+  </div>
+  <div class="desc"><div id="dText"></div><div id="dList"></div></div>
+</div>
+<div class="legend">Підказки: наведіть на повідомлення (або торкніться на 390), щоб побачити дії та метадані. «⋯» відкриває скорочене меню. «+» у композері відкриває меню генерації. «i» у шапці відкриває деталі чату.</div>
+<div class="stagewrap"><div id="frame" class="frame"></div></div>
+
+<script>
+/* ───────── helpers ───────── */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const P={
+ back:'<path d="m15 18-6-6 6-6"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+ copy:'<rect x="9" y="9" width="11" height="11" rx="1"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
+ refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',edit:'<path d="M4 20v-4L16 4l4 4L8 20z"/>',
+ more:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',send:'<path d="m4 12 16-8-5 16-3-7z"/>',bookmark:'<path d="M7 4h10v16l-5-4-5 4z"/>',
+ fork:'<circle cx="6" cy="5" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="12" cy="19" r="2"/><path d="M6 7v2a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V7M12 12v5"/>',
+ tr:'<path d="M4 6h9M8.5 4v2M6 6c1 4 4 6 7 7M12 6c-1 4-4 7-8 8"/><path d="m13 20 4-9 4 9M14.5 17h5"/>',
+ spk:'<path d="M4 10v4h4l5 4V6l-5 4z"/><path d="M16 9a4 4 0 0 1 0 6"/>',
+ eyeoff:'<path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><path d="M4 4l16 16"/>',code:'<path d="m8 8-4 4 4 4M16 8l4 4-4 4"/>',
+ data:'<path d="M5 20V10M12 20V4M19 20v-7"/>',sum:'<path d="M4 6h16M4 12h10M4 18h6"/>',up:'<path d="m6 15 6-6 6 6"/>',down:'<path d="m6 9 6 6 6-6"/>',
+ trash:'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',image:'<rect x="4" y="5" width="16" height="14" rx="1"/><circle cx="9" cy="10" r="1.5"/><path d="m4 17 5-4 4 3 3-2 4 3"/>',
+ clip:'<path d="m20 11-8 8a5 5 0 0 1-7-7l9-9a3.5 3.5 0 0 1 5 5l-9 9a2 2 0 0 1-3-3l8-8"/>',bolt:'<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>',
+ mic:'<rect x="9" y="4" width="6" height="10" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/>',chat:'<path d="M4 5h16v11H9l-5 4z"/>',
+ folder:'<path d="M3 6h6l2 2h10v11H3z"/>',expand:'<path d="M4 9V4h5M20 15v5h-5M4 4l6 6M20 20l-6-6"/>',play:'<path d="M7 5v14l11-7z"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',chevd:'<path d="m6 9 6 6 6-6"/>',spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/>',
+ sliders:'<path d="M5 6h9M18 6h1M5 12h3M12 12h7M5 18h11M20 18h-1"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+ home:'<path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/>',cards:'<rect x="5" y="4" width="10" height="14" rx="1"/><path d="M9 20h10V8"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>'
+};
+const ico=(n,s=16)=>`<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
+const fmt=s=>esc(s).replace(/\*([^*]+)\*/g,'<span class="act">$1</span>').replace(/(«[^»]+»)/g,'<span class="sp">$1</span>');
+
+/* ───────── the made-up scene ───────── */
+const WHO={'Марта':{h:12,role:'травниця'},'Остап':{h:205,role:'коваль'},'Лукаш':{h:165,role:'ти',user:true}};
+const SCENE={title:'Хата на краю Вовчого Яру',sub:'пізній вечір, завірюха'};
+const MODEL='example-70b-instruct';
+const MSGS=[
+ {who:'Марта',time:'21:04',gen:['41.6s','1777t','$0.0010'],paras:[
+  'Вітер гнав сніг понад Вовчим Яром, і єдине вікно в хаті Марти світилося, мов жовтий ґудзик на чорній свитці. Під стелею сохли пучки звіробою й полину, а на припічку тихо булькав казанок.',
+  '*Марта розтирала в ступці щось гірке й сіре, коли в сінях рипнули двері.* «Зачиняйте швидше, тепло не безкінечне», — сказала вона, не підводячи очей.']},
+ {who:'Лукаш',time:'21:05',paras:[
+  '*Лукаш струшує сніг з плаща й обережно зачиняє двері за собою.*',
+  '«Добрий вечір. Мені казали, що ви продаєте не лише трави.»']},
+ {who:'Марта',time:'21:06',gen:['38.2s','1420t','$0.0008'],paras:[
+  '*Вона нарешті глянула на нього — довго, як дивляться на погоду перед дорогою.* «Казати можуть що завгодно. Сідайте до печі, поки не замерзли на моєму порозі.»',
+  'Над столом гойднувся пучок сушеної ромашки. На лаві, поміж горщиків, дрімав рудий кіт, і лише кінчик його хвоста стежив за гостем.']},
+ {who:'Остап',time:'21:07',gen:['22.9s','960t','$0.0005'],paras:[
+  '*Із сіней долинув важкий кашель, і до хати, пригнувшись під сволоком, зайшов Остап — коваль із сусідньої садиби, весь у кіптяві.* «Марто, ти знову не замкнула? Ярема каже, на Яру хтось світив ліхтарем до самої півночі.»']},
+ {who:'Лукаш',time:'21:08',paras:[
+  '*Лукаш мимоволі торкається ліхтаря, прихованого під плащем.*',
+  '«Може, то були мисливці. У таку заметіль усі шукають, де перечекати.»']},
+ {who:'Марта',time:'21:09',think:20,gen:['41.6s','1777t','$0.0010'],paras:[
+  '*Марта повільно відставила ступку й витерла руки об фартух. Вона не питала, чого він боїться, — лише присунула до нього глиняну чашку.* «Пий. Це від холоду, а не від брехні, хоча брехню воно теж трохи відбиває.»',
+  'У казанку булькнуло. Остап, не промовивши й слова, сів на лаву так, щоб бачити і двері, і гостя, а кіт відкрив одне жовте око.']}
+];
+const LAST=MSGS.length-1;
+const LIVE=`Стан оновлено · 3 с · Марта запам'ятовує: <span class="sp">«гість ховає ліхтар під плащем»</span>`;
+const metaOf=m=>m.gen?m.gen.join(' · '):'';
+
+/* ───────── pieces ───────── */
+const av=(n,s=36,shape='circle')=>`<span class="av ${shape}" style="--s:${s}px;--h:${WHO[n].h}" aria-hidden="true"><span>${n[0]}</span></span>`;
+function sil(n){const h=WHO[n].h;
+ const kerch=n==='Марта'?`<path d="M30 50c0-18 40-18 40 0 0 6-3 10-6 12l-10-9-14 0-4 9c-3-3-6-6-6-12z" fill="hsl(${h} 70% 38%)"/><path d="M62 62c6 8 8 20 6 30l-7-8z" fill="hsl(${h} 60% 30%)"/>`:
+  n==='Остап'?`<path d="M32 46c0-14 36-14 36 0z" fill="hsl(${h} 18% 22%)"/><path d="M34 60c4 22 28 22 32 0 0 12-6 26-16 26s-16-14-16-26z" fill="hsl(${h} 15% 14%)"/>`:
+  `<path d="M28 58c-2-22 44-22 44 0v20c-10-10-34-10-44 0z" fill="hsl(${h} 25% 18%)"/>`;
+ const sh=n==='Остап'?'M2 130c4-30 22-40 48-40s44 10 48 40z':'M10 130c2-26 18-36 40-36s38 10 40 36z';
+ return `<svg class="sil" viewBox="0 0 100 130" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Силует: ${n}"><defs><linearGradient id="g${h}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="hsl(${h} 32% 26%)"/><stop offset="1" stop-color="hsl(${(h+30)%360} 38% 10%)"/></linearGradient></defs><rect width="100" height="130" fill="url(#g${h})"/><circle cx="50" cy="44" r="40" fill="hsl(${h} 50% 50%)" opacity=".10"/><path d="${sh}" fill="hsl(${h} 28% 9%)" stroke="hsl(${h} 40% 42%)" stroke-width=".8"/><rect x="43" y="68" width="14" height="14" fill="hsl(${h} 28% 9%)"/><ellipse cx="50" cy="52" rx="15" ry="18" fill="hsl(${h} 28% 11%)" stroke="hsl(${h} 40% 42%)" stroke-width=".8"/>${kerch}</svg>`}
+function ornament(){const dark=S.t==='dark',a=dark?'#c2182f':'#b3162d',b=dark?'#6f6a5e':'#9a917f';
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10" viewBox="0 0 20 10"><path d="M10 .8 15.2 5 10 9.2 4.8 5z" fill="none" stroke="${a}" stroke-width="1.2"/><path d="M10 3.4v3.2M8.4 5h3.2" stroke="${b}" stroke-width="1"/><path d="M0 5h2.6M17.4 5H20" stroke="${a}" stroke-width="1"/></svg>`;
+ return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`}
+const mi=(i,t,c='')=>`<button class="mi ${c}" role="menuitem">${ico(i,15)}<span>${t}</span></button>`;
+const moreMenu=()=>`<div class="pop menu r" role="menu" aria-label="More actions" hidden>
+ <div class="mh">Branch</div>${mi('bookmark','Bookmark')}${mi('fork','Fork from here')}${mi('sum','Summarize above')}<div class="sep"></div>
+ <div class="mh">Tools</div>${mi('tr','Translate')}${mi('spk','Speak')}${mi('eyeoff','Hide from AI')}${mi('code','Prompt peek')}${mi('data','Generation data')}<div class="sep"></div>
+ <div class="mh">Order and delete</div>${mi('up','Move up')}${mi('down','Move down')}${mi('trash','Delete this','danger')}${mi('trash','Delete this and below','danger')}</div>`;
+const tools=(lbl=false,extra='')=>`<div class="tools" role="toolbar" aria-label="Message actions">
+ <button class="tb" aria-label="Copy">${ico('copy',15)}${lbl?'<span class="lbl">Copy</span>':''}</button>
+ <button class="tb" aria-label="Regenerate">${ico('refresh',15)}${lbl?'<span class="lbl">Regenerate</span>':''}</button>
+ <button class="tb" aria-label="Edit">${ico('edit',15)}${lbl?'<span class="lbl">Edit</span>':''}</button>${extra}
+ <span class="pw"><button class="tb" data-pop aria-haspopup="menu" aria-label="More actions (12)">${ico('more',16)}${lbl?'<span class="lbl">More</span>':''}</button>${moreMenu()}</span></div>`;
+const think=m=>m.think?`<button class="chip thk" aria-expanded="false">${ico('spark',13)}Thought for ${m.think}s${ico('chevd',12)}</button>`:'';
+const paras=m=>m.paras.map(p=>`<p>${fmt(p)}</p>`).join('');
+const live=()=>`<div class="live" role="status"><i class="dot"></i><span>${LIVE}</span></div>`;
+const plusMenu=()=>`<div class="grp"><div class="mh">Generate</div>${mi('refresh','Regenerate')}${mi('play','Continue')}${mi('user','Impersonate')}</div><div class="sep"></div><div class="grp"><div class="mh">Compose</div>${mi('expand','Expand editor')}${mi('image','Send image')}${mi('clip','Attach files')}${mi('bolt','Shortcuts')}${mi('mic','Speak as…')}</div><div class="sep"></div><div class="grp"><div class="mh">Chat</div>${mi('chat','Start new chat')}${mi('trash','Delete messages')}${mi('folder','Manage chat files')}</div>`;
+const composer=open=>`<div class="comp"><span class="pw"><button class="cbtn" data-pop aria-haspopup="menu" aria-label="Generate and compose menu" aria-expanded="${open}">${ico('plus',18)}</button><div class="pop menu up l plusmenu" role="menu" ${open?'':'hidden'}>${plusMenu()}</div></span><textarea class="inp" rows="1" placeholder="Write an action or a line…" aria-label="Message"></textarea><button class="cbtn send" aria-label="Send">${ico('send',18)}</button></div>`;
+const detailsPop=()=>`<div class="pop details r" role="dialog" aria-label="Chat details" hidden><h4>Chat details</h4><dl>
+ <dt>Model</dt><dd>${MODEL}</dd><dt>Context</dt><dd>6,214 / 32,768<div class="cb"><i></i></div></dd><dt>This chat</dt><dd>$0.0142</dd><dt>Last reply</dt><dd>41.6s · 1777t · $0.0010</dd></dl>
+ <p>The model and cost chips left the header. Per-message numbers sit in each message's details.</p>${mi('sliders','Model and generation settings…')}</div>`;
+const stripBody=()=>`<div class="sec" style="display:flex;gap:6px;flex-wrap:wrap">${av('Марта',28,'sq')}${av('Остап',28,'sq')}${av('Лукаш',28,'sq')}</div>
+ <div class="sec"><div class="nm2"><span>Марта</span><span class="tag">обережна</span></div>
+ <div class="cn" style="margin:8px 0 4px"><svg width="128" height="112" viewBox="0 0 128 112" role="img" aria-label="Макет сузір'я"><g stroke="var(--muted)" stroke-width="1" fill="none" opacity=".7"><path d="M14 80 38 40 66 54 90 18 114 62 88 90 50 96z"/></g><g fill="var(--gold)"><circle cx="14" cy="80" r="3"/><circle cx="38" cy="40" r="3.5"/><circle cx="66" cy="54" r="2.5"/><circle cx="90" cy="18" r="4"/><circle cx="114" cy="62" r="3"/><circle cx="88" cy="90" r="2.5"/><circle cx="50" cy="96" r="3"/></g></svg>
+ <b>Зоря Чекання</b><span>Вона придивляється, але ще не вірить.</span></div></div>
+ <div class="sec"><div class="sbar">Довіра<i><u style="left:50%;width:17%"></u></i><em>+35</em></div><div class="sbar">Симпатія<i><u style="left:50%;width:10%"></u></i><em>+20</em></div><div class="sbar">Страх<i><u class="n" style="right:50%;width:5%"></u></i><em>−10</em></div><div class="sbar">Повага<i><u style="left:50%;width:22%"></u></i><em>+45</em></div></div>
+ <div class="sec"><div class="lab">Лінії історії</div><div class="th">Що ховає гість</div><div class="th">Борг коваля</div></div>
+ <button class="btn">Відкрити стан</button>`;
+const strip=()=>`<aside class="strip" aria-label="Стан стосунків"><div class="sh"><b>Стан</b><span class="ago"><i class="dot"></i>3 с</span><span style="margin-left:auto;font-size:10.5px;color:var(--muted)">макет</span></div><div class="sb">${stripBody()}</div><div class="ft">Стан оновлено · 3 с</div></aside>`;
+const rail=()=>`<nav class="rail" aria-label="Навігація"><div class="lg">М</div><button class="rb">${ico('home',18)}</button><button class="rb on" aria-current="page">${ico('chat',18)}</button><button class="rb">${ico('cards',18)}</button><button class="rb" style="margin-top:auto">${ico('gear',18)}</button></nav>`;
+function header(opts={}){return `<header class="hd"><button class="ib" aria-label="Back">${ico('back',20)}</button>${av('Марта',opts.av||34,opts.shape||'circle')}<div class="ttl"><b>Марта</b><small>${opts.sub||'chat 1 of 3'}</small></div><span class="sp1"></span>
+ <span class="pw"><button class="chip dashbtn" data-pop aria-haspopup="dialog" aria-label="Стан стосунків"><i class="dot"></i>Стан</button><div class="pop dashpop r" role="dialog" aria-label="Стан стосунків" hidden>${stripBody()}</div></span>
+ <span class="pw"><button class="ib" data-pop aria-haspopup="dialog" aria-label="Chat details">${ico('info',18)}</button>${detailsPop()}</span></header>`}
+
+/* ───────── variants ───────── */
+const V={
+a(){let h=`<div class="scene">${SCENE.title} · ${SCENE.sub}</div>`;
+ MSGS.forEach((m,i)=>{const u=WHO[m.who].user;
+  if(i)h+=`<div class="div" aria-hidden="true"><i></i></div>`;
+  h+=`<article class="msg ${u?'user':'char'} ${i===0?'dropcap':''}" data-msg><div class="por">${u?'':av(m.who,40)}</div><div class="body">
+   <div class="nm"><span class="mini">${u?'':av(m.who,20)}</span><span ${u?'':`style="--h:${WHO[m.who].h}" class="nc"`}>${m.who}</span><time>${m.time}</time>${m.gen?`<span class="meta">${MODEL} · ${metaOf(m)}</span>`:''}</div>
+   ${think(m)}<div class="prose">${paras(m)}</div>${tools(true)}</div></article>`;});
+ h+=live();
+ return `${header()}<div class="scroll"><div class="col">${h}</div></div>${composer(false)}`},
+b(){let h=`<div class="scene" role="heading" aria-level="2"><span class="band"></span><div><b>${SCENE.title}</b><small>${SCENE.sub}</small></div><span class="band"></span></div>`;
+ MSGS.forEach((m,i)=>{const w=WHO[m.who],u=w.user;
+  h+=`<div class="turn ${u?'user':'char'}" data-msg>${u?'':`<div class="arch"><div>${sil(m.who)}</div></div>`}<div class="panel">
+   ${tools(false)}<div class="nm"><b>${m.who}</b><span class="role">${w.role}</span><time>${m.time}</time></div>${think(m)}<div class="prose">${paras(m)}</div>
+   ${m.gen&&i===LAST?`<div class="foot">${ico('data',13)}<span>${metaOf(m)}</span><span>${MODEL}</span></div>`:''}</div></div>`;});
+ h+=live();
+ return `${header({sub:'chat 1 of 3',shape:'sq'})}<div class="scroll"><div class="col">${h}</div></div>${composer(false)}`},
+c(){let h=`<div class="daysep">Сьогодні · ${SCENE.title}</div>`;
+ MSGS.forEach((m,i)=>{const w=WHO[m.who],u=w.user;
+  const bubs=u?`<div class="bub" tabindex="0">${m.paras.map(p=>`<p>${fmt(p)}</p>`).join('')}</div>`:m.paras.map(p=>`<div class="bub" tabindex="0"><p style="margin:0">${fmt(p)}</p></div>`).join('');
+  const foot=`<div class="foot"><span>${m.time}</span>${m.gen?`<span>${metaOf(m)}</span><span>${MODEL}</span>`:''}${tools(false)}</div>`;
+  h+=`<div class="g ${u?'user':'char'} ${i===2?'on':''}" style="--h:${w.h}" data-msg>${u?'':`<span style="align-self:end">${av(m.who,30)}</span>`}<div class="stack">${u?'':`<div class="who">${m.who}</div>`}${think(m)}${bubs}${foot}</div></div>`;});
+ h+=live();
+ return `${header({sub:'chat 1 of 3 · Марта пише…'})}<div class="scroll"><div class="col">${h}</div></div>${composer(false)}`},
+d(){const m=MSGS[LAST],hist=MSGS.slice(0,LAST);
+ let hl=`<div class="scn">${SCENE.title} · ${SCENE.sub}</div>`;
+ hist.forEach(x=>{const w=WHO[x.who];hl+=`<button class="hl ${w.user?'user':''}" aria-expanded="false" style="--h:${w.h}">${av(x.who,22,'sq')}<span><b class="nc ${w.user?'u':''}">${x.who}<span class="htime">${x.time}</span></b><span class="t">${x.paras.map(fmt).join(' ')}</span></span></button>`;});
+ const dlg=`<div class="dlg" data-msg><div class="plate">${m.who}<small>${WHO[m.who].role}</small></div>${think(m)}<div class="dtxt" tabindex="0">${paras(m)}</div>
+  <div class="dact"><span class="nx" aria-hidden="true">▼</span><span class="chip" style="border:0;margin-right:4px" title="Generation data">${metaOf(m)}</span>
+  <button class="tb" aria-label="Copy">${ico('copy',15)}</button><button class="tb" aria-label="Regenerate">${ico('refresh',15)}</button><button class="tb" aria-label="Continue">${ico('play',15)}</button><button class="tb" aria-label="Edit">${ico('edit',15)}</button>
+  <span class="pw"><button class="tb" data-pop aria-haspopup="menu" aria-label="More actions (11)">${ico('more',16)}</button>${moreMenu().replace('class="pop menu r"','class="pop menu r up"')}</span></div></div>`;
+ return `${header({sub:'chat 1 of 3'})}<div class="stage"><div class="pp"><div class="big">${sil(m.who)}</div><div class="pname"><b>Марта</b><small>травниця</small></div><div class="cast">${av('Марта',34,'sq').replace('class="av sq"','class="av sq on"')}${av('Остап',34,'sq')}${av('Лукаш',34,'sq')}</div></div><div class="hist" id="hist">${hl}</div></div>${dlg}${live()}${composer(S.w>600)}`}
+};
+const INFO={
+a:{name:'A · Книжкова сторінка',text:'Без карток і рамок: текст ллється однією колонкою (близько 660 px) із засічковим шрифтом і міжрядком 1.8, як сторінка роману. Імена капітеллю, малий портрет у лівому полі, перша літера сцени — буквиця. Метадані (модель, час генерації, токени, ціна) з\'являються лише при наведенні або торканні. Між ходами тонкий орнамент-ромб. Плюс: найспокійніше читання довгої прози, найменше візуального шуму. Мінус: гірше «сканується» очима, хто говорить, якщо вимкнути портрети, і найдалі від звичного вигляду чату.',
+ list:['картки й рамки зникають, лишається текст на тлі сторінки','гутер 40 px зі статистикою замінено малим портретом; цифри перенесено в рядок метаданих при наведенні','шрифт тексту Noto Serif замість Noto Sans, міжрядок 1.8','меню дій: 3 кнопки (Copy, Regenerate, Edit) і «More» з 12 пунктів у 3 групах замість 15 в одному списку','модель і ціна: з шапки в «i» (деталі чату) і в метадані повідомлення','«Стан оновлено» — рядок-курсив під останнім ходом']},
+b:{name:'B · Вертеп-сцена',text:'Театральний варіант, названий за народним ляльковим театром. Мовець має портрет в арці з вишиванковим орнаментом (ромби й хрестики, червоне та лляне) по краях; репліки гравця вужчі й зсунуті праворуч, з блакитною рискою; зміна сцени — центрований заголовок між двома орнаментальними стрічками. Орнамент приглушений, це приправа, а не розмальовка. Плюс: найвпізнаваніше, власний характер Molfar Vertep, зрозуміло, хто говорить. Мінус: займає більше місця, портрети й орнамент на малому екрані треба стискати, потребує якісних портретів у карток.',
+ list:['картки лишаються, але з орнаментальною кромкою зверху й арочною рамкою портрета','гравець: вужча панель праворуч, без портрета','зміна сцени — заголовок Kurale між стрічками орнаменту','панель дій «спливає» над краєм картки при наведенні: Copy, Regenerate, Edit, More','цифри генерації тільки під останнім повідомленням; модель і ціна також у «i»','«Стан оновлено» — пунктирна смужка, вирівняна з текстом мовця']},
+c:{name:'C · Месенджер',text:'Компактні бабли: репліки персонажа ліворуч, гравця праворуч у холодному відтінку. Довга відповідь розкладається на послідовні бабли одного автора, аватар стоїть біля нижнього, ім\'я над першим. Метадані й дії ховаються у футері, який розкривається по торканню (на телефоні це природна дія; на десктопі — клік). Плюс: найкраще на телефоні, щільний ритм, багато історії на екрані. Мінус: проза дробиться на частини, довгий опис сцени у баблі виглядає тісно; найменше «літературності».',
+ list:['відповідь розбито на бабли за абзацами; гутер зі статистикою зникає','гравець: один синюватий бабл праворуч (дія курсивом, репліка в лапках)','метадані й дії: футер під баблом по кліку або торканню (приклад розкрито на 3-му повідомленні)','меню: ті самі 3 дії і «More» з 12 пунктів у футері','шапка як у месенджері: аватар, ім\'я, статус; модель і ціна в «i»','«Стан оновлено» — системна пігулка по центру під останнім']},
+d:{name:'D · Візуальна новела',text:'Велика панель з портретом мовця зліва, поряд стислий, прокручуваний журнал старих реплік (по два рядки, клік розгортає). Найновіша відповідь іде в діалоговому вікні знизу з іменною табличкою та мигаючою стрілкою «далі». Саме вікно містить кнопки дій і цифри генерації. Плюс: найбільш «кіношне» відчуття, одразу видно, хто зараз говорить, місце для арту карток. Мінус: нова відповідь «стирає» попередню з основного поля (історія стиснута), потрібні портрети, на телефоні портрет стає смугою і з\'їдає висоту.',
+ list:['уся історія стиснута в журнал; на сцені лише найновіша відповідь','портрет мовця на пів-екрана, у куті — «акторський склад» сцени','діалогове вікно: табличка з іменем, 4 основні дії (+Continue) і «More» з 11 пунктів','цифри генерації — в рядку під текстом вікна; модель і ціна в «i»','меню «+» у композері показано відкритим (на 1280; на 390 закрите, щоб не затуляти діалог)','на 390 px портрет стискається до смуги зверху, журнал лишається прокручуваним']}
+};
+
+/* ───────── state + render ───────── */
+const S={v:'a',t:'dark',w:1280,s:'bottom'};
+(location.hash||'').slice(1).split('&').forEach(kv=>{const[k,v]=kv.split('=');if(k&&v){S[k]=k==='w'?+v:v}});
+function save(){history.replaceState(null,'',`#v=${S.v}&t=${S.t}&w=${S.w}`)}
+$('.tabs').innerHTML=Object.keys(INFO).map(k=>`<button role="tab" data-v="${k}">${INFO[k].name}</button>`).join('');
+function render(){
+ document.documentElement.dataset.theme=S.t;
+ const f=$('#frame');f.dataset.theme=S.t;f.className='frame v'+S.v;
+ f.style.width=S.w+'px';f.style.height=(S.w>600?840:780)+'px';f.style.setProperty('--orn',ornament());
+ f.innerHTML=`<div class="app">${rail()}<main class="chat">${V[S.v]()}</main>${strip()}</div>`;
+ $$('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===S.v));
+ $$('#segT button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===S.t));
+ $$('#segW button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.w===S.w));
+ const i=INFO[S.v];$('#dText').innerHTML=`<h2>${i.name}</h2><p>${i.text}</p>`;
+ $('#dList').innerHTML=`<h3>Що змінюється проти сьогодні</h3><ul>${i.list.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+ // name colours in light theme need a darker tone for contrast
+ 
+ const sc=$('.scroll',f)||$('#hist',f);
+ if(sc)sc.scrollTop=S.s==='top'?0:sc.scrollHeight;
+ const hh=$('#hist',f);if(hh)hh.scrollTop=hh.scrollHeight;
+ save();
+}
+document.addEventListener('click',e=>{
+ const f=$('#frame');
+ const b=e.target.closest('[data-pop]');
+ const inPop=e.target.closest('.pop');
+ if(b){const p=b.closest('.pw').querySelector('.pop');const open=p.hidden;
+  $$('.pop',f).forEach(x=>{if(x!==p)x.hidden=true});
+  p.hidden=!open;b.setAttribute('aria-expanded',open);
+  if(open&&!p.classList.contains('plusmenu')&&!p.classList.contains('details')&&!p.classList.contains('dashpop')){
+    if(!S.upLock)p.classList.remove('up');
+    const fr=f.getBoundingClientRect(),r=p.getBoundingClientRect();
+    if(r.bottom>fr.bottom-70)p.classList.add('up');
+    const r2=p.getBoundingClientRect();if(r2.top<fr.top+4){p.classList.remove('up')}}
+  return}
+ if(!inPop)$$('.pop',f).forEach(x=>x.hidden=true);
+ const msg=e.target.closest('.msg,.g,.turn');
+ if(msg&&!e.target.closest('button,.pop')||e.target.closest('.bub')){(e.target.closest('.msg,.g,.turn')).classList.toggle('on')}
+ const hl=e.target.closest('.hl');if(hl){hl.classList.toggle('open');hl.setAttribute('aria-expanded',hl.classList.contains('open'))}
+ const tb=e.target.closest('.tabs button');if(tb){S.v=tb.dataset.v;render()}
+ const t=e.target.closest('#segT button');if(t){S.t=t.dataset.t;render()}
+ const w=e.target.closest('#segW button');if(w){S.w=+w.dataset.w;render()}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$$('.pop').forEach(x=>x.hidden=true)});
+render();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{const sc=$('.scroll')||$('#hist');if(sc&&S.s!=='top')sc.scrollTop=sc.scrollHeight;const hh=$('#hist');if(hh)hh.scrollTop=hh.scrollHeight});
+</script>
+</body>
+</html>
