@@ -29,7 +29,9 @@ for (const f of fs.readdirSync(regexDir).filter((x) => x.endsWith(".json"))) {
   fs.writeFileSync(path.join(data, "regex", f), JSON.stringify(r));
   k++;
 }
-fs.writeFileSync(path.join(data, "characters", "aria", "card.json"), JSON.stringify({ spec: "chara_card_v2", name: "Aria", description: "A barista.", first_mes: "Hi." }));
+const cardMb = Number(process.env.CARD_MB ?? 0);
+const blob = "A".repeat(256 * 1024);
+fs.writeFileSync(path.join(data, "characters", "aria", "card.json"), JSON.stringify({ spec: "chara_card_v2", name: "Aria", description: "A barista.", first_mes: "Hi.", extensions: { emotions: Array.from({ length: cardMb * 4 }, (_, i) => ({ name: "e" + i, image: "data:image/png;base64," + blob })) } }));
 fs.writeFileSync(path.join(data, "personas", "you.json"), JSON.stringify({ id: "you", name: "You", description: "Courier." }));
 fs.writeFileSync(path.join(data, "settings.json"), JSON.stringify({ model: null, personaId: "you" }));
 // a long chat whose replies carry HUD and HTML blocks (one left unclosed now and then)
@@ -38,9 +40,11 @@ const hud = '<sola_hud digest="T=2 F=1 D=0"><details><summary>HUD</summary>$150 
 const msgs = [];
 for (let i = 0; i < N; i++) {
   const user = i % 2 === 0;
-  msgs.push({ id: "m" + i, role: user ? "user" : "char", charId: user ? undefined : "aria", name: user ? "You" : "Aria", text: user ? "I check my phone." : prose + "\n" + hud + (i % 10 === 1 ? "\n<date>unclosed " : ""), at: i });
+  msgs.push({ id: "m" + i, role: user ? "user" : "char", charId: user ? undefined : "aria", name: user ? "You" : "Aria", text: user ? "I check my phone near word1 and place2." : prose + "\n" + hud + (i % 10 === 1 ? "\n<date>unclosed " : ""), at: i });
 }
-fs.writeFileSync(path.join(data, "chats", "c1.meta.json"), JSON.stringify({ id: "c1", characterId: "aria", presetId: "sola", personaId: "you" }));
+const loreN = Number(process.env.LORE_N ?? 0);
+if (loreN) fs.writeFileSync(path.join(data, "lorebooks", "big.json"), JSON.stringify({ id: "big", name: "Big", settings: { recursive: true }, entries: Array.from({ length: loreN }, (_, i) => ({ uid: i, title: "Entry " + i, keys: ["word" + i, "thing" + i, "place" + i], content: "Entry " + i + " mentions word" + ((i * 7) % loreN) + " and place" + ((i * 13) % loreN) + ". " + "Lore text. ".repeat(40), enabled: true, order: 100, position: "before_char" })) }));
+fs.writeFileSync(path.join(data, "chats", "c1.meta.json"), JSON.stringify({ id: "c1", characterId: "aria", presetId: "sola", personaId: "you", ...(loreN ? { lorebookIds: ["big"] } : {}) }));
 fs.writeFileSync(path.join(data, "chats", "c1.jsonl"), msgs.map((m) => JSON.stringify(m)).join("\n") + "\n");
 
 const plugin = discoverAppPlugins(path.join(root, "apps"), "roleplay").find((p) => p.id === "roleplay__engine")!;

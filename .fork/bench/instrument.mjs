@@ -5,7 +5,7 @@ const [src, dst] = process.argv.slice(2);
 fs.cpSync(src, dst, { recursive: true });
 const f = path.join(dst, "engine", "plugin.js");
 let s = fs.readFileSync(f, "utf8");
-const names = ["loadChat", "loadRegexScripts", "runRegexScripts", "activateWorldInfo", "transcriptMacros", "expandMacros", "assemble", "searchDatabank", "chatMembers", "chatPersona", "litopysCut", "litopysLine", "hookInsertReserve", "estimateTokens", "applyRegexScript", "semanticPrep", "locateSources", "orderedPrompts", "resolvePresetVars"];
+const names = (process.env.NAMES ? process.env.NAMES.split(",") : []).concat(["loadChat", "loadRegexScripts", "runRegexScripts", "activateWorldInfo", "transcriptMacros", "expandMacros", "assemble", "searchDatabank", "chatMembers", "chatPersona", "litopysCut", "litopysLine", "hookInsertReserve", "estimateTokens", "applyRegexScript", "semanticPrep", "locateSources", "orderedPrompts", "resolvePresetVars"]);
 let wrapped = [];
 for (const n of names) {
   const re = new RegExp(`^(export )?function ${n}\\(`, "m");

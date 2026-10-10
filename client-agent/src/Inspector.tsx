@@ -246,11 +246,15 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
   }, [copied])
   useEffect(() => {
     if (active == null) return
+    // capture phase: the first Esc only clears the highlight; the dialog stays open for the second
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === "Escape") setActive(null)
+      if (e.key !== "Escape") return
+      e.stopPropagation()
+      e.preventDefault()
+      setActive(null)
     }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
+    window.addEventListener("keydown", onKey, true)
+    return () => window.removeEventListener("keydown", onKey, true)
   }, [active])
 
   const header = (
