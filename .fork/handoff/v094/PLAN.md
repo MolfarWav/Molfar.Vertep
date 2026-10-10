@@ -93,3 +93,14 @@ Verified in code by the orchestrator: [v] ; from the report only: [r].
   stays in "Later".
 - [r] Card export (PNG/JSON) never writes `character_book`: exported cards lose their book.
   Deleting a character orphans its embedded book; deleting a book leaves dangling ids on cards.
+
+## Rounds 2-4 (2026-10-10), Roleplay `lore-v094`
+User decisions: implement every dead field (all six); honest positions + fallback; group chats as a
+whole go to 1.0.0, but members' books join the scope now; export with the book, cleanup on delete, the
+stale chat scope fixed; Data Bank: the small fixes in 0.9.4 (scope, word forms, chunking, budget,
+sources), embeddings and "document -> entries" later.
+- `5784aef` dead fields + positions (round 2). Found by a test on the way: the regex helpers were
+  declared after the prompt markers, so any before/after-examples entry would have crashed assembly.
+- `53bba03` binding (round 3): see the commit body.
+- `e326f2d` Data Bank (round 4).
+- UI round: `UI-SPEC.md`, Sonnet subagent.
