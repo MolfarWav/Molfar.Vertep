@@ -70,9 +70,13 @@ function extractSend(message: AppendMessage): { text: string; images?: SendImage
   return { text, images: images.length ? images : undefined }
 }
 
-/** message ids embed their run's `at` (u<at> / a<at>) — the engine truncate target */
+/** The run (its `at`, the engine truncate target) of a user message: its runAt, else the u<at> id.
+ *  Ids shown during a live run stay after it settles (keepShownIds), so the id alone may not say. */
 function runAtFromId(id: string | null | undefined): number | null {
-  if (!id || id[0] !== "u") return null
+  if (!id) return null
+  const m = useAgent.getState().msgs.find((x) => x.id === id)
+  if (m) return m.role === "user" && m.runAt !== undefined ? m.runAt : null
+  if (id[0] !== "u") return null
   const at = Number(id.slice(1))
   return Number.isFinite(at) ? at : null
 }
@@ -144,7 +148,7 @@ export default function App(): ReactNode {
     onReload: async (parentId) => {
       const at = runAtFromId(parentId)
       if (at === null) return
-      const original = useAgent.getState().msgs.find((m) => m.id === `u${at}`)
+      const original = useAgent.getState().msgs.find((m) => m.role === "user" && m.runAt === at)
       const text = original?.parts.find((p) => p.kind === "text")
       if (text && text.kind === "text") await useAgent.getState().editAt(at, text.text)
     },

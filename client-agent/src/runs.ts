@@ -190,3 +190,17 @@ export function applyStreamEvent(parts: PartData[], ev: StreamEvent): PartData[]
   }
   return out
 }
+
+/**
+ * The ids the thread already showed stay on the messages that replace them after a reload. assistant-ui's
+ * external store keeps every message id it has seen, so swapping the live turn's ids (`m_…`/`live_…`) for
+ * the run record's (`u<at>`/`a<at>`) left the old user message beside the new one as a branch ("2 / 2").
+ * Only uid-made ids (`<prefix>_…`) are carried over, by position and role; the run's `runAt` comes from
+ * the record, so editing and regenerating still find their run.
+ */
+export function keepShownIds(prev: Msg[], next: Msg[]): Msg[] {
+  return next.map((m, i) => {
+    const old = prev[i]
+    return old && old.role === m.role && old.id !== m.id && /^[a-z]+_/.test(old.id) ? { ...m, id: old.id } : m
+  })
+}

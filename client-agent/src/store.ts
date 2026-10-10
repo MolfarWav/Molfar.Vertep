@@ -23,7 +23,7 @@ import {
   type ProjectSummary,
   type ModelFavorite,
 } from "./api"
-import { applyStreamEvent, msgsFromRuns, partsFromResponse, uid, type Msg, type PartData } from "./runs"
+import { applyStreamEvent, keepShownIds, msgsFromRuns, partsFromResponse, uid, type Msg, type PartData } from "./runs"
 import { createStreamDeltaBatcher, type AskOption, type AskQuestion, type StreamEvent } from "./streaming"
 
 export interface PendingAsk {
@@ -358,7 +358,7 @@ export const useAgent = create<AgentState>()((set, get) => {
       if (!sid) return
       try {
         const r = await sessionsApi.get(sid)
-        if (get().sessionId === sid) set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []) })
+        if (get().sessionId === sid) set({ msgs: keepShownIds(get().msgs, msgsFromRuns(r.runs ?? [])), spend: sessionSpend(r.runs ?? []) })
       } catch {
         // keep the local view; the stream already showed the run
       }

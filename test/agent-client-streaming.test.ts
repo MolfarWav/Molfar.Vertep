@@ -5,7 +5,7 @@ import {
   type StreamDeltaEvent,
   type StreamEvent,
 } from "../client-agent/src/streaming.js";
-import { applyStreamEvent, partsFromTurns, visibleParts, type PartData } from "../client-agent/src/runs.js";
+import { applyStreamEvent, keepShownIds, partsFromTurns, visibleParts, type Msg, type PartData } from "../client-agent/src/runs.js";
 
 function manualScheduler() {
   const callbacks = new Map<number, () => void>();
@@ -130,5 +130,29 @@ describe("agent steps: live stream and saved run lay out the same", () => {
   it("a blank thinking fragment is not a step", () => {
     const msg = { id: "m", role: "assistant" as const, parts: applyStreamEvent([], { type: "thinking", delta: " \n" }) };
     expect(visibleParts(msg)).toEqual([]);
+  });
+});
+
+describe("ids after a run settles", () => {
+  it("keeps the ids the thread showed live, so assistant-ui sees no second branch", () => {
+    const text = (t: string) => [{ kind: "text" as const, text: t }];
+    const prev: Msg[] = [
+      { id: "u1", runAt: 1, role: "user", parts: text("first") },
+      { id: "a1", runAt: 1, role: "assistant", parts: text("ok") },
+      { id: "m_abc", role: "user", parts: text("second") },
+      { id: "live_abd", role: "assistant", parts: text("done"), streaming: false },
+    ];
+    const next: Msg[] = [
+      { id: "u1", runAt: 1, role: "user", parts: text("first") },
+      { id: "a1", runAt: 1, role: "assistant", parts: text("ok") },
+      { id: "u2", runAt: 2, role: "user", parts: text("second") },
+      { id: "a2", runAt: 2, role: "assistant", parts: text("done") },
+    ];
+    const out = keepShownIds(prev, next);
+    expect(out.map((m) => m.id)).toEqual(["u1", "a1", "m_abc", "live_abd"]);
+    expect(out[2]?.runAt).toBe(2);
+    // a record id never gives way, and roles must match
+    expect(keepShownIds([{ id: "u9", role: "user", parts: [] }], [{ id: "u2", role: "user", parts: [] }])[0]?.id).toBe("u2");
+    expect(keepShownIds([{ id: "m_x", role: "assistant", parts: [] }], [{ id: "u2", role: "user", parts: [] }])[0]?.id).toBe("u2");
   });
 });
