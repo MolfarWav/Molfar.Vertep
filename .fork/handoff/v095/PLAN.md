@@ -1,7 +1,10 @@
 # 0.9.5: what 0.9.2 left open (was the 0.9.3 plan)
 
-Collected 2026-10-09 at the 0.9.2 release (user: "what is not finished goes to the next patch"). Not yet
-ordered with the user: ask for the order before starting. Moved from 0.9.3 to 0.9.5 by the user on 2026-10-09 (0.9.3 = card sources, 0.9.4 = lorebooks). Engine branch to create: `claude/v095` from main.
+Collected 2026-10-09 at the 0.9.2 release (user: "what is not finished goes to the next patch").
+ORDER AGREED 2026-10-10 (user): 1 -> bugs 8/10/11/12 -> 9 -> 4 -> 7; the live NanoGPT run (2) at the end with the user.
+Decisions 2026-10-10: backstory = a chain with one budget (item 4); Enter on the phone stays a new line (item 13,
+closed as intended: long replies need line breaks); recommendations get named examples (item 5).
+Roleplay clone `.claude/worktrees/rp-memory`, branch `v095` from fork main 4.29.0. Moved from 0.9.3 to 0.9.5 by the user on 2026-10-09 (0.9.3 = card sources, 0.9.4 = lorebooks). Engine branch to create: `claude/v095` from main.
 
 ## Left from 0.9.2 item 2 (models in one place)
 1. **Effective parameters in the chat.** The spec wanted the chat header switch to show the model's

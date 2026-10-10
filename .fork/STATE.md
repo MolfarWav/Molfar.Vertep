@@ -22,8 +22,35 @@ Live test 2026-10-10 (user): translation preview OK, filters OK, always-on entri
 Released: `lore-v094` fast-forwarded into the fork main on the user's word ("I trust it, merge and release"). No engine release (no engine code changed); the E: workspace has the code, its root manifest updates with the app update.
 Seen, not fixed: `updateCharacter` rewrites the card's whole studio bag with defaults on the first edit.
 
+## 0.9.5 (started 2026-10-10): what 0.9.2 left open
+Plan, order and the user's decisions: `.fork/handoff/v095/PLAN.md`. Engine branch `claude/v095` (worktree
+`.claude/worktrees/v095`, from main `5cc7711`); Roleplay clone `.claude/worktrees/rp-memory`, branch `v095` from
+fork main 4.29.0.
+- 1 BUILT: engine `GET /v1/models/params/effective` takes the preset side (temperature, max_tokens, reasoning,
+  thinkingBudget, paramsSource) and answers `applied` with `from` (`effectiveParams`, test); Roleplay
+  `effective-params.tsx` in the header switch's model tab (draft by an external code model, rewritten).
+- 4 BUILT: backstory along the chain, up to 3 chats back, one budget (shares 50/30/20, unused rolls to the
+  nearer chats), oldest first, a fact once, insert record `chain`; tests in `rp-chat-links.test.ts`.
+- 5 BUILT: named examples in the model recommendations (`EXAMPLES` in `client/src/model-panel.tsx`, refresh each
+  release), "For example: {names}." in 14 locales.
+- 7 BUILT (user picked A, B, C, D of `.fork/handoff/v095/settings-audit.md`): Samplers show the model's window
+  and Chat-block max output read-only (`FromModel`); the app follows the shell's language until picked
+  (`languageChosen`; engine bridge `chrysalisShell.locale()`); embeddings field -> link to Settings > Memory
+  (`chrysalisShell.openSettingsTab`, tabs api/models/memory/backup); backup buttons say "Roleplay data" and
+  point to the shell's Backup. Not browser-checked yet.
+- 8 FIXED (likely cause): `attachBranches` keeps one entry per chat id (newChat/forkChat prepend after awaits
+  while a hydrate may already hold the chat). Cause found by reading; the original warning was never reproduced.
+- 9 SETTLED: the S5 builder test passes alone and in its file (1.6 s warm, 8.5 s on a cold first run): the 5 s
+  timeout was the environment. Also fixed: the session path test on Windows (12 known Windows failures left).
+- 12 FIXED: stat tile labels hyphenate in the UI language and wrap.
+- 13 CLOSED by the user: Enter on the phone stays a new line.
+- 10, 11: being reproduced in a browser (Sonnet subagent). 11 reading so far: assistant-ui's external store
+  keeps messages it saw before; the live ids (`m_*`, `live_*`) are swapped for `u<at>`/`a<at>` by
+  `reloadCurrent` after every run, so stale siblings stay in its repository.
+- 2 (live NanoGPT run) at the end with the user; 3 (Android provider list) needs the phone's error text; 6 left.
+
 ## Next
-- 0.9.5: what 0.9.2 left open, `.fork/handoff/v095/PLAN.md`; ask the user for the order.
+- 0.9.5 above.
 - Plans for later, the user picks the version: the card editor (`.fork/handoff/card-editor/PLAN.md`,
   incl. emotion images as full-size files), group chats (do not work for the user: 1.0.0), the Data
   Bank's embeddings and "document -> entries" (`v094/data-bank.md`), the queue in START.md.
