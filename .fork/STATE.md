@@ -5,100 +5,39 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 0.9.4, deeper lorebooks: RELEASED 2026-10-10 as Roleplay 4.29.0 (fork main `a30f811`, the user's word)
-Plan, rounds and the user's decisions: `.fork/handoff/v094/PLAN.md`; UI spec `UI-SPEC.md`; Data Bank
-research `data-bank.md`; built-in agent task for workspace skill copies `workspace-agent-task.md`.
-Roleplay clone `.claude/worktrees/rp-memory`, branch `lore-v094` (pushed, not main), release commit
-`1898de8` + fixes: word forms in Cyrillic keys (phrase match), why an entry fired / was held back,
-real keyword test (`POST /wi-test`), minActivations, every dead field working (filters, format
-template, strategy, include names, group scoring), honest positions with a fallback, links only on the
-card (group members' books, exports with `character_book`, delete cleanup, backups), Data Bank scope /
-word forms / budget, the editor's translation preview with a persistent Save toast, llm translation in
-pieces. 847 tests. UI built and browser-checked by a Sonnet subagent, reviewed by the orchestrator.
-No engine code changed in 0.9.4: no engine release needed.
-2026-10-10: the branch's 35 changed files were copied into the E: workspace for the user's live test
-(not `data/`, not the root manifest: the app update sets it).
-Live test 2026-10-10 (user): translation preview OK, filters OK, always-on entries now reach the chat. Fixed after it: card saves PATCH only changed fields (a card with emotion images passed the 1 MB app request cap: every edit failed, `body too large`; `49cad3d`), unique new book names; UI `2ff043c`: search in the card's book picker, "With Molfar" (askMolfar, lorebook-craft), bulk By meaning + vector note. Copied to the E: workspace again. Small: "1 entries" / "1 global books" plurals.
-Released: `lore-v094` fast-forwarded into the fork main on the user's word ("I trust it, merge and release"). No engine release (no engine code changed); the E: workspace has the code, its root manifest updates with the app update.
-Seen, not fixed: `updateCharacter` rewrites the card's whole studio bag with defaults on the first edit.
+## 0.9.7 (started 2026-10-10): the prompt inspector with sources
+Engine branch `claude/v097-inspector` (worktree `.claude/worktrees/v097`, from main `95ec2a1` = v0.9.6); Roleplay
+clone `.claude/worktrees/rp-memory` on the fork main `4cb3a8d` (4.31.0). Plan: `.fork/handoff/inspector-sources/PLAN.md`.
 
-## 0.9.5: RELEASED to main 2026-10-10 (engine `b58218a`, Roleplay 4.30.0 on the fork main `5279c38`); the tag v0.9.5 is the user's
-Plan, order and the user's decisions: `.fork/handoff/v095/PLAN.md`. Engine branch `claude/v095` (worktree
-`.claude/worktrees/v095`, from main `5cc7711`); Roleplay clone `.claude/worktrees/rp-memory`, branch `v095` from
-fork main 4.29.0.
-- 1 BUILT: engine `GET /v1/models/params/effective` takes the preset side (temperature, max_tokens, reasoning,
-  thinkingBudget, paramsSource) and answers `applied` with `from` (`effectiveParams`, test); Roleplay
-  `effective-params.tsx` in the header switch's model tab (draft by an external code model, rewritten).
-- 4 BUILT: backstory along the chain, up to 3 chats back, one budget (shares 50/30/20, unused rolls to the
-  nearer chats), oldest first, a fact once, insert record `chain`; tests in `rp-chat-links.test.ts`.
-- 5 BUILT: named examples in the model recommendations (`EXAMPLES` in `client/src/model-panel.tsx`, refresh each
-  release), "For example: {names}." in 14 locales.
-- 7 BUILT (user picked A, B, C, D of `.fork/handoff/v095/settings-audit.md`): Samplers show the model's window
-  and Chat-block max output read-only (`FromModel`); the app follows the shell's language until picked
-  (`languageChosen`; engine bridge `chrysalisShell.locale()`); embeddings field -> link to Settings > Memory
-  (`chrysalisShell.openSettingsTab`, tabs api/models/memory/backup); backup buttons say "Roleplay data" and
-  point to the shell's Backup. Not browser-checked yet.
-- 8 FIXED (likely cause): `attachBranches` keeps one entry per chat id (newChat/forkChat prepend after awaits
-  while a hydrate may already hold the chat). Cause found by reading; the original warning was never reproduced.
-- 9 SETTLED: the S5 builder test passes alone and in its file (1.6 s warm, 8.5 s on a cold first run): the 5 s
-  timeout was the environment. Also fixed: the session path test on Windows (12 known Windows failures left).
-- 12 FIXED: stat tile labels hyphenate in the UI language and wrap.
-- 13 CLOSED by the user: Enter on the phone stays a new line.
-- 10 NOT REPRODUCED (browser check, ~260 open/close cycles at 1280 and 390, mouse and touch, after loads,
-  chat switches, hydrates and streaming): closed unless the user sees it.
-- 11 FIXED `befc2c9`: reproduced on every live run (the picker was on the USER message, above Molfar's reply):
-  `reloadCurrent` swapped live ids for `u<at>`/`a<at>` and assistant-ui keeps every id it saw. `keepShownIds`
-  (client-agent/src/runs.ts) keeps the shown ids; edit/regenerate find the run by `runAt`.
-- Browser check round 1 (Sonnet subagent): item 1 passed (dark/light/390, override); Home tiles not clipped but
-  broke mid-word at 1280 -> rows in a narrow column; the preset's thinking budget was marked "model" -> own row.
-  Round 2 PASSED (all 7): no picker after live runs, edit/regenerate on live messages, Home rows, the budget
-  row, Samplers read-only numbers (and editable with override / unknown window), the shell's language and an
-  in-app pick that sticks, Memory and Backup links. Note: shell links and locale need a trusted (official)
-  install; a hand-copied app is untrusted and gets "not allowed".
-- 3 CLOSED by the user 2026-10-10 (the provider list works on the phone now).
-- 2 DONE 2026-10-10 (user, NanoGPT GLM 5.2 thinking): the reply's requestParams carried the model's Chat block,
-  every value `from: model`. Seen in that run: one first reply had the preset's "seven checks" planning as plain
-  reply text (17.7k chars, no think tags at all; the swipe was clean). Not a parser fault; the user chose to leave it.
-- RELEASED: both branches fast-forwarded into main on the user's word. Left: the tag v0.9.5 (the user).
+## Repos after 0.9.6 (cleaned 2026-10-10)
+- Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
+  merged into main; the local branches and worktrees are gone. The remote copies wait for the user to delete
+  them on GitHub (auto mode blocks remote branch deletion). `claude/upstream-context-fixes` stays.
 
-## 0.9.6 (started 2026-10-10): presets with choices per chat, Marinara import, FRANKENX built in
-Plan, the user's decisions, data formats: `.fork/handoff/chat-presets/PLAN.md`; UI spec `UI-SPEC.md`.
-Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `claude/v095`); Roleplay clone
-`.claude/worktrees/rp-memory`, branch `presets` (from `v095`, on top of 4.30.0).
-- BUILT (Roleplay): picks per chat (`meta.presetVars`), `{{name}}` / `{{var:name}}` / `{{#if}}`, section
-  conditions `name` / `!name`, `POST /chats/:id/preset` with notes (`meta.presetNotes`), per-character memory
-  (`meta.presetAt`, `GET /preset-memory/:charId`), option costs (`POST /preset-costs/:id`), Marinara importer,
-  `choice` and toggle variables, FRANKENX 1.6 adapted and shipped read-only (`data/presets/frankenx.json` +
-  update template `_frankenx.json`; built by `.fork/presets/frankenx/adapt.ts` from the user's export on G:),
-  DATA-FORMATS.md, preset-craft skill. 865 tests.
-- UI BUILT (Sonnet subagent, reviewed): chat Preset panel (quick bar "Choices"), new-chat step (Settings > Chat
-  Behavior switch "ask for the preset"), muted notes after messages, choice/toggle editor in Presets > Variables
-  (+ Description). Browser-checked (6 flows, dark/light 1280 and 390, Ukrainian). Orchestrator fixes `280b756`: option
-  costs once per preset + `{ only: "total" }` after a change (the sandbox took ~1.8 s per full request), a marker's
-  own text counts (Default ~49 tokens, was 0), forks keep only their notes, step picker pinned. 867 tests.
-  Roleplay branch `presets` pushed (head `280b756`).
-- Open for the user: the editor's "Use this preset" still also makes the preset default (old `usePreset`);
-  "Make default" moves chats that rode the old default (existing store behavior).
-- 2026-10-10: the 23 changed Roleplay files (`a30f811` 4.29.0 -> `presets` `280b756`) copied into the E: workspace
-  (none had the user's own edits; root manifest untouched). Needs the engine from `claude/v095` or newer.
-- First live test failed: a minute after the copy the engine updated Roleplay to the released 4.30.0
-  (fork main `5279c38`, manifest `source.head`), and the merge put back the 4.30.0 versions of 5 files changed on
-  both sides (store, types, i18n, quick bar, settings view): new components with the old store, nothing worked.
-  Re-copied, verified all 23 against `presets`, the app rebuilt (hot update). Lesson: after copying into a
-  workspace, check the app's manifest `source.head` and re-verify the files after the first engine start.
-- Live test passed (user, 2026-10-10); the quick bar's Choices/Edit became real buttons (contrast measured AA
-  on both themes, `e598981`).
-- Engine: a Discord link beside GitHub in the apps page footer (`651af31`, the user's invite), the one engine change.
-- RELEASE (user's word "можна випускати разом з пресетом"): Roleplay 4.31.0 on the fork's main (`4cb3a8d`);
-  engine 0.9.6 (package.json, CHANGELOG, `.fork/release-notes/0.9.6.md`), main merged in. Left: the tag v0.9.6 (the user).
-## Next
-- 0.9.5 above.
-- Plans for later, the user picks the version: the card editor (`.fork/handoff/card-editor/PLAN.md`,
-  incl. emotion images as full-size files), group chats (do not work for the user: 1.0.0), the Data
-  Bank's embeddings and "document -> entries" (`v094/data-bank.md`), the queue in START.md.
+## Open, from 0.9.4-0.9.6
+- `updateCharacter` (Roleplay) rewrites the card's whole studio bag with defaults on the first edit: silent data loss.
+- "1 entries" / "1 global books" plurals in the lorebook UI.
+- Presets: the editor's "Use this preset" also makes the preset default (old `usePreset`); "Make default"
+  moves chats that rode the old default (existing store behavior). Open for the user.
+- One first reply on NanoGPT GLM 5.2 thinking carried the preset's planning as plain text (no think tags);
+  the user chose to leave it.
+- Lesson from 0.9.6: after copying Roleplay files into a workspace, check the app's manifest `source.head` and
+  re-verify the files after the first engine start (an app update can merge the released versions back).
+- Plans for later, the user picks the version: the card editor (`.fork/handoff/card-editor/PLAN.md`), group
+  chats (do not work for the user: 1.0.0), the Data Bank's embeddings and "document -> entries"
+  (`v094/data-bank.md`), the queue in START.md.
 
 ## Released (details: CHANGELOG, `.fork/release-notes/`, git history)
 Tags are pushed by the user; `release.yml` builds the archives, the APK and the Docker image.
+- 0.9.6 (2026-10-10; Roleplay 4.31.0): presets with options per chat (`meta.presetVars`, `{{#if}}`, section
+  conditions, notes, per-character memory, option costs), Marinara import, FRANKENX 1.6 built in
+  (`.fork/presets/frankenx/adapt.ts`), a Discord link in the apps page footer. Plan: git history of `.fork/handoff/chat-presets/`.
+- 0.9.5 (2026-10-10; Roleplay 4.30.0): effective parameters in the chat (`GET /v1/models/params/effective`),
+  backstory along a chain of up to 3 chats, named examples in model recommendations, Roleplay settings next to
+  the shell (language, embeddings and backup links), duplicate chat ids, the agent page's picker on live runs.
+- 0.9.4 (2026-10-10; Roleplay 4.29.0, no engine release): deeper lorebooks (word forms in Cyrillic keys, why an
+  entry fired, keyword test, every SillyTavern field working, links on the card, Data Bank scope), card saves
+  send only changed fields.
 - 0.9.3 (2026-10-10; Roleplay 4.28.0): six card storefronts, paste-a-link, cards up to 200 MB through
   the engine file route, RisuAI emotion images, card translation. The first v0.9.3 tag sat on the old
   main and release.yml failed; the user moved it to `8f9c58f` and the release is out (6 assets).

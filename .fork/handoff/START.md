@@ -4,17 +4,15 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
-1. **0.9.4 lorebooks: RELEASED 2026-10-10 (Roleplay 4.29.0).** Leftovers: "1 entries" / "1 global books" plurals.
-2. **0.9.5: what 0.9.2 left open.** `.fork/handoff/v095/PLAN.md` (effective parameters in the chat, a
-   live provider run, the Android provider list, backstory depth, the duplicate-key warning, a
-   timing-out builder test, older small bugs). Ask the user for its order.
+Small leftovers from 0.9.4-0.9.6 (the studio bag overwrite, plurals, preset defaults): STATE, "Open".
 3. **Card editor** (user, 2026-10-10): `.fork/handoff/card-editor/PLAN.md` (button labels, export
    icon, export variants that keep emotions and the book, emotion images as full-size files, a pass
    over the extra fields with the user).
 4. **Group chats** do not work for the user (seen 2026-10-10, cause unknown): look into them for 1.0.0.
 5. **Data Bank, the rest** (`.fork/handoff/v094/data-bank.md`): embeddings through `/v1/embeddings`
    with the term search as fallback; "document -> lorebook entries".
-6. **Prompt inspector with sources** (user, 2026-10-06): on Molfar's page (`src/inspector.ts`), label
+6. **Prompt inspector with sources: IN WORK as 0.9.7** (user, 2026-10-06; plan
+   `.fork/handoff/inspector-sources/PLAN.md`): on Molfar's page (`src/inspector.ts`), label
    every part of one request by its source (card fields, group members, persona, preset blocks,
    lorebook entries with book/entry/why, Litopys, the dashboard insert, the "Story, move" note, regex
    changes, history and what the budget cut). Likely: Roleplay's `assemble()` and each llmRequest hook
@@ -32,7 +30,6 @@ Finished work is not listed here: see STATE ("Released") and git history.
     - UI redesign, next round: `.fork/handoff/ui-pr1-shell/BRIEF.md` (read its status header; ask the
       user what is still wanted; Home content and the app-to-Molfar bridge).
     - Five agent tools: `.fork/handoff/agent-tools/HANDOFF.md`.
-    - Presets per chat with choices: `.fork/handoff/chat-presets/HANDOFF.md`.
     - Android APK leftovers: `.fork/handoff/android-apk/HANDOFF.md`; building Roleplay on the phone
       failed with "Failed to fetch" (needs the phone's engine log); compact, hideable shell tabs on phones.
     - Full rename of internal names (`chrysalis` command, `CHRYSALIS_*`, data paths) with data migration.
