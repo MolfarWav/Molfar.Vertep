@@ -26,7 +26,7 @@ import { SELF_UPDATE, startUpdate, updateState } from "../self-update.js";
 import { DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
 import * as git from "../git.js";
 import { UserModelService, ModelNotConfiguredError, type ModelPricing } from "../models.js";
-import { blockFor, blockValues, ModelParamsError, readModelParams, writeModelParams } from "../model-params.js";
+import { effectiveParams, ModelParamsError, readModelParams, writeModelParams } from "../model-params.js";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
 import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
 import type { AuthPrompt, Credential, ProviderAuthInteraction } from "@earendil-works/pi-ai";
@@ -1373,12 +1373,18 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // is sent, whichever preset or app calls it (model-params.ts, CONNECTIONS-SPEC.md)
   app.get("/v1/models/params", (c) => c.json(readModelParams(c.get("paths").root)));
 
-  // the block a caller would get and its values: for UIs that show the effective value and its source
+  // the block a caller would get, its values, and (given what the request would carry: temperature,
+  // max_tokens, reasoning, thinkingBudget, paramsSource) the merged result with the source of each
+  // value: for UIs that show the effective value and where it comes from (Roleplay's chat header)
   app.get("/v1/models/params/effective", (c) => {
     const ref = c.req.query("model") ?? "";
     const entry = readModelParams(c.get("paths").root).models[ref];
-    const block = blockFor(entry, { source: c.req.query("source") ?? "", key: c.req.query("key") ?? undefined });
-    return c.json({ model: ref, block, values: blockValues(entry, block) ?? {} });
+    const q = (k: string) => c.req.query(k) ?? undefined;
+    const eff = effectiveParams(entry, { source: q("source") ?? "", key: q("key") }, {
+      temperature: q("temperature"), max_tokens: q("max_tokens"), reasoning: q("reasoning"),
+      thinkingBudget: q("thinkingBudget"), paramsSource: q("paramsSource"),
+    });
+    return c.json({ model: ref, ...eff });
   });
 
   app.put("/v1/models/params", async (c) => {

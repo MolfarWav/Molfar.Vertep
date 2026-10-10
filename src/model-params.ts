@@ -272,3 +272,40 @@ export function mergeParams(block: ParamBlock | undefined, blockName: string | n
   if (b.headers && Object.keys(b.headers).length) out.headers = { ...b.headers };
   return out;
 }
+
+/** What a UI shows as "effective": the values a call would be sent and where each one comes from. */
+export interface EffectiveParams {
+  block: string | null;
+  values: ParamBlock;
+  applied: Omit<AppliedParams, "headers" | "reasoningTags">;
+}
+
+/**
+ * The block a caller gets, merged with what its request would carry (a preset's temperature, max
+ * output, reasoning, paramsSource), the same way generation does. A query string is all a UI has, so
+ * the request side arrives as strings; a value that does not parse is treated as absent.
+ */
+export function effectiveParams(entry: ModelParamsEntry | undefined, caller: ParamsCaller, query: Record<string, string | undefined>): EffectiveParams {
+  const block = blockFor(entry, caller);
+  const values = blockValues(entry, block) ?? {};
+  const num = (v: string | undefined) => {
+    if (v === undefined || v.trim() === "") return undefined;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  };
+  const temperature = num(query.temperature);
+  const maxTokens = num(query.max_tokens);
+  const thinkingBudget = num(query.thinkingBudget);
+  const reasoning = query.reasoning && (REASONING_LEVELS as readonly string[]).includes(query.reasoning) ? query.reasoning : undefined;
+  const merged = mergeParams(block ? values : undefined, block, {
+    presetParams: {
+      ...(temperature !== undefined ? { temperature } : {}),
+      ...(maxTokens !== undefined && maxTokens > 0 ? { max_tokens: maxTokens } : {}),
+    },
+    ...(reasoning ? { reasoning } : {}),
+    ...(thinkingBudget !== undefined && thinkingBudget > 0 ? { thinkingBudget } : {}),
+    ...(query.paramsSource === "request" ? { paramsSource: "request" } : {}),
+  });
+  const { headers: _h, reasoningTags: _t, ...applied } = merged;
+  return { block, values, applied };
+}

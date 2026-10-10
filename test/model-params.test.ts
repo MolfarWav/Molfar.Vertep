@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fauxProvider, fauxAssistantMessage } from "@earendil-works/pi-ai/providers/faux";
-import { blockFor, blockValues, mergeParams, pluginBlockName, ModelParamsError, readModelParams, validateBlock, writeModelParams } from "../src/model-params.js";
+import { blockFor, blockValues, effectiveParams, mergeParams, pluginBlockName, ModelParamsError, readModelParams, validateBlock, writeModelParams } from "../src/model-params.js";
 import { cleanFavorites, UserModelService } from "../src/models.js";
 import { defaultInstanceConfig } from "../src/config.js";
 import { bootstrapUserDir } from "../src/paths.js";
@@ -69,6 +69,20 @@ describe("model params: which block and who wins", () => {
     expect(r.temperature).toBe(0.5);
     expect(r.params?.top_p).toBe(0.7);
     expect(r.from.temperature).toBe("request");
+  });
+
+  it("effective values for a UI: the preset's side as query strings, with the source of each", () => {
+    const entry = { chat: { temperature: 0.95, reasoning: "medium" as const, headers: { "X-T": "1" } } };
+    const caller = { source: "app:roleplay/roleplay__engine", key: "reply" };
+    const e = effectiveParams(entry, caller, { temperature: "0.5", max_tokens: "300", reasoning: "low" });
+    expect(e.block).toBe("chat");
+    expect(e.applied).toMatchObject({ temperature: 0.95, max_tokens: 300, reasoning: "medium", from: { temperature: "model", max_tokens: "request", reasoning: "model" } });
+    expect("headers" in e.applied).toBe(false);
+    const r = effectiveParams(entry, caller, { temperature: "0.5", paramsSource: "request" });
+    expect(r.applied).toMatchObject({ temperature: 0.5, reasoning: "medium", from: { temperature: "request", reasoning: "model" } });
+    // no block for this model: the preset alone; junk and zero values count as absent
+    const n = effectiveParams(undefined, caller, { temperature: "abc", max_tokens: "0", reasoning: "loud" });
+    expect(n).toEqual({ block: null, values: {}, applied: { block: null, from: {} } });
   });
 });
 
