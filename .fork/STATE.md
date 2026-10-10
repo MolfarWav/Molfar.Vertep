@@ -55,8 +55,10 @@ fork main 4.29.0.
   row, Samplers read-only numbers (and editable with override / unknown window), the shell's language and an
   in-app pick that sticks, Memory and Backup links. Note: shell links and locale need a trusted (official)
   install; a hand-copied app is untrusted and gets "not allowed".
-- LEFT: 3 (the phone's error text), 2 (live NanoGPT run with the user), then the release (engine 0.9.5 +
-  Roleplay 4.30.0; CHANGELOG, release notes, merge on the user's word).
+- 3 CLOSED by the user 2026-10-10 (the provider list works on the phone now).
+- RELEASE PREPARED (not merged): engine 0.9.5 (package.json, CHANGELOG, `.fork/release-notes/0.9.5.md`) on
+  `claude/v095`; Roleplay 4.30.0 (manifest, CHANGELOG) on the fork's `v095`. LEFT: 2, the live NanoGPT run (the
+  user is testing), then merge both into main on the user's word and the tag v0.9.5 (the user).
 - 2026-10-10: the 13 changed Roleplay files (v095 `d8e2ee2` vs 4.29.0) copied into the E: workspace for the
   user (all were still 4.29.0 there; root manifest untouched). They need the engine from `claude/v095`.
 - 2 (live NanoGPT run) at the end with the user; 3 (Android provider list) needs the phone's error text; 6 left.

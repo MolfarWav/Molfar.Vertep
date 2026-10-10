@@ -7,6 +7,14 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.5 (2026-10-10)
+
+- Roleplay 4.30.0 through app updates: the chat header's model tab shows the temperature, max output, reasoning and thinking budget a reply is sent with, each marked as the model's, the preset's or the provider's default; a chat that continues a chain of earlier chats gets their stories as backstory (up to three back, one budget); the preset's context size and max output show the model's numbers when the model sets them; the app starts in the shell's language; the embeddings and backup settings point to the shell's Settings.
+- `GET /v1/models/params/effective` takes the request side (temperature, max_tokens, reasoning, thinkingBudget, paramsSource) and answers the merged values with the source of each (`applied.from`), the same merge generation does.
+- Apps can read the shell's language (`chrysalisShell.locale()`) and open Settings on the Connections, Models, Memory or Backup tab (`chrysalisShell.openSettingsTab(tab)`); trusted apps only.
+- Molfar's page: a finished run no longer shows a "2 / 2" branch picker under your message (the live messages' ids were swapped for the saved ones, and the thread kept the old ones as a second branch).
+- The recommended values for each parameter block name example models next to the kind of model they describe.
+
 ## 0.9.3 (2026-10-10)
 
 - Roleplay 4.28.0 through app updates: the Marketplace has six storefronts (Chub, RisuRealm, CharaVault, Wyvern, Pygmalion, JannyAI) with their own filters, a "paste a card link" box, cards of any size up to 200 MB with their emotion images, translation of cards in the Marketplace and in the character editor (with "Restore original"), expression sprites that follow Ukrainian and Russian replies, and a floating sprite that folds and resizes.
