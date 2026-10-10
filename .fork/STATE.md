@@ -31,6 +31,17 @@ Plan: `.fork/handoff/inspector-sources/PLAN.md`; UI spec `UI-SPEC.md`.
   without "{{", regex scripts read and filtered once per pass, compiled once, skipped by literal head). Left:
   150 host file reads per pass (~0.3 s; a bulk read in the engine would cut it), a longer limit on Android only
   together with this.
+  The player then said: a NEW chat, Default and FRANKENX, NanoGPT and OpenRouter, several models, same error. So
+  neither history nor the preset. Bench (`LORE_N`, `CARD_MB`): a 16 MB card.json costs ~0.3 s; a big lorebook was
+  it: 300 entries 3.2 s, 1000 entries hit the 10 s limit even on the desktop (`keyMatch` compiled a Unicode regex
+  per key per call). Roleplay `7b096a1`: indexOf + edge checks (same matches as the old pattern, tested),
+  compiled keys cached: 300 entries 0.26 s, 1000 entries 0.6 s. Not confirmed on the player's card (likely a
+  simulator card with a big embedded book); ask them for the card or its book size.
+- 4 Roleplay peek BUILT `144d6c0` (Sonnet subagent: port of the panel, browser-checked dark/light 1280/390, 45
+  screenshots in `.fork/screens/v097/`, untracked); engine `a85a99c`: Esc clears the highlight without closing
+  the inspector. Seen: entries whose keys did not hit are not in "Left out" (only skipped/blocked are); a book of
+  1000 would flood it, so a count row is the likely answer (ask the user).
+- LEFT: the plurals (last, before the push), the user's live test, release 0.9.7 + Roleplay 4.32.0.
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
 - Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
