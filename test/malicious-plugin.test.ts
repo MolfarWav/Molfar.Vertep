@@ -151,7 +151,8 @@ describe("hostile plugin with every permission", () => {
     // the response (what the app page and the agent's console capture see)
     // names the plugin, not just the parse message
     expect(JSON.stringify(res)).toContain("broken");
-    expect(JSON.stringify(res)).toContain("route failed");
+    // and the route, so a timeout names what was slow
+    expect(JSON.stringify(res)).toContain("route GET x failed");
   });
 });
 

@@ -808,7 +808,8 @@ export async function runPluginRoute(
         // the plugin id belongs in the response too: the app page (and the
         // agent reading its console) must know WHICH plugin failed to parse,
         // not just that one did
-        return { status: 500, json: { error: `plugin ${plugin.id} route failed: ${r.error}` } };
+        // and which route: a timeout on a slow phone says nothing without it
+        return { status: 500, json: { error: `plugin ${plugin.id} route ${req.method} ${req.path} failed: ${r.error}` } };
       }
       const out = r.out as Record<string, unknown> | null;
       if (out?.__llmPending === true && out.stash && typeof out.stash === "object") {
