@@ -172,3 +172,29 @@ what every field does now.
      it does not.
 - Report: what you built per section, commits, every screenshot path, the on-disk read-backs, anything you
   could not do or doubt, and engine problems you noticed.
+
+## J. Translating a card in the editor: preview, then "Save translation?" (user, 2026-10-10)
+The data side is done (commit `c4163dd` on `lore-v094`): `previewTranslation(id, name, {target, translation})`
+in `src/lib/card-translate-store.ts` runs a pass WITHOUT saving and keeps it in `usePendingTranslations`
+(zustand, `byId[characterId]`); `savePendingTranslation(id, name)` / `discardPendingTranslation(id)` end it;
+`previewPendingTranslation(pending, character, book)` in `src/lib/card-translate.ts` gives the patch to show.
+- `src/components/character/translate-menu.tsx`: the header button gets a visible label and colour: a tinted
+  button (e.g. sky/primary tint, icon + "Translate"; on phones the icon may stand alone but keeps the tint)
+  so it stands out next to the plain icons. The default target is the app's language when nothing is
+  remembered: `loadTranslateTo(<app language is uk> ? 'Ukrainian' : 'English')` (find the app-language
+  setting the `useT` hook reads). The Translate action calls `previewTranslation` instead of
+  `translateCharacter` (the Store keeps `translateCharacter`, it saves at once by design).
+- While a pending translation exists for the open character:
+  - the editor shows the translated texts in the fields (`{...c, ...preview.patch}` for the writing fields
+    and alternate greetings), read-only, with a visible tint/border and a banner at the top of the editor:
+    "Translation preview (<target>), not saved" with Save and Discard;
+  - a toast that does not close on its own and has no close button (sonner `duration: Infinity`,
+    `dismissible: false`, `closeButton: false`) asks "Save the translation of <name>?" with Save / Discard;
+    both the toast and the banner act on the same pending pass and both go away when either is used;
+  - leaving the editor keeps the pending pass (the toast stays) until Save or Discard.
+- Strings through `t()` (en + uk).
+- Check in the browser with the mock model: the engine's `/translate` (llm provider) answers through the
+  mock; script the mock to return a Ukrainian text, run Translate on an English card, screenshot the preview +
+  the toast (dark and 390 px), Save -> the card file on disk has the translated description and
+  `extensions.molfar_translation`; run again with the target equal to the card's language (mock echoes the
+  text) -> the "already in" warning, nothing written.
