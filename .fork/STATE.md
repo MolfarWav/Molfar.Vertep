@@ -73,9 +73,15 @@ Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `cl
   `choice` and toggle variables, FRANKENX 1.6 adapted and shipped read-only (`data/presets/frankenx.json` +
   update template `_frankenx.json`; built by `.fork/presets/frankenx/adapt.ts` from the user's export on G:),
   DATA-FORMATS.md, preset-craft skill. 865 tests.
-- IN PROGRESS: UI (chat Preset panel, new-chat step, notes in the chat, choice editor) by a Sonnet subagent,
-  then the orchestrator's review and the browser check screenshots.
-- LEFT: the user's live test; release as engine 0.9.6? (no engine code: maybe Roleplay 4.31.0 only).
+- UI BUILT (Sonnet subagent, reviewed): chat Preset panel (quick bar "Choices"), new-chat step (Settings > Chat
+  Behavior switch "ask for the preset"), muted notes after messages, choice/toggle editor in Presets > Variables
+  (+ Description). Browser-checked (6 flows, dark/light 1280 and 390, Ukrainian). Orchestrator fixes `280b756`: option
+  costs once per preset + `{ only: "total" }` after a change (the sandbox took ~1.8 s per full request), a marker's
+  own text counts (Default ~49 tokens, was 0), forks keep only their notes, step picker pinned. 867 tests.
+  Roleplay branch `presets` pushed (head `280b756`).
+- Open for the user: the editor's "Use this preset" still also makes the preset default (old `usePreset`);
+  "Make default" moves chats that rode the old default (existing store behavior).
+- LEFT: the user's live test (needs the 4.30.0 base too: engine from `claude/v095`); release (0.9.5 first).
 
 ## Next
 - 0.9.5 above.
