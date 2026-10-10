@@ -22,7 +22,7 @@ Live test 2026-10-10 (user): translation preview OK, filters OK, always-on entri
 Released: `lore-v094` fast-forwarded into the fork main on the user's word ("I trust it, merge and release"). No engine release (no engine code changed); the E: workspace has the code, its root manifest updates with the app update.
 Seen, not fixed: `updateCharacter` rewrites the card's whole studio bag with defaults on the first edit.
 
-## 0.9.5 (started 2026-10-10): what 0.9.2 left open
+## 0.9.5: RELEASED to main 2026-10-10 (engine `b58218a`, Roleplay 4.30.0 on the fork main `5279c38`); the tag v0.9.5 is the user's
 Plan, order and the user's decisions: `.fork/handoff/v095/PLAN.md`. Engine branch `claude/v095` (worktree
 `.claude/worktrees/v095`, from main `5cc7711`); Roleplay clone `.claude/worktrees/rp-memory`, branch `v095` from
 fork main 4.29.0.
@@ -56,12 +56,10 @@ fork main 4.29.0.
   in-app pick that sticks, Memory and Backup links. Note: shell links and locale need a trusted (official)
   install; a hand-copied app is untrusted and gets "not allowed".
 - 3 CLOSED by the user 2026-10-10 (the provider list works on the phone now).
-- RELEASE PREPARED (not merged): engine 0.9.5 (package.json, CHANGELOG, `.fork/release-notes/0.9.5.md`) on
-  `claude/v095`; Roleplay 4.30.0 (manifest, CHANGELOG) on the fork's `v095`. LEFT: 2, the live NanoGPT run (the
-  user is testing), then merge both into main on the user's word and the tag v0.9.5 (the user).
-- 2026-10-10: the 13 changed Roleplay files (v095 `d8e2ee2` vs 4.29.0) copied into the E: workspace for the
-  user (all were still 4.29.0 there; root manifest untouched). They need the engine from `claude/v095`.
-- 2 (live NanoGPT run) at the end with the user; 3 (Android provider list) needs the phone's error text; 6 left.
+- 2 DONE 2026-10-10 (user, NanoGPT GLM 5.2 thinking): the reply's requestParams carried the model's Chat block,
+  every value `from: model`. Seen in that run: one first reply had the preset's "seven checks" planning as plain
+  reply text (17.7k chars, no think tags at all; the swipe was clean). Not a parser fault; the user chose to leave it.
+- RELEASED: both branches fast-forwarded into main on the user's word. Left: the tag v0.9.5 (the user).
 
 ## 0.9.6 (started 2026-10-10): presets with choices per chat, Marinara import, FRANKENX built in
 Plan, the user's decisions, data formats: `.fork/handoff/chat-presets/PLAN.md`; UI spec `UI-SPEC.md`.
@@ -89,7 +87,6 @@ Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `cl
   Re-copied, verified all 23 against `presets`, the app rebuilt (hot update). Lesson: after copying into a
   workspace, check the app's manifest `source.head` and re-verify the files after the first engine start.
 - LEFT: the user's live test (again); release.
-
 ## Next
 - 0.9.5 above.
 - Plans for later, the user picks the version: the card editor (`.fork/handoff/card-editor/PLAN.md`,
@@ -100,7 +97,7 @@ Engine branch `claude/v096-presets` (worktree `.claude/worktrees/v096`, from `cl
 Tags are pushed by the user; `release.yml` builds the archives, the APK and the Docker image.
 - 0.9.3 (2026-10-10; Roleplay 4.28.0): six card storefronts, paste-a-link, cards up to 200 MB through
   the engine file route, RisuAI emotion images, card translation. The first v0.9.3 tag sat on the old
-  main and release.yml failed: the user moves the tag to the release commit.
+  main and release.yml failed; the user moved it to `8f9c58f` and the release is out (6 assets).
 - 0.9.2 (2026-10-09; Roleplay 4.27.0): connections and models in one Settings tab with a quick switch,
   parameters on the model (model-params.json), a model per chat, chats that continue each other
   (backstory), Library portraits on the dashboard and in Soul.
