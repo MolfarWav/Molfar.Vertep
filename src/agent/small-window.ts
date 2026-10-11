@@ -41,7 +41,7 @@ export function isSmallWindow(mode: SmallModelMode, contextWindow: number | null
 
 // ---------- tool groups ----------
 
-export type ToolGroup = "app" | "skills" | "shell" | "admin" | "mcp";
+export type ToolGroup = "app" | "skills" | "shell" | "web" | "admin" | "mcp";
 
 /** Always sent in small mode. */
 export const CORE_TOOLS: ReadonlySet<string> = new Set(["read_file", "write_file", "edit_file", "json_get", "json_set", "grep", "git", "ask_user", "skill_load", "memory_propose", "memory_search", "tools_enable"]);
@@ -53,6 +53,12 @@ const GROUP_OF: Record<string, ToolGroup> = {
   app_rebuild: "app",
   app_console: "app",
   checkpoint: "app",
+  plugin_log: "app",
+  app_request: "app",
+  model_try: "app",
+  web_fetch: "web",
+  // small mode: big runs are app work, and the core set has no room for it
+  run_budget: "app",
   skill_propose: "skills",
   skill_edit: "skills",
   bash: "shell",
@@ -68,9 +74,10 @@ export function groupOf(toolName: string): ToolGroup | null {
 }
 
 const GROUP_LINES: Record<ToolGroup, string> = {
-  app: "app: create, build-check, rebuild, read the console and add packages for an app; checkpoints",
+  app: "app: create, build-check, rebuild, read the console and plugin log, call app routes, add packages, test a prompt on a model; checkpoints",
   skills: "skills: propose a new skill or edit one",
   shell: "shell: bash in the sandbox (scripts, batch edits, data crunching)",
+  web: "web: read a public web page as text",
   admin: "admin: accounts and server settings",
   mcp: "mcp: the tools of the user's MCP servers",
 };
@@ -88,6 +95,11 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
   app_check: "Wait for an app's browser build and return ok or the errors. Call after editing src/ or package.json.",
   app_rebuild: "Force a fresh build of an app.",
   app_console: "Read console output captured from an open app page (newest last).",
+  plugin_log: "Read plugin (backend) output and failures, newest last. app/plugin/errors narrow it.",
+  app_request: "Call an app's own plugin route as the user: id, method, path, body. Writes are real and committed.",
+  model_try: "One paid test generation on a model (the user confirms): messages, system, model, maxTokens.",
+  web_fetch: "Read a public web page as plain text (internet must be on in Settings).",
+  run_budget: "Before a big task: steps + one-line plan; the user sees the estimate and says go on or not.",
   checkpoint: "Save or restore an app's code: create before risky work, list, restore (asks the user). data/ is never touched.",
   skill_propose: "Propose a new skill or a full rewrite; the user saves or skips it. Load skill-authoring first.",
   skill_edit: "Change part of a skill: exact old text to new text; the user saves or skips it.",
@@ -96,10 +108,13 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
   memory_search: "Search all memory entries by words (inflections match). scope narrows it.",
 };
 
+/** In the app group for small mode only: full mode always sends these. */
+const FULL_ALWAYS: ReadonlySet<string> = new Set(["run_budget"]);
+
 /** The tools the model is sent this step. */
 export function visibleTools(all: AgentTool[], small: boolean, unlocked: ReadonlySet<ToolGroup>): AgentTool[] {
   // full mode hides only the app tools, until an app's code is in play
-  if (!small) return all.filter((t) => (t.name === "tools_enable" ? !unlocked.has("app") : groupOf(t.name) !== "app" || unlocked.has("app")));
+  if (!small) return all.filter((t) => (t.name === "tools_enable" ? !unlocked.has("app") : groupOf(t.name) !== "app" || unlocked.has("app") || FULL_ALWAYS.has(t.name)));
   return all
     // a tool in no group is core (or new and unclassified: better sent than lost)
     .filter((t) => {

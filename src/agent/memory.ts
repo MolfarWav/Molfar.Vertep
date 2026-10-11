@@ -33,6 +33,7 @@ import { resourcesDir } from "../install.js";
 import type { UserPaths } from "../paths.js";
 import type { AgentToolOptions } from "./tools.js";
 import { matchCount, tokens } from "./text-match.js";
+import { estimateTextTokens } from "./context-budget.js";
 
 export const GLOBAL_MEMORY = "memory/MEMORY.md";
 export const GLOBAL_SKILLS = "skills";
@@ -668,7 +669,7 @@ function skillDiff(file: string, before: string, after: string): string | undefi
   return body.length > 12_000 ? `${body.slice(0, 12_000)}\n… (diff truncated)` : body;
 }
 
-const text = (t: string) => ({ content: [{ type: "text" as const, text: t }], details: {} });
+const text = (t: string, details: Record<string, unknown> = {}) => ({ content: [{ type: "text" as const, text: t }], details });
 
 export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<AgentToolOptions, "ask">): AgentTool[] {
   const root = p.root;
@@ -747,13 +748,17 @@ export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<Agen
       const { name, scope, file } = params as { name: string; scope?: string; file?: string };
       const s = findSkill(root, name, scope);
       if (!s) throw new Error(`no skill named "${name}"${scope ? ` in ${scope}` : ""}`);
-      if (file) return text(`# ${s.name}/${file}\n\n${readSkillFile(root, s, file)}`);
+      // details feed the chat's skills chip: which skill, and what it cost
+      if (file) {
+        const body = `# ${s.name}/${file}\n\n${readSkillFile(root, s, file)}`;
+        return text(body, { skill: s.name, scope: s.scope, file, tokens: estimateTextTokens(body) });
+      }
       const files = skillFiles(root, s);
       const where = s.builtin ? "built-in" : s.file;
-      return text(
+      const body =
         `# Skill ${s.name} (${s.scope}, ${where})\n\n${skillText(root, s).trim()}` +
-          (files.length ? `\n\nFiles in this skill (read one with skill_load { name: "${s.name}", file }): ${files.join(", ")}` : ""),
-      );
+        (files.length ? `\n\nFiles in this skill (read one with skill_load { name: "${s.name}", file }): ${files.join(", ")}` : "");
+      return text(body, { skill: s.name, scope: s.scope, tokens: estimateTextTokens(body) });
     },
   };
 

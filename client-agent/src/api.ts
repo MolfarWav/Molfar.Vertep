@@ -51,6 +51,8 @@ export interface EngineRun {
   usage?: EngineUsage
   /** every model call of the run, summed; older runs do not carry it */
   spend?: RunSpend
+  /** skills the agent loaded in this run, with the estimated token cost of each */
+  skills?: RunSkill[]
   title?: string
   summary?: string
   checkpoints?: RunCheckpoint[]
@@ -64,6 +66,17 @@ export interface RunSpend {
   cacheRead: number
   cacheWrite: number
   cost: number | null
+  /** model calls (steps) the run made; older runs do not carry it */
+  calls?: number
+}
+
+/** A skill loaded with skill_load during a run; `file` is set when one extra
+ *  file of the skill was read instead of its SKILL.md. */
+export interface RunSkill {
+  name: string
+  scope?: string
+  file?: string
+  tokens: number
 }
 
 export interface AgentResponse {
@@ -75,6 +88,8 @@ export interface AgentResponse {
   thinkingMs?: number
   usage?: EngineUsage
   autoCompacted?: boolean
+  spend?: RunSpend
+  skills?: RunSkill[]
   stopped?: boolean
   error?: string
   checkpoints?: RunCheckpoint[]

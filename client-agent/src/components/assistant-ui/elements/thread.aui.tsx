@@ -46,6 +46,8 @@ import { ArrowDown, ArrowUp, Check, CaretLeft, CaretRight, Copy, DownloadSimple,
 import { useEnterSends } from "@/hooks/use-touch-ui";
 import { currentProjectId, effectiveModel, useAgent as useAgentStore } from "@/store";
 import { RunCheckpoints } from "@/Checkpoints";
+import { RunInfo } from "@/RunInfo";
+import { compactTokens, usd } from "@/lib/format";
 import { MolfarAvatar } from "@/MolfarAvatar";
 import { ComposerProjectRow, ProjectAttachButton, ProjectContextLine, SaveToProjectAction } from "@/ProjectChat";
 import {
@@ -358,10 +360,6 @@ const ComposerContextRing: FC = () => {
   )
 };
 
-const compactTokens = (n: number): string =>
-  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
-const usd = (n: number): string => `$${n < 0.01 ? n.toFixed(4) : n < 1 ? n.toFixed(3) : n.toFixed(2)}`;
-
 /** What this chat has cost so far: tokens over every model call of every run,
  *  and their price where the model has one. Tool-heavy runs make many calls,
  *  so this is usually far more than the context ring's last-call figure. */
@@ -634,6 +632,7 @@ const AssistantMessage: FC = () => {
       </div>
       <div className="-ms-2">
         <RunCheckpoints />
+        <RunInfo />
       </div>
 
       <div

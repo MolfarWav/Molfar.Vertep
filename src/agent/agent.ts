@@ -19,7 +19,8 @@ import type { McpRegistry, McpToolInfo } from "../mcp/registry.js";
 import { Type } from "typebox";
 import { log } from "../logger.js";
 import { clampThinkingLevel, isContextOverflow, type AssistantMessage } from "@earendil-works/pi-ai";
-import { clampMaxTokens, fitContext, newTrimState } from "./context-budget.js";
+import { clampMaxTokens, estimateMessageTokens, estimateTextTokens, fitContext, newTrimState, toolsTokens } from "./context-budget.js";
+import { buildRunTools, type RunToolOptions } from "./run-tools.js";
 import { foldToolResults } from "./context-fold.js";
 import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
@@ -91,6 +92,8 @@ export interface AgentRunResult {
   spend?: RunSpend;
   /** Apps this run changed, each with the checkpoint to undo it. */
   checkpoints?: RunCheckpoint[];
+  /** Skills the run loaded (the chat's skills chip). */
+  skills?: RunSkill[];
   /** Context window of the resolved model (auto-compact thresholding). */
   contextWindow?: number;
   /** Set when the run was aborted mid-flight (partial output is persisted). */
@@ -140,6 +143,8 @@ interface SessionRunRecord {
   spend?: RunSpend;
   /** Apps this run changed, each with the checkpoint to undo it. */
   checkpoints?: RunCheckpoint[];
+  /** Skills the run loaded. */
+  skills?: RunSkill[];
 }
 
 /** Tokens a whole run used across its model calls, and what they cost in
@@ -150,6 +155,16 @@ export interface RunSpend {
   cacheRead: number;
   cacheWrite: number;
   cost: number | null;
+  /** Model calls (steps) the run made. */
+  calls?: number;
+}
+
+/** A skill the run loaded with skill_load, and what its text cost. */
+export interface RunSkill {
+  name: string;
+  scope?: string;
+  file?: string;
+  tokens: number;
 }
 
 /**
@@ -399,6 +414,8 @@ export class UserAgent {
       /** Project for a NEW session; an existing one keeps the project its
        *  start record names. */
       project?: string
+      /** The app route dispatcher, as this user (app_request). */
+      appRequest?: RunToolOptions["appRequest"]
     } = {},
   ): Promise<UserAgent> {
     const isAdmin = users.get(username)?.role === "admin";
@@ -464,6 +481,31 @@ export class UserAgent {
       pick(cfg.defaultModel ?? undefined) ??
       available.find((m) => m.provider === "faux") ??
       [...available].sort((x, y) => (x.provider + "/" + x.id).localeCompare(y.provider + "/" + y.id))[0]!;
+
+    // tools that reach past the files (run-tools.ts): built after the model
+    // pick, since model_try and run_budget price on it
+    let agentRef: Agent | undefined;
+    tools.push(...buildRunTools(username, {
+      ...(opts.ask ? { ask: opts.ask } : {}),
+      ...(opts.mode ? { mode: opts.mode } : {}),
+      ...(opts.appRequest ? { appRequest: opts.appRequest } : {}),
+      tryModel: {
+        resolve: (ref) => {
+          const m = ref ? pick(ref) : model;
+          return m ? { ref: `${m.provider}/${m.id}`, price: (u) => svc.costOf(m, u) } : null;
+        },
+        generate: (req) => svc.generate(req),
+      },
+      // offered only while internet is on; the tool re-reads the switch per call
+      ...(readSandboxSettings(paths.sandbox).internet ? { internet: () => readSandboxSettings(paths.sandbox).internet } : {}),
+      budgetBasis: () => {
+        const st = agentRef?.state;
+        const contextTokens = st
+          ? estimateTextTokens(st.systemPrompt) + st.messages.reduce((n, m) => n + estimateMessageTokens(m), 0) + toolsTokens(visibleTools(st.tools, small, unlocked))
+          : 0;
+        return { contextTokens, model: `${model.provider}/${model.id}`, price: (u) => svc.costOf(model, u) };
+      },
+    }));
 
     const messages = loadSessionDialogue(sFile, model);
     // small-window mode (small-window.ts): one compact prompt, core tools only;
@@ -573,6 +615,7 @@ export class UserAgent {
         return svc.streamFn(m, sent, opts, sessionId, small ? { smallModelMode: true } : undefined);
       },
     });
+    agentRef = agent;
     return new UserAgent(agent, sessionId, sFile, budget, svc, project, runState, paths.root);
   }
 
@@ -782,6 +825,7 @@ export class UserAgent {
     const usageRaw = (finalAssistant as { usage?: { input: number; output: number; cacheRead: number } } | undefined)?.usage;
     const usage = usageRaw ? { input: usageRaw.input, output: usageRaw.output, cacheRead: usageRaw.cacheRead } : undefined;
     const spend = this.spendOf(fresh);
+    const skills = this.skillsOf(fresh);
     const thinkingMs = thinkingStart ? (thinkingEnd || Date.now()) - thinkingStart : undefined;
     const stop = (finalAssistant as { stopReason?: string } | undefined)?.stopReason;
     const errorMessage = (finalAssistant as { errorMessage?: string } | undefined)?.errorMessage;
@@ -798,7 +842,7 @@ export class UserAgent {
     // (stop/length/aborted) diagnosable from the engine log
     if (!text) log.warn(`[agent:${this.sessionId}] run settled with no reply: stop=${stop ?? "none"} out=${(finalAssistant as { usage?: { output?: number } } | undefined)?.usage?.output ?? "?"}`);
     const checkpoints = await this.runCheckpoints();
-    this.persistRun(userMessage, text, toolTrace, usage, thinkingText, thinkingMs, turns, opts.imageUrls, spend, checkpoints);
+    this.persistRun(userMessage, text, toolTrace, usage, thinkingText, thinkingMs, turns, opts.imageUrls, spend, checkpoints, skills);
     const resolvedModel = (this.agent.state as { model?: { contextWindow?: number } }).model;
     return {
       finalText: text || emptyNote || "",
@@ -810,6 +854,7 @@ export class UserAgent {
       ...(usage ? { usage } : {}),
       ...(spend ? { spend } : {}),
       ...(checkpoints.length ? { checkpoints } : {}),
+      ...(skills.length ? { skills } : {}),
       ...(resolvedModel?.contextWindow ? { contextWindow: resolvedModel.contextWindow } : {}),
       ...(stop === "aborted" ? { stopped: true } : {}),
       ...(error ? { error } : {}),
@@ -877,7 +922,24 @@ export class UserAgent {
       sum.cacheWrite += m.usage.cacheWrite ?? 0;
     }
     if (!calls) return undefined;
-    return { ...sum, cost: this.svc.costOf(this.agent.state.model, sum) };
+    return { ...sum, cost: this.svc.costOf(this.agent.state.model, sum), calls };
+  }
+
+  /** The skills a run loaded, from skill_load's result details. */
+  private skillsOf(fresh: readonly unknown[]): RunSkill[] {
+    const out: RunSkill[] = [];
+    for (const m of fresh as { role?: string; toolName?: string; isError?: boolean; details?: Record<string, unknown> }[]) {
+      if (m.role !== "toolResult" || m.toolName !== "skill_load" || m.isError) continue;
+      const d = m.details ?? {};
+      if (typeof d.skill !== "string" || typeof d.tokens !== "number") continue;
+      out.push({
+        name: d.skill,
+        ...(typeof d.scope === "string" ? { scope: d.scope } : {}),
+        ...(typeof d.file === "string" ? { file: d.file } : {}),
+        tokens: d.tokens,
+      });
+    }
+    return out;
   }
 
   private persistRun(
@@ -891,6 +953,7 @@ export class UserAgent {
     imageUrls?: string[],
     spend?: RunSpend,
     checkpoints: RunCheckpoint[] = [],
+    skills: RunSkill[] = [],
   ): void {
     try {
       fs.mkdirSync(path.dirname(this.sFile), { recursive: true });
@@ -929,6 +992,7 @@ export class UserAgent {
         ...(usage ? { usage } : {}),
         ...(spend ? { spend } : {}),
         ...(checkpoints.length ? { checkpoints } : {}),
+        ...(skills.length ? { skills } : {}),
       };
       fs.appendFileSync(this.sFile, JSON.stringify(rec) + "\n", "utf8");
     } catch (e) {
@@ -1387,9 +1451,9 @@ ${LANGUAGE_RULE}`],
 ${PRECEDENCE_RULE}`],
     ["rules", "How you work", `# How you work
 1. Look before you change anything: the project's instructions and files, the notes/ list, memory (memory_search), the app's AGENTS.md and data/README.md. Read the code you are about to change; never guess a field, an export or an API.
-2. Ask when it matters. Before building a new app, a UI or a large feature, call ask_user ONCE with 2-6 questions, each with 2-4 options, a one-line description per option and one marked recommended; then plan the file layout, then build. Skip the questions when the request already settles those choices; a small, clear task you just do.
+2. Ask when it matters. Before building a new app, a UI or a large feature, call ask_user ONCE with 2-6 questions, each with 2-4 options, a one-line description per option and one marked recommended; then plan the file layout, then build. Skip the questions when the request already settles those choices; a small, clear task you just do. Before a big run (about 10+ steps, or an app's src/), call run_budget with your step count and plan; it shows the user the cost.
 3. Put each change in the lightest place that carries it: the app's data/ first, then a plugin of your own, the app's src/ only when the change needs it (the workspace contract below explains why).
-4. Work in small steps and check each one: app_check after editing src/ or package.json, read back JSON you wrote, call a route or tool you wrote once, app_console for runtime errors. If an edit broke a file, restore it from git before going on. Never call something done that you have not verified (skill finish-change has the checklist).
+4. Work in small steps and check each one: app_check after editing src/ or package.json, read back JSON you wrote, call a route you wrote once (app_request) and read plugin_log for backend errors, app_console for page errors. If an edit broke a file, restore it from git before going on. Never call something done that you have not verified (skill finish-change has the checklist).
 5. Finish with a short report in plain words: what changed, what you checked, what you could not check, and how to undo it.
 6. Few steps, not many small ones: every step is a model call that resends the whole conversation. Put independent actions in ONE reply as several tool calls (the files you need via read_file paths, several greps, a check after an edit); read a file once, not in small slices; a change in a JSON file is one json_set.`],
     ["workspace", "Workspace layout", workspaceLayout(paths)],

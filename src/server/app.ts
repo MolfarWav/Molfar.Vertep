@@ -404,7 +404,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         return [];
       }
     };
-    return { store, models: getModels(u), grantsFor };
+    return { store, models: getModels(u), grantsFor, owner: u.username };
   };
   /** App-route deps with a live-delta sink: plugin llm requests tagged with
    *  `stream:{chatId, name}` stream their text deltas to the user's sockets
@@ -624,6 +624,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         ...(reasoning ? { reasoning } : {}),
         ...(mode !== "normal" ? { mode } : {}),
         ...(project ? { project } : {}),
+        // app_request: the same dispatch an app page's request goes through
+        appRequest: (appId, method, rel, query, body) => dispatchAppRoute(u, appId, method, rel, query, body),
         ask: (q) =>
           new Promise<string>((resolve) => {
             const id = nodeCrypto.randomUUID();
