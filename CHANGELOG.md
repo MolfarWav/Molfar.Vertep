@@ -7,6 +7,17 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.8 (2026-10-11)
+
+- Roleplay 4.33.0 through app updates: the character card split into fields (identity, appearance with measurements, personality, behaviors, goals, background, circles, trauma, relationships, an opt-in adult block, notes) that write Description and Personality; every section has an on/off switch (an off section keeps its fields and writes nothing); "Structure it" sorts the card's text into the fields, "Fill empty" proposes values for empty fields, "Read from picture" reads the appearance from the portrait or an attached picture, each as a draft to Accept with the old text in Versions; personas get the same form, "Five questions" and "Structure it"; Export offers PNG, CHARX and JSON; editor tabs have icons and groups.
+- Vision model: Settings > Connections and models picks the model apps send pictures to (Auto = the cheapest shown model that reads pictures, by catalog price, or the user's choice; `GET /v1/models/vision`, `PUT` from Settings only). Plugin llm requests can carry up to 4 pictures; one with no `model` goes to the vision model, and a model that does not read pictures refuses the request instead of getting a placeholder.
+- Molfar's page, redesigned: the sidebar folds to an icon rail; the header holds the model chip, a context meter (amber at 75 %, red at 90 %), the connection dot, inspector, search and memory; the project opens as a resizable pane beside the chat or a full-width page with tabs; on phones a Chat | Project switch and a strip with model, reasoning, context and cost.
+- Molfar: task templates (`/card`, `/lorebook`, `/preset`, `/fix`, `/skill`) in the "/" menu and as starter cards in an empty chat; Shorter, Simpler and Apply under the last reply; chips under a reply for the skills it loaded (with their tokens) and the memory entries it looked up, each opening the panel; a per-reply line with steps, tokens and cost.
+- Molfar: `run_budget` prices a big task (steps, tokens, cost, files) and asks Go on / Smaller / Stop; writes to an app's code or to more than 3 files wait for that answer (off in Accept and Plan modes).
+- Molfar's new tools: `plugin_log` (the last 500 plugin log lines, failed routes and hooks), `app_request` (calls an app's own plugin route as the user, committed like a page's write), `model_try` (one test generation after an ask card with the price ceiling), `web_fetch` (public pages as text, only with the sandbox's internet switch on).
+- Android: when the in-app update is stopped (Play Protect), the app offers the download in the browser.
+- `ask-model` skill: a repo copy for the laptop and cloud sessions; retries a request when the connection drops.
+
 ## 0.9.7 (2026-10-11)
 
 - Roleplay 4.32.0 through app updates: Prompt peek shows where every part of the next request comes from (card fields, persona, preset sections, lorebook entries with why they fired, Data Bank, history with the regex scripts that changed it), what was left out and why, and the preset's choices; sends stay fast with big lorebooks (a 1000-entry book ran past the plugin time limit, now 0.6 s on a desktop) and with many preset regex scripts; counts take the right word form.

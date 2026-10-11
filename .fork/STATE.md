@@ -27,7 +27,12 @@ CI lint on main was red from the `.fork/ui-assets` HTML mockups (3 duplicate CSS
 is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bun run test` fails the 0600 and
 `tar` tests (Windows-only, CI on Linux passes); `client-agent` needs its own `bun install` in a fresh worktree.
 
-## Next: 0.9.8, the card editor and the user's Persona
+## 0.9.8: READY 2026-10-11, tag waits for the user (Roleplay 4.33.0 on the fork main `6be41bb`)
+The user said to merge and release 0.9.8 (2026-10-11). Engine main also carries the Molfar agent track
+(PRs 6, 7, 9: tools, run budget, the new agent page; `.fork/handoff/molfar-agent/HANDOFF.md`), which the
+user merged; the notes cover both. Release commit: package.json 0.9.8, CHANGELOG, `.fork/release-notes/0.9.8.md`.
+
+### The card editor and the user's Persona
 `.fork/handoff/card-editor/PLAN.md`: all questions answered 2026-10-11 ("as recommended"). Built on the Roleplay
 branch `claude/v098-card` (from `quick-fixes`, pushed, NOT on the fork's main: that ships to every install, the
 user's word first): the Profile tab, "Structure it" (new plugin `plugins/profile/`), the persona's five

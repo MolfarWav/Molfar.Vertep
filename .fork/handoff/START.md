@@ -5,7 +5,7 @@ Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
 Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio bag overwrite moved to the card editor (0.9.8), the plurals to the end of 0.9.7.
-3. **NEXT: 0.9.8, card editor + the user's Persona** (user, 2026-10-10): `.fork/handoff/card-editor/PLAN.md` (first the studio bag overwrite; a card modeled on Lorebary's, keys from the user; the Persona as a real card with a 3-6 question generator; button labels, export
+3. **0.9.8 is released once the user pushes the tag** (STATE). Was: card editor + the user's Persona (user, 2026-10-10): `.fork/handoff/card-editor/PLAN.md` (first the studio bag overwrite; a card modeled on Lorebary's, keys from the user; the Persona as a real card with a 3-6 question generator; button labels, export
    icon, export variants that keep emotions and the book, emotion images as full-size files, a pass
    over the extra fields with the user).
 4. **Group chats** do not work for the user (seen 2026-10-10, cause unknown): look into them for 1.0.0.
