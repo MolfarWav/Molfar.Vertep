@@ -32,12 +32,12 @@ The card in fields (Profile tab, section switches, Structure it / Fill empty / R
 form and five questions, PNG/CHARX/JSON export), the vision model setting (`model-vision.json`, `GET/PUT
 /v1/models/vision`, pictures in plugin llm requests), and the Molfar agent track (PRs 6, 7, 9: tools, run budget,
 the new agent page; `.fork/handoff/molfar-agent/HANDOFF.md`). The user tested the card editor before the tag.
-1.0.0 (user, 2026-10-11): kept for the next big batch of agent work; 0.9.8 stays as released, agent included.
+1.0.0 (user, 2026-10-11, revised the same evening): group chats, not the agent batch; 0.9.8 stays as released, agent included.
 0.9.8's notes miss the agent page's colour pass and the "M" avatar fallback; the user may add them to the GitHub
 release text by hand. Card editor leftovers: `.fork/handoff/card-editor/PLAN.md` (rewritten as a short "later" list).
 The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
 
-## 0.9.9: RELEASED 2026-10-11 (branch fast-forwarded into main; the tag v0.9.9 is the user's to push; Roleplay 4.34.0 on the fork main `d3fa432`)
+## 0.9.9: RELEASED 2026-10-11 (tag v0.9.9 on `24ffcec`; Roleplay 4.34.0 on the fork main `d3fa432`)
 The user asked for "0.9.8.1"; the launcher and release.yml accept only vX.Y.Z, so it is 0.9.9.
 Prompt restore audit: every prompt a user can edit has a way back to its default. Engine: Molfar's instructions,
 workspace AGENTS.md, built-in skills already had one. Roleplay 4.34.0: utility prompts in editable preset copies got
@@ -47,6 +47,11 @@ a per-field Restore; Litopys and dashboard prompts restore one by one. Left on p
 dashboard's in-chat settings got note age + soul/nudge/fast prompts and a gear before the first build, the Tools
 panels of both plugins are gone (no `uiPanel` export). "Open dashboard" sits at the top of the strip.
 README (3 languages): download and Discord badges, profile.png and persona.png rows, "Work in progress" removed.
+
+## Next: 1.0.0 = group chats (user, 2026-10-11)
+Looked into live: groups work in the engine, but a group cannot be deleted (wrong route), opens in the card
+editor where edits are dropped, and has no UI for members. Plan: `.fork/handoff/group-chats/PLAN.md`.
+1.0.1 = the phone version; the agent batch (3.7, 2.5) comes after.
 
 ## Repos (checked 2026-10-11, after 0.9.8)
 - Engine: every `claude/*` branch except `claude/upstream-context-fixes` is fully in main (0 commits ahead):
