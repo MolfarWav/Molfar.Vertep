@@ -148,8 +148,8 @@ SillyTavern/RisuAI carry readable text, and the prompt inspector shows the compi
   export of a card on the default avatar stopped silently (tainted canvas in the sandboxed frame).
 - All browser-checked in a throwaway engine (dark and light, 1280 and 390), CHARX re-imported with its
   emotions. Roleplay tests 896 pass.
-- Left open: the PNG and JSON exports still carry `studio` with `versions` (old texts of the card) and
-  the pictures; whether to slim them is the user's call. Item 4 (the extra fields with the user) and
+- Card exports (PNG, JSON, bulk JSON, CHARX) drop `studio.versions` (user, 2026-10-11); the full backup
+  keeps it. Item 4 (the extra fields with the user) and
   the emotion images as full-size files (deferred) stay. Lorebary extras (pickers, trauma, per-field
   suggest) are later.
 

@@ -31,8 +31,8 @@ is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bu
 `.fork/handoff/card-editor/PLAN.md`: all questions answered 2026-10-11 ("as recommended"). Built on the Roleplay
 branch `claude/v098-card` (from `quick-fixes`, pushed, NOT on the fork's main: that ships to every install, the
 user's word first): the Profile tab, "Structure it" (new plugin `plugins/profile/`), the persona's five
-questions, CHARX/JSON export. Browser-checked dark and light, 1280 and 390. Left: see PLAN "Built" (PNG/JSON
-export carrying `studio.versions`; the extra fields with the user), then the Roleplay version, CHANGELOG and
+questions, CHARX/JSON export. Browser-checked dark and light, 1280 and 390. Left: see PLAN "Built" (the extra
+fields with the user), then the Roleplay version, CHANGELOG and
 the 0.9.8 release. The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
