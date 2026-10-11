@@ -54,7 +54,7 @@ function useProject(id: string) {
 function OpenAppButton({ detail, className }: { detail: ProjectDetail; className?: string }): ReactNode {
   if (detail.kind !== "app" || !inShell()) return null
   return (
-    <Button variant="outline" className={cn("border-primary/40 text-primary hover:text-primary", className)} onClick={() => openShellApp(detail.id.replace(/^app:/, ""))}>
+    <Button variant="outline" className={cn("border-link/50 text-link hover:bg-link/10 hover:text-link", className)} onClick={() => openShellApp(detail.id.replace(/^app:/, ""))}>
       <ArrowSquareOut /> Open {detail.title}
     </Button>
   )
@@ -83,7 +83,7 @@ function PaneView({ detail, id }: { detail: ProjectDetail; id: string }): ReactN
       <div className="flex shrink-0 items-start gap-2.5 px-3.5 pt-3 pb-2">
         <ProjectIcon project={detail} className="mt-0.5 text-xl" />
         <div className="min-w-0 flex-1">
-          <h2 className="truncate text-base leading-tight font-semibold">{detail.title}</h2>
+          <h2 className="font-heading truncate text-base leading-tight font-normal">{detail.title}</h2>
           <p className="text-muted-foreground truncate font-mono text-[11px]">{projectFolder(id)}</p>
         </div>
         <Button variant="ghost" size="icon-sm" aria-label="Open the full project page" title="Open the full project page" onClick={() => openProject(id)}>
@@ -141,7 +141,7 @@ function PageView({ detail, tab, setTab }: { detail: ProjectDetail; tab: TabId; 
           <div className="flex items-center gap-3">
             <ProjectIcon project={detail} className="text-3xl" />
             <div className="min-w-0">
-              <h1 className="flex min-w-0 items-center gap-2 text-xl font-semibold">
+              <h1 className="font-heading flex min-w-0 items-center gap-2 text-2xl font-normal">
                 <span className="truncate">{detail.title}</span>
                 <TagBadge tag={detail.tag} />
               </h1>
@@ -162,7 +162,7 @@ function PageView({ detail, tab, setTab }: { detail: ProjectDetail; tab: TabId; 
                 aria-selected={tab === t.id}
                 className={cn(
                   "-mb-px flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition-colors",
-                  tab === t.id ? "border-primary text-foreground font-medium" : "text-muted-foreground hover:text-foreground border-transparent",
+                  tab === t.id ? "border-brand text-foreground font-medium" : "text-muted-foreground hover:text-foreground border-transparent",
                 )}
                 onClick={() => setTab(t.id)}
               >
@@ -215,7 +215,7 @@ function PhoneView({ detail }: { detail: ProjectDetail }): ReactNode {
             <ProjectIcon project={detail} className="text-2xl [&]:size-6" />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-lg leading-tight font-semibold">{detail.title}</h2>
+            <h2 className="font-heading truncate text-xl leading-tight font-normal">{detail.title}</h2>
             <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
               <span className="truncate font-mono">{projectFolder(detail.id)}</span>
               {app ? <TagBadge tag="app" /> : null}
@@ -236,7 +236,7 @@ function PhoneView({ detail }: { detail: ProjectDetail }): ReactNode {
       </div>
       <div className="bg-background flex shrink-0 gap-2 border-t p-3">
         {app ? (
-          <Button className="h-11 min-w-0 flex-1" disabled={busy} onClick={() => void save("saved by hand", true)}>
+          <Button className="bg-brand text-brand-foreground hover:bg-brand/90 h-11 min-w-0 flex-1" disabled={busy} onClick={() => void save("saved by hand", true)}>
             <Flag /> Save checkpoint
           </Button>
         ) : null}

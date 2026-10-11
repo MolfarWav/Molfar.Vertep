@@ -52,9 +52,9 @@ export function ProjectContextLine(): ReactNode {
   return (
     <div
       data-slot="aui_project-context"
-      className="text-muted-foreground mx-auto mb-4 w-full max-w-(--thread-max-width) shrink-0 rounded-xl border px-3 py-2 text-[13px] leading-relaxed"
+      className="text-muted-foreground bg-brand-soft/50 border-s-brand mx-auto mb-4 w-full max-w-(--thread-max-width) shrink-0 rounded-xl border border-s-2 px-3 py-2 text-[13px] leading-relaxed"
     >
-      <Folder aria-hidden className="text-foreground me-1.5 -mt-0.5 inline size-3.5" />
+      <Folder aria-hidden className="text-brand me-1.5 -mt-0.5 inline size-3.5" />
       <strong className="text-foreground font-semibold">Project context attached:</strong>{" "}
       {parts.map(([key, p], i) => (
         <span key={key}>

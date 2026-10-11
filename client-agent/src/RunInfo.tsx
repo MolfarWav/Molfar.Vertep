@@ -75,13 +75,13 @@ export function RunInfo(): ReactNode {
       ) : null}
       {memory.length ? (
         <div className="flex min-w-0 flex-wrap items-center gap-1" data-testid="run-memory">
-          <Brain size={14} className="shrink-0" aria-hidden />
+          <Brain size={14} className="text-brand shrink-0" aria-hidden />
           {memory.map((m) => (
             <button
               key={`${m.file}|${m.date ?? ""}|${m.text}`}
               type="button"
               title={`From memory (${m.file}): ${m.text}`}
-              className="bg-muted/60 hover:bg-muted hover:text-foreground max-w-full truncate rounded-md px-1.5 py-0.5"
+              className="bg-brand-soft text-brand hover:bg-brand/20 max-w-full truncate rounded-md px-1.5 py-0.5"
               onClick={() => openMemory({ file: m.file, text: m.text, ...(m.scope ? { scope: m.scope } : {}) })}
             >
               from memory: {m.text.length > 40 ? `${m.text.slice(0, 39).trimEnd()}…` : m.text}

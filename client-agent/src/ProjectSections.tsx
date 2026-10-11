@@ -93,7 +93,7 @@ export function agoLabel(at: number): string {
 export const memoryNotes = (detail: ProjectDetail): string[] =>
   detail.memory.split("\n").filter((l) => l.startsWith("- ")).map((l) => l.slice(2))
 
-const inlineLink = "hover:text-foreground underline underline-offset-2"
+const inlineLink = "text-brand hover:text-brand/80 underline underline-offset-2"
 const basename = (p: string): string => p.split("/").at(-1) ?? p
 
 /** A section: a card on the pane and the page, an accordion row on the phone. */
@@ -114,8 +114,8 @@ function Shell({ id, icon, title, aside, summary, children, className, ...rest }
     return (
       <section className={cn("bg-card min-w-0 rounded-xl border", className)} data-section={id} {...rest}>
         <button type="button" aria-expanded={open} className="flex min-h-12 w-full items-center gap-3 px-3.5 text-start" onClick={() => toggle(id)}>
-          <span className="text-muted-foreground shrink-0 [&_svg]:size-[18px]">{icon}</span>
-          <span className="shrink-0 text-sm font-semibold">{title}</span>
+          <span className="text-brand/80 shrink-0 [&_svg]:size-[18px]">{icon}</span>
+          <span className="font-heading shrink-0 text-sm font-normal">{title}</span>
           <span className="text-muted-foreground ms-auto min-w-0 truncate text-xs">{summary}</span>
           {open ? <CaretDown className="text-muted-foreground size-3.5 shrink-0" /> : <CaretRight className="text-muted-foreground size-3.5 shrink-0" />}
         </button>
@@ -125,9 +125,9 @@ function Shell({ id, icon, title, aside, summary, children, className, ...rest }
   }
   return (
     <section className={cn("bg-card min-w-0 rounded-xl border p-4", className)} data-section={id} {...rest}>
-      <h3 className="mb-2.5 flex items-baseline justify-between gap-3 text-sm font-semibold">
+      <h3 className="font-heading mb-2.5 flex items-baseline justify-between gap-3 text-base font-normal">
         <span className="flex shrink-0 items-center gap-2">
-          <span className="text-muted-foreground [&_svg]:size-4 [&_svg]:translate-y-0.5">{icon}</span>
+          <span className="text-brand/80 [&_svg]:size-4 [&_svg]:translate-y-0.5">{icon}</span>
           {title}
         </span>
         {aside ? <span className="text-muted-foreground min-w-0 truncate text-xs font-normal">{aside}</span> : null}
@@ -290,7 +290,7 @@ export function MemorySection({ detail }: { detail: ProjectDetail; mode: Mode })
           {notes.slice(0, limit).map((m, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: notes can repeat
             <li key={`${i}-${m}`} className="flex gap-2">
-              <span aria-hidden className="text-muted-foreground">•</span>
+              <span aria-hidden className="text-brand">•</span>
               <span className={cn("min-w-0 break-words", layout === "pane" && "line-clamp-2")}>{m}</span>
             </li>
           ))}
@@ -444,7 +444,7 @@ export function CheckpointsSection({ detail, mode }: { detail: ProjectDetail; mo
           }}
         >
           <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Label (optional)" aria-label="Checkpoint label" maxLength={120} disabled={busy} className="min-w-0" />
-          <Button type="submit" variant="outline" disabled={busy} className="shrink-0">
+          <Button type="submit" disabled={busy} className="bg-brand text-brand-foreground hover:bg-brand/90 shrink-0">
             {layout === "pane" ? "Save now" : "Save checkpoint"}
           </Button>
         </form>
@@ -683,7 +683,7 @@ export function ChatsSection({ detail }: { detail: ProjectDetail }): ReactNode {
       ) : (
         <p className="text-muted-foreground text-sm">No chats yet.</p>
       )}
-      <Button className="mt-3 h-9 rounded-full px-4" onClick={() => newChat(detail.id)}>
+      <Button className="bg-brand text-brand-foreground hover:bg-brand/90 mt-3 h-9 rounded-full px-4" onClick={() => newChat(detail.id)}>
         <Plus /> New chat in {detail.title}
       </Button>
     </Shell>

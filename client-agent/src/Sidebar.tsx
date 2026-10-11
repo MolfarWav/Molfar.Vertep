@@ -44,9 +44,8 @@ export function TagBadge({ tag }: { tag: string }): ReactNode {
     <span
       className={cn(
         "shrink-0 rounded-full px-1.5 py-px text-[10px] leading-4 font-medium",
-        tag === "app"
-          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-          : "bg-violet-500/15 text-violet-700 dark:text-violet-300",
+        "border text-[10px] tracking-wide uppercase",
+        tag === "app" ? "border-brand-line text-brand bg-brand-soft" : "text-muted-foreground border-border",
       )}
     >
       {tag}
@@ -67,11 +66,11 @@ export function focusSidebarSearch(): void {
   }, 80)
 }
 
-function RailButton({ label, onClick, active, children }: { label: string; onClick: () => void; active?: boolean; children: ReactNode }): ReactNode {
+function RailButton({ label, onClick, active, primary, children }: { label: string; onClick: () => void; active?: boolean; primary?: boolean; children: ReactNode }): ReactNode {
   return (
     <Tooltip>
       <TooltipTrigger
-        render={<Button variant="ghost" size="icon" aria-label={label} aria-current={active ? "page" : undefined} className={cn("size-9 rounded-lg", active && "bg-muted")} onClick={onClick} />}
+        render={<Button variant="ghost" size="icon" aria-label={label} aria-current={active ? "page" : undefined} className={cn("size-9 rounded-lg", active && "bg-brand-soft text-brand ring-brand-line ring-1", primary && "bg-brand text-brand-foreground hover:bg-brand/90 hover:text-brand-foreground size-9 rounded-full")} onClick={onClick} />}
       >
         {children}
       </TooltipTrigger>
@@ -93,7 +92,7 @@ export function SidebarRail(): ReactNode {
         <MolfarAvatar size={28} />
       </div>
       <nav aria-label="Projects" className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto py-2">
-        <RailButton label="New chat" onClick={() => newChat()}>
+        <RailButton label="New chat" primary onClick={() => newChat()}>
           <Plus size={18} />
         </RailButton>
         <RailButton label="Search chats" onClick={focusSidebarSearch}>
@@ -225,7 +224,8 @@ function ProjectRow({ project, query, expanded, onToggle, indices, ids }: {
   const drop = useChatDrop(project.id)
   return (
     <div className={cn("flex flex-col gap-0.5 rounded-md", drop.over && "bg-muted/60 ring-ring/50 ring-1")} {...drop.props}>
-      <div className={cn("hover:bg-muted group flex h-8 items-center gap-0.5 rounded-md pe-2 transition-colors", active && "bg-muted")}>
+      <div className={cn("hover:bg-muted group relative flex h-8 items-center gap-0.5 rounded-md pe-2 transition-colors", active && "bg-brand-soft hover:bg-brand-soft")}>
+        {active ? <span aria-hidden className="bg-brand absolute inset-y-1 start-0 w-[3px] rounded-full" /> : null}
         <button
           type="button"
           aria-label={`${open ? "Collapse" : "Expand"} ${project.title}`}
@@ -325,9 +325,9 @@ export function Sidebar(): ReactNode {
         if ((e.target as HTMLElement).closest('[data-slot="aui_thread-list-item-trigger"]')) useAgent.getState().showChat()
       }}
     >
-      <Button variant="ghost" className="hover:bg-muted h-8 justify-start gap-2 rounded-md px-2.5 text-sm font-normal" onClick={() => newChat()}>
-        <Plus className="size-4 shrink-0" />
-        New chat
+      <Button className="bg-brand text-brand-foreground hover:bg-brand/90 mb-1 h-9 w-full justify-start gap-2 rounded-lg px-3 text-sm font-medium" onClick={() => newChat()}>
+        <Plus className="size-4 shrink-0" weight="bold" />
+        <span className="flex-1 text-start">New chat</span>
       </Button>
       <ThreadListSearch value={search} onValueChange={setSearch} placeholder="Search chats" aria-label="Search chats" data-sidebar-search="" />
 

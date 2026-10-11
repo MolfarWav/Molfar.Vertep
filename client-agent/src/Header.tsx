@@ -283,7 +283,7 @@ export function ContextMeter({ compact = false }: { compact?: boolean }): ReactN
     >
       <span className="bg-muted h-1 w-14 overflow-hidden rounded-full" aria-hidden>
         <span
-          className={cn("block h-full rounded-full", tone === "destructive" ? "bg-destructive" : tone === "amber" ? "bg-amber-500" : "bg-primary")}
+          className={cn("block h-full rounded-full", tone === "destructive" ? "bg-destructive" : tone === "amber" ? "bg-amber-500" : "bg-linear-to-r from-link to-amber-400")}
           style={{ width: `${Math.min(100, Math.round(ratio * 100))}%` }}
         />
       </span>
@@ -418,8 +418,8 @@ function PhoneHeader(): ReactNode {
               role="tab"
               aria-selected={phoneTab === tab}
               className={cn(
-                "h-9 rounded-md text-sm font-medium capitalize transition-colors",
-                phoneTab === tab ? "bg-background text-foreground shadow-xs" : "text-muted-foreground",
+                "h-9 rounded-md border-b-2 text-sm font-medium capitalize transition-colors",
+                phoneTab === tab ? "bg-card text-foreground border-brand shadow-xs" : "text-muted-foreground border-transparent",
               )}
               onClick={() => setPhoneTab(tab)}
             >

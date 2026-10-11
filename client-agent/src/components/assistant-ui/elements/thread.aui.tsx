@@ -47,7 +47,7 @@ import type { EngineSession } from "@/api";
 import { RunCheckpoints } from "@/Checkpoints";
 import { RunInfo } from "@/RunInfo";
 import { compactTokens, usd } from "@/lib/format";
-import { MolfarAvatar } from "@/MolfarAvatar";
+import { MolfarAvatar, MolfarHalo } from "@/MolfarAvatar";
 import { ComposerProjectRow, ProjectAttachButton, ProjectContextLine, SaveToProjectAction } from "@/ProjectChat";
 import {
   createContext,
@@ -179,13 +179,13 @@ const ThreadRoot: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
         data-slot="aui_thread-viewport"
         turnAnchor="bottom"
         autoScroll
-        className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4 md:px-6"
+        className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4 md:px-6 vertep:bg-[radial-gradient(color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px)] vertep:bg-[size:14px_14px]"
       >
         <ProjectContextLine />
         {/* a new chat keeps the composer at the bottom like any other; the
             welcome takes the room above it and sits in the middle of it */}
         <AuiIf condition={isNewChatView}>
-          <div className="flex flex-1 flex-col justify-center">
+          <div className="flex flex-1 flex-col">
             <Welcome />
           </div>
         </AuiIf>
@@ -256,9 +256,9 @@ const ThreadWelcome: FC = () => {
     return p ? p.title || p.name : null;
   });
   return (
-    <div className="aui-thread-welcome-root mb-6 flex flex-col items-center px-4 text-center">
-      <MolfarAvatar size={88} className="fade-in animate-in fill-mode-both mb-4 duration-200" />
-      <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-medium tracking-tight duration-200">
+    <div className="aui-thread-welcome-root my-auto flex flex-col items-center px-4 text-center">
+      <MolfarHalo size={88} className="fade-in animate-in fill-mode-both mb-3 duration-200" />
+      <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both font-heading text-2xl font-normal tracking-tight duration-200 md:text-3xl">
         How can I help you today?
       </h1>
       {project && title ? (
@@ -283,7 +283,7 @@ function whenLabel(at: number): string {
 }
 
 const cardClass =
-  "bg-card hover:bg-muted border-border/60 fade-in slide-in-from-bottom-2 animate-in fill-mode-both flex min-h-16 min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition-colors duration-200";
+  "bg-card hover:bg-muted hover:border-brand-line hover:-translate-y-px border-border/60 fade-in slide-in-from-bottom-2 animate-in fill-mode-both flex min-h-16 min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition duration-200";
 
 /** Starter cards on an empty chat: pick up the last chat, or start one of the
  *  task templates. A phone lists the last three chats instead: its templates
@@ -311,8 +311,8 @@ const StarterCards: FC<{ project: string | null }> = ({ project }) => {
       className="mt-6 grid w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
     >
       {recent.map((chat, i) => (
-        <button key={chat.sessionId} type="button" className={cn(cardClass, i > 0 && "md:hidden")} onClick={() => void open(chat.sessionId)}>
-          <span className="bg-primary/15 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+        <button key={chat.sessionId} type="button" className={cn(cardClass, i === 0 && "border-brand-line bg-brand-soft hover:bg-brand-soft", i > 0 && "md:hidden")} onClick={() => void open(chat.sessionId)}>
+          <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", i === 0 ? "bg-brand text-brand-foreground" : "bg-brand-soft text-brand")}>
             <ClockCounterClockwise aria-hidden size={18} />
           </span>
           <span className="flex min-w-0 flex-col gap-0.5">
@@ -328,7 +328,7 @@ const StarterCards: FC<{ project: string | null }> = ({ project }) => {
         const Icon = templateIcon(t.id);
         return (
           <button key={t.id} type="button" className={cn(cardClass, "max-md:hidden")} onClick={() => pick(t)}>
-            <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
+            <span className="bg-brand-soft text-brand flex size-9 shrink-0 items-center justify-center rounded-lg">
               <Icon aria-hidden size={18} />
             </span>
             <span className="flex min-w-0 flex-col gap-0.5">
@@ -543,7 +543,7 @@ const ComposerAction: FC = () => {
               type="button"
               variant="default"
               size="icon"
-              className="aui-composer-send size-7 rounded-full"
+              className="aui-composer-send bg-brand text-brand-foreground hover:bg-brand/90 disabled:bg-muted disabled:text-muted-foreground size-8 rounded-full"
               aria-label="Send message"
             >
               <ArrowUp className="aui-composer-send-icon size-4" />
@@ -554,9 +554,9 @@ const ComposerAction: FC = () => {
           <ComposerPrimitive.Cancel asChild>
             <Button
               type="button"
-              variant="default"
+              variant="outline"
               size="icon"
-              className="aui-composer-cancel size-7 rounded-full"
+              className="aui-composer-cancel border-brand text-brand hover:bg-brand-soft hover:text-brand size-8 rounded-full"
               aria-label="Stop generating"
             >
               <Square className="aui-composer-cancel-icon size-3.5 fill-current" />
@@ -774,7 +774,7 @@ const UserMessage: FC = () => {
       <UserMessageAttachments />
 
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-        <div className="aui-user-message-content peer bg-muted text-foreground rounded-xl px-4 py-2 wrap-break-word empty:hidden">
+        <div className="aui-user-message-content peer bg-card text-foreground rounded-xl border px-4 py-2 wrap-break-word empty:hidden">
           <MessagePrimitive.Parts
             components={{ File: UserFilePart, Image: UserImagePart }}
           />

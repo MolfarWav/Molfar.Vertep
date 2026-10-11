@@ -1,4 +1,4 @@
-import { ArrowElbowDownLeft, Check } from "@phosphor-icons/react"
+import { ArrowElbowDownLeft, Check, Question } from "@phosphor-icons/react"
 import { useState, type ReactNode } from "react"
 import { cn } from "@/lib/utils"
 import { useAgent } from "./store"
@@ -43,17 +43,18 @@ function OptionButton({ option, picked, rich, onClick }: { option: AskOption; pi
       className={cn(
         "border-border hover:bg-accent border text-start text-xs transition-colors",
         rich ? "flex w-full items-start gap-2 rounded-lg px-2.5 py-1.5" : "rounded-full px-3 py-1.5",
-        picked && "border-primary bg-primary/10",
+        option.recommended && "border-brand bg-brand-soft",
+        picked && "border-brand bg-brand/20",
       )}
     >
       {rich ? (
-        <span className={cn("border-border mt-0.5 flex size-3.5 shrink-0 items-center justify-center rounded-full border", picked && "border-primary bg-primary text-primary-foreground")}>
+        <span className={cn("border-border mt-0.5 flex size-3.5 shrink-0 items-center justify-center rounded-full border", picked && "border-brand bg-brand text-brand-foreground")}>
           {picked ? <Check size={9} weight="bold" /> : null}
         </span>
       ) : null}
       <span className="min-w-0">
         <span className="font-medium">{option.label}</span>
-        {option.recommended ? <span className="text-primary ms-1.5 text-[10px] font-medium tracking-wide uppercase">recommended</span> : null}
+        {option.recommended ? <span className="text-brand ms-1.5 text-[10px] font-medium tracking-wide uppercase">recommended</span> : null}
         {option.description ? <span className="text-muted-foreground mt-0.5 block">{option.description}</span> : null}
       </span>
     </button>
@@ -120,8 +121,10 @@ function AskCard(): ReactNode {
   const anyPick = picks.some((p) => p.length > 0)
 
   return (
-    <div className="border-ring/40 bg-card flex max-h-[60vh] flex-col gap-2 overflow-y-auto rounded-xl border p-3">
-      <div>
+    <div className="border-brand-line bg-card flex max-h-[60vh] flex-col gap-2 overflow-y-auto rounded-xl border p-3">
+      <div className="flex items-start gap-2">
+        <Question aria-hidden size={16} weight="fill" className="text-brand mt-0.5 shrink-0" />
+        <div className="min-w-0 flex-1">
         <p className="text-sm font-medium whitespace-pre-wrap">{ask.question}</p>
         {ask.detail ? (
           ask.detailKind === "diff" ? (
@@ -130,6 +133,7 @@ function AskCard(): ReactNode {
             <p className="text-muted-foreground mt-1 text-xs whitespace-pre-wrap">{ask.detail}</p>
           )
         ) : null}
+        </div>
       </div>
       {questions.map((q, qi) => {
         const rich = (q.options ?? []).some((o) => o.description) || !instant
@@ -166,7 +170,7 @@ function AskCard(): ReactNode {
           type="submit"
           title="Send"
           disabled={!instant && !anyPick && !draft.trim()}
-          className="bg-primary text-primary-foreground flex items-center gap-1.5 rounded-lg px-2.5 text-xs disabled:opacity-50"
+          className="bg-brand text-brand-foreground hover:bg-brand/90 flex items-center gap-1.5 rounded-lg px-2.5 text-xs disabled:opacity-50"
         >
           {instant ? null : "Send"}
           <ArrowElbowDownLeft size={14} />

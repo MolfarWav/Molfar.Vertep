@@ -198,7 +198,7 @@ export default function App(): ReactNode {
         >
           {sidebarPinned ? (
             <>
-              <div className="flex h-12 shrink-0 items-center gap-2 px-4 text-sm font-semibold">
+              <div className="font-heading flex h-12 shrink-0 items-center gap-2 px-4 text-base font-normal">
                 <MolfarAvatar size={24} />
                 Molfar
               </div>
