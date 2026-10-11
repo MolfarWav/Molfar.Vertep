@@ -27,7 +27,10 @@ CI lint on main was red from the `.fork/ui-assets` HTML mockups (3 duplicate CSS
 is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bun run test` fails the 0600 and
 `tar` tests (Windows-only, CI on Linux passes); `client-agent` needs its own `bun install` in a fresh worktree.
 
-## 0.9.8: READY 2026-10-11, tag waits for the user (Roleplay 4.33.0 on the fork main `6be41bb`)
+## 0.9.8: TAGGED 2026-10-11 on `70bc6c3`, with the Molfar agent track (Roleplay 4.33.0 on the fork main `6be41bb`)
+1.0.0 (user, 2026-10-11): postponed to the next big batch of agent work; 0.9.8 stays as released, agent included.
+A draft of 1.0.0 notes that relabeled this same code is commit `2b14bcc` (not on any branch now), unused.
+0.9.8's notes miss the agent page's colour pass (accent buttons, Kurale and the dot grid on Vertep) and the "M" avatar fallback.
 The user said to merge and release 0.9.8 (2026-10-11). Engine main also carries the Molfar agent track
 (PRs 6, 7, 9: tools, run budget, the new agent page; `.fork/handoff/molfar-agent/HANDOFF.md`), which the
 user merged; the notes cover both. Release commit: package.json 0.9.8, CHANGELOG, `.fork/release-notes/0.9.8.md`.
