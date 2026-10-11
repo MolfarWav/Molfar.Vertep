@@ -7,6 +7,10 @@
     <img src="https://img.shields.io/github/license/MolfarWav/Molfar.Vertep" alt="license" />
     <img src="https://img.shields.io/badge/platform-Win%20%C2%B7%20mac%20%C2%B7%20Linux%20%C2%B7%20Android-blue" alt="platforms" />
   </p>
+  <p>
+    <a href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest"><img src="https://img.shields.io/badge/Download-latest%20release-2ea44f?style=for-the-badge&logo=github&logoColor=white" alt="Download the latest release" /></a>
+    <a href="https://discord.gg/NMqSehTCTs"><img src="https://img.shields.io/badge/Discord-join%20us-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join our Discord" /></a>
+  </p>
   <p><b>English</b> · <a href="README.uk.md">Українська</a> · <a href="README.ru.md">Русский</a></p>
 </div>
 
@@ -76,6 +80,14 @@ A good part of the Roleplay app you see below was made exactly like this: we ask
     <td><b>Story memory.</b> Litopys writes a short chapter after each scene and keeps the facts: who it is about, who knows it, how much it matters. Old messages leave the prompt and the chapters stay, so a long chat still fits a small model's window. In the Library you can read and fix all of it.</td>
     <td><b>Molfar next to the app.</b> Split the screen: Molfar on one side, the app on the other, changes appear as he makes them.</td>
   </tr>
+  <tr>
+    <td><img src=".github/assets/screens/profile.png" alt="The Profile tab of a character card" /></td>
+    <td><img src=".github/assets/screens/persona.png" alt="A persona with its profile" /></td>
+  </tr>
+  <tr>
+    <td><b>A card in fields.</b> The Profile tab splits a character into sections: identity, appearance, personality, behavior, goals, background, relationships and more. Switch off what you don't need, so a small model pays only for what is on. "Structure it" sorts an old card's text into the fields, "Fill empty" asks the model for the blanks, "Read from picture" fills appearance from the portrait. The card still saves as plain text, so every other app reads it.</td>
+    <td><b>Your persona, the same way.</b> Personas get the same fields, plus five short questions that write the description for you. "Structure it" sorts a pasted persona into the fields.</td>
+  </tr>
 </table>
 
 There is more in the small details: "Story, move" makes the next reply push the plot instead of just reacting to you; lorebooks match by keywords or by meaning; presets, regex scripts, personas, a data bank for long documents.
@@ -98,21 +110,6 @@ There is more in the small details: "Story, move" makes the next reply push the 
 - **Apps are sandboxed.** An app from someone else shows what it wants before install (engine access, network, packages), and an update that wants more stops and asks again.
 - **14 interface languages**, Ukrainian among them.
 - **Free software.** AGPL-3.0. Molfar Vertep began as a fork of [Chrysalis Engine](https://github.com/ProjectChrysalis/Chrysalis-Engine) by ProjectChrysalis and has gone its own way since; see [LICENSE](LICENSE) and [CHANGELOG.md](CHANGELOG.md).
-
-## Work in progress, and moving
-
-This is version 0.9, and it's honest to call it early. It also moves quickly: 0.1.0 came out on October 1, 2026, and 0.9.0 a week later, twelve releases in that week. Each has notes in plain words on the [releases page](https://github.com/MolfarWav/Molfar.Vertep/releases).
-
-Being worked on right now:
-
-- **Molfar spends fewer tokens.** We measured where the tokens of a typical task go and cut the biggest shares: old steps get folded, files are read in batches, JSON is edited by path instead of being rewritten whole.
-- **Molfar learns to write cards and presets.** Skills for creating and adapting character cards, lorebooks and presets, so a request like "turn this card into a narrator for a whole village" goes in a few steps.
-- **A calmer agent page.** Reasoning and tool calls folded by default, on the desktop and on the phone.
-- **Molfar's tools on Android.** Today some of them fail when everything runs on the phone.
-
-Next in line: all model connections in one place, a small benchmark to see which models handle Molfar well, a better Chats page.
-
-If you try it and something breaks, open an [issue](https://github.com/MolfarWav/Molfar.Vertep/issues). Ideas are welcome there too, though there is a fair chance Molfar can build yours before we get to it.
 
 <div align="center"><img src=".github/assets/divider.svg" width="480" alt="" aria-hidden="true" /></div>
 
@@ -290,5 +287,6 @@ The idea comes from [pi](https://pi.dev), the minimal coding agent you adapt by 
 
 ## 💬 Support
 
+- Chat, help and news: our [Discord](https://discord.gg/NMqSehTCTs).
 - Bugs and questions: [GitHub issues](https://github.com/MolfarWav/Molfar.Vertep/issues).
 - Security problems: private vulnerability report via the **Security** tab, not a public issue.

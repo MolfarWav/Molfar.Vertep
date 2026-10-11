@@ -37,18 +37,16 @@ the new agent page; `.fork/handoff/molfar-agent/HANDOFF.md`). The user tested th
 release text by hand. Card editor leftovers: `.fork/handoff/card-editor/PLAN.md` (rewritten as a short "later" list).
 The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
 
-## Prompt restore audit (2026-10-11)
-Every prompt a user can edit was checked for a way back to its default. Engine: Molfar's instructions
-(Restore default instructions), workspace AGENTS.md (restore route), built-in skills (Reset to built-in): all
-have one. Roleplay: Litopys chapter+arc and the dashboard prompts have Restore; the stock Default and FRANKENX
-presets are read-only; image prefix/negative default to empty. The one gap, utility prompts in editable preset
-copies, got a per-field "Restore default" on the Roleplay fork branch `claude/project-thread-6ih1e9`
-(unreleased; browser-checked at 1280 and 390). Left on purpose: a copy's Main Prompt (its "default" is its
-source preset, which a copy does not record).
-Same branch, user's ask "app settings live in the apps": Litopys settings open from a Library gear (Settings >
-Memory points there), the dashboard's in-chat settings got note age + soul/nudge/fast prompts and a gear before the
-first build, the Tools panels of both plugins are gone (no `uiPanel` export), every prompt restores on its own.
-Release (4.34.0) waits on the user's word.
+## 0.9.9: RELEASED 2026-10-11 (branch fast-forwarded into main; the tag v0.9.9 is the user's to push; Roleplay 4.34.0 on the fork main `d3fa432`)
+The user asked for "0.9.8.1"; the launcher and release.yml accept only vX.Y.Z, so it is 0.9.9.
+Prompt restore audit: every prompt a user can edit has a way back to its default. Engine: Molfar's instructions,
+workspace AGENTS.md, built-in skills already had one. Roleplay 4.34.0: utility prompts in editable preset copies got
+a per-field Restore; Litopys and dashboard prompts restore one by one. Left on purpose: a copy's Main Prompt (its
+"default" is its source preset, which a copy does not record).
+"App settings live in the apps": Litopys settings open from a Library gear (Settings > Memory points there), the
+dashboard's in-chat settings got note age + soul/nudge/fast prompts and a gear before the first build, the Tools
+panels of both plugins are gone (no `uiPanel` export). "Open dashboard" sits at the top of the strip.
+README (3 languages): download and Discord badges, profile.png and persona.png rows, "Work in progress" removed.
 
 ## Repos (checked 2026-10-11, after 0.9.8)
 - Engine: every `claude/*` branch except `claude/upstream-context-fixes` is fully in main (0 commits ahead):

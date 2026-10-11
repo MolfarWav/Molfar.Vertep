@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.9 (2026-10-11)
+
+- Roleplay 4.34.0 through app updates: each tool's settings live with it. Litopys settings (on/off, chapter and arc prompts) open from a gear in the Library, and Settings > Memory points there; the dashboard's own settings gain the note age and the soul, nudge and fast prompts, and a gear before the first build; the Litopys and dashboard panels in Tools are gone. Every built-in prompt restores to its default on its own, including utility prompts in an editable preset copy. "Open dashboard" moves to the top of the strip, in the accent colour.
+- README: a download button and the Discord link at the top, the card profile and Persona in "What's already inside", the "Work in progress" block removed.
+
 ## 0.9.8 (2026-10-11)
 
 - Roleplay 4.33.0 through app updates: the character card split into fields (identity, appearance with measurements, personality, behaviors, goals, background, circles, trauma, relationships, an opt-in adult block, notes) that write Description and Personality; every section has an on/off switch (an off section keeps its fields and writes nothing); "Structure it" sorts the card's text into the fields, "Fill empty" proposes values for empty fields, "Read from picture" reads the appearance from the portrait or an attached picture, each as a draft to Accept with the old text in Versions; personas get the same form, "Five questions" and "Structure it"; Export offers PNG, CHARX and JSON; editor tabs have icons and groups.
