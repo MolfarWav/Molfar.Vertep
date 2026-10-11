@@ -313,7 +313,14 @@ function Shell(props: { theme: ThemeControl }) {
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== location.origin || e.source !== agentFrame.current?.contentWindow) return
-      if ((e.data as { __chrysalisAgent?: unknown } | null)?.__chrysalisAgent !== "ready") return
+      const d = e.data as { __chrysalisAgent?: unknown; appId?: unknown } | null
+      // the project pane's "Open app": only an installed app, by its id
+      if (d?.__chrysalisAgent === "open-app") {
+        const id = d.appId
+        if (typeof id === "string" && shellNow.current.launch?.apps.some((a) => a.id === id)) shellNow.current.openApp(id)
+        return
+      }
+      if (d?.__chrysalisAgent !== "ready") return
       agentReady.current = true
       deliverAgentPrompt()
     }

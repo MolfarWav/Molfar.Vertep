@@ -53,6 +53,8 @@ export interface EngineRun {
   spend?: RunSpend
   /** skills the agent loaded in this run, with the estimated token cost of each */
   skills?: RunSkill[]
+  /** memory entries the run looked up (memory_search hits), for the "from memory" marks */
+  memory?: RunMemory[]
   title?: string
   summary?: string
   checkpoints?: RunCheckpoint[]
@@ -79,6 +81,16 @@ export interface RunSkill {
   tokens: number
 }
 
+/** A memory entry a run found with memory_search: its file (workspace-relative,
+ *  e.g. `.memory/MEMORY.md`), the entry text, and its date when it has one. */
+export interface RunMemory {
+  /** "global", "app:<id>" or "project:<name>" */
+  scope?: string
+  file: string
+  text: string
+  date?: string
+}
+
 export interface AgentResponse {
   sessionId: string
   finalText: string
@@ -90,6 +102,7 @@ export interface AgentResponse {
   autoCompacted?: boolean
   spend?: RunSpend
   skills?: RunSkill[]
+  memory?: RunMemory[]
   stopped?: boolean
   error?: string
   checkpoints?: RunCheckpoint[]

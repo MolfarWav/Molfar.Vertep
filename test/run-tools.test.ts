@@ -5,7 +5,7 @@
  */
 import { describe, it, expect, beforeEach } from "bun:test";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
-import { buildRunTools, estimateRun, htmlToText, type RunToolOptions } from "../src/agent/run-tools.js";
+import { buildRunTools, estimateRun, htmlToText, newPlanState, planGate, PLAN_FILES, type RunToolOptions } from "../src/agent/run-tools.js";
 import { clearPluginLog, readPluginLog, recordPluginLog } from "../src/plugins/plugin-log.js";
 import { assertInternetHost } from "../src/net-guard.js";
 import type { AskRequest } from "../src/agent/tools.js";
@@ -167,5 +167,49 @@ describe("run_budget", () => {
     expect(out(r)).toContain("about 12 steps");
     expect(out(r)).toContain("smaller run");
     expect(r.details).toMatchObject({ steps: 12, model: "a/b", answer: "Smaller" });
+  });
+});
+
+describe("plan first", () => {
+  it("lets three files through, refuses the fourth and any app code until the user says go", () => {
+    const st = newPlanState();
+    for (let i = 1; i <= PLAN_FILES; i++) expect(planGate(st, "write_file", { path: `data/x${i}.json` }, false)).toBeUndefined();
+    // a file already written stays writable
+    expect(planGate(st, "edit_file", { path: "./data/x1.json" }, false)).toBeUndefined();
+    expect(planGate(st, "write_file", { path: "data/x4.json" }, false)).toContain("file 4");
+    expect(planGate(newPlanState(), "edit_file", { path: "apps/rp/src/App.tsx" }, true)).toContain("app's code");
+    // reads and other tools never wait
+    expect(planGate(newPlanState(), "read_file", { path: "apps/rp/src/App.tsx" }, true)).toBeUndefined();
+    st.answer = "go";
+    expect(planGate(st, "write_file", { path: "data/x9.json" }, true)).toBeUndefined();
+    st.answer = "stop";
+    expect(planGate(st, "write_file", { path: "data/x9.json" }, false)).toContain("said stop");
+  });
+
+  it("run_budget lists the files and opens the gate on Go on, keeps it shut on Stop", async () => {
+    const plan = newPlanState();
+    const seen: AskRequest[] = [];
+    let reply = "Go on";
+    const t = tool(
+      buildRunTools("mia", {
+        plan,
+        budgetBasis: () => ({ contextTokens: 8000, model: "a/b", price: () => null }),
+        ask: async (q) => {
+          seen.push(q);
+          return reply;
+        },
+      }),
+      "run_budget",
+    );
+    const files = ["apps/rp/src/a.ts", "apps/rp/src/b.ts", "apps/rp/src/c.ts", "apps/rp/src/d.ts", "apps/rp/src/e.ts"];
+    const r = await run(t, { steps: 6, plan: "Split the editor", files });
+    expect(seen[0]!.question).toContain("Changing 5 files: apps/rp/src/a.ts");
+    expect(seen[0]!.question).toContain(", …");
+    expect(seen[0]!.detail).toContain("- apps/rp/src/e.ts");
+    expect(r.details).toMatchObject({ files });
+    expect(plan.answer).toBe("go");
+    reply = "Stop";
+    await run(t, { steps: 6, plan: "Split the editor" });
+    expect(plan.answer).toBe("stop");
   });
 });

@@ -20,7 +20,7 @@ import { Type } from "typebox";
 import { log } from "../logger.js";
 import { clampThinkingLevel, isContextOverflow, type AssistantMessage } from "@earendil-works/pi-ai";
 import { clampMaxTokens, estimateMessageTokens, estimateTextTokens, fitContext, newTrimState, toolsTokens } from "./context-budget.js";
-import { buildRunTools, type RunToolOptions } from "./run-tools.js";
+import { buildRunTools, newPlanState, planGate, type PlanState, type RunToolOptions } from "./run-tools.js";
 import { foldToolResults } from "./context-fold.js";
 import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
@@ -64,6 +64,8 @@ interface RunState {
   checkpoints: Map<string, Checkpoint>;
   /** When the current run began: tool results stamped before it belong to earlier runs. */
   startedAt: number;
+  /** Plan first for big tasks (run-tools.ts planGate); reset in place per run. */
+  plan: PlanState;
 }
 
 /** An app the run changed, and the checkpoint taken before it did. */
@@ -94,6 +96,8 @@ export interface AgentRunResult {
   checkpoints?: RunCheckpoint[];
   /** Skills the run loaded (the chat's skills chip). */
   skills?: RunSkill[];
+  /** Memory entries the run looked up (the chat's "from memory" marks). */
+  memory?: RunMemory[];
   /** Context window of the resolved model (auto-compact thresholding). */
   contextWindow?: number;
   /** Set when the run was aborted mid-flight (partial output is persisted). */
@@ -145,6 +149,8 @@ interface SessionRunRecord {
   checkpoints?: RunCheckpoint[];
   /** Skills the run loaded. */
   skills?: RunSkill[];
+  /** Memory entries the run looked up. */
+  memory?: RunMemory[];
 }
 
 /** Tokens a whole run used across its model calls, and what they cost in
@@ -166,6 +172,17 @@ export interface RunSkill {
   file?: string;
   tokens: number;
 }
+
+/** A memory entry memory_search returned during a run. */
+export interface RunMemory {
+  scope?: string;
+  file: string;
+  text: string;
+  date?: string;
+}
+
+/** Marks under one reply: past this many it is a list, not a hint. */
+const RUN_MEMORY_MAX = 6;
 
 /**
  * Compaction marker: APPENDED to the session file (history is kept for the
@@ -386,7 +403,7 @@ export class UserAgent {
     /** The project this session belongs to (null: a plain chat). */
     readonly project: string | null = null,
     /** Checkpoints the current run took (reset at each run). */
-    private runState: RunState = { username: "", label: "", checkpoints: new Map(), startedAt: 0 },
+    private runState: RunState = { username: "", label: "", checkpoints: new Map(), startedAt: 0, plan: newPlanState() },
     private root = "",
   ) {}
 
@@ -432,7 +449,7 @@ export class UserAgent {
       }
     }
     const projectSettings = project ? readSettings(paths.root, projectLayout(paths.root, project)) : null;
-    const runState: RunState = { username, label: "", checkpoints: new Map(), startedAt: 0 };
+    const runState: RunState = { username, label: "", checkpoints: new Map(), startedAt: 0, plan: newPlanState() };
 
     let tools: AgentTool[] = [
       ...buildUserTools(username, paths, {
@@ -498,6 +515,7 @@ export class UserAgent {
       },
       // offered only while internet is on; the tool re-reads the switch per call
       ...(readSandboxSettings(paths.sandbox).internet ? { internet: () => readSandboxSettings(paths.sandbox).internet } : {}),
+      plan: runState.plan,
       budgetBasis: () => {
         const st = agentRef?.state;
         const contextTokens = st
@@ -573,6 +591,16 @@ export class UserAgent {
       // the first change to an app in a run takes a checkpoint first, so a
       // build that goes wrong has a known point to go back to
       beforeToolCall: async (ctx) => {
+        // plan first: only where someone can answer the card, and not when the
+        // user chose Accept (run without asking) or Plan (writes are off anyway)
+        if (opts.ask && opts.mode !== "accept" && opts.mode !== "plan") {
+          const refused = planGate(runState.plan, ctx.toolCall.name, ctx.args, appCodeTouched(ctx.toolCall.name, ctx.args));
+          if (refused) {
+            // run_budget sits in the app group in small mode: show it for the next step
+            unlocked.add("app");
+            return { block: true, reason: refused };
+          }
+        }
         try {
           if (!AUTO_CHECKPOINT_TOOLS.has(ctx.toolCall.name)) return undefined;
           const appId = appTouched(ctx.toolCall.name, ctx.args);
@@ -653,6 +681,8 @@ export class UserAgent {
     this.markStarted(userMessage);
     this.runState.label = userMessage.replace(/\s+/g, " ").trim().slice(0, 60) || "a request";
     this.runState.checkpoints.clear();
+    this.runState.plan.answer = "none";
+    this.runState.plan.written.clear();
     this.runState.startedAt = Date.now();
     // what the user allowed in protected paths covers one request
     if (this.runState.username) resetAllowed(this.runState.username);
@@ -826,6 +856,7 @@ export class UserAgent {
     const usage = usageRaw ? { input: usageRaw.input, output: usageRaw.output, cacheRead: usageRaw.cacheRead } : undefined;
     const spend = this.spendOf(fresh);
     const skills = this.skillsOf(fresh);
+    const memory = this.memoryOf(fresh);
     const thinkingMs = thinkingStart ? (thinkingEnd || Date.now()) - thinkingStart : undefined;
     const stop = (finalAssistant as { stopReason?: string } | undefined)?.stopReason;
     const errorMessage = (finalAssistant as { errorMessage?: string } | undefined)?.errorMessage;
@@ -842,7 +873,7 @@ export class UserAgent {
     // (stop/length/aborted) diagnosable from the engine log
     if (!text) log.warn(`[agent:${this.sessionId}] run settled with no reply: stop=${stop ?? "none"} out=${(finalAssistant as { usage?: { output?: number } } | undefined)?.usage?.output ?? "?"}`);
     const checkpoints = await this.runCheckpoints();
-    this.persistRun(userMessage, text, toolTrace, usage, thinkingText, thinkingMs, turns, opts.imageUrls, spend, checkpoints, skills);
+    this.persistRun(userMessage, text, toolTrace, usage, thinkingText, thinkingMs, turns, opts.imageUrls, spend, checkpoints, skills, memory);
     const resolvedModel = (this.agent.state as { model?: { contextWindow?: number } }).model;
     return {
       finalText: text || emptyNote || "",
@@ -855,6 +886,7 @@ export class UserAgent {
       ...(spend ? { spend } : {}),
       ...(checkpoints.length ? { checkpoints } : {}),
       ...(skills.length ? { skills } : {}),
+      ...(memory.length ? { memory } : {}),
       ...(resolvedModel?.contextWindow ? { contextWindow: resolvedModel.contextWindow } : {}),
       ...(stop === "aborted" ? { stopped: true } : {}),
       ...(error ? { error } : {}),
@@ -942,6 +974,29 @@ export class UserAgent {
     return out;
   }
 
+  /** The memory entries a run found, from memory_search's result details;
+   *  the same entry found twice is one mark. */
+  private memoryOf(fresh: readonly unknown[]): RunMemory[] {
+    const out = new Map<string, RunMemory>();
+    for (const m of fresh as { role?: string; toolName?: string; isError?: boolean; details?: Record<string, unknown> }[]) {
+      if (m.role !== "toolResult" || m.toolName !== "memory_search" || m.isError) continue;
+      const hits = m.details?.hits;
+      if (!Array.isArray(hits)) continue;
+      for (const h of hits as Record<string, unknown>[]) {
+        if (typeof h?.file !== "string" || typeof h.text !== "string") continue;
+        const key = `${h.file}\n${h.text}`;
+        if (out.has(key) || out.size >= RUN_MEMORY_MAX) continue;
+        out.set(key, {
+          ...(typeof h.scope === "string" ? { scope: h.scope } : {}),
+          file: h.file,
+          text: h.text,
+          ...(typeof h.date === "string" ? { date: h.date } : {}),
+        });
+      }
+    }
+    return [...out.values()];
+  }
+
   private persistRun(
     userMessage: string,
     finalText: string,
@@ -954,6 +1009,7 @@ export class UserAgent {
     spend?: RunSpend,
     checkpoints: RunCheckpoint[] = [],
     skills: RunSkill[] = [],
+    memory: RunMemory[] = [],
   ): void {
     try {
       fs.mkdirSync(path.dirname(this.sFile), { recursive: true });
@@ -993,6 +1049,7 @@ export class UserAgent {
         ...(spend ? { spend } : {}),
         ...(checkpoints.length ? { checkpoints } : {}),
         ...(skills.length ? { skills } : {}),
+        ...(memory.length ? { memory } : {}),
       };
       fs.appendFileSync(this.sFile, JSON.stringify(rec) + "\n", "utf8");
     } catch (e) {
@@ -1451,7 +1508,7 @@ ${LANGUAGE_RULE}`],
 ${PRECEDENCE_RULE}`],
     ["rules", "How you work", `# How you work
 1. Look before you change anything: the project's instructions and files, the notes/ list, memory (memory_search), the app's AGENTS.md and data/README.md. Read the code you are about to change; never guess a field, an export or an API.
-2. Ask when it matters. Before building a new app, a UI or a large feature, call ask_user ONCE with 2-6 questions, each with 2-4 options, a one-line description per option and one marked recommended; then plan the file layout, then build. Skip the questions when the request already settles those choices; a small, clear task you just do. Before a big run (about 10+ steps, or an app's src/), call run_budget with your step count and plan; it shows the user the cost.
+2. Ask when it matters. Before building a new app, a UI or a large feature, call ask_user ONCE with 2-6 questions, each with 2-4 options, a one-line description per option and one marked recommended; then plan the file layout, then build. Skip the questions when the request already settles those choices; a small, clear task you just do. Before a big run (about 10+ steps, an app's code, or more than 3 files), call run_budget with your step count, plan and the files you will change; it shows the user the cost, and such writes wait for their yes.
 3. Put each change in the lightest place that carries it: the app's data/ first, then a plugin of your own, the app's src/ only when the change needs it (the workspace contract below explains why).
 4. Work in small steps and check each one: app_check after editing src/ or package.json, read back JSON you wrote, call a route you wrote once (app_request) and read plugin_log for backend errors, app_console for page errors. If an edit broke a file, restore it from git before going on. Never call something done that you have not verified (skill finish-change has the checklist).
 5. Finish with a short report in plain words: what changed, what you checked, what you could not check, and how to undo it.

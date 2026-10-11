@@ -52,9 +52,9 @@ export function ProjectContextLine(): ReactNode {
   return (
     <div
       data-slot="aui_project-context"
-      className="text-muted-foreground mx-auto mb-4 w-full max-w-(--thread-max-width) shrink-0 rounded-xl border px-3 py-2 text-[13px] leading-relaxed"
+      className="text-muted-foreground bg-brand-soft/50 border-s-brand mx-auto mb-4 w-full max-w-(--thread-max-width) shrink-0 rounded-xl border border-s-2 px-3 py-2 text-[13px] leading-relaxed"
     >
-      <Folder aria-hidden className="text-foreground me-1.5 -mt-0.5 inline size-3.5" />
+      <Folder aria-hidden className="text-brand me-1.5 -mt-0.5 inline size-3.5" />
       <strong className="text-foreground font-semibold">Project context attached:</strong>{" "}
       {parts.map(([key, p], i) => (
         <span key={key}>
@@ -77,7 +77,7 @@ export function ComposerProjectRow(): ReactNode {
       <button
         type="button"
         title={`Open the ${summary.title} project`}
-        className="flex max-w-48 shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs text-emerald-700 dark:text-emerald-300"
+        className="flex max-w-48 shrink-0 items-center gap-1.5 rounded-full border border-brand-line bg-brand-soft px-2.5 py-0.5 text-xs text-brand"
         onClick={() => openProject(summary.id)}
       >
         {summary.icon ? <span aria-hidden>{summary.icon}</span> : <Folder aria-hidden className="size-3.5" />}

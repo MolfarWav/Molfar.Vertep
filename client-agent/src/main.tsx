@@ -21,7 +21,7 @@ const CUSTOM_VARS: Record<string, string[]> = {
   line: ["--border", "--input", "--sidebar-border"],
   cta: ["--primary"],
   inkInverse: ["--primary-foreground"],
-  accent: ["--ring", "--sidebar-primary"],
+  accent: ["--ring", "--sidebar-primary", "--brand"],
   danger: ["--destructive"],
 }
 const HEX = /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i

@@ -1,7 +1,7 @@
 // Under an assistant message: the skills the run loaded (each opens in the
 // memory panel) and what the run really took (steps, tokens, price).
 import { useAuiState } from "@assistant-ui/react"
-import { BookOpen } from "@phosphor-icons/react"
+import { BookOpen, Brain } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
 import type { RunSkill, RunSpend } from "./api"
 import { compactTokens, usd } from "./lib/format"
@@ -45,10 +45,12 @@ export function RunInfo(): ReactNode {
   const id = useAuiState((s) => s.message.id)
   const msg = useAgent((s) => s.msgs.find((m) => m.id === id))
   const openSkill = useAgent((s) => s.openSkill)
+  const openMemory = useAgent((s) => s.openMemory)
   if (!msg || msg.streaming) return null
   const chips = msg.skills?.length ? mergeSkills(msg.skills) : []
   const spend = msg.spend && spendTokens(msg.spend) > 0 ? msg.spend : null
-  if (!chips.length && !spend) return null
+  const memory = msg.memory ?? []
+  if (!chips.length && !memory.length && !spend) return null
   return (
     <div className="text-muted-foreground ms-2 flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-xs" data-testid="run-info">
       {chips.length ? (
@@ -69,6 +71,22 @@ export function RunInfo(): ReactNode {
               </button>
             )
           })}
+        </div>
+      ) : null}
+      {memory.length ? (
+        <div className="flex min-w-0 flex-wrap items-center gap-1" data-testid="run-memory">
+          <Brain size={14} className="text-brand shrink-0" aria-hidden />
+          {memory.map((m) => (
+            <button
+              key={`${m.file}|${m.date ?? ""}|${m.text}`}
+              type="button"
+              title={`From memory (${m.file}): ${m.text}`}
+              className="bg-brand-soft text-brand hover:bg-brand/20 max-w-full truncate rounded-md px-1.5 py-0.5"
+              onClick={() => openMemory({ file: m.file, text: m.text, ...(m.scope ? { scope: m.scope } : {}) })}
+            >
+              from memory: {m.text.length > 40 ? `${m.text.slice(0, 39).trimEnd()}…` : m.text}
+            </button>
+          ))}
         </div>
       ) : null}
       {spend ? (

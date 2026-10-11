@@ -73,7 +73,37 @@ export function sessionSpend(runs: readonly EngineRun[]): SessionSpend | null {
   return any ? { tokens, cost, unpriced } : null
 }
 
+/** The context the chat's last run sent, so a reopened chat shows its meter too. */
+export function lastUsage(runs: readonly EngineRun[]): EngineUsage | null {
+  for (let i = runs.length - 1; i >= 0; i--) {
+    const r = runs[i]
+    if (r?.type === "compact") return null
+    if (r?.type === "run" && r.usage) return r.usage
+  }
+  return null
+}
+
 export type View = { kind: "chat" } | { kind: "project"; id: string }
+
+/** The project pane beside the chat (desktop): shown or folded, its width in px. */
+export interface PaneState {
+  open: boolean
+  width: number
+}
+
+export const PANE_MIN = 280
+export const PANE_MAX = 560
+export const PANE_DEFAULT = 340
+
+function storedPane(): PaneState {
+  try {
+    const v = JSON.parse(prefs.get("agent-ui-pane") ?? "{}") as Partial<PaneState>
+    const width = typeof v.width === "number" ? Math.min(PANE_MAX, Math.max(PANE_MIN, Math.round(v.width))) : PANE_DEFAULT
+    return { open: v.open !== false, width }
+  } catch {
+    return { open: true, width: PANE_DEFAULT }
+  }
+}
 
 /** Session key of a chat that has no id yet. */
 const NEW_KEY = "new"
@@ -122,6 +152,15 @@ export interface AgentState {
    *  the transient drawer (sidebarOpen) */
   sidebarPinned: boolean
   setSidebarPinned: (pinned: boolean) => void
+  /** the project pane beside the chat, persisted in this browser */
+  pane: PaneState
+  setPane: (patch: Partial<PaneState>) => void
+  /** phones: which half the segmented control shows */
+  phoneTab: "chat" | "project"
+  setPhoneTab: (tab: "chat" | "project") => void
+  /** a "from memory" mark under a message asks the memory panel to open this entry */
+  memoryRequest: { file: string; text: string; scope?: string } | null
+  openMemory: (req: { file: string; text: string; scope?: string } | null) => void
   init: () => Promise<void>
   refreshSessions: () => Promise<void>
   refreshMcp: () => Promise<void>
@@ -282,6 +321,9 @@ export const useAgent = create<AgentState>()((set, get) => {
     mcp: [],
     sidebarOpen: false,
     sidebarPinned: prefs.get("agent-ui-sidebar") !== "closed",
+    pane: storedPane(),
+    phoneTab: "chat",
+    memoryRequest: null,
 
     init: async () => {
       try {
@@ -349,7 +391,7 @@ export const useAgent = create<AgentState>()((set, get) => {
       set({ sessionId: id, draftProject: null, view: { kind: "chat" }, msgs: [], banner: null, ask: null, sidebarOpen: false })
       try {
         const r = await sessionsApi.get(id)
-        if (get().sessionId === id) set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []) })
+        if (get().sessionId === id) set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []) })
       } catch (e) {
         set({ banner: { kind: "error", text: e instanceof Error ? e.message : String(e) } })
       }
@@ -361,7 +403,7 @@ export const useAgent = create<AgentState>()((set, get) => {
       if (!sid) return
       try {
         const r = await sessionsApi.get(sid)
-        if (get().sessionId === sid) set({ msgs: keepShownIds(get().msgs, msgsFromRuns(r.runs ?? [])), spend: sessionSpend(r.runs ?? []) })
+        if (get().sessionId === sid) set({ msgs: keepShownIds(get().msgs, msgsFromRuns(r.runs ?? [])), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []) })
       } catch {
         // keep the local view; the stream already showed the run
       }
@@ -649,6 +691,14 @@ export const useAgent = create<AgentState>()((set, get) => {
       prefs.set("agent-ui-sidebar", pinned ? "open" : "closed")
       set({ sidebarPinned: pinned })
     },
+    setPane: (patch) => {
+      const pane = { ...get().pane, ...patch }
+      pane.width = Math.min(PANE_MAX, Math.max(PANE_MIN, Math.round(pane.width)))
+      prefs.set("agent-ui-pane", JSON.stringify(pane))
+      set({ pane })
+    },
+    setPhoneTab: (tab) => set({ phoneTab: tab }),
+    openMemory: (req) => set({ memoryRequest: req }),
     setBanner: (b) => set({ banner: b }),
   }
 })

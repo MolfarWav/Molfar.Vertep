@@ -1,6 +1,6 @@
 "use client";
 
-import { ComposerSettings, ModelPicker } from "@/Header";
+import { ComposerSettings } from "@/Header";
 import { ContextActions } from "@/ContextActions";
 
 import {
@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AskBar } from "@/AskBar"
 import { FileMentions } from "@/FileMentions";
-import { QuickActions } from "@/QuickActions";
+import { QuickActions, QuickGrid, ReplyQuickActions, templateIcon, usePickTemplate, useTemplates } from "@/QuickActions";
 import { SlashCommands } from "@/SlashCommands";
 import { cn, copyText } from "@/lib/utils";
 import {
@@ -33,8 +33,6 @@ import {
   groupPartByType,
   MessagePrimitive,
   SuggestionPrimitive,
-  ThreadListItemPrimitive,
-  ThreadListPrimitive,
   ThreadPrimitive,
   type FileMessagePartComponent,
   type ImageMessagePartComponent,
@@ -42,13 +40,14 @@ import {
   useAui,
   useAuiState,
 } from "@assistant-ui/react";
-import { ArrowDown, ArrowUp, Check, CaretLeft, CaretRight, Copy, DownloadSimple, Chat, Microphone, DotsThree, PencilSimple, ArrowsClockwise, Square } from "@phosphor-icons/react";
+import { ArrowDown, ArrowUp, Check, CaretLeft, CaretRight, Copy, DownloadSimple, ClockCounterClockwise, Microphone, DotsThree, PencilSimple, ArrowsClockwise, Square } from "@phosphor-icons/react";
 import { useEnterSends } from "@/hooks/use-touch-ui";
 import { currentProjectId, effectiveModel, useAgent as useAgentStore } from "@/store";
+import type { EngineSession } from "@/api";
 import { RunCheckpoints } from "@/Checkpoints";
 import { RunInfo } from "@/RunInfo";
 import { compactTokens, usd } from "@/lib/format";
-import { MolfarAvatar } from "@/MolfarAvatar";
+import { MolfarAvatar, MolfarHalo } from "@/MolfarAvatar";
 import { ComposerProjectRow, ProjectAttachButton, ProjectContextLine, SaveToProjectAction } from "@/ProjectChat";
 import {
   createContext,
@@ -170,7 +169,7 @@ const ThreadRoot: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
     <ThreadPrimitive.Root
       className="aui-root aui-thread-root bg-background @container flex min-h-0 flex-1 flex-col"
       style={{
-        ["--thread-max-width" as string]: "56rem",
+        ["--thread-max-width" as string]: "min(1100px, 100%)",
         ["--composer-bg" as string]: "var(--color-card)",
         ["--composer-radius" as string]: "1.5rem",
         ["--composer-padding" as string]: "8px",
@@ -180,13 +179,13 @@ const ThreadRoot: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
         data-slot="aui_thread-viewport"
         turnAnchor="bottom"
         autoScroll
-        className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4"
+        className="relative flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-4 pt-4 md:px-6 vertep:bg-[radial-gradient(color-mix(in_oklab,var(--border)_70%,transparent)_1px,transparent_1px)] vertep:bg-[size:14px_14px]"
       >
         <ProjectContextLine />
         {/* a new chat keeps the composer at the bottom like any other; the
             welcome takes the room above it and sits in the middle of it */}
         <AuiIf condition={isNewChatView}>
-          <div className="flex flex-1 flex-col justify-center">
+          <div className="flex flex-1 flex-col">
             <Welcome />
           </div>
         </AuiIf>
@@ -208,8 +207,12 @@ const ThreadRoot: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
           <ThreadScrollToBottom />
           <ThreadFollowupSuggestions />
           <AskBar />
-          <AuiIf condition={(s) => s.composer.isEmpty && !s.thread.isRunning}>
+          {/* an empty chat already offers the templates as cards (desktop) or a grid (phone) */}
+          <AuiIf condition={(s) => !isNewChatView(s) && s.composer.isEmpty && !s.thread.isRunning}>
             <QuickActions />
+          </AuiIf>
+          <AuiIf condition={(s) => isNewChatView(s) && s.composer.isEmpty}>
+            <QuickGrid />
           </AuiIf>
           <Composer autoFocus={autoFocus} />
           <AuiIf condition={(s) => isNewChatView(s) && s.composer.isEmpty}>
@@ -247,66 +250,97 @@ const ThreadScrollToBottom: FC = () => {
 };
 
 const ThreadWelcome: FC = () => {
+  const project = useAgentStore(currentProjectId);
+  const title = useAgentStore((st) => {
+    const p = st.projects.find((x) => x.id === currentProjectId(st));
+    return p ? p.title || p.name : null;
+  });
   return (
-    <div className="aui-thread-welcome-root mb-6 flex flex-col items-center px-4 text-center">
-      <MolfarAvatar size={88} className="fade-in animate-in fill-mode-both mb-4 duration-200" />
-      <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both text-2xl font-medium tracking-tight duration-200">
+    <div className="aui-thread-welcome-root my-auto flex flex-col items-center px-4 text-center">
+      {/* smaller on phones: the welcome and three recent chats must fit above the grid */}
+      <MolfarHalo size={60} className="fade-in animate-in fill-mode-both mb-2 duration-200 md:hidden" />
+      <MolfarHalo size={88} className="fade-in animate-in fill-mode-both mb-3 duration-200 max-md:hidden" />
+      <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both font-heading text-2xl font-normal tracking-tight duration-200 md:text-3xl">
         How can I help you today?
       </h1>
-      <ThreadWelcomeRecents />
+      {project && title ? (
+        <p className="text-muted-foreground mt-2 text-sm">
+          Working in <span className="text-foreground">{title}</span> · Molfar sees its instructions, memory and skills.
+        </p>
+      ) : null}
+      <StarterCards project={project} />
     </div>
   );
 };
 
-/** How many chats the welcome screen offers before it stops being a shortcut
- *  and starts being a list. The sidebar is there for the rest. */
-const RECENT_LIMIT = 5;
+/** "Today, 18:42", "Yesterday, 18:42" or "6 Oct": when a chat was last used. */
+function whenLabel(at: number): string {
+  const d = new Date(at);
+  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diff = Math.round((day(new Date()) - day(d)) / 86_400_000);
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (diff === 0) return `Today, ${time}`;
+  if (diff === 1) return `Yesterday, ${time}`;
+  return d.toLocaleDateString([], { day: "numeric", month: "short" });
+}
 
-/** Recent chats, inline on the empty thread. Getting back to yesterday's
- *  conversation shouldn't require finding the sidebar toggle first. */
-const ThreadWelcomeRecents: FC = () => {
-  const threadIds = useAuiState((s) => s.threads.threadIds);
-  const isLoading = useAuiState((s) => s.threads.isLoading);
-  // a new chat in a project offers that project's chats; a plain one, any
-  const project = useAgentStore(currentProjectId);
+const cardClass =
+  "bg-card hover:bg-muted hover:border-brand-line hover:-translate-y-px border-border/60 fade-in slide-in-from-bottom-2 animate-in fill-mode-both flex min-h-16 min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition duration-200";
+
+/** Starter cards on an empty chat: pick up the last chat, or start one of the
+ *  task templates. A phone lists the last three chats instead: its templates
+ *  are the grid above the composer. */
+const StarterCards: FC<{ project: string | null }> = ({ project }) => {
   const sessions = useAgentStore((s) => s.sessions);
-  const recent = threadIds
-    .map((id, index) => ({ id, index }))
-    .filter(({ id }) => !project || sessions.find((x) => x.sessionId === id)?.project === project)
-    .slice(0, RECENT_LIMIT);
-  if (isLoading || recent.length === 0) return null;
-
+  const projects = useAgentStore((s) => s.projects);
+  const open = useAgentStore((s) => s.open);
+  const templates = useTemplates();
+  const pick = usePickTemplate();
+  // the newest chat of this project, or of any when there is no project
+  const recent: EngineSession[] = sessions
+    .filter((x) => !x.archived && x.lastAt && (!project || x.project === project))
+    .sort((a, b) => (b.lastAt ?? 0) - (a.lastAt ?? 0))
+    .slice(0, 3);
+  const last = recent[0];
+  const projectOf = (id?: string | null) => {
+    const p = projects.find((x) => x.id === id);
+    return p ? p.title || p.name : null;
+  };
+  if (!last && !templates.length) return null;
   return (
-    <div className="aui-thread-welcome-recents fade-in slide-in-from-bottom-2 animate-in fill-mode-both mt-6 flex w-full flex-col items-center gap-2 duration-200">
-      <span className="text-muted-foreground text-xs font-medium">Recent chats</span>
-      <ThreadListPrimitive.Root className="flex flex-wrap items-center justify-center gap-1.5">
-        {recent.map(({ id, index }) => (
-          <ThreadListPrimitive.ItemByIndex
-            key={id}
-            index={index}
-            components={{ ThreadListItem: ThreadWelcomeRecentItem }}
-          />
-        ))}
-      </ThreadListPrimitive.Root>
-    </div>
-  );
-};
-
-const ThreadWelcomeRecentItem: FC = () => {
-  return (
-    <ThreadListItemPrimitive.Root>
-      <ThreadListItemPrimitive.Trigger asChild>
-        <Button
-          variant="ghost"
-          className="text-foreground hover:bg-muted border-border/60 h-auto max-w-56 gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-normal transition-colors"
-        >
-          <Chat aria-hidden className="size-3.5 shrink-0 opacity-60" />
-          <span className="min-w-0 truncate">
-            <ThreadListItemPrimitive.Title fallback="New Chat" />
+    <div
+      data-testid="starter-cards"
+      className="mt-6 grid w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {recent.map((chat, i) => (
+        <button key={chat.sessionId} type="button" className={cn(cardClass, i === 0 && "border-brand-line bg-brand-soft hover:bg-brand-soft", i > 0 && "md:hidden")} onClick={() => void open(chat.sessionId)}>
+          <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", i === 0 ? "bg-brand text-brand-foreground" : "bg-brand-soft text-brand")}>
+            <ClockCounterClockwise aria-hidden size={18} />
           </span>
-        </Button>
-      </ThreadListItemPrimitive.Trigger>
-    </ThreadListItemPrimitive.Root>
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="line-clamp-2 text-sm font-medium">{i === 0 ? "Continue: " : ""}{chat.title || "New chat"}</span>
+            <span className="text-muted-foreground truncate text-xs">
+              {whenLabel(chat.lastAt ?? 0)}
+              {projectOf(chat.project) ? ` · ${projectOf(chat.project)}` : ""}
+            </span>
+          </span>
+        </button>
+      ))}
+      {templates.slice(0, last ? 5 : 6).map((t) => {
+        const Icon = templateIcon(t.id);
+        return (
+          <button key={t.id} type="button" className={cn(cardClass, "max-md:hidden")} onClick={() => pick(t)}>
+            <span className="bg-brand-soft text-brand flex size-9 shrink-0 items-center justify-center rounded-lg">
+              <Icon aria-hidden size={18} />
+            </span>
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-sm font-medium">{t.label}</span>
+              <span className="text-muted-foreground line-clamp-2 text-xs">{t.description}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 };
 
@@ -450,12 +484,6 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
             />
             <SlashCommands />
             <FileMentions />
-            {/* a narrow composer cannot fit the model name beside the buttons:
-                it gets a row of its own (the picker in the action row is
-                hidden at that width, so only one of the two can be opened) */}
-            <div className="aui-composer-model-row flex min-w-0 px-1 empty:hidden @lg:hidden">
-              <ModelPicker wide />
-            </div>
             <ComposerAction />
           </div>
         </ComposerPrimitive.AttachmentDropzone>
@@ -517,7 +545,7 @@ const ComposerAction: FC = () => {
               type="button"
               variant="default"
               size="icon"
-              className="aui-composer-send size-7 rounded-full"
+              className="aui-composer-send bg-brand text-brand-foreground hover:bg-brand/90 disabled:bg-muted disabled:text-muted-foreground size-8 rounded-full"
               aria-label="Send message"
             >
               <ArrowUp className="aui-composer-send-icon size-4" />
@@ -528,9 +556,9 @@ const ComposerAction: FC = () => {
           <ComposerPrimitive.Cancel asChild>
             <Button
               type="button"
-              variant="default"
+              variant="outline"
               size="icon"
-              className="aui-composer-cancel size-7 rounded-full"
+              className="aui-composer-cancel border-brand text-brand hover:bg-brand-soft hover:text-brand size-8 rounded-full"
               aria-label="Stop generating"
             >
               <Square className="aui-composer-cancel-icon size-3.5 fill-current" />
@@ -689,7 +717,7 @@ const AssistantActionBar: FC = () => {
     <ActionBarPrimitive.Root
       hideWhenRunning
       autohide={saving ? "never" : "not-last"}
-      className="aui-assistant-action-bar-root text-muted-foreground animate-in fade-in col-start-3 row-start-2 -ms-1 flex gap-1 duration-200"
+      className="aui-assistant-action-bar-root text-muted-foreground animate-in fade-in col-start-3 row-start-2 -ms-1 flex flex-wrap items-center gap-1 duration-200"
     >
       <CopyAction />
       <ActionBarPrimitive.Reload asChild>
@@ -721,6 +749,7 @@ const AssistantActionBar: FC = () => {
           </ActionBarPrimitive.ExportMarkdown>
         </ActionBarMorePrimitive.Content>
       </ActionBarMorePrimitive.Root>
+      <ReplyQuickActions />
     </ActionBarPrimitive.Root>
   );
 };
@@ -747,7 +776,7 @@ const UserMessage: FC = () => {
       <UserMessageAttachments />
 
       <div className="aui-user-message-content-wrapper relative col-start-2 min-w-0">
-        <div className="aui-user-message-content peer bg-muted text-foreground rounded-xl px-4 py-2 wrap-break-word empty:hidden">
+        <div className="aui-user-message-content peer bg-card text-foreground rounded-xl border px-4 py-2 wrap-break-word empty:hidden">
           <MessagePrimitive.Parts
             components={{ File: UserFilePart, Image: UserImagePart }}
           />

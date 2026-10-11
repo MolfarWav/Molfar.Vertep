@@ -1,7 +1,7 @@
 // Engine run/turn records → the flat part list the UI renders. Both the
 // session history loader and the final POST response go through here, so a
 // stream and its authoritative record land on the same shapes.
-import type { AgentResponse, EngineRun, EngineTool, EngineTurn, RunCheckpoint, RunSkill, RunSpend } from "./api.js"
+import type { AgentResponse, EngineRun, EngineTool, EngineTurn, RunCheckpoint, RunMemory, RunSkill, RunSpend } from "./api.js"
 import type { StreamEvent } from "./streaming.js"
 
 export type ToolState = "running" | "ok" | "error"
@@ -47,11 +47,13 @@ export interface Msg {
   /** what the run really took, and the skills it loaded (shown under the message) */
   spend?: RunSpend
   skills?: RunSkill[]
+  /** memory entries the run relied on (memory_search hits) */
+  memory?: RunMemory[]
 }
 
 /** The run facts a message carries, from a run record or a run result. */
-export function runInfo(r: { spend?: RunSpend; skills?: RunSkill[] }): Pick<Msg, "spend" | "skills"> {
-  return { ...(r.spend ? { spend: r.spend } : {}), ...(r.skills?.length ? { skills: r.skills } : {}) }
+export function runInfo(r: { spend?: RunSpend; skills?: RunSkill[]; memory?: RunMemory[] }): Pick<Msg, "spend" | "skills" | "memory"> {
+  return { ...(r.spend ? { spend: r.spend } : {}), ...(r.skills?.length ? { skills: r.skills } : {}), ...(r.memory?.length ? { memory: r.memory } : {}) }
 }
 
 let seq = 0

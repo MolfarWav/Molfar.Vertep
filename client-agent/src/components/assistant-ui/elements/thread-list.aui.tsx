@@ -316,7 +316,7 @@ export const ThreadListItem: FC = () => {
         event.dataTransfer.setData(CHAT_DRAG_TYPE, id);
         event.dataTransfer.effectAllowed = "move";
       }}
-      className="group hover:bg-muted focus-visible:bg-muted data-active:bg-muted has-focus-visible:bg-muted has-data-[state=open]:bg-muted relative flex h-8 items-center rounded-md transition-colors focus-visible:outline-none"
+      className="group hover:bg-muted focus-visible:bg-muted data-active:bg-brand-soft before:absolute before:inset-y-1 before:start-0 before:w-[3px] before:rounded-full before:bg-brand before:content-[''] before:hidden data-active:before:block has-focus-visible:bg-muted has-data-[state=open]:bg-muted relative flex h-8 items-center rounded-md transition-colors focus-visible:outline-none"
     >
       {isRenaming ? (
         <ThreadListItemRename

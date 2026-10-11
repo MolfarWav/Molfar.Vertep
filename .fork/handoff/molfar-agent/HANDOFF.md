@@ -9,6 +9,44 @@ Supersedes `.fork/handoff/agent-tools/HANDOFF.md` (its four open tools are folde
 file when this one ships).
 
 ## Progress (newest first)
+- 2026-10-11, branch `claude/project-thread-c3878l` (pushed, not merged, not released): part 2, the page.
+  - Layout (`App.tsx`, `Header.tsx`, `Sidebar.tsx`): the sidebar folds to a 56 px rail (avatar, new chat, search,
+    project icons). Header right: model chip (the only desktop model picker), context meter (amber 75 %, red 90 %; a
+    reopened chat takes it from its last run, `lastUsage` in `store.ts`), connection dot ("Offline" only when down),
+    inspector (now an eye icon), search, memory panel, pane toggle. Banners are a slim strip under the header.
+  - Project pane (`ProjectPage.tsx` `ProjectPane {id, layout: "pane"|"page"|"phone"}`, sections in
+    `ProjectSections.tsx`): one set of sections, three layouts. Pane width and fold state in `store.ts` `pane`
+    (localStorage `agent-ui-pane`), drag handle, double-click resets, arrows resize. `view.kind === "project"` is the
+    full page with tabs. "Open app" posts `{__chrysalisAgent: "open-app"}` to the shell (`shell.ts`, handled in
+    `client/src/App.tsx`, installed apps only).
+  - Phone: Chat | Project segmented control (`phoneTab`), a strip with model, reasoning, meter, tokens and cost, one
+    combined model/reasoning/mode chip in the composer, the project as an accordion with a sticky footer.
+  - Thread: composer and messages up to 1100 px; empty chat = 2x3 starter cards ("Continue: <last chat>" + templates);
+    phones list the last 3 chats and show the templates as a 2x2 grid. `MolfarAvatar` falls back to an "M" circle.
+  - 3.5 templates: `client-agent/src/templates.ts` (`/card`, `/lorebook`, `/preset`, `/fix`, `/skill`): each names its
+    skill and asks Molfar for ONE ask_user card of 2-3 questions before it starts; offered only when the skill is
+    installed. Same list in the "/" menu (group Templates), the starter cards, the phone grid and the chip row.
+  - 3.4 quick actions under the last reply: Shorter, Simpler, Apply (only when it changed nothing). Undo stays the
+    "Changed <app> · Undo" line under the reply (a second button there was a duplicate).
+  - 3.3 plan first: `planGate` in `src/agent/run-tools.ts`, called from `beforeToolCall` in `agent.ts`: write_file /
+    edit_file / json_set on an app's code (`appCodeTouched`) or on a 4th distinct file (`PLAN_FILES = 3`) is refused
+    until run_budget (now with `files`, listed on the card) gets "Go on" or "Smaller"; "Stop" refuses every write of
+    the run. Off in Accept and Plan modes and without an ask channel. Bash is not gated.
+  - 3.6 memory marks: memory_search returns its top 3 hits as `details.hits`; the run keeps them as `memory`
+    (`RunMemory`, max 6); `RunInfo` shows "from memory: …" chips that open the memory panel on that entry
+    (`openMemory`). Limit: notes the model reads from the always-present memory section of the prompt are not marked;
+    only memory_search lookups are.
+  - Checked: typecheck, full test run (new tests for the gate, the run_budget files and memory_search details), client
+    build, lint on touched files, browser check with a mock model at 1440, 1024 and 390 px, dark and light. Not checked
+    live: the gate on a real model (does a small model recover from the refusal with run_budget?), the shell's Open app
+    from inside the frame, Restore from the pane with a real checkpoint, the "Offline" state.
+  - Colour pass (user, 2026-10-11: "the point was to make the main things stand out"): tokens `brand` (the shell's
+    accent: Vertep red, blue on Dark/Light, a custom theme's accent), `link` (cyan, actions that leave the page) and
+    `font-heading` (Kurale on Vertep only, self-hosted in `client-agent/src/fonts/kurale`) in `globals.css`. Filled brand:
+    New chat, Send, Save checkpoint, the ask card's recommended option and send. Brand bar + tint: active chat, open
+    project, selected tab, phone segment. Vertep only: dot grid behind the thread, the Vertep mark behind the welcome
+    avatar (`MolfarHalo`). Check screens in the vertep theme: browser-check's `open()` defaults to "dark".
+  - Next: part 3 (3.7 skills that learn, then 2.5 app_screenshot).
 - 2026-10-11, branch `claude/project-thread-eed1tv` (pushed, not merged, not released): part 1 of the order below.
   - 2.1 `plugin_log`: `src/plugins/plugin-log.ts` keeps 500 lines per user in memory (host.log and console
     lines, failed routes, hooks and tools), fed from `printLogs`/`logFailure` in `runtime.ts` through the new

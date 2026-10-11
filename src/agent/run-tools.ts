@@ -35,6 +35,43 @@ export interface RunToolOptions {
   internet?: () => boolean;
   /** run_budget: what one step costs now. */
   budgetBasis?: () => { contextTokens: number; model: string; price: (u: Usage) => number | null };
+  /** The run's plan gate (planGate below): run_budget's answer lands here. */
+  plan?: PlanState;
+}
+
+// ---------- plan first ----------
+
+/** More distinct files than this in one run, or any app code, needs a plan the user agreed to. */
+export const PLAN_FILES = 3;
+const PLAN_TOOLS = new Set(["write_file", "edit_file", "json_set"]);
+
+/** One run's plan gate: files written so far, and the user's answer to the plan card. */
+export interface PlanState {
+  answer: "none" | "go" | "stop";
+  written: Set<string>;
+}
+
+export const newPlanState = (): PlanState => ({ answer: "none", written: new Set() });
+
+/**
+ * Plan first for big tasks: a write to an app's code, or to a fourth distinct
+ * file, is refused until run_budget has shown the user a plan and they said go.
+ * The prompt asks for the plan; this holds when a model skips it. Returns the
+ * refusal for the model, or undefined to let the call through.
+ */
+export function planGate(st: PlanState, tool: string, args: unknown, appCode: boolean): string | undefined {
+  if (!PLAN_TOOLS.has(tool) || st.answer === "go") return undefined;
+  const file = (args as { path?: unknown } | null)?.path;
+  if (typeof file !== "string" || !file.trim()) return undefined;
+  const key = file.replace(/\\/g, "/").replace(/^\.\//, "");
+  if (st.answer === "stop") return "Not written: the user said stop to the plan. Do not change files in this run; say what you would need.";
+  if (st.written.has(key)) return undefined;
+  if (appCode || st.written.size >= PLAN_FILES) {
+    const why = appCode ? "it changes an app's code" : `it would be file ${st.written.size + 1} in this run`;
+    return `Not written yet: ${why}. Plan first: call run_budget with your step count, a one-line plan and files (every file you will change), and write after the user says go on.`;
+  }
+  st.written.add(key);
+  return undefined;
 }
 
 const textResult = (text: string, details: Record<string, unknown> = {}) => ({ content: [{ type: "text" as const, text }], details });
@@ -315,36 +352,42 @@ export function estimateRun(steps: number, context: number, price: (u: Usage) =>
 
 const short = (n: number): string => (n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}k` : String(n));
 
-function runBudgetTool(basis: NonNullable<RunToolOptions["budgetBasis"]>, ask: RunToolOptions["ask"]): AgentTool {
+function runBudgetTool(basis: NonNullable<RunToolOptions["budgetBasis"]>, ask: RunToolOptions["ask"], plan_?: PlanState): AgentTool {
   return {
     name: "run_budget",
     label: "Estimate the run",
     executionMode: "sequential",
     description:
-      "Before a big task (about 10+ steps, or changes to an app's src/), estimate it and ask the user to go on: pass your step count and a one-line plan. The engine prices it on the current context and model and shows the user a card.",
+      "Before a big task (about 10+ steps, changes to an app's code, or more than 3 files), estimate it and ask the user to go on: pass your step count, a one-line plan and the files you will change. The engine prices it on the current context and model and shows the user a card. Such writes are refused until the user says go on.",
     parameters: Type.Object({
       steps: Type.Number({ description: "Model calls (tool rounds) you expect" }),
       plan: Type.String({ description: "One line: what you will do" }),
+      files: Type.Optional(Type.Array(Type.String(), { description: "Files you will change (paths)" })),
     }),
     async execute(_id, params) {
       const { plan } = params as { plan: string };
+      const files = ((params as { files?: unknown }).files ?? []) as unknown[];
+      const paths = files.filter((f): f is string => typeof f === "string" && !!f.trim()).slice(0, 40);
       const steps = Math.min(Math.max(1, Math.round((params as { steps: number }).steps)), 200);
       const b = basis();
       const e = estimateRun(steps, b.contextTokens, b.price);
       const line = `about ${steps} steps, ~${short(e.input + e.output)} tokens${e.cost === null ? " (this model has no known price)" : `, about ${usd(e.cost)}`} on ${b.model}`;
-      const details = { steps, tokens: e.input + e.output, cost: e.cost, model: b.model };
+      const details = { steps, tokens: e.input + e.output, cost: e.cost, model: b.model, ...(paths.length ? { files: paths } : {}) };
+      const changing = paths.length ? ` Changing ${paths.length === 1 ? "1 file" : `${paths.length} files`}: ${paths.slice(0, 4).join(", ")}${paths.length > 4 ? ", …" : ""}.` : "";
       if (!ask) return textResult(`Estimate: ${line}. The user is not available to confirm; go on only if the task is clearly asked for.`, details);
       const answer = (
         await ask({
-          question: `Go on? ${plan.slice(0, 200)}`,
+          question: `Go on? ${plan.slice(0, 200)}${changing}`,
           options: [
             { label: "Go on", description: line, recommended: true },
             { label: "Smaller", description: "do the core part first, then ask" },
             { label: "Stop", description: "do nothing yet" },
           ],
-          detail: `Estimate before prompt caching, which usually makes it cheaper: ${line}. Each step resends the whole chat (~${short(b.contextTokens)} tokens now).`,
+          detail: `Estimate before prompt caching, which usually makes it cheaper: ${line}. Each step resends the whole chat (~${short(b.contextTokens)} tokens now).${paths.length ? `\n\nFiles:\n${paths.map((f) => `- ${f}`).join("\n")}` : ""}`,
         })
       ).trim();
+      // "Smaller" is a yes to the core part; anything typed is the user steering, not a no
+      if (plan_) plan_.answer = answer === "Stop" ? "stop" : "go";
       const next =
         answer === "Go on"
           ? "The user agreed: go on."
@@ -363,6 +406,6 @@ export function buildRunTools(username: string, o: RunToolOptions): AgentTool[] 
   if (o.appRequest) out.push(appRequestTool(o.appRequest, o.mode === "plan"));
   if (o.tryModel) out.push(modelTryTool(o.tryModel, o.ask));
   if (o.internet) out.push(webFetchTool(o.internet));
-  if (o.budgetBasis) out.push(runBudgetTool(o.budgetBasis, o.ask));
+  if (o.budgetBasis) out.push(runBudgetTool(o.budgetBasis, o.ask, o.plan));
   return out;
 }

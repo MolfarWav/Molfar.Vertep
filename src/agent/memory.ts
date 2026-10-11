@@ -669,6 +669,8 @@ function skillDiff(file: string, before: string, after: string): string | undefi
   return body.length > 12_000 ? `${body.slice(0, 12_000)}\n… (diff truncated)` : body;
 }
 
+/** memory_search hits the chat marks under the reply: the best few, the ones a reply rests on. */
+const MEMORY_MARKS = 3;
 const text = (t: string, details: Record<string, unknown> = {}) => ({ content: [{ type: "text" as const, text: t }], details });
 
 export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<AgentToolOptions, "ask">): AgentTool[] {
@@ -730,7 +732,10 @@ export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<Agen
       const { query, scope } = params as { query: string; scope?: string };
       const hits = searchMemory(root, String(query ?? ""), scope?.trim() || undefined);
       if (!hits.length) return text(`Nothing in memory matches "${query}".`);
-      return text(hits.map((h) => `${h.file}${h.date ? ` (${h.date})` : ""}: ${h.text}`).join("\n"));
+      // details feed the chat's "from memory" marks: which entry, where it lives
+      return text(hits.map((h) => `${h.file}${h.date ? ` (${h.date})` : ""}: ${h.text}`).join("\n"), {
+        hits: hits.slice(0, MEMORY_MARKS).map((h) => ({ scope: h.scope, file: h.file, text: h.text, ...(h.date ? { date: h.date } : {}) })),
+      });
     },
   };
 

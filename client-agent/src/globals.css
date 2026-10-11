@@ -33,12 +33,50 @@
 }
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant vertep (&:is(.vertep *));
+
+/* Kurale (SIL OFL, fonts/kurale/OFL.txt): the heading face of the Vertep look,
+   the same files the shell ships (client/src/styles/fonts). */
+@font-face {
+  font-family: "Kurale";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/kurale/kurale-cyrillic-400-normal.woff2") format("woff2");
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Kurale";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/kurale/kurale-latin-ext-400-normal.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Kurale";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/kurale/kurale-latin-400-normal.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  /* titles: Kurale on the Vertep look, the body face elsewhere */
+  --font-heading: var(--heading-face);
+  /* the one colour that says "this matters": the main action, what is active,
+     an app. The shell's accent (Vertep red; blue on Dark and Light). */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: color-mix(in oklab, var(--brand) 14%, transparent);
+  --color-brand-line: color-mix(in oklab, var(--brand) 42%, transparent);
+  /* a second, cool accent for links out of the page (Open app) and the meter */
+  --color-link: var(--link);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -79,6 +117,10 @@
 
 :root {
   --radius: 0.625rem;
+  --brand: #2f5fbf;
+  --brand-foreground: #ffffff;
+  --link: #0a7ea4;
+  --heading-face: var(--font-sans);
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -113,6 +155,9 @@
 }
 
 .dark {
+  --brand: #7aa2f7;
+  --brand-foreground: #0b0b0d;
+  --link: #39d5ff;
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
@@ -149,6 +194,10 @@
 /* Vertep: the shell's default look (client/src/styles/tokens.css). Always sits
    on top of .dark, which it extends, and must stay after it. */
 .vertep {
+  --brand: #e2213a;
+  --brand-foreground: #ffffff;
+  --link: #39d5ff;
+  --heading-face: "Kurale", Georgia, serif;
   --background: #07080b;
   --foreground: #f0e9dc;
   --card: #0b0c11;
