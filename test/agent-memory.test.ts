@@ -358,3 +358,30 @@ describe("a skill ecosystem the user grows", () => {
   });
 });
 
+
+describe("the agent's model pick", () => {
+  const setup = () => {
+    const users = new UserService(dataDir);
+    users.create("admin", "admin", { password: "admin-pass-1" });
+    users.create("mia", "user", { password: "test-pass-1" });
+    const svc = new UserModelService("mia", userPaths(dataDir, "mia"), defaultInstanceConfig());
+    const handle = fauxProvider({ models: [{ id: "faux-agent" }, { id: "faux-other" }] });
+    svc.models.setProvider(handle.provider);
+    return { users, svc };
+  };
+  it("a named model that is missing is an error, not a quiet swap to another", async () => {
+    const { users, svc } = setup();
+    await expect(UserAgent.create("mia", svc, userPaths(dataDir, "mia"), users, defaultInstanceConfig(), { model: "openrouter/moonshotai/kimi-k2.5" }))
+      .rejects.toThrow('"openrouter/moonshotai/kimi-k2.5" is not available');
+  });
+  it("a stale default in the user's settings is an error too", async () => {
+    const { users, svc } = setup();
+    fs.writeFileSync(p.settings, JSON.stringify({ model: "gone/model" }));
+    await expect(UserAgent.create("mia", svc, userPaths(dataDir, "mia"), users, defaultInstanceConfig())).rejects.toThrow('"gone/model"');
+  });
+  it("a named model that exists is the one used", async () => {
+    const { users, svc } = setup();
+    const agent = await UserAgent.create("mia", svc, userPaths(dataDir, "mia"), users, defaultInstanceConfig(), { model: "faux-other" });
+    expect((agent as unknown as { agent: { state: { model: { id: string } } } }).agent.state.model.id).toBe("faux-other");
+  });
+});

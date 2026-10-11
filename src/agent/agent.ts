@@ -8,7 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { Agent, type AgentTool, type AgentMessage } from "@earendil-works/pi-agent-core";
-import type { UserModelService } from "../models.js";
+import { ModelNotConfiguredError, type UserModelService } from "../models.js";
 import { buildUserTools, type AgentToolOptions, WRITE_TOOLS } from "./tools.js";
 import type { UserPaths } from "../paths.js";
 import { listApps } from "../apps/manager.js";
@@ -484,18 +484,26 @@ export class UserAgent {
 
     // the user's context override is the model's window here too: it decides
     // when the session auto-compacts
+    // the dynamic catalogs (connections, OpenRouter's live list) refresh once per service lifetime;
+    // without it a model the picker shows may not be in the snapshot yet
+    await svc.available();
     const available = (await svc.models.getAvailable()).map((m) => svc.withOverride(m));
     if (available.length === 0) throw new Error(`no models configured for ${username}`);
     // Deterministic pick: request model → project default → user settings
-    // default → instance default → faux (tests) → sorted first.
+    // default → instance default → faux (tests) → sorted first. The first one
+    // NAMED decides: a named model that is missing is an error, never a quiet
+    // swap to another (a user who picked a cheap model was billed for the
+    // alphabetically first one), the same rule as models.ts resolveModel.
     const userDefault = readUserDefaultModel(paths);
     const pick = (pattern: string | undefined) =>
       pattern ? available.find((m) => `${m.provider}/${m.id}` === pattern || m.id === pattern) : undefined;
+    const named = [opts.model, projectSettings?.model ?? undefined, userDefault, cfg.defaultModel ?? undefined]
+      .find((x): x is string => typeof x === "string" && x.trim() !== "");
+    if (named && !pick(named)) {
+      throw new ModelNotConfiguredError(`The model "${named}" is not available: its connection is missing, offline, or has no usable key. Pick another model.`);
+    }
     const model =
-      pick(opts.model) ??
-      pick(projectSettings?.model ?? undefined) ??
-      pick(userDefault) ??
-      pick(cfg.defaultModel ?? undefined) ??
+      (named ? pick(named) : undefined) ??
       available.find((m) => m.provider === "faux") ??
       [...available].sort((x, y) => (x.provider + "/" + x.id).localeCompare(y.provider + "/" + y.id))[0]!;
 
