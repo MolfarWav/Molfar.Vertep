@@ -20,6 +20,7 @@
     <string name="update_allow_installs">Дозвольте Molfar Vertep встановлювати застосунки й поверніться: оновлення продовжиться.</string>
     <string name="update_not_ours">Завантажений файл не є оновленням Molfar Vertep.</string>
     <string name="update_failed_title">Оновлення не встановилося</string>
+    <string name="update_aborted">Android або Play Захист зупинили оновлення, або його скасовано. Завантажте його в браузері й відкрийте файл: він встановиться поверх застосунку, дані залишаться.</string>
     <string name="update_in_browser">Завантажити в браузері</string>
     <string name="reinstall_title">Потрібна разова перевстановка</string>
     <string name="reinstall_body">Цю версію підписано іншим ключем, ніж застосунок на телефоні, тож Android не може встановити її поверх. Таке буває один раз, коли змінюється ключ підпису.
