@@ -70,7 +70,6 @@ keep unknown extensions):
 { "v": 1,
   "identity":   { "first": "", "family": "", "title": "", "nicknames": [], "age": "", "gender": "", "pronouns": "he", "comment": "" },
   "appearance": { "face": "", "eyes": "", "hair": "", "body": "", "height": "", "skin": "", "marks": "", "attire": "", "voice": "", "scent": "", "other": "" },
-  "spectrum":   { "introvert_extrovert": 35, "cautious_reckless": 45, "stoic_emotional": 30, "lawful_chaotic": 55, "suspicious_trusting": 30, "pessimist_optimist": 45, "practical_analytical": 80, "laidback_intense": 35 },
   "lists":      { "strengths": [], "flaws": [], "traits": [], "values": [], "fears": [], "wishes": [], "secrets": [] },
   "behaviors":  { "speech": "", "quirks": "", "habits": "", "underStress": "", "bodyLanguage": "" },
   "goals":      { "life": "", "shortTerm": "" },
@@ -117,13 +116,34 @@ SillyTavern/RisuAI carry readable text, and the prompt inspector shows the compi
   text only. Decide with the user.
 - Card format change: DATA-FORMATS, `edit-large-card`, a built-in agent task (CLAUDE.md rule).
 
+### Decided by the user (2026-10-11, second round: "all as recommended")
+- Field set: the "Proposed first set" above without the spectrum. Pickers and swatches: later.
+- Compile format: labeled lines (`Speech: ...`); a per-card format later if wanted.
+- Persona questionnaire: 5 questions (name and what people call you; age, gender, pronouns; looks in
+  1-2 sentences; character in three words plus one flaw; who you are in this world), filling identity,
+  appearance, traits and background, compiled into `persona.description`. A 6th, "what you want from the
+  story", may be a private note that never reaches the prompt.
+- Export: CHARX (zip with emotions and gallery) and JSON first; PNG V2 with the book exists; PNG V3
+  with assets waits until SillyTavern/RisuAI reading is checked.
+- Translate translates only the compiled text; per-field suggest buttons later.
+
+### Built (2026-10-11, Roleplay branch `claude/v098-card`, on top of `quick-fixes`)
+- `src/lib/profile.ts` + `test/rp-profile.test.ts`: the format, compile, the hand-edit hash, Free write,
+  "Start a profile" (old text -> notes), "Keep my additions" (text after the compiled lines -> notes).
+- `src/components/character/profile-tab.tsx` (drafted by Kimi K2.7 Code, reviewed: field components
+  hoisted out of render): the Profile tab after Core, not for groups.
+- DATA-FORMATS "The profile", `edit-large-card` (both copies), `workspace-agent-task.md` here.
+- Next: the "Structure it" button (a plugin route with `host.llm.request`, like the soul rating in
+  `plugins/relations/plugin.js` `askSoul`), then the Persona profile + questionnaire (Persona adapter
+  `enginePersonaToUI` in `src/lib/engine.ts` drops unknown keys: add `profile`), then export variants.
+
 ### Decided by the user (2026-10-11)
 - Compile the profile into `description`/`personality` on save (the recommended way): yes.
 - No Lorebary spectrum: the Soul tab already has the spectra we took from Lorebary; drop `spectrum` from the
   profile and the "Links to what exists / Soul" item.
 - Sexuality: an optional block, switched on per card.
 
-### Questions for the user before building (1, 4, 5 answered above)
+### Questions for the user before building (all answered above)
 1. Compile into `description`/`personality` (recommended) or assemble the profile at prompt time?
 2. The first field set above: confirm, add, cut.
 3. Pickers and swatches now or later (recommended later)?
