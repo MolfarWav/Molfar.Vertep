@@ -235,6 +235,9 @@ describe("exfiltration ways out of an app page", () => {
     // which models the pickers offer is the user's call in Settings, even for a shipped app
     expect(host.allowedRequest("roleplay", "PUT", "/v1/models/shown")).toBe(false);
     expect(host.allowedRequest("roleplay", "PUT", "/v1/models/shown", true)).toBe(false);
+    // so is the model that reads pictures; apps only read it
+    expect(host.allowedRequest("roleplay", "PUT", "/v1/models/vision", true)).toBe(false);
+    expect(host.allowedRequest("roleplay", "GET", "/v1/models/vision")).toBe(true);
     // engine-wide settings writes (context, pricing, embeddings) belong to
     // the shipped app only — an imported app cannot silently retune them
     const settingsWrites: Array<[string, string]> = [

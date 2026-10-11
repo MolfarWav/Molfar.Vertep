@@ -612,6 +612,11 @@ const en = {
   "{ref}: this model is gone": "",
   "Move up": "",
   "Move down": "",
+  "Vision model": "",
+  "Apps send pictures to this model, for example to describe a character from the portrait. Auto takes the cheapest model that reads pictures.": "",
+  "Auto (the cheapest that reads pictures)": "",
+  "In use:": "",
+  "None of your models reads pictures. Add a connection with one (Gemini, GPT-4o, Qwen-VL…).": "",
 } as const
 
 export default en

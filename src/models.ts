@@ -119,6 +119,27 @@ export interface ModelFavorite {
   name?: string;
 }
 
+/** The model that reads pictures for apps (Settings, API connections). `ref` is
+ *  what requests use; `auto` when nothing is chosen (or the choice went away) and
+ *  the cheapest model that takes images was picked; null ref when none does. */
+export interface VisionModel {
+  ref: string | null;
+  auto: boolean;
+  /** what the user chose; null = Auto */
+  setting: string | null;
+}
+
+/** Auto: the cheapest of the models that take images, priced ones first (input
+ *  plus output per million), unknown prices last, then by ref so the pick is stable. */
+export function pickVisionModel(models: readonly Pick<ModelInfo, "provider" | "modelId" | "images" | "pricing">[]): string | null {
+  const cost = (m: Pick<ModelInfo, "pricing">) => (m.pricing ? m.pricing.input + m.pricing.output : Number.POSITIVE_INFINITY);
+  const best = models
+    .filter((m) => m.images)
+    .map((m) => ({ ref: `${m.provider}/${m.modelId}`, cost: cost(m) }))
+    .sort((a, b) => a.cost - b.cost || a.ref.localeCompare(b.ref))[0];
+  return best?.ref ?? null;
+}
+
 export function cleanFavorites(items: unknown): ModelFavorite[] {
   if (!Array.isArray(items)) return [];
   const out: ModelFavorite[] = [];
@@ -507,6 +528,33 @@ export class UserModelService {
     const list = cleanFavorites(items);
     fs.writeFileSync(path.join(this.paths.root, "model-favorites.json"), JSON.stringify({ v: 1, items: list }, null, 2));
     return list;
+  }
+
+  /** The chosen vision model (model-vision.json); null = Auto. */
+  visionSetting(): string | null {
+    try {
+      const raw = JSON.parse(fs.readFileSync(path.join(this.paths.root, "model-vision.json"), "utf8")) as { ref?: unknown };
+      return typeof raw.ref === "string" && raw.ref.includes("/") ? raw.ref : null;
+    } catch {
+      return null;
+    }
+  }
+
+  setVisionModel(ref: string | null): string | null {
+    const clean = typeof ref === "string" && ref.includes("/") && ref.length <= 400 ? ref : null;
+    fs.writeFileSync(path.join(this.paths.root, "model-vision.json"), JSON.stringify({ v: 1, ref: clean }, null, 2));
+    return clean;
+  }
+
+  /** The model apps send pictures to: the user's choice while it is still
+   *  available, else Auto among the models the pickers show. */
+  async visionModel(): Promise<VisionModel> {
+    const setting = this.visionSetting();
+    const all = await this.available();
+    if (setting && all.some((m) => `${m.provider}/${m.modelId}` === setting)) return { ref: setting, auto: false, setting };
+    const shown = new Set(this.shownModels());
+    const pool = shown.size && all.some((m) => shown.has(`${m.provider}/${m.modelId}`)) ? all.filter((m) => shown.has(`${m.provider}/${m.modelId}`)) : all;
+    return { ref: pickVisionModel(pool), auto: true, setting };
   }
 
   /** The rates that actually apply to a model: the user's table first, then

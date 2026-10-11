@@ -610,6 +610,11 @@ const dict = {
   "{ref}: this model is gone": "{ref}: このモデルはなくなりました",
   "Move up": "上へ移動",
   "Move down": "下へ移動",
+  "Vision model": "画像モデル",
+  "Apps send pictures to this model, for example to describe a character from the portrait. Auto takes the cheapest model that reads pictures.": "アプリはこのモデルに画像を送ります。たとえば肖像からキャラクターを説明するときです。自動では画像を読める最も安いモデルを使います。",
+  "Auto (the cheapest that reads pictures)": "自動（画像を読める最も安いモデル）",
+  "In use:": "使用中:",
+  "None of your models reads pictures. Add a connection with one (Gemini, GPT-4o, Qwen-VL…).": "画像を読めるモデルがありません。対応モデルのある接続を追加してください（Gemini、GPT-4o、Qwen-VL…）。",
 }
 
 export default dict

@@ -610,6 +610,11 @@ const dict = {
   "{ref}: this model is gone": "{ref}：该模型已不存在",
   "Move up": "上移",
   "Move down": "下移",
+  "Vision model": "视觉模型",
+  "Apps send pictures to this model, for example to describe a character from the portrait. Auto takes the cheapest model that reads pictures.": "应用会把图片发送给这个模型，例如根据肖像描述角色。自动会选择能读图的最便宜的模型。",
+  "Auto (the cheapest that reads pictures)": "自动（能读图的最便宜模型）",
+  "In use:": "使用中：",
+  "None of your models reads pictures. Add a connection with one (Gemini, GPT-4o, Qwen-VL…).": "你的模型都不能读图。请添加包含此类模型的连接（Gemini、GPT-4o、Qwen-VL…）。",
 }
 
 export default dict

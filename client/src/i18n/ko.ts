@@ -610,6 +610,11 @@ const dict = {
   "{ref}: this model is gone": "{ref}: 이 모델은 더 이상 없습니다",
   "Move up": "위로 이동",
   "Move down": "아래로 이동",
+  "Vision model": "비전 모델",
+  "Apps send pictures to this model, for example to describe a character from the portrait. Auto takes the cheapest model that reads pictures.": "앱은 이 모델에 이미지를 보냅니다. 예를 들어 초상화로 캐릭터를 설명할 때입니다. 자동은 이미지를 읽는 가장 저렴한 모델을 사용합니다.",
+  "Auto (the cheapest that reads pictures)": "자동 (이미지를 읽는 가장 저렴한 모델)",
+  "In use:": "사용 중:",
+  "None of your models reads pictures. Add a connection with one (Gemini, GPT-4o, Qwen-VL…).": "이미지를 읽는 모델이 없습니다. 그런 모델이 있는 연결을 추가하세요 (Gemini, GPT-4o, Qwen-VL…).",
 }
 
 export default dict

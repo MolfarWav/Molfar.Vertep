@@ -54,6 +54,8 @@ export interface ModelDetails extends PickerModel {
   contextWindow: number | null
   reasoning: boolean
   reasoningLevels: string[]
+  /** takes pictures as input */
+  images?: boolean
   /** USD per million tokens (the user's first, then the catalog); null = unknown. */
   pricing: ModelPricing | null
 }
@@ -76,6 +78,9 @@ export const modelsApi = {
   all: () => api<{ models: ModelDetails[]; filtered: boolean; favorites?: ModelFavorite[] }>("GET", "/v1/models?all=1"),
   /** The quick-switch list, replaced whole (order kept). */
   setFavorites: (items: ModelFavorite[]) => api<{ ok: boolean; favorites: ModelFavorite[] }>("PUT", "/v1/models/favorites", { items }),
+  /** The model apps send pictures to; ref null = Auto (the cheapest that reads pictures). */
+  vision: () => api<{ ref: string | null; auto: boolean; setting: string | null }>("GET", "/v1/models/vision"),
+  setVision: (ref: string | null) => api<{ ok: boolean; ref: string | null; auto: boolean; setting: string | null }>("PUT", "/v1/models/vision", { ref }),
   setShown: (refs: string[], shown: boolean) => api<{ ok: boolean; shown: string[] }>("PUT", "/v1/models/shown", { refs, shown }),
   /** null clears back to the catalog number. */
   setContext: (ref: string, contextWindow: number | null) => api<{ ok: boolean }>("PUT", "/v1/models/context", { ref, contextWindow }),
