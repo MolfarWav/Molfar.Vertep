@@ -1545,6 +1545,7 @@ function ApiTab(props: { initialModel?: string | null }) {
     <Pane title={tr("Connections and models")} description={tr("Connections bring models. Here you choose which models the pickers show, which go into the quick switch (the star), and each model's settings. Keys never leave this machine.")}>
       <div className="flex flex-col gap-4 pb-4">
         <QuickSwitch favorites={favorites} models={all} busy={busy} onSave={(items) => void saveFavorites(items)} />
+        <VisionModelSection models={all} />
         {all.length ? <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <input className={inputClass} placeholder={tr("Search every model…")} value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
@@ -1722,6 +1723,60 @@ function ConnectionModels(props: {
 
 /** The quick switch: starred models in order, each with an optional name of its own. Every picker
  *  (the chat in Roleplay, Molfar, other apps) offers these first; they are chosen here only. */
+/** The model apps send pictures to (Roleplay reads a portrait with it): Auto picks
+ *  the cheapest model that takes images, or the user chooses one. */
+function VisionModelSection(props: { models: ModelDetails[] }) {
+  const [state, setState] = useState<{ ref: string | null; auto: boolean; setting: string | null } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState("")
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-reads Auto's pick when a connection adds or drops models
+  useEffect(() => {
+    modelsApi.vision().then(setState).catch(() => setState({ ref: null, auto: true, setting: null }))
+  }, [props.models.length])
+  const vision = props.models.filter((m) => m.images)
+  const label = (ref: string | null) => {
+    const m = props.models.find((x) => `${x.provider}/${x.modelId}` === ref)
+    return m ? `${m.connectionName ?? m.provider} · ${m.label}` : (ref ?? "")
+  }
+  const change = async (value: string) => {
+    setBusy(true)
+    setErr("")
+    try {
+      setState(await modelsApi.setVision(value === "" ? null : value))
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <section className="flex flex-col gap-1.5 rounded-lg border border-line p-3" data-testid="vision-model">
+      <h3 className="text-13 font-medium text-ink">{tr("Vision model")}</h3>
+      <p className="text-11 text-ink-faint">{tr("Apps send pictures to this model, for example to describe a character from the portrait. Auto takes the cheapest model that reads pictures.")}</p>
+      <select
+        className={`${inputClass} max-w-[360px] flex-none`}
+        aria-label={tr("Vision model")}
+        value={state?.setting ?? ""}
+        disabled={!state || busy}
+        onChange={(e) => void change(e.currentTarget.value)}
+      >
+        <option value="">{tr("Auto (the cheapest that reads pictures)")}</option>
+        {vision.map((m) => {
+          const ref = `${m.provider}/${m.modelId}`
+          return <option key={ref} value={ref}>{label(ref)}</option>
+        })}
+        {state?.setting && !vision.some((m) => `${m.provider}/${m.modelId}` === state.setting) ? <option value={state.setting}>{state.setting}</option> : null}
+      </select>
+      {state ? (
+        <p className="text-12 text-ink-muted">
+          {state.ref ? `${tr("In use:")} ${label(state.ref)}` : tr("None of your models reads pictures. Add a connection with one (Gemini, GPT-4o, Qwen-VL…).")}
+        </p>
+      ) : null}
+      {err ? <div className="text-12 text-danger">{err}</div> : null}
+    </section>
+  )
+}
+
 function QuickSwitch(props: { favorites: ModelFavorite[]; models: ModelDetails[]; busy: boolean; onSave: (items: ModelFavorite[]) => void }) {
   const [names, setNames] = useState<Record<string, string>>({})
   const label = (ref: string) => props.models.find((m) => `${m.provider}/${m.modelId}` === ref)?.label

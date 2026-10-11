@@ -610,6 +610,11 @@ const dict = {
   "{ref}: this model is gone": "{ref}: bu model artık yok",
   "Move up": "Yukarı taşı",
   "Move down": "Aşağı taşı",
+  "Vision model": "Görüntü modeli",
+  "Apps send pictures to this model, for example to describe a character from the portrait. Auto takes the cheapest model that reads pictures.": "Uygulamalar bu modele resim gönderir, örneğin portreden bir karakteri tarif etmek için. Otomatik, resim okuyan en ucuz modeli seçer.",
+  "Auto (the cheapest that reads pictures)": "Otomatik (resim okuyan en ucuz model)",
+  "In use:": "Kullanımda:",
+  "None of your models reads pictures. Add a connection with one (Gemini, GPT-4o, Qwen-VL…).": "Modellerinizin hiçbiri resim okumuyor. Böyle bir model içeren bir bağlantı ekleyin (Gemini, GPT-4o, Qwen-VL…).",
 }
 
 export default dict

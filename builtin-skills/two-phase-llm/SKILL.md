@@ -30,7 +30,8 @@ host.llm.request("reply", {
   // reasoning: "low", presetParams: { temperature: 0.8, max_tokens: 600 },
   // schema: { type: "object", properties: {...} }  → structured result in r.json
   // images: [{ data: "<base64>", mimeType: "image/png" }]  → up to 4, ride on the last user turn;
-  //   a model without image input fails with r.error (pick a vision model)
+  //   leave out `model` and the user's vision model (Settings, API connections) reads them;
+  //   a model without image input fails with r.error
 });
 // next pass: host.llm.results.reply = { text, json?, reasoning?, model, error?, usage }
 host.llm.embed("vec", { texts: ["a", "b"] });      // next pass: host.llm.embedResults.vec = number[][] | null

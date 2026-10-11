@@ -83,7 +83,7 @@ export interface LlmRequestHook {
 
 export interface PluginRuntimeDeps {
   store: PluginStoreService;
-  models: Pick<UserModelService, "generate" | "embed"> & Partial<Pick<UserModelService, "embedVia" | "embedModelUsed">>;
+  models: Pick<UserModelService, "generate" | "embed"> & Partial<Pick<UserModelService, "embedVia" | "embedModelUsed" | "visionModel">>;
   /** settings.json pluginGrants — required for imported plugins. */
   grantsFor: (pluginId: string) => string[];
   /** When set, plugin llm requests tagged with a `stream` descriptor get
@@ -755,7 +755,14 @@ async function runPassRequests(
       results.llm[key] = emptyGeneration(pictures.error);
       continue;
     }
-    if (pictures.images) (clean as GenerateRequest).images = pictures.images;
+    if (pictures.images) {
+      (clean as GenerateRequest).images = pictures.images;
+      // no model named: the one chosen for pictures (Settings, API connections), not the chat default
+      if (!clean.model && deps.models.visionModel) {
+        const vision = await deps.models.visionModel().catch(() => null);
+        if (vision?.ref) clean.model = vision.ref;
+      }
+    }
     let toolBridge: PluginToolBridge | null = null;
     if (mode !== "tool") {
       toolBridge = pluginToolBridge(plugin, clean, deps);

@@ -610,6 +610,11 @@ const dict = {
   "{ref}: this model is gone": "{ref}: este modelo ya no está",
   "Move up": "Subir",
   "Move down": "Bajar",
+  "Vision model": "Modelo de visión",
+  "Apps send pictures to this model, for example to describe a character from the portrait. Auto takes the cheapest model that reads pictures.": "Las apps envían imágenes a este modelo, por ejemplo para describir un personaje a partir del retrato. Auto elige el modelo más barato que lee imágenes.",
+  "Auto (the cheapest that reads pictures)": "Auto (el más barato que lee imágenes)",
+  "In use:": "En uso:",
+  "None of your models reads pictures. Add a connection with one (Gemini, GPT-4o, Qwen-VL…).": "Ninguno de tus modelos lee imágenes. Añade una conexión con uno (Gemini, GPT-4o, Qwen-VL…).",
 }
 
 export default dict

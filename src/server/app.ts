@@ -1273,6 +1273,24 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     return c.json({ models: models.filter(isShown), favorites });
   });
 
+  // the model that reads pictures for apps: Auto (cheapest that takes images) or the user's pick; Settings only sets it
+  app.get("/v1/models/vision", async (c) => c.json(await c.get("models").visionModel()));
+  app.put("/v1/models/vision", async (c) => {
+    const u = c.get("user");
+    const p = c.get("paths");
+    const body = await c.req.json<{ ref?: unknown }>().catch(() => ({}) as { ref?: unknown });
+    if (body.ref !== null && (typeof body.ref !== "string" || !body.ref.includes("/") || body.ref.length > 400)) {
+      return c.json({ error: 'ref must be "<provider>/<model>" or null for Auto' }, 400);
+    }
+    if (body.ref !== null && !(await c.get("models").available()).some((m) => m.images && `${m.provider}/${m.modelId}` === body.ref)) {
+      return c.json({ error: `${body.ref} is not a connected model that reads pictures` }, 400);
+    }
+    c.get("models").setVisionModel(body.ref);
+    await git.commitAll(p.root, u.username, "models: vision model").catch(() => undefined);
+    bus.emit(u.username, "connections_changed", { id: "models-vision" });
+    return c.json({ ok: true, ...(await c.get("models").visionModel()) });
+  });
+
   // the quick-switch list, replaced whole (Settings, or a trusted app moving its old profiles in once)
   app.get("/v1/models/favorites", (c) => c.json({ favorites: c.get("models").favoriteModels() }));
   app.put("/v1/models/favorites", async (c) => {
