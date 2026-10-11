@@ -20,8 +20,12 @@ The Discord player's timeouts turned out to be a Roleplay that had not finished 
 (2026-10-11); the speed work stays (measured, and it removed real 10 s cases). CLOSED.
 Android update 0.9.2 -> 0.9.7 (2026-10-11, user's Xiaomi): the in-app update was stopped by Play Protect ("never
 checked apps from this developer", "Install anyway" not tappable); OK closed it silently (the session reports
-ABORTED). Same APK downloaded from GitHub in the browser installed fine. Branch `claude/android-update-fallback`:
-ABORTED now shows "download in the browser". For good: Android developer verification (user's Google account).
+ABORTED). Same APK downloaded from GitHub in the browser installed fine. MERGED into main (PR 3, `5f7fed7`):
+ABORTED now shows "download in the browser"; ships with 0.9.8 (it changes the installed app, so it helps from the
+update after that). Not yet seen on a real phone. For good: Android developer verification (user's Google account).
+CI lint on main was red from the `.fork/ui-assets` HTML mockups (3 duplicate CSS properties): `.fork/**/*.html`
+is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bun run test` fails the 0600 and
+`tar` tests (Windows-only, CI on Linux passes); `client-agent` needs its own `bun install` in a fresh worktree.
 
 ## Next: 0.9.8, the card editor and the user's Persona
 `.fork/handoff/card-editor/PLAN.md` ("Start here"): the studio bag data loss first, then the user's answers
