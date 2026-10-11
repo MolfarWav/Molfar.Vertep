@@ -48,14 +48,17 @@ dashboard's in-chat settings got note age + soul/nudge/fast prompts and a gear b
 panels of both plugins are gone (no `uiPanel` export). "Open dashboard" sits at the top of the strip.
 README (3 languages): download and Discord badges, profile.png and persona.png rows, "Work in progress" removed.
 
-## Agent model pick: no quiet swap (2026-10-11, branch `claude/project-thread-1k7fm5`, not released)
+## 0.9.10: PREPARED 2026-10-11 (main fast-forwarded to the release commit; the tag v0.9.10 is the user's to push)
+Two Discord fixes, engine only (Roleplay unchanged at 4.34.0): the agent model pick and the custom stream end, below.
+
+## Agent model pick: no quiet swap (2026-10-11, in 0.9.10)
 A Discord player picked Kimi K2.5 for Molfar and was billed for a Claude model. `UserAgent.create` fell through
 request model -> project -> user default -> instance default -> the alphabetically first model whenever a named one
 was missing (the cause for that player is inferred, not seen). Now the first named model must exist, else a clear
 error (503), like `models.ts` resolveModel; the dynamic catalogs refresh before the pick. Tests in
 `test/agent-memory.test.ts`. Not checked in a browser: how the agent page shows that error.
 
-## Custom connections: a stream without finish_reason keeps its reply (2026-10-11, same branch, not released)
+## Custom connections: a stream without finish_reason keeps its reply (2026-10-11, in 0.9.10)
 A Discord player on Chub's Soji (`https://inference.chub.ai/soji/v1`, custom OpenAI-compatible) saw replies vanish
 with "Stream ended without finish_reason". pi-ai throws when `compat.supportsFinishReason` is on and the stream ends
 without one; custom openai-completions models now carry `supportsFinishReason: false` (`src/providers/custom.ts`

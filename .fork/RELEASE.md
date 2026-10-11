@@ -22,7 +22,7 @@ Fork-only. The version line is the fork's own (0.1.0, 0.2.0, ...), independent o
    git push origin vX.Y.Z
    ```
    Push only the tag. Do NOT create the release in GitHub's "Draft a new release" form: the workflow creates the release itself, and a release that already exists makes it fail.
-8. **The workflow** (`.github/workflows/release.yml`, tags `v*`): checks the tag matches `package.json` and sits on main, builds `Molfar-Vertep-<version>-<target>` archives and the Android APK (`self-update.ts` accepts these and the older `Chrysalis-*` names), publishes the release as "Molfar.Vertep X.Y.Z" with the notes file. The Docker image step runs only in the upstream repository. npm publishing runs only when an `NPM_TOKEN` secret exists (the fork has none).
+8. **The workflow** (`.github/workflows/release.yml`, tags `v*`): checks the tag matches `package.json` and sits on main, builds `Molfar-Vertep-<version>-<target>` archives and the Android APK (`self-update.ts` accepts these and the older `Chrysalis-*` names), publishes the release as "Molfar.Vertep X.Y.Z" with the notes file. The Docker image goes to `ghcr.io/molfarwav/molfar-vertep` (`:vX.Y.Z` and `:latest`). npm publishing runs only when an `NPM_TOKEN` secret exists (the fork has none).
 9. **Verify:** the release page lists the archives; Settings > Server (or the Updates panel) on an older copy offers the new version.
 
 ## One-time setup

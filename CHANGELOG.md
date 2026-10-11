@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.10 (2026-10-11)
+
+- Molfar never swaps the model you picked: when the picked model (or a project or default one) is not in the engine's list, the request now fails with "The model … is not available" (HTTP 503) instead of quietly running on the next default or the alphabetically first model, which billed one player for a Claude model while Kimi K2.5 was selected. The live model catalogs refresh before the pick.
+- Custom OpenAI-compatible connections keep a reply whose stream ends without a `finish_reason` (Chub's Soji did this); it used to vanish halfway with "Stream ended without finish_reason". A `finish_reason` that comes is still read.
+
 ## 0.9.9 (2026-10-11)
 
 - Roleplay 4.34.0 through app updates: each tool's settings live with it. Litopys settings (on/off, chapter and arc prompts) open from a gear in the Library, and Settings > Memory points there; the dashboard's own settings gain the note age and the soul, nudge and fast prompts, and a gear before the first build; the Litopys and dashboard panels in Tools are gone. Every built-in prompt restores to its default on its own, including utility prompts in an editable preset copy. "Open dashboard" moves to the top of the strip, in the accent colour.

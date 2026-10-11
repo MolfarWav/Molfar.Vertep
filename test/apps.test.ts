@@ -136,7 +136,7 @@ describe("curated providers", () => {
 
     const { buildProvider } = await import("../src/providers/custom.js");
     const prov = buildProvider("nanogpt", { ...CURATED_PROVIDERS["nanogpt"]!, models: [{ id: "anthropic/claude-x", reasoning: true }, { id: "zai/glm-x" }] }, { codeDefined: true });
-    const models = prov.getModels() as readonly { id: string; compat?: { cacheControlFormat?: string; thinkingFormat?: string } }[];
+    const models = prov.getModels() as readonly { id: string; compat?: { cacheControlFormat?: string; thinkingFormat?: string; supportsFinishReason?: boolean } }[];
     // the endpoint places cache breakpoints itself, so no inline markers
     expect(models[0]?.compat).toEqual({ thinkingFormat: "openrouter", supportsFinishReason: false });
 
