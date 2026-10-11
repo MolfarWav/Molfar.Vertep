@@ -27,6 +27,13 @@ CI lint on main was red from the `.fork/ui-assets` HTML mockups (3 duplicate CSS
 is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bun run test` fails the 0600 and
 `tar` tests (Windows-only, CI on Linux passes); `client-agent` needs its own `bun install` in a fresh worktree.
 
+## Dashboard event vocabulary, bigger: ON BRANCH (2026-10-11, Roleplay fork `claude/project-thread-q26p0k`, not on main)
+19 new events in `EVENT_ROWS` (`plugins/relations/plugin.js`), 3 meanings widened (protected_her, protected_her_standing,
+insult); `trust.shared_secret`-style ids count. Draft by an external model, reviewed and cut. Measured on 72 scenes
+(uk/ru/en, `/mnt/project-files/dashboard-vocab/`): DeepSeek V4.1 Flash 39 -> 2-6 turns with no usable event; Gemma 4
+26B A4B improves but swings between runs and often invents ids. +~300 tokens on the sensor prompt. Not yet: what lands
+in `other` on the user's real chats (debug `unknownEvents`). Ships with the next Roleplay release on the user's word.
+
 ## Next: 0.9.8, the card editor and the user's Persona
 `.fork/handoff/card-editor/PLAN.md` ("Start here"): the studio bag data loss first, then the user's answers
 (Lorebary card keys, the Persona card, the questionnaire, export variants) before any design.

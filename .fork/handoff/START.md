@@ -38,8 +38,9 @@ Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio ba
     - Full rename of internal names (`chrysalis` command, `CHRYSALIS_*`, data paths) with data migration.
     - Threads as quests (main / side / everyday threads, side steps under a main one) for the dashboard
       and "Story, move"; "Story, move" with a twist (an event in none of the threads).
-    - Dashboard event vocabulary, a bigger one (`EVENT_ROWS` in Roleplay `plugins/relations/plugin.js`):
-      list what lands in `other` on real chats, add events with deltas, check cheap sensors pick them.
+    - Dashboard event vocabulary: the bigger one is on the Roleplay branch `claude/project-thread-q26p0k`
+      (STATE.md). Left: what lands in `other` on real chats (debug `unknownEvents`); a fuzzy match for ids
+      small models invent (`jealousy`, `check_on_her`).
     - Better Chats page (agreed layout: list + a panel for the selected chat; story so far, last messages,
       the technical side; pins, time groups, sorts, bulk actions).
     - Image studio inside Roleplay (generators as connections, sprites and full-body art bound to cards);
