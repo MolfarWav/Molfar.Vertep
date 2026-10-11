@@ -130,7 +130,7 @@ function Shell({ id, icon, title, aside, summary, children, className, ...rest }
           <span className="text-brand/80 [&_svg]:size-4 [&_svg]:translate-y-0.5">{icon}</span>
           {title}
         </span>
-        {aside ? <span className="text-muted-foreground min-w-0 truncate text-xs font-normal">{aside}</span> : null}
+        {aside ? <span className="text-muted-foreground min-w-0 truncate font-sans text-xs font-normal">{aside}</span> : null}
       </h3>
       {children}
     </section>
