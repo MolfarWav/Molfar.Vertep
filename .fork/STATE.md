@@ -109,5 +109,5 @@ Tags are pushed by the user; `release.yml` builds the archives, the APK and the 
 ## Closed with the user: do not reopen
 - UI redesign: designed by Hermes; the brief is queued (handoff 4), do not start it before the user says so.
 - Release 0.1.0 title on GitHub reads "Molfar.Vertep 0.1.0"; update checks read `tag_name`.
-- Delegation rule (Opus/Fable orchestrate, other models execute) is in `CLAUDE.md` and `~/.claude/CLAUDE.md`. `ask-model` is on the desktop only; `adaptive-agent` is a Claude Code skill pair, not for Hermes.
+- Delegation rule (Opus/Fable orchestrate, other models execute) is in `CLAUDE.md` and `~/.claude/CLAUDE.md`. `ask-model`: the personal copy on the desktop (`~/.claude/skills/ask-model`, keys in its `keys.env`) and, since 2026-10-11, a repo copy `.claude/skills/ask-model` for the laptop and cloud (keys from env; in the cloud also the hosts in Allowed domains, set by the user in the project's cloud environment); `adaptive-agent` is a Claude Code skill pair, not for Hermes.
 - Launcher: one `.bat`, source mode, update channel = latest release tag, `dev` = newest `claude/*`. Versions: significant = minor, patch = patch.
