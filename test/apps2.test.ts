@@ -309,7 +309,7 @@ describe("kernel chrome client + agent session history", () => {
     expect(res.headers.get("content-type")).toContain("text/html");
     expect(res.headers.get("content-security-policy")).toContain("default-src 'self'");
     const html = await res.text();
-    expect(html).toMatch(/chrysalis/i);
+    expect(html).toMatch(/molfar vertep/i);
     const asset = /href="(\/client\/assets\/[^"]+\.css)"/.exec(html)?.[1];
     if (asset) {
       const css = await app.request(asset, { headers: h() });

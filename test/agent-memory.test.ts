@@ -204,6 +204,9 @@ describe("memory tools (the user confirms)", () => {
     expect(parseSkill(read("skills/fix-icons/SKILL.md"))?.name).toBe("fix-icons");
     const loaded = await tool(tools, "skill_load").execute("t", { name: "fix-icons" }, undefined as never);
     expect(out(loaded)).toContain("2. app_check.");
+    // the chat's skills chip reads which skill this was and what it cost
+    expect(loaded.details).toMatchObject({ skill: "fix-icons", scope: "global" });
+    expect((loaded.details as { tokens: number }).tokens).toBeGreaterThan(5);
     await expect(tool(tools, "skill_load").execute("t", { name: "nope" }, undefined as never)).rejects.toThrow("no skill");
   });
 });
