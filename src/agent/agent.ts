@@ -486,11 +486,12 @@ export class UserAgent {
     // when the session auto-compacts
     // the dynamic catalogs (connections, OpenRouter's live list) refresh once per service lifetime;
     // without it a model the picker shows may not be in the snapshot yet
-    await svc.available();
+    const listed = await svc.available();
     const available = (await svc.models.getAvailable()).map((m) => svc.withOverride(m));
     if (available.length === 0) throw new Error(`no models configured for ${username}`);
     // Deterministic pick: request model → project default → user settings
-    // default → instance default → faux (tests) → sorted first. The first one
+    // default → instance default → the first shown (what the pickers show; faux wins in tests
+    // while nothing is ticked) → sorted first. The first one
     // NAMED decides: a named model that is missing is an error, never a quiet
     // swap to another (a user who picked a cheap model was billed for the
     // alphabetically first one), the same rule as models.ts resolveModel.
@@ -502,9 +503,17 @@ export class UserAgent {
     if (named && !pick(named)) {
       throw new ModelNotConfiguredError(`The model "${named}" is not available: its connection is missing, offline, or has no usable key. Pick another model.`);
     }
+    // nothing named: the model the pickers show as current, the first shown one in their
+    // order. Sorting the whole catalog instead ran OpenRouter's "~anthropic/…" alias
+    // while the picker showed the one model the user had ticked.
+    const shown = new Set(svc.shownModels());
+    const filtered = listed.some((m) => shown.has(`${m.provider}/${m.modelId}`));
+    const firstShown = listed.find((m) => !filtered || shown.has(`${m.provider}/${m.modelId}`));
     const model =
       (named ? pick(named) : undefined) ??
+      (filtered && firstShown ? pick(`${firstShown.provider}/${firstShown.modelId}`) : undefined) ??
       available.find((m) => m.provider === "faux") ??
+      (firstShown ? pick(`${firstShown.provider}/${firstShown.modelId}`) : undefined) ??
       [...available].sort((x, y) => (x.provider + "/" + x.id).localeCompare(y.provider + "/" + y.id))[0]!;
 
     // tools that reach past the files (run-tools.ts): built after the model

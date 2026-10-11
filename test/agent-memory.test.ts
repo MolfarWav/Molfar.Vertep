@@ -383,5 +383,10 @@ describe("the agent's model pick", () => {
     const { users, svc } = setup();
     const agent = await UserAgent.create("mia", svc, userPaths(dataDir, "mia"), users, defaultInstanceConfig(), { model: "faux-other" });
     expect((agent as unknown as { agent: { state: { model: { id: string } } } }).agent.state.model.id).toBe("faux-other");
+  });  it("nothing named: the model the pickers show, not the first of the whole catalog", async () => {
+    const { users, svc } = setup();
+    svc.setShown(["faux/faux-other"], true);
+    const agent = await UserAgent.create("mia", svc, userPaths(dataDir, "mia"), users, defaultInstanceConfig());
+    expect((agent as unknown as { agent: { state: { model: { id: string } } } }).agent.state.model.id).toBe("faux-other");
   });
 });

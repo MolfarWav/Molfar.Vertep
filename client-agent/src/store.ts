@@ -265,6 +265,12 @@ export function currentProjectId(s: Pick<AgentState, "sessions" | "sessionId" | 
   return row ? (row.project ?? null) : s.draftProject
 }
 
+/** The model the pickers show as current when none is picked: the first shown one. */
+export function firstShownRef(models: EngineModel[]): string | null {
+  const m = models.find((x) => x.shown)
+  return m ? `${m.provider}/${m.modelId}` : null
+}
+
 /** The model the current chat runs on: a pick made in this chat, else the
  *  project's default, else the global pick. Outside a project, the global pick. */
 export function effectiveModel(s: ModelView): string | null {
@@ -512,7 +518,8 @@ export const useAgent = create<AgentState>()((set, get) => {
           message: text,
           sessionId: s.sessionId ?? undefined,
           ...(project ? { project } : {}),
-          model: effectiveModel(s) ?? undefined,
+          // none picked: the model the header shows (the first shown), so what runs is what it says
+          model: effectiveModel(s) ?? firstShownRef(s.models) ?? undefined,
           reasoning: effectiveReasoning(s) || undefined,
           mode: s.mode,
           images: images?.length ? images : undefined,

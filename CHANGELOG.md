@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Molfar runs the model its picker shows when you never picked one: it used to show the first model you ticked in Settings > Models but run the first of the whole catalog, which on OpenRouter is the `~anthropic/claude-fable-latest` alias, and bill it.
+
 ## 0.9.10 (2026-10-11)
 
 - Molfar never swaps the model you picked: when the picked model (or a project or default one) is not in the engine's list, the request now fails with "The model … is not available" (HTTP 503) instead of quietly running on the next default or the alphabetically first model, which billed one player for a Claude model while Kimi K2.5 was selected. The live model catalogs refresh before the pick.
