@@ -257,7 +257,9 @@ const ThreadWelcome: FC = () => {
   });
   return (
     <div className="aui-thread-welcome-root my-auto flex flex-col items-center px-4 text-center">
-      <MolfarHalo size={88} className="fade-in animate-in fill-mode-both mb-3 duration-200" />
+      {/* smaller on phones: the welcome and three recent chats must fit above the grid */}
+      <MolfarHalo size={60} className="fade-in animate-in fill-mode-both mb-2 duration-200 md:hidden" />
+      <MolfarHalo size={88} className="fade-in animate-in fill-mode-both mb-3 duration-200 max-md:hidden" />
       <h1 className="aui-thread-welcome-message-inner fade-in slide-in-from-bottom-1 animate-in fill-mode-both font-heading text-2xl font-normal tracking-tight duration-200 md:text-3xl">
         How can I help you today?
       </h1>

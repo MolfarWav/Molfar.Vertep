@@ -77,7 +77,7 @@ export function ComposerProjectRow(): ReactNode {
       <button
         type="button"
         title={`Open the ${summary.title} project`}
-        className="flex max-w-48 shrink-0 items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs text-emerald-700 dark:text-emerald-300"
+        className="flex max-w-48 shrink-0 items-center gap-1.5 rounded-full border border-brand-line bg-brand-soft px-2.5 py-0.5 text-xs text-brand"
         onClick={() => openProject(summary.id)}
       >
         {summary.icon ? <span aria-hidden>{summary.icon}</span> : <Folder aria-hidden className="size-3.5" />}
