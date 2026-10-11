@@ -11,6 +11,7 @@ An edit made to those two texts directly is lost on the next edit in the Profile
    "A card with `/extensions/molfar_profile` (the Profile tab) has `description` and `personality`
    WRITTEN from that profile: change the profile's fields (DATA-FORMATS, "The profile"), not the two
    texts, or the next edit in the Profile tab overwrites yours. When the profile has `"free": true`,
-   edit the texts as usual."
+   edit the texts as usual. A section switched off in `sections` (`"trauma": false`) keeps its fields
+   but writes nothing into the text."
    And add `"/extensions/molfar_profile"` to the example `pointers` list of the first `json_get`.
 3. If I have no own copies, change nothing and tell me so. Show me the diff before saving.

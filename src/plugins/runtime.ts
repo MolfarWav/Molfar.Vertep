@@ -680,6 +680,24 @@ function logFailure(plugin: LoadedPlugin, deps: PluginRuntimeDeps, text: string)
 }
 
 /** The stand-in result for a model call that produced nothing usable. */
+/** A plugin's `images` for an llm request: at most 4 pictures, PNG/JPEG/WebP/GIF,
+ *  base64 of up to 8 MB each. Anything else is refused with a reason, never trimmed. */
+export const PLUGIN_IMAGE_MAX = 4;
+export const PLUGIN_IMAGE_CHARS = 8 * 1024 * 1024;
+export function sanitizePluginImages(v: unknown): { images?: { data: string; mimeType: string }[]; error?: string } {
+  if (v === undefined || v === null) return {};
+  if (!Array.isArray(v)) return { error: "images must be a list" };
+  if (v.length > PLUGIN_IMAGE_MAX) return { error: `at most ${PLUGIN_IMAGE_MAX} images` };
+  const out: { data: string; mimeType: string }[] = [];
+  for (const img of v) {
+    const { data, mimeType } = (img ?? {}) as { data?: unknown; mimeType?: unknown };
+    if (typeof mimeType !== "string" || !/^image\/(png|jpeg|webp|gif)$/.test(mimeType)) return { error: "image type must be png, jpeg, webp or gif" };
+    if (typeof data !== "string" || !data || data.length > PLUGIN_IMAGE_CHARS || !/^[A-Za-z0-9+/]+={0,2}$/.test(data)) return { error: "image data must be base64 of at most 8 MB" };
+    out.push({ data, mimeType });
+  }
+  return out.length ? { images: out } : {};
+}
+
 function emptyGeneration(error?: string): GenerateResult {
   return { text: "", model: "error", ...(error ? { error } : {}), usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, costTotal: 0, priced: false } };
 }
@@ -729,9 +747,15 @@ async function runPassRequests(
     // `wantsTools` likewise: a marker asking for sibling-contributed tools.
     // `turn` labels the generation for llmRequest hooks (sanitizeTurn).
     // `promptSources` labels the request's parts for the prompt inspector: sanitized here, never sent.
-    const { stream, wantsTools, turn, promptSources, ...clean } = req as GenerateRequest & { stream?: unknown; wantsTools?: unknown; tools?: unknown; turn?: unknown; promptSources?: unknown };
+    const { stream, wantsTools, turn, promptSources, images, ...clean } = req as GenerateRequest & { stream?: unknown; wantsTools?: unknown; tools?: unknown; turn?: unknown; promptSources?: unknown; images?: unknown };
     const labels = sanitizePromptSources(promptSources);
     if (labels) (clean as GenerateRequest).promptSources = labels;
+    const pictures = sanitizePluginImages(images);
+    if (pictures.error) {
+      results.llm[key] = emptyGeneration(pictures.error);
+      continue;
+    }
+    if (pictures.images) (clean as GenerateRequest).images = pictures.images;
     let toolBridge: PluginToolBridge | null = null;
     if (mode !== "tool") {
       toolBridge = pluginToolBridge(plugin, clean, deps);
