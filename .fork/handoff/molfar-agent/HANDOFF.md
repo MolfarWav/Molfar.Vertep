@@ -40,6 +40,12 @@ file when this one ships).
     build, lint on touched files, browser check with a mock model at 1440, 1024 and 390 px, dark and light. Not checked
     live: the gate on a real model (does a small model recover from the refusal with run_budget?), the shell's Open app
     from inside the frame, Restore from the pane with a real checkpoint, the "Offline" state.
+  - Colour pass (user, 2026-10-11: "the point was to make the main things stand out"): tokens `brand` (the shell's
+    accent: Vertep red, blue on Dark/Light, a custom theme's accent), `link` (cyan, actions that leave the page) and
+    `font-heading` (Kurale on Vertep only, self-hosted in `client-agent/src/fonts/kurale`) in `globals.css`. Filled brand:
+    New chat, Send, Save checkpoint, the ask card's recommended option and send. Brand bar + tint: active chat, open
+    project, selected tab, phone segment. Vertep only: dot grid behind the thread, the Vertep mark behind the welcome
+    avatar (`MolfarHalo`). Check screens in the vertep theme: browser-check's `open()` defaults to "dark".
   - Next: part 3 (3.7 skills that learn, then 2.5 app_screenshot).
 - 2026-10-11, branch `claude/project-thread-eed1tv` (pushed, not merged, not released): part 1 of the order below.
   - 2.1 `plugin_log`: `src/plugins/plugin-log.ts` keeps 500 lines per user in memory (host.log and console
