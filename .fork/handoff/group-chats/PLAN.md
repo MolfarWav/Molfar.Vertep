@@ -61,3 +61,13 @@ task (CLAUDE.md rule).
   dropped.
 - Entry character filters match the current speaker (`plugin.js` ~1505), fine for "each in turn"; the
   narrator mode has no single speaker, so it must treat every active member as present.
+
+## Progress
+- Step 1 (fixes) on the Roleplay fork branch `claude/project-thread-1k7fm5`, not released: group delete
+  (DELETE /groups/<id> takes its chats), description by members, Home count, card menu and editor
+  without copy/export for groups, favorite kept. `test/rp-groups.test.ts`. Checked live in a throwaway
+  engine. Left for step 2: deleting a character leaves its id in groups' memberIds (skipped at runtime);
+  the card editor still opens for a group and drops edits (the group editor replaces it).
+- Agreed (user, 2026-10-11): the Characters | Groups switch at the top of Characters; the group card
+  proposal (`/mnt/project-files/group-chats/group-card-proposal.md`) as written; external models
+  (`ask-model`) join the work.
