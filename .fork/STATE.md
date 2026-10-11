@@ -37,6 +37,15 @@ the new agent page; `.fork/handoff/molfar-agent/HANDOFF.md`). The user tested th
 release text by hand. Card editor leftovers: `.fork/handoff/card-editor/PLAN.md` (rewritten as a short "later" list).
 The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
 
+## Prompt restore audit (2026-10-11)
+Every prompt a user can edit was checked for a way back to its default. Engine: Molfar's instructions
+(Restore default instructions), workspace AGENTS.md (restore route), built-in skills (Reset to built-in): all
+have one. Roleplay: Litopys chapter+arc and the dashboard prompts have Restore; the stock Default and FRANKENX
+presets are read-only; image prefix/negative default to empty. The one gap, utility prompts in editable preset
+copies, got a per-field "Restore default" on the Roleplay fork branch `claude/project-thread-6ih1e9`
+(unreleased; browser-checked at 1280 and 390). Left on purpose: a copy's Main Prompt (its "default" is its
+source preset, which a copy does not record); Litopys' one Reset covers both prompts.
+
 ## Repos (checked 2026-10-11, after 0.9.8)
 - Engine: every `claude/*` branch except `claude/upstream-context-fixes` is fully in main (0 commits ahead):
   `android-update-fallback`, `project-thread-c3878l`, `-eed1tv`, `-mqq0gh`, `-ukmmm7`, `-a2fc82`, `v098-card`.
