@@ -73,6 +73,16 @@ export function sessionSpend(runs: readonly EngineRun[]): SessionSpend | null {
   return any ? { tokens, cost, unpriced } : null
 }
 
+/** The context the chat's last run sent, so a reopened chat shows its meter too. */
+export function lastUsage(runs: readonly EngineRun[]): EngineUsage | null {
+  for (let i = runs.length - 1; i >= 0; i--) {
+    const r = runs[i]
+    if (r?.type === "compact") return null
+    if (r?.type === "run" && r.usage) return r.usage
+  }
+  return null
+}
+
 export type View = { kind: "chat" } | { kind: "project"; id: string }
 
 /** The project pane beside the chat (desktop): shown or folded, its width in px. */
@@ -381,7 +391,7 @@ export const useAgent = create<AgentState>()((set, get) => {
       set({ sessionId: id, draftProject: null, view: { kind: "chat" }, msgs: [], banner: null, ask: null, sidebarOpen: false })
       try {
         const r = await sessionsApi.get(id)
-        if (get().sessionId === id) set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []) })
+        if (get().sessionId === id) set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []) })
       } catch (e) {
         set({ banner: { kind: "error", text: e instanceof Error ? e.message : String(e) } })
       }
@@ -393,7 +403,7 @@ export const useAgent = create<AgentState>()((set, get) => {
       if (!sid) return
       try {
         const r = await sessionsApi.get(sid)
-        if (get().sessionId === sid) set({ msgs: keepShownIds(get().msgs, msgsFromRuns(r.runs ?? [])), spend: sessionSpend(r.runs ?? []) })
+        if (get().sessionId === sid) set({ msgs: keepShownIds(get().msgs, msgsFromRuns(r.runs ?? [])), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []) })
       } catch {
         // keep the local view; the stream already showed the run
       }

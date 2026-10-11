@@ -179,6 +179,12 @@ export default function App(): ReactNode {
     }
     prevTab.current = phoneTab
   }, [desktop, view.kind, phoneTab, setPhoneTab])
+  // leaving the project page (a new chat, or a chat opened from it) lands on the Chat tab
+  const prevKind = useRef(view.kind)
+  useEffect(() => {
+    if (prevKind.current === "project" && view.kind === "chat") setPhoneTab("chat")
+    prevKind.current = view.kind
+  }, [view.kind, setPhoneTab])
 
   const fullPage = view.kind === "project"
   const showPane = desktop && !fullPage && !!projectId && pane.open

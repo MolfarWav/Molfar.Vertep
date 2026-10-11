@@ -4,7 +4,6 @@ import { unstable_useComposerInput, useAuiState } from "@assistant-ui/react"
 import type { Icon } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
 import { memoryApi, type AgentSkill } from "./api"
-import { restoreConfirm } from "./Checkpoints"
 import { useAgent } from "./store"
 import { availableTemplates, type TaskTemplate } from "./templates"
 
@@ -119,26 +118,18 @@ export function QuickGrid(): ReactNode {
 const BTN = "text-muted-foreground hover:bg-muted hover:text-foreground h-6 rounded-md px-2 text-xs whitespace-nowrap transition-colors"
 
 /**
- * Quick actions in the action bar of the last reply: shorter, simpler, apply
- * (when it only proposed) and undo (when it changed an app). Each is a plain
- * message to Molfar, except undo, which restores the run's checkpoints.
+ * Quick actions in the action bar of the last reply: shorter, simpler, and
+ * apply (when it only proposed). Each is a plain message to Molfar. Undoing a
+ * reply that changed an app is the "Changed … · Undo" line under it.
  */
 export function ReplyQuickActions(): ReactNode {
   const id = useAuiState((s) => s.message.id)
   const msgs = useAgent((s) => s.msgs)
-  const undone = useAgent((s) => s.undone)
   const running = useAgent((s) => s.running)
-  const restore = useAgent((s) => s.restoreCheckpoint)
   const send = useAgent((s) => s.send)
   const at = msgs.findIndex((m) => m.id === id)
   const msg = msgs[at]
   if (!msg || at !== msgs.length - 1 || running || msg.streaming) return null
-  const open = (msg.checkpoints ?? []).filter((c) => !undone[c.id])
-  const undo = async () => {
-    for (const cp of open) {
-      if (window.confirm(restoreConfirm(cp.app, cp.label))) await restore(cp.app, cp.id, cp.id)
-    }
-  }
   return (
     <div className="ms-1 flex items-center gap-0.5 border-s ps-2" data-testid="reply-actions">
       <button type="button" className={BTN} title="Say the last answer again, shorter" onClick={() => void send("Make your last answer shorter.")}>
@@ -150,11 +141,6 @@ export function ReplyQuickActions(): ReactNode {
       {!msg.checkpoints?.length ? (
         <button type="button" className={BTN} title="Do what Molfar proposed" onClick={() => void send("Apply what you proposed.")}>
           Apply
-        </button>
-      ) : null}
-      {open.length ? (
-        <button type="button" className={BTN} title="Put the changed apps back as they were before this reply" onClick={() => void undo()}>
-          Undo changes
         </button>
       ) : null}
     </div>
