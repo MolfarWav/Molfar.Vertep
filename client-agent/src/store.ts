@@ -75,6 +75,26 @@ export function sessionSpend(runs: readonly EngineRun[]): SessionSpend | null {
 
 export type View = { kind: "chat" } | { kind: "project"; id: string }
 
+/** The project pane beside the chat (desktop): shown or folded, its width in px. */
+export interface PaneState {
+  open: boolean
+  width: number
+}
+
+export const PANE_MIN = 280
+export const PANE_MAX = 560
+export const PANE_DEFAULT = 340
+
+function storedPane(): PaneState {
+  try {
+    const v = JSON.parse(prefs.get("agent-ui-pane") ?? "{}") as Partial<PaneState>
+    const width = typeof v.width === "number" ? Math.min(PANE_MAX, Math.max(PANE_MIN, Math.round(v.width))) : PANE_DEFAULT
+    return { open: v.open !== false, width }
+  } catch {
+    return { open: true, width: PANE_DEFAULT }
+  }
+}
+
 /** Session key of a chat that has no id yet. */
 const NEW_KEY = "new"
 
@@ -122,6 +142,15 @@ export interface AgentState {
    *  the transient drawer (sidebarOpen) */
   sidebarPinned: boolean
   setSidebarPinned: (pinned: boolean) => void
+  /** the project pane beside the chat, persisted in this browser */
+  pane: PaneState
+  setPane: (patch: Partial<PaneState>) => void
+  /** phones: which half the segmented control shows */
+  phoneTab: "chat" | "project"
+  setPhoneTab: (tab: "chat" | "project") => void
+  /** a "from memory" mark under a message asks the memory panel to open this entry */
+  memoryRequest: { file: string; text: string } | null
+  openMemory: (req: { file: string; text: string } | null) => void
   init: () => Promise<void>
   refreshSessions: () => Promise<void>
   refreshMcp: () => Promise<void>
@@ -282,6 +311,9 @@ export const useAgent = create<AgentState>()((set, get) => {
     mcp: [],
     sidebarOpen: false,
     sidebarPinned: prefs.get("agent-ui-sidebar") !== "closed",
+    pane: storedPane(),
+    phoneTab: "chat",
+    memoryRequest: null,
 
     init: async () => {
       try {
@@ -649,6 +681,14 @@ export const useAgent = create<AgentState>()((set, get) => {
       prefs.set("agent-ui-sidebar", pinned ? "open" : "closed")
       set({ sidebarPinned: pinned })
     },
+    setPane: (patch) => {
+      const pane = { ...get().pane, ...patch }
+      pane.width = Math.min(PANE_MAX, Math.max(PANE_MIN, Math.round(pane.width)))
+      prefs.set("agent-ui-pane", JSON.stringify(pane))
+      set({ pane })
+    },
+    setPhoneTab: (tab) => set({ phoneTab: tab }),
+    openMemory: (req) => set({ memoryRequest: req }),
     setBanner: (b) => set({ banner: b }),
   }
 })
