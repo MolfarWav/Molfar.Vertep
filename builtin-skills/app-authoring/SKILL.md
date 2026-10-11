@@ -80,5 +80,7 @@ hot-reload by mtime: nothing to call.
 - After editing `src/` or `package.json`, call `app_check`: it waits for the build and returns ok or the errors. Never assume an edit built.
 - A stale page or a broken hot-update chain: `app_rebuild`.
 - `console.log` from an open app page: `app_console` reads it back (newest last). Nothing is captured while no page has the app open.
+- A plugin route you wrote: call it once with `app_request { id, method, path, body }`. Its `host.log`/console lines and failures go to `plugin_log`, never to `app_console`. Route writes are real and committed like a page's.
+- A prompt the app sends (a card, a preset): one `model_try` shows what a model answers. It is paid: the user confirms each call.
 - Before a risky change: `checkpoint { action: "create", app, label }`. When `app_check` keeps failing, offer a restore with `ask_user`. A restore puts back code only; `data/` stays.
 - Before you say "done": skill `finish-change`.

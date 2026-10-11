@@ -82,3 +82,27 @@ export async function assertPublicHost(hostname: string): Promise<void> {
     throw new Error(`host resolves to a private address: ${hostname}`);
   }
 }
+
+/** Egress guard for the agent's web_fetch: the open internet only. Unlike a
+ *  plugin's allowlist, nobody named the host on purpose, so localhost,
+ *  private literals and names that resolve to private addresses all refuse.
+ *  Unresolvable names are refused too: the fetch would resolve them again. */
+export async function assertInternetHost(hostname: string): Promise<void> {
+  const host = hostname.replace(/^\[|\]$/g, "");
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal")) {
+    throw new Error(`not a public host: ${hostname}`);
+  }
+  if (net.isIP(host)) {
+    if (isPrivateAddress(host)) throw new Error(`not a public address: ${hostname}`);
+    return;
+  }
+  let addrs: { address: string }[];
+  try {
+    addrs = await dns.lookup(host, { all: true });
+  } catch {
+    throw new Error(`cannot resolve ${hostname}`);
+  }
+  if (!addrs.length || addrs.some((a) => isPrivateAddress(a.address))) {
+    throw new Error(`host resolves to a private address: ${hostname}`);
+  }
+}

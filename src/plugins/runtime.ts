@@ -37,6 +37,7 @@ import type { UserModelService, GenerateRequest, GenerateResult } from "../model
 import { log } from "../logger.js";
 import { hookInsertions, mergePromptSources, sanitizePromptSources, uncovered } from "../prompt-sources.js";
 import { assertPublicHost } from "../net-guard.js";
+import { recordPluginLog } from "./plugin-log.js";
 
 /** Exports the engine calls on its own (routes and tools are dispatched by
  *  request, not from here). Only these names fire — a plugin exporting
@@ -108,6 +109,9 @@ export interface PluginRuntimeDeps {
    *  a cancelled generation's result is DISCARDED (error result, no commit);
    *  the client owns what a cancelled reply keeps and writes it itself. */
   consumeCancel?: (tag: unknown) => boolean;
+  /** The user these deps run for: plugin output goes to their plugin log
+   *  (plugin-log.ts, read by the agent's plugin_log tool). */
+  owner?: string;
 }
 
 
@@ -233,10 +237,10 @@ export async function runPluginTool(
       netAllowed: caps.net,
       netResults: results.net,
     });
-    printLogs(plugin, r);
+    printLogs(plugin, r, deps);
     applyStoreWrites(plugin, r, deps);
     if (!r.ok) {
-      log.warn(`[plugin:${plugin.id}] tool ${toolName} failed: ${r.error}`);
+      logFailure(plugin, deps, `tool ${toolName} failed: ${r.error}`);
       return null;
     }
     const out = r.out as { text?: unknown; isError?: unknown } | null;
@@ -662,8 +666,17 @@ function passWants(r: SandboxResponse, caps: PassCaps): boolean {
   );
 }
 
-function printLogs(plugin: LoadedPlugin, r: SandboxResponse): void {
-  for (const line of r.logs ?? []) log.info(`[plugin:${plugin.id}] ${line}`);
+function printLogs(plugin: LoadedPlugin, r: SandboxResponse, deps: PluginRuntimeDeps): void {
+  for (const line of r.logs ?? []) {
+    log.info(`[plugin:${plugin.id}] ${line}`);
+    if (deps.owner) recordPluginLog(deps.owner, { plugin: plugin.id, ...(plugin.appId ? { app: plugin.appId } : {}), level: "log", text: line });
+  }
+}
+
+/** A failed pass: the engine log, and the owner's plugin log. */
+function logFailure(plugin: LoadedPlugin, deps: PluginRuntimeDeps, text: string): void {
+  log.warn(`[plugin:${plugin.id}] ${text}`);
+  if (deps.owner) recordPluginLog(deps.owner, { plugin: plugin.id, ...(plugin.appId ? { app: plugin.appId } : {}), level: "error", text });
 }
 
 /** The stand-in result for a model call that produced nothing usable. */
@@ -801,10 +814,10 @@ export async function runPluginRoute(
         ...(siblingToolDefs ? { siblingToolDefs } : {}),
         retryOnPoison: req.method === "GET" || req.method === "HEAD",
       });
-      printLogs(plugin, r);
+      printLogs(plugin, r, deps);
       applyStoreWrites(plugin, r, deps);
       if (!r.ok) {
-        log.warn(`[plugin:${plugin.id}] route ${req.method} ${req.path} failed: ${r.error}`);
+        logFailure(plugin, deps, `route ${req.method} ${req.path} failed: ${r.error}`);
         // the plugin id belongs in the response too: the app page (and the
         // agent reading its console) must know WHICH plugin failed to parse,
         // not just that one did
@@ -960,13 +973,13 @@ async function hookPasses(
     });
 
     applyStoreWrites(plugin, r, deps);
-    printLogs(plugin, r);
+    printLogs(plugin, r, deps);
 
     if (!r.ok) {
       if (!storeOk && r.storeWrites && Object.keys(r.storeWrites).length > 0) {
         log.warn(`[plugin:${plugin.id}] store writes attempted without permission — discarded`);
       }
-      log.warn(`[plugin:${plugin.id}] ${hook} failed: ${r.error}`);
+      logFailure(plugin, deps, `${hook} failed: ${r.error}`);
       return { ok: false, error: r.error ?? "failed" }; // crash-isolated: the caller keeps its own ctx
     }
 

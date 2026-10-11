@@ -23,7 +23,7 @@ import {
   type ProjectSummary,
   type ModelFavorite,
 } from "./api"
-import { applyStreamEvent, keepShownIds, msgsFromRuns, partsFromResponse, uid, type Msg, type PartData } from "./runs"
+import { applyStreamEvent, keepShownIds, msgsFromRuns, partsFromResponse, runInfo, uid, type Msg, type PartData } from "./runs"
 import { createStreamDeltaBatcher, type AskOption, type AskQuestion, type StreamEvent } from "./streaming"
 
 export interface PendingAsk {
@@ -139,6 +139,9 @@ export interface AgentState {
   draftSeed: number
   /** start a new chat with `text` already in its composer */
   newChatWith: (text: string) => void
+  /** a skill chip under a message asks the memory panel to open this skill */
+  skillRequest: { scope: string; name: string; file?: string } | null
+  openSkill: (req: { scope: string; name: string; file?: string } | null) => void
   send: (text: string, images?: Array<{ data: string; mimeType: string }>, urls?: string[]) => Promise<void>
   stop: () => Promise<void>
   answer: (text: string) => Promise<void>
@@ -399,6 +402,9 @@ export const useAgent = create<AgentState>()((set, get) => {
       }
     },
 
+    skillRequest: null,
+    openSkill: (req) => set({ skillRequest: req }),
+
     newChatWith: (text) => {
       // the composer keeps unsent text under a per-thread key; "new" is the chat not created yet
       prefs.set("chrysalis.agent.draft.new", text)
@@ -474,7 +480,7 @@ export const useAgent = create<AgentState>()((set, get) => {
         adoptSessionKey(res.sessionId)
         const finalParts = partsFromResponse(res)
         set((st) => ({
-          msgs: st.msgs.map((m) => (m.id === id ? { ...m, parts: finalParts, streaming: false, ...(res.checkpoints?.length ? { checkpoints: res.checkpoints } : {}) } : m)),
+          msgs: st.msgs.map((m) => (m.id === id ? { ...m, parts: finalParts, streaming: false, ...(res.checkpoints?.length ? { checkpoints: res.checkpoints } : {}), ...runInfo(res) } : m)),
           running: false,
           sessionId: res.sessionId,
           usage: res.usage ?? null,

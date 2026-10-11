@@ -5,7 +5,7 @@ description: Use when a plugin, route, onTick or hook silently does nothing (no 
 
 # A plugin does nothing: prove each link, in order
 
-You cannot read the engine log: it lives outside the workspace. So do not guess and do not rewrite the plugin "to be safe". Walk the links below in order, stop at the first broken one, fix only that, then verify (step 7).
+You cannot read the engine log, but `plugin_log` shows every plugin's `host.log`/console lines and failed routes, hooks and tools since the engine started. Read it first (`plugin_log { app, errors: true }`). Do not guess and do not rewrite the plugin "to be safe". Walk the links below in order, stop at the first broken one, fix only that, then verify (step 7).
 
 ## 1. Is it where the engine looks?
 - Bundled: `apps/<app>/plugins/<id>/manifest.json` + `plugin.js`. Top-level: `plugins/<id>/…`. Any other folder is never loaded.
@@ -47,7 +47,7 @@ You cannot read the engine log: it lives outside the workspace. So do not guess 
 - `host.llm.results[key]` is `{ text, error? }`. Empty text with an error means the model call failed: no model set, or a rate limit on a free OpenRouter model. Record the error; do not treat it as "no facts found".
 
 ## 6. Make it observable
-`host.log` lines reach only the engine log, which the user can read and you cannot. Add a heartbeat file you can read:
+`host.log` lines and thrown errors go to `plugin_log`. For a route, call it with `app_request` and read `plugin_log` right after. For a tick or hook, wait for it to run, then read. When the log is empty or gone (the engine restarted), add a heartbeat file you can read:
 
 ```js
 function beat(host, stage, extra) {
@@ -62,10 +62,10 @@ function beat(host, stage, extra) {
 - Call `beat` on entry, after each phase, and in a `catch` around the whole body with `String(e)`. An uncaught throw reaches only the log.
 - Wait one interval, then read `apps/<app>/data/_debug/PLUGIN_ID.json`. The `_` prefix keeps it out of the UI.
 - No file means the export never ran: go back to steps 1–4. A file shows the stage where it stopped.
-- If the file is still missing, ask the user to search `data/logs/chrysalis.log` for `[plugin:<id>]`. The line `<id> onTick failed: …` is the thrown error.
+- If the file is still missing, read `plugin_log { plugin: "<id>" }`: the line `onTick failed: …` is the thrown error.
 
 ## 7. Done means verified
-- The heartbeat shows the final stage on a real tick or request.
+- The heartbeat or `plugin_log` shows the final stage on a real tick or request (`app_request` for a route).
 - The expected output file exists and its content is fresh.
 - The heartbeat and the test interval are removed. The heartbeat writes a tracked file on every tick, so leaving it in floods git history.
 - The fix is committed with the git tool.

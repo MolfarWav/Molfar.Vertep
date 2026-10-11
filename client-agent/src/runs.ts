@@ -1,7 +1,7 @@
 // Engine run/turn records → the flat part list the UI renders. Both the
 // session history loader and the final POST response go through here, so a
 // stream and its authoritative record land on the same shapes.
-import type { AgentResponse, EngineRun, EngineTool, EngineTurn, RunCheckpoint } from "./api.js"
+import type { AgentResponse, EngineRun, EngineTool, EngineTurn, RunCheckpoint, RunSkill, RunSpend } from "./api.js"
 import type { StreamEvent } from "./streaming.js"
 
 export type ToolState = "running" | "ok" | "error"
@@ -44,6 +44,14 @@ export interface Msg {
   streaming?: boolean
   /** apps the run changed, each with the checkpoint taken before the change */
   checkpoints?: RunCheckpoint[]
+  /** what the run really took, and the skills it loaded (shown under the message) */
+  spend?: RunSpend
+  skills?: RunSkill[]
+}
+
+/** The run facts a message carries, from a run record or a run result. */
+export function runInfo(r: { spend?: RunSpend; skills?: RunSkill[] }): Pick<Msg, "spend" | "skills"> {
+  return { ...(r.spend ? { spend: r.spend } : {}), ...(r.skills?.length ? { skills: r.skills } : {}) }
 }
 
 let seq = 0
@@ -136,7 +144,7 @@ export function msgsFromRuns(runs: EngineRun[]): Msg[] {
       ? partsFromTurns(turns)
       : partsLegacy({ thinking: run.thinking, thinkingMs: run.thinkingMs, tools: run.tools, text: run.assistant })
     if (parts.length)
-      msgs.push({ id: `a${run.at}`, runAt: run.at, role: "assistant", parts, ...(run.checkpoints?.length ? { checkpoints: run.checkpoints } : {}) })
+      msgs.push({ id: `a${run.at}`, runAt: run.at, role: "assistant", parts, ...(run.checkpoints?.length ? { checkpoints: run.checkpoints } : {}), ...runInfo(run) })
   }
   return msgs
 }

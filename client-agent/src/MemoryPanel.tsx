@@ -376,8 +376,10 @@ function SkillForm({ initial, scopes, onSaved, onCancel }: {
   )
 }
 
-function SkillView({ skill, scopes, onBack, onChanged, onImprove, onError }: {
+function SkillView({ skill, initialFile, scopes, onBack, onChanged, onImprove, onError }: {
   skill: AgentSkill
+  /** open straight on this extra file of the skill */
+  initialFile?: string
   scopes: Array<{ value: string; label: string }>
   onBack: () => void
   /** the skill was saved or reset: the list needs a reload; gone = it no longer exists */
@@ -394,6 +396,10 @@ function SkillView({ skill, scopes, onBack, onChanged, onImprove, onError }: {
   }, [skill, onError])
   const reload = () => memoryApi.skill(skill.scope, skill.name).then(setDetail, onError)
   const openFile = (file: string) => memoryApi.skillFile(skill.scope, skill.name, file).then(setExtra, onError)
+  useEffect(() => {
+    setExtra(null)
+    if (initialFile) memoryApi.skillFile(skill.scope, skill.name, initialFile).then(setExtra, onError)
+  }, [skill, initialFile, onError])
 
   if (editing && detail) {
     const parsed = parseSkill(detail.text)
@@ -487,6 +493,7 @@ export function MemoryPanel(): ReactNode {
   const [data, setData] = useState<AgentMemory | null>(null)
   const [skill, setSkill] = useState<AgentSkill | null>(null)
   const [creating, setCreating] = useState(false)
+  const [skillFile, setSkillFile] = useState<string | undefined>()
   const [error, setError] = useState<string | null>(null)
   const onError = useCallback((e: unknown) => setError((e as Error).message), [])
   const [query, setQuery] = useState("")
@@ -526,6 +533,18 @@ export function MemoryPanel(): ReactNode {
       setCreating(false)
     }
   }, [open, load])
+  // a skill chip under a chat message asks for this skill to be opened
+  const request = useAgent((s) => s.skillRequest)
+  const openSkill = useAgent((s) => s.openSkill)
+  useEffect(() => {
+    if (!request) return
+    setOpen(true)
+    setTab("skills")
+    setCreating(false)
+    setSkillFile(request.file)
+    setSkill({ name: request.name, scope: request.scope, description: "", file: "" })
+    openSkill(null)
+  }, [request, openSkill])
   const projects = useAgent((s) => s.projects)
   const newChatWith = useAgent((s) => s.newChatWith)
   const scopes = useMemo(
@@ -550,7 +569,7 @@ export function MemoryPanel(): ReactNode {
             <Button variant={tab === "memory" ? "secondary" : "ghost"} size="sm" onClick={() => setTab("memory")}>
               Memory
             </Button>
-            <Button variant={tab === "skills" ? "secondary" : "ghost"} size="sm" onClick={() => { setTab("skills"); setSkill(null); setCreating(false) }}>
+            <Button variant={tab === "skills" ? "secondary" : "ghost"} size="sm" onClick={() => { setTab("skills"); setSkill(null); setSkillFile(undefined); setCreating(false) }}>
               Skills{data ? ` (${data.skills.length})` : ""}
             </Button>
           </div>
@@ -590,8 +609,9 @@ export function MemoryPanel(): ReactNode {
           ) : skill ? (
             <SkillView
               skill={skill}
+              initialFile={skillFile}
               scopes={scopes}
-              onBack={() => setSkill(null)}
+              onBack={() => { setSkill(null); setSkillFile(undefined) }}
               onChanged={(gone) => {
                 if (gone) setSkill(null)
                 load()
@@ -616,7 +636,7 @@ export function MemoryPanel(): ReactNode {
                       <button
                         type="button"
                         className="hover:bg-muted/60 grid w-full gap-0.5 rounded-lg px-3 py-2 text-left"
-                        onClick={() => setSkill(s)}
+                        onClick={() => { setSkillFile(undefined); setSkill(s) }}
                       >
                         <span className="text-sm font-medium">
                           {s.name}

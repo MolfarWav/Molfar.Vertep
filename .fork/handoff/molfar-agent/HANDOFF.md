@@ -8,6 +8,37 @@ Everything is engine code (`src/agent/`, `client-agent/`), no Roleplay fork chan
 Supersedes `.fork/handoff/agent-tools/HANDOFF.md` (its four open tools are folded in below; delete that
 file when this one ships).
 
+## Progress (newest first)
+- 2026-10-11, branch `claude/project-thread-eed1tv` (pushed, not merged, not released): part 1 of the order below.
+  - 2.1 `plugin_log`: `src/plugins/plugin-log.ts` keeps 500 lines per user in memory (host.log and console
+    lines, failed routes, hooks and tools), fed from `printLogs`/`logFailure` in `runtime.ts` through the new
+    `PluginRuntimeDeps.owner`. Skill `plugin-silent-failure` now starts from it.
+  - 2.2 `app_request {id, method, path, body}`: `dispatchAppRoute` passed from `app.ts` as `appRequest`; route
+    writes are committed like a page's (`app(<id>): METHOD path`), revertable with git. No checkpoint: checkpoints
+    cover code, a route writes data. Plan mode: GET only.
+  - 2.3 `model_try`: one generation through `svc.generate` with `source: "agent:try"`, an ask card with the model and
+    a price ceiling first (input estimate + maxTokens; default 1024, cap 4096). Not in WRITE_TOOLS (costs, writes
+    nothing).
+  - 2.4 `web_fetch`: built only when the sandbox internet switch is on, re-read per call; `assertInternetHost` in
+    `net-guard.ts` refuses localhost, private literals, private DNS answers and unresolvable names on every redirect
+    hop (DNS rebinding between check and fetch stays possible, as for plugin egress). HTML -> text, 30k chars.
+  - 3.1 run budget: tool `run_budget {steps, plan}` prices `steps` calls on the current context
+    (`steps*context + 1500*steps*(steps-1)/2` in, 400 out per step, no cache discount) and asks Go on / Smaller /
+    Stop; one line in the full prompt asks for it before 10+ step runs. After the run: `RunSpend.calls` and the
+    per-run line under each reply (`3 steps · 16.5k tok · $0.004`).
+  - 3.2 skills chip: `skill_load` result details `{skill, scope, file?, tokens}` -> run `skills` (result and session
+    record) -> `client-agent/src/RunInfo.tsx` chips under the reply; a click opens the skill in the memory panel
+    (on the file for a file load).
+  - Small mode: the new tools are in the app group (`web_fetch` in a new `web` group); `run_budget` is app-group in
+    small mode only (`FULL_ALWAYS`), since the core set must stay under 3.7k tokens.
+  - Checked: typecheck, full test run (`test/run-tools.test.ts` new), client build, lint (no new warnings except
+    `!` in the new test, the test files' style), browser check of the chip and the cost line (dark, light, 390 px)
+    with a mock model. Not checked live: `web_fetch` against a real site, `model_try` on a real model, a file-load
+    chip in the browser, the `$` part of the line (the mock has no price).
+  - Trap: the cloud clone is shallow; `bun scripts/skill-digests.ts` then drops old digests. `git fetch --unshallow
+    origin main` first.
+  - Next: part 2, the page (section 1 with 3.3-3.6).
+
 ## Decisions (the user, 2026-10-11): do not ask again
 - Design: **variant A as the base** + **the right side panel from variant C** (the project beside the
   chat; it can expand to the full width, which is the project page). **Phone: variant C's phone**
