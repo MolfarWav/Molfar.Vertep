@@ -82,3 +82,10 @@ task (CLAUDE.md rule).
   `color` is stored but not used yet (step 3).
 - Next, step 3: the narrator mode (one reply voices all members, the default) with coloured dialogue;
   then scene generation, small-model prompt tweaks, the Chats page group part, a type filter.
+- Step 3 (narrator mode, coloured dialogue) on the Roleplay branch, not released: `generationMode: "narrator"`
+  (default for new groups) = one reply with every unmuted card, stored with charId = group id; colours by
+  member (group, card, palette), in narrator replies by the first member named in the line
+  (`src/lib/dialogue-voices.ts`). Browser-checked with seeded messages; not yet run against a real model.
+  Known: palette yellow is pale on the light theme.
+- Next, step 4: scene generation (auto / semi-auto), then small-model prompt tweaks, the Chats page group
+  part, the Characters type filter.
