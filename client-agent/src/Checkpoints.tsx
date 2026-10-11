@@ -30,7 +30,7 @@ export function RunCheckpoints(): ReactNode {
             ) : (
               <button
                 type="button"
-                className="hover:text-foreground underline underline-offset-2"
+                className="text-link hover:text-foreground font-medium underline underline-offset-2"
                 onClick={() => {
                   if (window.confirm(restoreConfirm(cp.app, cp.label, later))) void restore(cp.app, cp.id, cp.id)
                 }}

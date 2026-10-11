@@ -320,7 +320,7 @@ export function SkillsSection({ detail, mode }: { detail: ProjectDetail; mode: M
   const limit = layout === "pane" ? 4 : skills.length
   const open = (s: ProjectDetail["skills"][number]) => {
     chatFirst()
-    openSkill({ scope: s.scope, name: s.name, file: s.file })
+    openSkill({ scope: s.scope, name: s.name })
   }
   const chip = "bg-muted/60 hover:bg-muted max-w-full truncate rounded-full border px-2.5 py-0.5 font-mono text-xs transition-colors"
   return (

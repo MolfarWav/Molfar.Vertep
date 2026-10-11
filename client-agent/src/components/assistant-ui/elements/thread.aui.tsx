@@ -717,7 +717,7 @@ const AssistantActionBar: FC = () => {
     <ActionBarPrimitive.Root
       hideWhenRunning
       autohide={saving ? "never" : "not-last"}
-      className="aui-assistant-action-bar-root text-muted-foreground animate-in fade-in col-start-3 row-start-2 -ms-1 flex flex-wrap items-center gap-1 duration-200"
+      className="aui-assistant-action-bar-root text-muted-foreground animate-in fade-in col-start-3 row-start-2 -ms-1 flex flex-wrap items-center gap-1 duration-200 [&>button:hover]:bg-brand-soft [&>button:hover]:text-brand"
     >
       <CopyAction />
       <ActionBarPrimitive.Reload asChild>
