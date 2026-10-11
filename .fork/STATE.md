@@ -55,6 +55,14 @@ was missing (the cause for that player is inferred, not seen). Now the first nam
 error (503), like `models.ts` resolveModel; the dynamic catalogs refresh before the pick. Tests in
 `test/agent-memory.test.ts`. Not checked in a browser: how the agent page shows that error.
 
+## Custom connections: a stream without finish_reason keeps its reply (2026-10-11, same branch, not released)
+A Discord player on Chub's Soji (`https://inference.chub.ai/soji/v1`, custom OpenAI-compatible) saw replies vanish
+with "Stream ended without finish_reason". pi-ai throws when `compat.supportsFinishReason` is on and the stream ends
+without one; custom openai-completions models now carry `supportsFinishReason: false` (`src/providers/custom.ts`
+toModel), so the stream end counts as done and a finish_reason that comes is still read. Reproduced and covered in
+`test/custom-finish-reason.test.ts`; not tried against Soji itself (no key). Trade-off: a stream cut mid-way by the
+network now reads as a finished short reply on custom endpoints.
+
 ## Next: 1.0.0 = group chats (user, 2026-10-11)
 Looked into live: groups work in the engine, but a group cannot be deleted (wrong route), opens in the card
 editor where edits are dropped, and has no UI for members. Plan: `.fork/handoff/group-chats/PLAN.md`.

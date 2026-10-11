@@ -401,7 +401,11 @@ function catalogEntry(baseUrl: string, id: string): Model<Api> | undefined {
 function toModel(m: CustomModelDef, providerId: string, api: Api, def: CustomProviderDef): Model<Api> {
   const { baseUrl, headers } = def;
   const cacheCompat = compatFor(api, m.id, baseUrl, !!def.extraBody);
-  const compat = def.thinkingFormat && api === "openai-completions" ? { ...cacheCompat, thinkingFormat: def.thinkingFormat } : cacheCompat;
+  const withThinking = def.thinkingFormat && api === "openai-completions" ? { ...cacheCompat, thinkingFormat: def.thinkingFormat } : cacheCompat;
+  // some OpenAI-compatible hosts (Chub's Soji) end a stream without a finish_reason; the library
+  // then threw the whole reply away. A custom endpoint's reply counts as done when its stream ends;
+  // a finish_reason that does come is still read.
+  const compat = api === "openai-completions" ? { ...withThinking, supportsFinishReason: false } : withThinking;
   const known = catalogEntry(baseUrl, m.id);
   const model: Model<Api> = {
     id: m.id,
