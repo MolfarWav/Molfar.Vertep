@@ -48,7 +48,7 @@ dashboard's in-chat settings got note age + soul/nudge/fast prompts and a gear b
 panels of both plugins are gone (no `uiPanel` export). "Open dashboard" sits at the top of the strip.
 README (3 languages): download and Discord badges, profile.png and persona.png rows, "Work in progress" removed.
 
-## 0.9.10: PREPARED 2026-10-11 (main fast-forwarded to the release commit; the tag v0.9.10 is the user's to push)
+## 0.9.10: RELEASED 2026-10-11 (tag v0.9.10 pushed by the user)
 Two Discord fixes, engine only (Roleplay unchanged at 4.34.0): the agent model pick and the custom stream end, below.
 
 ## Agent model pick: no quiet swap (2026-10-11, in 0.9.10)
