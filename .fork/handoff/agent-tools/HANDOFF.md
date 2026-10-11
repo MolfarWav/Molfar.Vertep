@@ -1,3 +1,6 @@
+> **SUPERSEDED 2026-10-11:** the open tools moved into `.fork/handoff/molfar-agent/HANDOFF.md` (the agent track:
+> new page + new abilities). Read that one; this file goes when it ships.
+
 # Handoff: five agent tools
 
 Written 2026-10-01, trimmed 2026-10-02. Read `CLAUDE.md`, then `.fork/STATE.md`, then this.
