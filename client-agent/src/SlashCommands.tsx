@@ -6,9 +6,15 @@ import type { ReactNode } from "react"
 import { agentCommands, memoryApi, type AgentSkill, type UserCommand } from "./api"
 import { useAgent } from "./store"
 import { useScrollHighlightIntoView } from "./trigger-popover"
+import { availableTemplates } from "./templates"
+import { templateIcon, usePickTemplate } from "./QuickActions"
 
 /** Icon shown next to a command in the "/" menu. */
 function commandIcon(id: string): ReactNode {
+  if (id.startsWith("tpl:")) {
+    const Icon = templateIcon(id.slice(4))
+    return <Icon size={15} />
+  }
   if (id === "new") return <Plus size={15} />
   if (id === "compact") return <Broom size={15} />
   if (id.startsWith("skill:")) return <BookOpen size={15} />
@@ -24,13 +30,14 @@ export function skillPrefix(k: Pick<AgentSkill, "name" | "scope">): string {
 }
 
 /** Group headers of the "/" menu, in the order the groups are listed. */
-const GROUPS = ["Commands", "My commands", "App skills", "Project skills", "Skills"] as const
+const GROUPS = ["Commands", "Templates", "My commands", "App skills", "Project skills", "Skills"] as const
 type Group = (typeof GROUPS)[number]
 
 /** The group of an item, read off its id: the popover hands the render
  *  callback a flat list, so the id is all there is to go by. */
 function groupOf(id: string): Group {
   if (id === "new" || id === "compact") return "Commands"
+  if (id.startsWith("tpl:")) return "Templates"
   if (id.startsWith("user:")) return "My commands"
   if (id.startsWith("skill:app:")) return "App skills"
   if (id.startsWith("skill:project:")) return "Project skills"
@@ -62,6 +69,7 @@ export function SlashCommands(): ReactNode {
   // the supported bridge to the composer's text — a command fills the box, it
   // does not send, so the usual "…and check X too" can be added first
   const input = unstable_useComposerInput()
+  const pickTemplate = usePickTemplate()
   const popoverRef = useScrollHighlightIntoView()
   const slash = unstable_useSlashCommandAdapter({
     // the typed command text is consumed by selecting the item, never sent
@@ -90,6 +98,13 @@ export function SlashCommands(): ReactNode {
           void s.compact()
         },
       },
+      // a template is a command too; one whose skill is missing here is hidden
+      ...availableTemplates(skills).map((t) => ({
+        id: `tpl:${t.id}`,
+        label: `/${t.id}`,
+        description: `${t.label}: ${t.description}`,
+        execute: () => pickTemplate(t),
+      })),
       ...mine.map((c) => ({
         id: `user:${c.name}`,
         label: `/${c.name}`,

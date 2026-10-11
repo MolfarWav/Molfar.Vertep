@@ -1,79 +1,162 @@
-import { useEffect, useRef, useState } from "react"
-import { Lightning } from "@phosphor-icons/react"
-import { unstable_useComposerInput } from "@assistant-ui/react"
+import { useEffect, useState } from "react"
+import { BookBookmark, GraduationCap, Lightning, Sliders, UserCircle, Wrench } from "@phosphor-icons/react"
+import { unstable_useComposerInput, useAuiState } from "@assistant-ui/react"
+import type { Icon } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
 import { memoryApi, type AgentSkill } from "./api"
-import { skillPrefix } from "./SlashCommands"
+import { restoreConfirm } from "./Checkpoints"
+import { useAgent } from "./store"
+import { availableTemplates, type TaskTemplate } from "./templates"
 
-/** One chip: the skill it loads and what it leaves in the box after the
- *  request to load it. A text ending in "@" is left open for the file picker. */
-const ACTIONS = [
-  { label: "New character", skill: "card-craft", text: "create a new character: " },
-  { label: "Improve a card", skill: "card-craft", text: "improve the card @" },
-  { label: "Write a lorebook", skill: "lorebook-craft", text: "write a lorebook for @" },
-  { label: "Audit a preset", skill: "preset-craft", text: "audit the preset @" },
-  { label: "Import a card", skill: "card-import", text: "import this card: " },
-] as const
+export type ReadyTemplate = TaskTemplate & { text: string }
 
-/**
- * Chips above an empty composer for the jobs people come to Molfar for. Each
- * is the "/" menu's skill request plus the start of a sentence, so the model
- * is told which skill to load instead of being left to notice that one fits.
- * A chip appears only when its skill is installed here: an engine without the
- * Roleplay app has no card-craft, and a chip that loads nothing would mislead.
- *
- * Picking one fills the box and puts the caret at its end; it does not send,
- * because every one of them ends where a name or a path is still to come.
- */
-export function QuickActions(): ReactNode {
+const ICONS: Record<string, Icon> = {
+  card: UserCircle,
+  lorebook: BookBookmark,
+  preset: Sliders,
+  fix: Wrench,
+  skill: GraduationCap,
+}
+
+export const templateIcon = (id: string): Icon => ICONS[id] ?? Lightning
+
+/** The templates whose skill is installed here. Skills are read once per mount:
+ *  an engine without the Roleplay app has no card-craft, and a tile that loads
+ *  nothing would mislead. */
+export function useTemplates(): ReadyTemplate[] {
   const [skills, setSkills] = useState<AgentSkill[]>([])
-  const row = useRef<HTMLDivElement>(null)
-  const input = unstable_useComposerInput()
   useEffect(() => {
     void memoryApi.get().then((m) => setSkills(m.skills)).catch(() => undefined)
   }, [])
+  return availableTemplates(skills)
+}
 
-  const chips = ACTIONS.flatMap((a) => {
-    const skill = skills.find((k) => k.name === a.skill)
-    return skill ? [{ ...a, prefix: skillPrefix(skill) }] : []
-  })
-  if (!chips.length) return null
-
-  const pick = (text: string) => {
-    // found before the text is set: a filled box takes these chips away
-    const box = row.current?.closest('[data-slot="aui_thread-viewport"]')?.querySelector<HTMLTextAreaElement>("textarea.aui-composer-input")
-    input.setText(text)
+/**
+ * What picking a template does. One that ends where a detail is still to come
+ * (`fill`) puts its text in the box with the caret at its end; the others ask
+ * their questions in one ask_user card, so they are sent at once.
+ */
+export function usePickTemplate(): (t: ReadyTemplate) => void {
+  const input = unstable_useComposerInput()
+  return (t) => {
+    if (!t.fill) {
+      void useAgent.getState().send(t.text)
+      return
+    }
+    // found before the text is set: a filled box takes the chips away
+    const box = document.querySelector<HTMLTextAreaElement>("textarea.aui-composer-input")
+    input.setText(t.text)
     // The box takes the new text on the next render. The caret has to be set
     // after it: that is also what lets a text ending in "@" open the file
     // picker, which only looks at the text up to the caret.
     requestAnimationFrame(() => {
       if (!box) return
       box.focus()
-      box.setSelectionRange(text.length, text.length)
+      box.setSelectionRange(t.text.length, t.text.length)
     })
   }
+}
 
+/**
+ * Chips above an empty composer for the jobs people come to Molfar for, driven
+ * by the same templates as the "/" menu and the starter cards. Desktop only:
+ * the phone shows them as a grid (`QuickGrid`).
+ */
+export function QuickActions(): ReactNode {
+  const templates = useTemplates()
+  const pick = usePickTemplate()
+  if (!templates.length) return null
   return (
     <div
-      ref={row}
       aria-label="Quick actions"
       // one row that scrolls sideways on a narrow screen; the scrollbar is
       // hidden because the cut-off chip already says there is more
-      className="-mb-2 flex w-full overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="-mb-2 hidden w-full overflow-x-auto overscroll-x-contain md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <div className="mx-auto flex shrink-0 items-center gap-1.5 px-0.5">
         <Lightning aria-hidden size={14} className="text-muted-foreground/70 shrink-0" />
-        {chips.map((c) => (
+        {templates.map((t) => (
           <button
-            key={c.label}
+            key={t.id}
             type="button"
+            title={t.description}
             className="text-muted-foreground hover:bg-muted hover:text-foreground border-border/60 h-7 shrink-0 rounded-full border px-3 text-xs whitespace-nowrap transition-colors"
-            onClick={() => pick(c.prefix + c.text)}
+            onClick={() => pick(t)}
           >
-            {c.label}
+            {t.label}
           </button>
         ))}
       </div>
+    </div>
+  )
+}
+
+/** Phones: the first four templates as a 2x2 grid above the composer. */
+export function QuickGrid(): ReactNode {
+  const templates = useTemplates()
+  const pick = usePickTemplate()
+  if (!templates.length) return null
+  return (
+    <div aria-label="Quick actions" data-testid="quick-grid" className="grid grid-cols-2 gap-2 md:hidden">
+      {templates.slice(0, 4).map((t) => {
+        const Icon = templateIcon(t.id)
+        return (
+          <button
+            key={t.id}
+            type="button"
+            className="bg-card hover:bg-muted border-border/60 flex min-h-11 min-w-0 items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm transition-colors"
+            onClick={() => pick(t)}
+          >
+            <Icon aria-hidden size={18} className="text-primary shrink-0" />
+            <span className="min-w-0 truncate">{t.label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+const BTN = "text-muted-foreground hover:bg-muted hover:text-foreground h-6 rounded-md px-2 text-xs whitespace-nowrap transition-colors"
+
+/**
+ * Quick actions in the action bar of the last reply: shorter, simpler, apply
+ * (when it only proposed) and undo (when it changed an app). Each is a plain
+ * message to Molfar, except undo, which restores the run's checkpoints.
+ */
+export function ReplyQuickActions(): ReactNode {
+  const id = useAuiState((s) => s.message.id)
+  const msgs = useAgent((s) => s.msgs)
+  const undone = useAgent((s) => s.undone)
+  const running = useAgent((s) => s.running)
+  const restore = useAgent((s) => s.restoreCheckpoint)
+  const send = useAgent((s) => s.send)
+  const at = msgs.findIndex((m) => m.id === id)
+  const msg = msgs[at]
+  if (!msg || at !== msgs.length - 1 || running || msg.streaming) return null
+  const open = (msg.checkpoints ?? []).filter((c) => !undone[c.id])
+  const undo = async () => {
+    for (const cp of open) {
+      if (window.confirm(restoreConfirm(cp.app, cp.label))) await restore(cp.app, cp.id, cp.id)
+    }
+  }
+  return (
+    <div className="ms-1 flex items-center gap-0.5 border-s ps-2" data-testid="reply-actions">
+      <button type="button" className={BTN} title="Say the last answer again, shorter" onClick={() => void send("Make your last answer shorter.")}>
+        Shorter
+      </button>
+      <button type="button" className={BTN} title="Say the last answer again in simpler words" onClick={() => void send("Say your last answer again in simpler words.")}>
+        Simpler
+      </button>
+      {!msg.checkpoints?.length ? (
+        <button type="button" className={BTN} title="Do what Molfar proposed" onClick={() => void send("Apply what you proposed.")}>
+          Apply
+        </button>
+      ) : null}
+      {open.length ? (
+        <button type="button" className={BTN} title="Put the changed apps back as they were before this reply" onClick={() => void undo()}>
+          Undo changes
+        </button>
+      ) : null}
     </div>
   )
 }

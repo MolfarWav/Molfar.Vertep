@@ -149,8 +149,8 @@ export interface AgentState {
   phoneTab: "chat" | "project"
   setPhoneTab: (tab: "chat" | "project") => void
   /** a "from memory" mark under a message asks the memory panel to open this entry */
-  memoryRequest: { file: string; text: string } | null
-  openMemory: (req: { file: string; text: string } | null) => void
+  memoryRequest: { file: string; text: string; scope?: string } | null
+  openMemory: (req: { file: string; text: string; scope?: string } | null) => void
   init: () => Promise<void>
   refreshSessions: () => Promise<void>
   refreshMcp: () => Promise<void>

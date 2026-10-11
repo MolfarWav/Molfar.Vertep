@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { ArrowCounterClockwise, ArrowLeft, ArrowsLeftRight, Brain, CaretRight, FileText, MagnifyingGlass, PencilSimple, Plus, Sparkle, Trash } from "@phosphor-icons/react"
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { memoryApi, type AgentMemory, type AgentSkill, type AgentSkillDetail, type MemoryHit, type ScopeMemory } from "./api"
 import { useAgent } from "./store"
 
@@ -63,15 +63,44 @@ function TopicNameInput({ value, onChange, disabled, autoFocus }: { value: strin
   )
 }
 
+/** The scope a memory file belongs to, read off its workspace-relative path. */
+export function scopeOfFile(file: string): string {
+  const app = /^apps\/([^/]+)\/\.memory\//.exec(file)
+  if (app) return `app:${app[1]}`
+  const project = /^projects\/([^/]+)\/\.memory\//.exec(file)
+  if (project) return `project:${project[1]}`
+  return "global"
+}
+
+/** Best effort: a run's mark carries the entry text, the panel the whole line
+ *  (maybe with a date), so either may contain the other. */
+function sameEntry(line: string, needle: string): boolean {
+  const a = line.replace(/^- /, "").trim().toLowerCase()
+  const b = needle.trim().toLowerCase()
+  return b.length > 0 && (a.includes(b) || b.includes(a))
+}
+
+/** The entry a "from memory" mark points at: shown with a ring and scrolled to. */
+interface Mark {
+  scope: string
+  text: string
+}
+
 /** One stored entry: its text, a Move action and Forget. `topic` is where it lives now (null = core). */
-function EntryRow({ line, scope, topic, topics, busy, run }: {
+function EntryRow({ line, scope, topic, topics, busy, run, mark }: {
   line: string
   scope: string
   topic: string | null
   topics: string[]
   busy: boolean
   run: Run
+  mark: Mark | null
 }): ReactNode {
+  const marked = !!mark && mark.scope === scope && sameEntry(line, mark.text)
+  const row = useRef<HTMLLIElement>(null)
+  useEffect(() => {
+    if (marked) row.current?.scrollIntoView({ block: "center" })
+  }, [marked])
   const [moving, setMoving] = useState(false)
   const [naming, setNaming] = useState(false)
   const [name, setName] = useState("")
@@ -84,7 +113,7 @@ function EntryRow({ line, scope, topic, topics, busy, run }: {
     })
   const targets = topics.filter((t) => t !== topic)
   return (
-    <li className="bg-muted/40 grid gap-2 rounded-lg px-3 py-2 text-sm">
+    <li ref={row} data-marked={marked || undefined} className={cn("bg-muted/40 grid gap-2 rounded-lg px-3 py-2 text-sm", marked && "ring-primary bg-primary/10 ring-2")}>
       <div className="flex items-start gap-1">
         <span className="min-w-0 flex-1 break-words">{line.slice(2)}</span>
         <Button
@@ -143,13 +172,20 @@ function EntryRow({ line, scope, topic, topics, busy, run }: {
   )
 }
 
-function MemorySection({ title, scope, memory, onChange, onError }: {
+function MemorySection({ title, scope, memory, onChange, onError, mark }: {
   title: string
   scope: string
   memory: ScopeMemory
   onChange: () => void
   onError: (e: unknown) => void
+  mark: Mark | null
 }): ReactNode {
+  const section = useRef<HTMLElement>(null)
+  // a mark without text only names the scope: show its section
+  const wholeScope = !!mark && mark.scope === scope && !mark.text.trim()
+  useEffect(() => {
+    if (wholeScope) section.current?.scrollIntoView({ block: "start" })
+  }, [wholeScope])
   const [draft, setDraft] = useState("")
   const [pick, setPick] = useState(CORE)
   const [newName, setNewName] = useState("")
@@ -172,7 +208,7 @@ function MemorySection({ title, scope, memory, onChange, onError }: {
     }
   }
   return (
-    <section className="grid gap-2">
+    <section ref={section} className="grid gap-2">
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="text-sm font-medium">{title}</h3>
         <span className="text-muted-foreground truncate font-mono text-xs">{memory.file}</span>
@@ -183,7 +219,7 @@ function MemorySection({ title, scope, memory, onChange, onError }: {
           <h4 className="text-muted-foreground text-xs font-medium">Core (always in the prompt)</h4>
           <ul className="grid gap-1">
             {core.map((line) => (
-              <EntryRow key={line} line={line} scope={scope} topic={null} topics={topicNames} busy={busy} run={run} />
+              <EntryRow key={line} line={line} scope={scope} topic={null} topics={topicNames} busy={busy} run={run} mark={mark} />
             ))}
           </ul>
         </div>
@@ -191,7 +227,8 @@ function MemorySection({ title, scope, memory, onChange, onError }: {
       {memory.topics.map((t) => {
         const lines = entriesOf(t.text)
         return (
-          <Collapsible key={t.topic} className="grid gap-1">
+          // a topic holding the marked entry starts open, or the entry is not on screen
+          <Collapsible key={t.topic} className="grid gap-1" defaultOpen={!!mark && mark.scope === scope && lines.some((l) => sameEntry(l, mark.text))}>
             <CollapsibleTrigger className="group/trig hover:bg-muted/60 flex w-full min-w-0 items-center gap-2 rounded-md px-1 py-1 text-left text-sm font-medium">
               <CaretRight size={14} className="text-muted-foreground shrink-0 transition-transform group-data-[panel-open]/trig:rotate-90" />
               <span className="min-w-0 flex-1 truncate">{t.title ?? t.topic}</span>
@@ -200,7 +237,7 @@ function MemorySection({ title, scope, memory, onChange, onError }: {
             <CollapsibleContent>
               <ul className="grid gap-1 pl-5">
                 {lines.map((line) => (
-                  <EntryRow key={line} line={line} scope={scope} topic={t.topic} topics={topicNames} busy={busy} run={run} />
+                  <EntryRow key={line} line={line} scope={scope} topic={t.topic} topics={topicNames} busy={busy} run={run} mark={mark} />
                 ))}
               </ul>
             </CollapsibleContent>
@@ -531,11 +568,24 @@ export function MemoryPanel(): ReactNode {
     else {
       setSkill(null)
       setCreating(false)
+      setMark(null)
     }
   }, [open, load])
   // a skill chip under a chat message asks for this skill to be opened
   const request = useAgent((s) => s.skillRequest)
   const openSkill = useAgent((s) => s.openSkill)
+  // a "from memory" mark (or the project pane's edit button) asks for a memory entry
+  const memoryRequest = useAgent((s) => s.memoryRequest)
+  const openMemory = useAgent((s) => s.openMemory)
+  const [mark, setMark] = useState<Mark | null>(null)
+  useEffect(() => {
+    if (!memoryRequest) return
+    setOpen(true)
+    setTab("memory")
+    setQuery("")
+    setMark({ scope: memoryRequest.scope ?? scopeOfFile(memoryRequest.file), text: memoryRequest.text })
+    openMemory(null)
+  }, [memoryRequest, openMemory])
   useEffect(() => {
     if (!request) return
     setOpen(true)
@@ -586,9 +636,9 @@ export function MemoryPanel(): ReactNode {
                 <SearchResults hits={hits} error={searchError} />
               ) : (
                 <>
-                  <MemorySection title="About you and everything" scope="global" memory={data.global} onChange={load} onError={onError} />
+                  <MemorySection title="About you and everything" scope="global" memory={data.global} onChange={load} onError={onError} mark={mark} />
                   {data.apps.map((a) => (
-                    <MemorySection key={a.id} title={`Project: ${a.id}`} scope={a.scope ?? `app:${a.id}`} memory={a} onChange={load} onError={onError} />
+                    <MemorySection key={a.id} title={`Project: ${a.id}`} scope={a.scope ?? `app:${a.id}`} memory={a} onChange={load} onError={onError} mark={mark} />
                   ))}
                   <p className="text-muted-foreground text-xs">
                     A project appears here once it has memory. Ask the agent to remember something about an app, or it will offer to at the end of a task.
