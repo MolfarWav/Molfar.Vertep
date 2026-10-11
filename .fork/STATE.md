@@ -31,9 +31,13 @@ is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bu
 `.fork/handoff/card-editor/PLAN.md`: all questions answered 2026-10-11 ("as recommended"). Built on the Roleplay
 branch `claude/v098-card` (from `quick-fixes`, pushed, NOT on the fork's main: that ships to every install, the
 user's word first): the Profile tab, "Structure it" (new plugin `plugins/profile/`), the persona's five
-questions, CHARX/JSON export. Browser-checked dark and light, 1280 and 390. Left: see PLAN "Built" (the extra
-fields with the user), then the Roleplay version, CHANGELOG and
-the 0.9.8 release. The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
+questions, CHARX/JSON export. Browser-checked dark and light, 1280 and 390. Round 2 (user's screenshots of
+Lorebary, 2026-10-11): many more fields, section switches (off = kept, not compiled), a sectioned form with a
+side rail and chips, "Fill empty" (one section or all; a vision model reads the portrait), the persona gets
+the same form and Structure it, editor tabs with icons in groups. Pictures in plugin llm requests are an ENGINE
+change (this branch, `2cb2c36`): on a 0.9.7 engine Fill empty works from text only. Both branches copied to the
+user's desktop workspace app by the device tools (no git there; install manifest left alone). Left: the user's
+test, then the Roleplay version, CHANGELOG and the 0.9.8 release. The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
 - Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
