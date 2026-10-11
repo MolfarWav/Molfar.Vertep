@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { BookBookmark, GraduationCap, Lightning, Sliders, UserCircle, Wrench } from "@phosphor-icons/react"
+import { ArrowsInLineVertical, BookBookmark, Check, Feather, GraduationCap, Lightning, Sliders, UserCircle, Wrench } from "@phosphor-icons/react"
 import { unstable_useComposerInput, useAuiState } from "@assistant-ui/react"
 import type { Icon } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
@@ -115,7 +115,10 @@ export function QuickGrid(): ReactNode {
   )
 }
 
-const BTN = "text-muted-foreground hover:bg-muted hover:text-foreground h-6 rounded-md px-2 text-xs whitespace-nowrap transition-colors"
+// Tinted pills, so the follow-ups read as actions next to the grey icon row;
+// Apply, the one that changes things, is filled.
+const BTN = "border-brand-line bg-brand-soft text-brand hover:bg-brand hover:text-brand-foreground inline-flex h-6 items-center gap-1 rounded-full border px-2.5 text-xs font-medium whitespace-nowrap transition-colors"
+const BTN_MAIN = "bg-brand text-brand-foreground hover:bg-brand/90 inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-medium whitespace-nowrap transition-colors"
 
 /**
  * Quick actions in the action bar of the last reply: shorter, simpler, and
@@ -131,15 +134,18 @@ export function ReplyQuickActions(): ReactNode {
   const msg = msgs[at]
   if (!msg || at !== msgs.length - 1 || running || msg.streaming) return null
   return (
-    <div className="ms-1 flex items-center gap-0.5 border-s ps-2" data-testid="reply-actions">
+    <div className="ms-1 flex items-center gap-1.5 border-s ps-2.5" data-testid="reply-actions">
       <button type="button" className={BTN} title="Say the last answer again, shorter" onClick={() => void send("Make your last answer shorter.")}>
+        <ArrowsInLineVertical size={13} weight="bold" aria-hidden />
         Shorter
       </button>
       <button type="button" className={BTN} title="Say the last answer again in simpler words" onClick={() => void send("Say your last answer again in simpler words.")}>
+        <Feather size={13} weight="bold" aria-hidden />
         Simpler
       </button>
       {!msg.checkpoints?.length ? (
-        <button type="button" className={BTN} title="Do what Molfar proposed" onClick={() => void send("Apply what you proposed.")}>
+        <button type="button" className={BTN_MAIN} title="Do what Molfar proposed" onClick={() => void send("Apply what you proposed.")}>
+          <Check size={13} weight="bold" aria-hidden />
           Apply
         </button>
       ) : null}
