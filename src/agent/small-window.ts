@@ -99,7 +99,7 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
   app_request: "Call an app's own plugin route as the user: id, method, path, body. Writes are real and committed.",
   model_try: "One paid test generation on a model (the user confirms): messages, system, model, maxTokens.",
   web_fetch: "Read a public web page as plain text (internet must be on in Settings).",
-  run_budget: "Before a big task: steps + one-line plan; the user sees the estimate and says go on or not.",
+  run_budget: "Before a big task (app code or 4+ files): steps, one-line plan, files; writes wait for the user's go.",
   checkpoint: "Save or restore an app's code: create before risky work, list, restore (asks the user). data/ is never touched.",
   skill_propose: "Propose a new skill or a full rewrite; the user saves or skips it. Load skill-authoring first.",
   skill_edit: "Change part of a skill: exact old text to new text; the user saves or skips it.",

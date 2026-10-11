@@ -188,8 +188,11 @@ describe("memory_search", () => {
 
   it("the tool returns entries with file and date", async () => {
     const t = buildMemoryTools("mia", p, {}).find((x) => x.name === "memory_search")!;
-    const text = out(await t.execute("s", { query: "Олену" }, undefined as never));
+    const r = await t.execute("s", { query: "Олену" }, undefined as never);
+    const text = out(r);
     expect(text).toMatch(/^memory\/olena\.md \(\d{4}-\d\d-\d\d\): /);
+    // the chat's "from memory" marks come from these
+    expect((r.details as { hits: unknown[] }).hits[0]).toMatchObject({ scope: "global", file: "memory/olena.md" });
     expect(out(await t.execute("s", { query: "дракон" }, undefined as never))).toContain("Nothing in memory matches");
   });
 });
