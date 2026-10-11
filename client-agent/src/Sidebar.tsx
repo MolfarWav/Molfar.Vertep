@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { ThreadListPrimitive, useAuiState } from "@assistant-ui/react"
-import { AppWindow, CaretRight, Folder, Plus } from "@phosphor-icons/react"
+import { AppWindow, CaretRight, Folder, MagnifyingGlass, Plus } from "@phosphor-icons/react"
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { projectsApi, type ProjectSummary } from "./api"
+import { MolfarAvatar } from "./MolfarAvatar"
 import { currentProjectId, useAgent } from "./store"
 
 const OPEN_KEY = "agent-ui-projects-open"
@@ -49,6 +51,62 @@ export function TagBadge({ tag }: { tag: string }): ReactNode {
     >
       {tag}
     </span>
+  )
+}
+
+/** The sidebar's search box, for any search button (rail, header): shows the full sidebar
+ *  (desktop: unfolds it, phone: opens the drawer) and puts the cursor in the box. */
+export function focusSidebarSearch(): void {
+  const state = useAgent.getState()
+  if (window.matchMedia("(min-width: 768px)").matches) state.setSidebarPinned(true)
+  else state.setSidebar(true)
+  // the box exists only once the sidebar has rendered unfolded
+  setTimeout(() => {
+    const boxes = [...document.querySelectorAll<HTMLInputElement>("input[data-sidebar-search]")]
+    boxes.find((b) => b.offsetParent !== null)?.focus()
+  }, 80)
+}
+
+function RailButton({ label, onClick, active, children }: { label: string; onClick: () => void; active?: boolean; children: ReactNode }): ReactNode {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={<Button variant="ghost" size="icon" aria-label={label} aria-current={active ? "page" : undefined} className={cn("size-9 rounded-lg", active && "bg-muted")} onClick={onClick} />}
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+/** The folded sidebar: an icon rail with the face, New chat, Search and one icon per project. */
+export function SidebarRail(): ReactNode {
+  const projects = useAgent((s) => s.projects)
+  const activeProject = useAgent((s) => currentProjectId(s))
+  const view = useAgent((s) => s.view)
+  const newChat = useAgent((s) => s.newChat)
+  const openProject = useAgent((s) => s.openProject)
+  return (
+    <TooltipProvider>
+      <div className="flex h-12 shrink-0 items-center justify-center">
+        <MolfarAvatar size={28} />
+      </div>
+      <nav aria-label="Projects" className="flex min-h-0 flex-1 flex-col items-center gap-1 overflow-y-auto py-2">
+        <RailButton label="New chat" onClick={() => newChat()}>
+          <Plus size={18} />
+        </RailButton>
+        <RailButton label="Search chats" onClick={focusSidebarSearch}>
+          <MagnifyingGlass size={18} />
+        </RailButton>
+        <div className="bg-border my-1 h-px w-6 shrink-0" />
+        {projects.map((p) => (
+          <RailButton key={p.id} label={p.title} active={view.kind === "project" ? view.id === p.id : activeProject === p.id} onClick={() => openProject(p.id)}>
+            <ProjectIcon project={p} className="size-[18px] text-[16px]" />
+          </RailButton>
+        ))}
+      </nav>
+    </TooltipProvider>
   )
 }
 
@@ -271,7 +329,7 @@ export function Sidebar(): ReactNode {
         <Plus className="size-4 shrink-0" />
         New chat
       </Button>
-      <ThreadListSearch value={search} onValueChange={setSearch} placeholder="Search chats" aria-label="Search chats" />
+      <ThreadListSearch value={search} onValueChange={setSearch} placeholder="Search chats" aria-label="Search chats" data-sidebar-search="" />
 
       <div className="text-muted-foreground flex items-center justify-between ps-2.5 pe-1 pt-3 pb-1 text-[11px] font-medium tracking-wider uppercase">
         <span>Projects</span>

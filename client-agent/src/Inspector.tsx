@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn, copyText, shortModelName } from "@/lib/utils"
-import { ArrowLeft, ArrowsClockwise, Check, Copy, MagnifyingGlass, Trash } from "@phosphor-icons/react"
+import { ArrowLeft, ArrowsClockwise, Check, Copy, Eye, Trash } from "@phosphor-icons/react"
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { inspectorApi, type InspectorEntry, type InspectorSummary } from "./api"
 import { MarkedText, SourcesPanel } from "./inspector-sources"
@@ -403,7 +403,7 @@ export function Inspector(): ReactNode {
   return (
     <>
       <Button variant="ghost" size="icon" className="size-9 shrink-0" aria-label="Prompt inspector" title="Prompt inspector" onClick={() => setOpen(true)}>
-        <MagnifyingGlass size={18} />
+        <Eye size={18} />
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="grid-cols-1 overflow-x-hidden max-sm:max-h-[calc(100dvh-1rem)] max-sm:max-w-[calc(100%-1rem)] max-sm:p-3 sm:max-w-4xl">
