@@ -202,6 +202,8 @@ const dict = {
   "Manual list": "手动列表",
   "Match the model": "匹配模型",
   "Model (tts-1, gpt-4o-mini-tts, playai-tts…)": "模型（tts-1、gpt-4o-mini-tts、playai-tts…）",
+  "The models think (local server)": "模型会思考（本地服务器）",
+  "Sends enable_thinking, as llama.cpp, vLLM and LM Studio read it: a preset's reasoning level turns thinking on, Off turns it off.": "发送 enable_thinking（llama.cpp、vLLM 和 LM Studio 读取它）：预设中的推理级别开启思考，关闭则关闭思考。",
   "Model supports reasoning/thinking": "模型支持推理/思考",
   "Models": "模型",
   "Models are discovered from the endpoint. Pick Manual if the list is wrong or to set context windows.": "模型从端点自动发现。如果列表不对，或要设置上下文窗口，请选“手动”。",

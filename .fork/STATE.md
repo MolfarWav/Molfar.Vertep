@@ -59,6 +59,12 @@ tags (a budget adds to the reply limit); an all-thinking answer names the cause;
 is skipped; a bulk card import no longer rates every card (one card still is); the insert and the fast note say the reply
 stays in the story's language. Inferred, not verified: a local OpenAI-compatible model the engine does not know as a
 reasoning model gets no thinking fields at all, so on such a server only the server's own settings bound the thinking.
+Engine part (same day, the user's word: "if not too big"): a chat completions connection has a "The models think (local
+server)" switch in Settings (Add and Edit; `ConnectionDef.thinking`, `templateThinking` in `src/providers/custom.ts`).
+On: every model of the connection counts as thinking and gets `chat_template_kwargs.enable_thinking` (true when the
+preset asks for reasoning, false on Off). No budget field is sent: which per-request budget field llama.cpp reads is
+unknown here. Tested against a fake server (`test/custom-template-thinking.test.ts`), not against a real llama.cpp.
+Browser-checked (dark/light 1280, light 390). Text completion connections are untouched.
 
 ## 0.9.11: RELEASED 2026-10-11 (tag v0.9.11 pushed by the user). Fix: with no model picked, Molfar runs the first shown model, not the catalog's first (OpenRouter "~anthropic/claude-fable-latest").
 

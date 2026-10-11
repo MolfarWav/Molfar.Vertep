@@ -16,6 +16,8 @@ export interface EngineConnection {
   /** text completion connections: "auto", a format id, or "custom" */
   promptFormat?: string
   promptFormatCustom?: PromptFormat
+  /** chat completions endpoints: the models think, switched by enable_thinking */
+  thinking?: boolean
   hasKey: boolean
   credentialType?: "api_key" | "oauth"
   effectiveProviderId: string
@@ -212,9 +214,9 @@ export const avatarApi = {
 
 export const connectionsApi = {
   list: () => api<{ connections: EngineConnection[] }>("GET", "/v1/settings/connections").then((r) => r.connections ?? []),
-  create: (body: { name: string; providerId?: string; oauthProvider?: "radius"; gateway?: string; api?: EngineConnection["api"]; baseUrl?: string; proxyUrl?: string; models?: unknown; key?: string; promptFormat?: string; promptFormatCustom?: PromptFormat }) =>
+  create: (body: { name: string; providerId?: string; oauthProvider?: "radius"; gateway?: string; api?: EngineConnection["api"]; baseUrl?: string; proxyUrl?: string; models?: unknown; key?: string; promptFormat?: string; promptFormatCustom?: PromptFormat; thinking?: boolean }) =>
     api<{ connection: EngineConnection }>("POST", "/v1/settings/connections", body),
-  update: (id: string, body: { name?: string; baseUrl?: string; key?: string; models?: unknown; promptFormat?: string; promptFormatCustom?: PromptFormat }) =>
+  update: (id: string, body: { name?: string; baseUrl?: string; key?: string; models?: unknown; promptFormat?: string; promptFormatCustom?: PromptFormat; thinking?: boolean }) =>
     api<{ connection: EngineConnection }>("PATCH", `/v1/settings/connections/${encodeURIComponent(id)}`, body),
   remove: (id: string) => api("DELETE", `/v1/settings/connections/${encodeURIComponent(id)}`),
 }

@@ -3154,7 +3154,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.patch("/v1/settings/connections/:id", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const body = await c.req.json<{ name?: string; baseUrl?: string; key?: string; models?: unknown; promptFormat?: unknown; promptFormatCustom?: unknown }>().catch(() => null) ?? {};
+    const body = await c.req.json<{ name?: string; baseUrl?: string; key?: string; models?: unknown; promptFormat?: unknown; promptFormatCustom?: unknown; thinking?: unknown }>().catch(() => null) ?? {};
+    if (body.thinking !== undefined && typeof body.thinking !== "boolean") return c.json({ error: "thinking must be true or false" }, 400);
     let models: import("../connections.js").ConnectionDef["models"] | undefined;
     if (body.models !== undefined) {
       const check = validateConnectionInput({ name: "x", api: "openai-completions", baseUrl: "http://x.example", models: body.models });
@@ -3172,6 +3173,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       ...(typeof body.baseUrl === "string" ? { baseUrl: body.baseUrl } : {}),
       ...(typeof body.key === "string" ? { key: body.key } : {}),
       ...(models !== undefined ? { models } : {}),
+      ...(typeof body.thinking === "boolean" ? { thinking: body.thinking } : {}),
       ...format,
     });
     if (!updated) return c.json({ error: "connection not found" }, 404);

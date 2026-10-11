@@ -202,6 +202,8 @@ const dict = {
   "Manual list": "수동 목록",
   "Match the model": "모델에 맞춤",
   "Model (tts-1, gpt-4o-mini-tts, playai-tts…)": "모델(tts-1, gpt-4o-mini-tts, playai-tts…)",
+  "The models think (local server)": "모델이 생각함 (로컬 서버)",
+  "Sends enable_thinking, as llama.cpp, vLLM and LM Studio read it: a preset's reasoning level turns thinking on, Off turns it off.": "llama.cpp, vLLM, LM Studio가 읽는 enable_thinking을 보냅니다. 프리셋의 추론 수준이 생각을 켜고, 끔으로 끕니다.",
   "Model supports reasoning/thinking": "모델이 추론/사고를 지원",
   "Models": "모델",
   "Models are discovered from the endpoint. Pick Manual if the list is wrong or to set context windows.": "모델은 엔드포인트에서 자동 검색됩니다. 목록이 잘못되었거나 컨텍스트 창을 설정하려면 수동을 선택하세요.",

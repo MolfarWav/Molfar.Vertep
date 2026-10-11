@@ -39,6 +39,9 @@ export interface ConnectionDef {
    *  "custom" with `promptFormatCustom`. */
   promptFormat?: string;
   promptFormatCustom?: PromptFormat;
+  /** openai-completions endpoints only: the models think, switched by chat_template_kwargs.enable_thinking
+   *  (llama.cpp, vLLM, LM Studio). */
+  thinking?: boolean;
 }
 
 /** A text completion connection's format choice from untrusted input. */
@@ -176,6 +179,7 @@ export function validateConnectionInput(input: {
   key?: unknown;
   promptFormat?: unknown;
   promptFormatCustom?: unknown;
+  thinking?: unknown;
 }):
   | { ok: true; value: ConnectionInput }
   | { ok: false; error: string } {
@@ -261,7 +265,9 @@ export function validateConnectionInput(input: {
     if (!format.ok) return format;
     return { ok: true, value: { name, api: input.api, baseUrl, models, ...format.value, ...(key ? { key } : {}) } };
   }
-  return { ok: true, value: { name, api: input.api as ConnectionDef["api"], baseUrl, models, ...(key ? { key } : {}) } };
+  if (input.thinking !== undefined && typeof input.thinking !== "boolean") return { ok: false, error: "thinking must be true or false" };
+  const thinking = input.thinking === true && input.api === "openai-completions";
+  return { ok: true, value: { name, api: input.api as ConnectionDef["api"], baseUrl, models, ...(thinking ? { thinking } : {}), ...(key ? { key } : {}) } };
 }
 
 export function listConnections(p: UserPaths): ConnectionInfo[] {
@@ -276,7 +282,7 @@ export function listConnections(p: UserPaths): ConnectionInfo[] {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-type ConnectionInput = Pick<ConnectionDef, "providerId" | "oauthProvider" | "gateway" | "api" | "baseUrl" | "proxyOf" | "models" | "promptFormat" | "promptFormatCustom"> & { name: string; key?: string };
+type ConnectionInput = Pick<ConnectionDef, "providerId" | "oauthProvider" | "gateway" | "api" | "baseUrl" | "proxyOf" | "models" | "promptFormat" | "promptFormatCustom" | "thinking"> & { name: string; key?: string };
 
 export function createConnection(p: UserPaths, value: ConnectionInput): ConnectionInfo {
   const file = readConnections(p);
@@ -292,6 +298,7 @@ export function createConnection(p: UserPaths, value: ConnectionInput): Connecti
           baseUrl: value.baseUrl!,
           models: value.models ?? "auto",
           ...(value.proxyOf ? { proxyOf: value.proxyOf } : {}),
+          ...(value.thinking ? { thinking: true } : {}),
           ...(value.api === "openai-text" ? { promptFormat: value.promptFormat ?? "auto", ...(value.promptFormatCustom ? { promptFormatCustom: value.promptFormatCustom } : {}) } : {}),
         };
   file.connections[id] = def;
@@ -309,7 +316,7 @@ export function createConnection(p: UserPaths, value: ConnectionInput): Connecti
 export function updateConnection(
   p: UserPaths,
   id: string,
-  patch: { name?: string; baseUrl?: string; key?: string; models?: ConnectionDef["models"]; promptFormat?: string; promptFormatCustom?: PromptFormat },
+  patch: { name?: string; baseUrl?: string; key?: string; models?: ConnectionDef["models"]; promptFormat?: string; promptFormatCustom?: PromptFormat; thinking?: boolean },
 ): ConnectionInfo | null {
   const file = readConnections(p);
   const def = file.connections[id];
@@ -324,6 +331,10 @@ export function updateConnection(
     def.promptFormat = patch.promptFormat;
     if (patch.promptFormat === "custom" && patch.promptFormatCustom) def.promptFormatCustom = patch.promptFormatCustom;
     else delete def.promptFormatCustom;
+  }
+  if (patch.thinking !== undefined && def.api === "openai-completions" && !def.proxyOf) {
+    if (patch.thinking) def.thinking = true;
+    else delete def.thinking;
   }
   writeConnections(p, file);
   const endpoint = connectionEndpoint(def);
