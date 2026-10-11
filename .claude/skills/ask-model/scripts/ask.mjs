@@ -84,7 +84,21 @@ async function readStdin() {
 }
 
 // ---------- providers ----------
-async function httpJson(url, { method = 'GET', headers = {}, body, timeout = 300 }) {
+// A cloud session's proxy drops a connection now and then (a bare ECONNRESET,
+// "fetch failed"): the same request is tried again before moving to the next target.
+async function httpJson(url, opts) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await httpOnce(url, opts);
+    } catch (e) {
+      const network = e instanceof TypeError && /fetch failed/i.test(e.message);
+      if (!network || attempt >= 2) throw e;
+      await new Promise((r) => setTimeout(r, 1000 * (attempt * 2 + 1)));
+    }
+  }
+}
+
+async function httpOnce(url, { method = 'GET', headers = {}, body, timeout = 300 }) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeout * 1000);
   try {
