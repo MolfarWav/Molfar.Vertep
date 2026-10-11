@@ -9,7 +9,11 @@ Supersedes `.fork/handoff/agent-tools/HANDOFF.md` (its four open tools are folde
 file when this one ships).
 
 ## Progress (newest first)
-- 2026-10-11, branch `claude/project-thread-c3878l` (pushed, not merged, not released): part 2, the page.
+- 2026-10-11, follow-up after PR #7 merged (same branch, new PR): a skill clicked in the project pane opened with its
+  SKILL.md path as a "supporting file" ("is not a skill file path"); it now opens the skill. Under the last reply,
+  Shorter/Simpler are brand-tinted pills with icons, Apply is filled, the icon row tints on hover, and "Undo" on the
+  changed-files line is in the link colour. The user liked it.
+- 2026-10-11, branch `claude/project-thread-c3878l` (merged into main as PR #7, not released): part 2, the page.
   - Layout (`App.tsx`, `Header.tsx`, `Sidebar.tsx`): the sidebar folds to a 56 px rail (avatar, new chat, search,
     project icons). Header right: model chip (the only desktop model picker), context meter (amber 75 %, red 90 %; a
     reopened chat takes it from its last run, `lastUsage` in `store.ts`), connection dot ("Offline" only when down),
