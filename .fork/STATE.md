@@ -28,12 +28,12 @@ is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bu
 `tar` tests (Windows-only, CI on Linux passes); `client-agent` needs its own `bun install` in a fresh worktree.
 
 ## Next: 0.9.8, the card editor and the user's Persona
-`.fork/handoff/card-editor/PLAN.md`: all questions answered 2026-10-11 ("as recommended"). Done on the Roleplay
-branch `claude/v098-card` (from `quick-fixes`, pushed, not main): the structured profile
-(`extensions.molfar_profile`, compiled into description/personality, labeled lines) and the Profile tab,
-browser-checked dark 1280 and 390 in a throwaway engine (light not checked: the app keeps its own theme).
-Next: the "Structure it" model button, the Persona profile + questionnaire, export variants (CHARX, JSON).
-The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
+`.fork/handoff/card-editor/PLAN.md`: all questions answered 2026-10-11 ("as recommended"). Built on the Roleplay
+branch `claude/v098-card` (from `quick-fixes`, pushed, NOT on the fork's main: that ships to every install, the
+user's word first): the Profile tab, "Structure it" (new plugin `plugins/profile/`), the persona's five
+questions, CHARX/JSON export. Browser-checked dark and light, 1280 and 390. Left: see PLAN "Built" (PNG/JSON
+export carrying `studio.versions`; the extra fields with the user), then the Roleplay version, CHANGELOG and
+the 0.9.8 release. The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
 
 ## Repos after 0.9.6 (cleaned 2026-10-10)
 - Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are

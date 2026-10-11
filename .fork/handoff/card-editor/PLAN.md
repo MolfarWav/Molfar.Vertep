@@ -133,9 +133,25 @@ SillyTavern/RisuAI carry readable text, and the prompt inspector shows the compi
 - `src/components/character/profile-tab.tsx` (drafted by Kimi K2.7 Code, reviewed: field components
   hoisted out of render): the Profile tab after Core, not for groups.
 - DATA-FORMATS "The profile", `edit-large-card` (both copies), `workspace-agent-task.md` here.
-- Next: the "Structure it" button (a plugin route with `host.llm.request`, like the soul rating in
-  `plugins/relations/plugin.js` `askSoul`), then the Persona profile + questionnaire (Persona adapter
-  `enginePersonaToUI` in `src/lib/engine.ts` drops unknown keys: add `profile`), then export variants.
+- "Structure it": new plugin `plugins/profile/` (POST `/profile/structure`, GET/DELETE `/profile/draft`;
+  model = the dashboard's sensor model, else the app's), drafts in `data/profile-drafts/<id>.json`;
+  `src/components/character/structure-draft.tsx` shows what the texts would become; Accept =
+  `acceptDraft` (all sections at once: a partial accept would lose the text of the sections left out),
+  old text into `studio.versions`. Prompt tried on DeepSeek V4.1 Flash and GLM 5.3 Flash with a
+  Ukrainian card: good split; "each fact in one field" and an `occupation` field were added after it.
+- Persona: `persona.profile` (same shape) + "Five questions" on the Personas page
+  (`src/components/persona/persona-questionnaire.tsx`, no model call): compiles one description,
+  the private note is `identity.comment`, earlier text kept as notes, hand additions after the
+  compiled lines kept, an edit inside them replaced only after a confirm.
+- Export: a dropdown, PNG / CHARX (`src/lib/charx.ts`: V3 card.json + `assets/icon|emotion|other`,
+  `embeded://` URIs; the card.json drops pictures and `studio.versions`) / JSON. Fixed on the way: PNG
+  export of a card on the default avatar stopped silently (tainted canvas in the sandboxed frame).
+- All browser-checked in a throwaway engine (dark and light, 1280 and 390), CHARX re-imported with its
+  emotions. Roleplay tests 896 pass.
+- Left open: the PNG and JSON exports still carry `studio` with `versions` (old texts of the card) and
+  the pictures; whether to slim them is the user's call. Item 4 (the extra fields with the user) and
+  the emotion images as full-size files (deferred) stay. Lorebary extras (pickers, trauma, per-field
+  suggest) are later.
 
 ### Decided by the user (2026-10-11)
 - Compile the profile into `description`/`personality` on save (the recommended way): yes.
