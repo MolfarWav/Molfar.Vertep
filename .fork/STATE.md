@@ -48,6 +48,8 @@ dashboard's in-chat settings got note age + soul/nudge/fast prompts and a gear b
 panels of both plugins are gone (no `uiPanel` export). "Open dashboard" sits at the top of the strip.
 README (3 languages): download and Discord badges, profile.png and persona.png rows, "Work in progress" removed.
 
+## 1.0.0: PREPARED 2026-10-12 (main fast-forwarded; the tag v1.0.0 is the user's to push). Group chats ship as Roleplay 4.35.0 (pushed to the fork's main on the user's word); the engine is unchanged from 0.9.11. Still open for groups: scene generation, the Chats page group part, the Characters type filter, small-model prompt tweaks, a workspace-agent task for the edit-large-card skill copy, a darker palette yellow on light themes.
+
 ## 0.9.11: RELEASED 2026-10-11 (tag v0.9.11 pushed by the user). Fix: with no model picked, Molfar runs the first shown model, not the catalog's first (OpenRouter "~anthropic/claude-fable-latest").
 
 ## 0.9.10: RELEASED 2026-10-11 (tag v0.9.10 pushed by the user)
