@@ -84,6 +84,8 @@ export interface RunSkill {
 /** A memory entry a run found with memory_search: its file (workspace-relative,
  *  e.g. `.memory/MEMORY.md`), the entry text, and its date when it has one. */
 export interface RunMemory {
+  /** "global", "app:<id>" or "project:<name>" */
+  scope?: string
   file: string
   text: string
   date?: string
