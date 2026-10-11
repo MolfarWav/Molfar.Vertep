@@ -35,7 +35,7 @@ questions, CHARX/JSON export. Browser-checked dark and light, 1280 and 390. Roun
 Lorebary, 2026-10-11): many more fields, section switches (off = kept, not compiled), a sectioned form with a
 side rail and chips, "Fill empty" (one section or all; a vision model reads the portrait), the persona gets
 the same form and Structure it, editor tabs with icons in groups. Pictures in plugin llm requests are an ENGINE
-change (this branch, `2cb2c36`): on a 0.9.7 engine Fill empty works from text only. Both branches copied to the
+change (this branch, `2cb2c36`): on a 0.9.7 engine Fill empty works from text only. The Roleplay branch is copied to the
 user's desktop workspace app by the device tools (no git there; install manifest left alone). Left: the user's
 test, then the Roleplay version, CHANGELOG and the 0.9.8 release. The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
 
