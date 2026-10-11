@@ -5,8 +5,12 @@ Written 2026-10-11 from the user's decisions. A track of its own, separate from 
 `.fork/STATE.md` first. To keep parallel work from colliding on push, this track writes its progress
 HERE (and in its own commits), not in STATE.md or START.md, until it is merged and released.
 Everything is engine code (`src/agent/`, `client-agent/`), no Roleplay fork changes unless noted.
-Supersedes `.fork/handoff/agent-tools/HANDOFF.md` (its four open tools are folded in below; delete that
-file when this one ships).
+Supersedes the old `.fork/handoff/agent-tools/HANDOFF.md` (deleted after 0.9.8; git history keeps it).
+
+## Status (2026-10-11)
+Parts 1 and 2 (tools 2.1-2.4, 3.1-3.6, the page) RELEASED in 0.9.8. Next: part 3 (3.7 skills that learn,
+2.5 app_screenshot), the release the user wants to call 1.0.0. Still not checked live: the plan gate on a real
+small model, `web_fetch` against a real site, `model_try` on a real model, Open app from inside the frame.
 
 ## Progress (newest first)
 - 2026-10-11, follow-up after PR #7 merged (same branch, new PR): a skill clicked in the project pane opened with its

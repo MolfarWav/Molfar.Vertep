@@ -21,55 +21,42 @@ The Discord player's timeouts turned out to be a Roleplay that had not finished 
 Android update 0.9.2 -> 0.9.7 (2026-10-11, user's Xiaomi): the in-app update was stopped by Play Protect ("never
 checked apps from this developer", "Install anyway" not tappable); OK closed it silently (the session reports
 ABORTED). Same APK downloaded from GitHub in the browser installed fine. MERGED into main (PR 3, `5f7fed7`):
-ABORTED now shows "download in the browser"; ships with 0.9.8 (it changes the installed app, so it helps from the
+ABORTED now shows "download in the browser"; shipped in 0.9.8 (it changes the installed app, so it helps from the
 update after that). Not yet seen on a real phone. For good: Android developer verification (user's Google account).
 CI lint on main was red from the `.fork/ui-assets` HTML mockups (3 duplicate CSS properties): `.fork/**/*.html`
 is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bun run test` fails the 0600 and
 `tar` tests (Windows-only, CI on Linux passes); `client-agent` needs its own `bun install` in a fresh worktree.
 
-## 0.9.8: TAGGED 2026-10-11 on `70bc6c3`, with the Molfar agent track (Roleplay 4.33.0 on the fork main `6be41bb`)
-1.0.0 (user, 2026-10-11): postponed to the next big batch of agent work; 0.9.8 stays as released, agent included.
-A draft of 1.0.0 notes that relabeled this same code is commit `2b14bcc` (not on any branch now), unused.
-0.9.8's notes miss the agent page's colour pass (accent buttons, Kurale and the dot grid on Vertep) and the "M" avatar fallback.
-The user said to merge and release 0.9.8 (2026-10-11). Engine main also carries the Molfar agent track
-(PRs 6, 7, 9: tools, run budget, the new agent page; `.fork/handoff/molfar-agent/HANDOFF.md`), which the
-user merged; the notes cover both. Release commit: package.json 0.9.8, CHANGELOG, `.fork/release-notes/0.9.8.md`.
+## 0.9.8: RELEASED 2026-10-11 (tag v0.9.8 on `70bc6c3`, release built with 6 assets; Roleplay 4.33.0 on the fork main `6be41bb`)
+The card in fields (Profile tab, section switches, Structure it / Fill empty / Read from picture, the persona's
+form and five questions, PNG/CHARX/JSON export), the vision model setting (`model-vision.json`, `GET/PUT
+/v1/models/vision`, pictures in plugin llm requests), and the Molfar agent track (PRs 6, 7, 9: tools, run budget,
+the new agent page; `.fork/handoff/molfar-agent/HANDOFF.md`). The user tested the card editor before the tag.
+1.0.0 (user, 2026-10-11): kept for the next big batch of agent work; 0.9.8 stays as released, agent included.
+0.9.8's notes miss the agent page's colour pass and the "M" avatar fallback; the user may add them to the GitHub
+release text by hand. Card editor leftovers: `.fork/handoff/card-editor/PLAN.md` (rewritten as a short "later" list).
+The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
 
-### The card editor and the user's Persona
-`.fork/handoff/card-editor/PLAN.md`: all questions answered 2026-10-11 ("as recommended"). Built on the Roleplay
-branch `claude/v098-card` (from `quick-fixes`, pushed, NOT on the fork's main: that ships to every install, the
-user's word first): the Profile tab, "Structure it" (new plugin `plugins/profile/`), the persona's five
-questions, CHARX/JSON export. Browser-checked dark and light, 1280 and 390. Round 2 (user's screenshots of
-Lorebary, 2026-10-11): many more fields, section switches (off = kept, not compiled), a sectioned form with a
-side rail and chips, "Fill empty" (one section or all; a vision model reads the portrait), the persona gets
-the same form and Structure it, editor tabs with icons in groups. Pictures in plugin llm requests are an ENGINE
-change (this branch, `2cb2c36`): on a 0.9.7 engine Fill empty works from text only. Round 3 (2026-10-11): "Read from
-picture" in Appearance (avatar or an attached image, optional rewrite of filled fields, draft then Accept);
-the engine got a "Vision model" setting in Settings > Connections and models (`model-vision.json`; Auto = the
-cheapest shown model with `images`, by catalog price; `GET/PUT /v1/models/vision`, PUT shell-only), and a
-plugin llm request with pictures and no `model` goes to it. Male characters skip Measurements. The Roleplay branch is copied to the
-user's desktop workspace app by the device tools (no git there; install manifest left alone). Left: the user's
-test, then the Roleplay version, CHANGELOG and the 0.9.8 release. The user's workspace copies of `edit-large-card`: `.fork/handoff/card-editor/workspace-agent-task.md`.
-
-## Repos after 0.9.6 (cleaned 2026-10-10)
-- Every `claude/v09x` engine branch and the Roleplay fork's `card-sources`, `lore-v094`, `presets`, `v095` are
-  merged into main; the local branches and worktrees are gone. The remote copies wait for the user to delete
-  them on GitHub (auto mode blocks remote branch deletion). `claude/upstream-context-fixes` stays.
+## Repos (checked 2026-10-11, after 0.9.8)
+- Engine: every `claude/*` branch except `claude/upstream-context-fixes` is fully in main (0 commits ahead):
+  `android-update-fallback`, `project-thread-c3878l`, `-eed1tv`, `-mqq0gh`, `-ukmmm7`, `-a2fc82`, `v098-card`.
+  `claude/upstream-context-fixes` stays (the open upstream PR, CLAUDE.md).
+- Roleplay fork: `claude/v098-card` and `quick-fixes` are fully in main.
+- The session's proxy cannot delete remote branches: the user deletes the merged ones on GitHub.
 
 ## Open, from 0.9.4-0.9.6
-- `updateCharacter` studio bag: checked 2026-10-11, edits go through PATCH since 4.29 and send only what changed (the first edit of an imported card sends only that field). The one hole left, a whole-card PUT dropping studio keys the app does not manage, is fixed on the Roleplay branch `quick-fixes` (`721e353`).
-- Presets: "Use this preset" split into "Use in this chat" and "Make default" (user, 2026-10-11; Roleplay
-  `quick-fixes` `398ed9b`, ships with 0.9.8). "Make default" still moves chats that rode the old default (store behavior).
+- Presets: "Make default" still moves chats that rode the old default (store behavior). The studio bag hole and
+  the "Use in this chat" / "Make default" split shipped in Roleplay 4.33.0.
 - One first reply on NanoGPT GLM 5.2 thinking carried the preset's planning as plain text (no think tags);
   the user chose to leave it.
 - Lesson from 0.9.6: after copying Roleplay files into a workspace, check the app's manifest `source.head` and
   re-verify the files after the first engine start (an app update can merge the released versions back).
-- Plans for later, the user picks the version: the card editor (`.fork/handoff/card-editor/PLAN.md`), group
-  chats (do not work for the user: 1.0.0), the Data Bank's embeddings and "document -> entries"
-  (`v094/data-bank.md`), the queue in START.md.
+- Plans for later: the queue in START.md.
 
 ## Released (details: CHANGELOG, `.fork/release-notes/`, git history)
 Tags are pushed by the user; `release.yml` builds the archives, the APK and the Docker image.
+- 0.9.8 (2026-10-11; Roleplay 4.33.0): the card in fields, one vision model for apps, Molfar's new page, run
+  budget and four new tools, the Android update fallback.
 - 0.9.7 (2026-10-11; Roleplay 4.32.0): where each part of the prompt comes from (inspector and Prompt peek),
   Molfar's own prompt labeled, fast sends with big lorebooks and preset regex, plurals.
 - 0.9.6 (2026-10-10; Roleplay 4.31.0): presets with options per chat (`meta.presetVars`, `{{#if}}`, section

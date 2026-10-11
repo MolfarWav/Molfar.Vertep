@@ -4,11 +4,11 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
-Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio bag overwrite moved to the card editor (0.9.8), the plurals to the end of 0.9.7.
-3. **0.9.8 is released once the user pushes the tag** (STATE). Was: card editor + the user's Persona (user, 2026-10-10): `.fork/handoff/card-editor/PLAN.md` (first the studio bag overwrite; a card modeled on Lorebary's, keys from the user; the Persona as a real card with a 3-6 question generator; button labels, export
-   icon, export variants that keep emotions and the book, emotion images as full-size files, a pass
-   over the extra fields with the user).
-4. **Group chats** do not work for the user (seen 2026-10-10, cause unknown): look into them for 1.0.0.
+1. **Molfar, the next agent batch = 1.0.0** (user, 2026-10-11): part 3 of `.fork/handoff/molfar-agent/HANDOFF.md`
+   (3.7 skills that learn, then 2.5 app_screenshot) and its live checks.
+2. **Card editor leftovers**: `.fork/handoff/card-editor/PLAN.md` (the extra fields with the user, Lorebary
+   extras, emotion images as full-size files).
+4. **Group chats** do not work for the user (seen 2026-10-10, cause unknown): look into them.
 5. **Data Bank, the rest** (`.fork/handoff/v094/data-bank.md`): embeddings through `/v1/embeddings`
    with the term search as fallback; "document -> lorebook entries".
 6. **Plugin speed on phones** (from 0.9.7): the sandbox gives every route pass 10 s on every device and a
@@ -26,13 +26,11 @@ Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio ba
 7. **"Reply ready" notification** (user, 2026-10-05): a Settings option, off by default, that pops up
    when a reply is ready while the app is in the background (browser Notifications API; check whether
    the Android service should post it). Plan and spec it first.
-8. **Molfar's skill usage chip** (left from 0.9.1): show in the chat which skills Molfar loaded.
 10. **pi-ai upgrade** (builtin catalogs miss newer models; latest major 1.x): its own careful step on a
     branch with the full test run, the agent and every OAuth flow checked on desktop and APK.
 11. **Each only on the user's word:**
     - UI redesign, next round: `.fork/handoff/ui-pr1-shell/BRIEF.md` (read its status header; ask the
       user what is still wanted; Home content and the app-to-Molfar bridge).
-    - Five agent tools: `.fork/handoff/agent-tools/HANDOFF.md`.
     - Android APK leftovers: `.fork/handoff/android-apk/HANDOFF.md`; building Roleplay on the phone
       failed with "Failed to fetch" (needs the phone's engine log); compact, hideable shell tabs on phones.
     - Full rename of internal names (`chrysalis` command, `CHRYSALIS_*`, data paths) with data migration.
