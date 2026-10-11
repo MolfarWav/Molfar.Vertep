@@ -68,7 +68,7 @@ network now reads as a finished short reply on custom endpoints.
 
 ## Next: 1.0.0 = group chats (user, 2026-10-11)
 Looked into live: groups work in the engine, but a group cannot be deleted (wrong route), opens in the card
-editor where edits are dropped, and has no UI for members. Plan: `.fork/handoff/group-chats/PLAN.md`.
+editor where edits are dropped, and has no UI for members. Plan: `.fork/handoff/group-chats/PLAN.md`. Steps 1-2 done on the Roleplay branch (not released); step 3 = the narrator mode.
 1.0.1 = the phone version; the agent batch (3.7, 2.5) comes after.
 
 ## Repos (checked 2026-10-11, after 0.9.8)

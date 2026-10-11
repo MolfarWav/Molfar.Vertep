@@ -71,3 +71,14 @@ task (CLAUDE.md rule).
 - Agreed (user, 2026-10-11): the Characters | Groups switch at the top of Characters; the group card
   proposal (`/mnt/project-files/group-chats/group-card-proposal.md`) as written; external models
   (`ask-model`) join the work.
+- Step 2 (group card) on the same Roleplay branch, not released. Data: `GroupConfig` in `src/lib/types.ts`
+  (scenario, openings, memberSettings {talkativeness, opening, color}, own books, memberBooks), documented
+  in the fork's `docs/DATA-FORMATS.md` (test checks every key). Server: shared scenario and talkativeness
+  overrides in `chatMembers`, member books by `memberBooks`, muted members' books out, group openings as a
+  Narrator message with swipes, per-member opening choice. Client: Characters | Groups switch, group editor
+  (`src/components/groups/group-editor.tsx`, tabs overview/members/scene/turns/lore/chats), "Group
+  settings" in the member bar, "Edit group" after converting. Deleting a character drops it from groups.
+  Checked in a browser (dark 1280, light 390). Not checked: picture upload, the below-2 warning.
+  `color` is stored but not used yet (step 3).
+- Next, step 3: the narrator mode (one reply voices all members, the default) with coloured dialogue;
+  then scene generation, small-model prompt tweaks, the Chats page group part, a type filter.
