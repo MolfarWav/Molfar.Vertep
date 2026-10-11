@@ -44,7 +44,11 @@ have one. Roleplay: Litopys chapter+arc and the dashboard prompts have Restore; 
 presets are read-only; image prefix/negative default to empty. The one gap, utility prompts in editable preset
 copies, got a per-field "Restore default" on the Roleplay fork branch `claude/project-thread-6ih1e9`
 (unreleased; browser-checked at 1280 and 390). Left on purpose: a copy's Main Prompt (its "default" is its
-source preset, which a copy does not record); Litopys' one Reset covers both prompts.
+source preset, which a copy does not record).
+Same branch, user's ask "app settings live in the apps": Litopys settings open from a Library gear (Settings >
+Memory points there), the dashboard's in-chat settings got note age + soul/nudge/fast prompts and a gear before the
+first build, the Tools panels of both plugins are gone (no `uiPanel` export), every prompt restores on its own.
+Release (4.34.0) waits on the user's word.
 
 ## Repos (checked 2026-10-11, after 0.9.8)
 - Engine: every `claude/*` branch except `claude/upstream-context-fixes` is fully in main (0 commits ahead):
