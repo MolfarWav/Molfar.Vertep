@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 0.9.11 (2026-10-11)
+
 - Molfar runs the model its picker shows when you never picked one: it used to show the first model you ticked in Settings > Models but run the first of the whole catalog, which on OpenRouter is the `~anthropic/claude-fable-latest` alias, and bill it.
 
 ## 0.9.10 (2026-10-11)
