@@ -18,6 +18,10 @@ Plurals: `t()` reads `{n|one|other}` by `Intl.PluralRules`; the i18n placeholder
 Plan and UI spec were in `.fork/handoff/inspector-sources/` (git history).
 The Discord player's timeouts turned out to be a Roleplay that had not finished building on their phone
 (2026-10-11); the speed work stays (measured, and it removed real 10 s cases). CLOSED.
+Android update 0.9.2 -> 0.9.7 (2026-10-11, user's Xiaomi): the in-app update was stopped by Play Protect ("never
+checked apps from this developer", "Install anyway" not tappable); OK closed it silently (the session reports
+ABORTED). Same APK downloaded from GitHub in the browser installed fine. Branch `claude/android-update-fallback`:
+ABORTED now shows "download in the browser". For good: Android developer verification (user's Google account).
 
 ## Next: 0.9.8, the card editor and the user's Persona
 `.fork/handoff/card-editor/PLAN.md` ("Start here"): the studio bag data loss first, then the user's answers
