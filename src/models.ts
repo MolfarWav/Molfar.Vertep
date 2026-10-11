@@ -151,6 +151,9 @@ export interface GenerateRequest {
    * is sent as a user turn, because where it sits is what it means.
    */
   messages: { role: "user" | "assistant" | "system"; content: string }[];
+  /** Pictures sent with the LAST user turn (base64, no data: prefix). A model
+   *  that takes no images refuses the request rather than getting a placeholder. */
+  images?: { data: string; mimeType: string }[];
   systemPrompt?: string;
   model?: string | null; // "provider/model-id" or null = default/first available
   /** Stable id for this conversation (chat id, agent session, …). Keys
@@ -1140,6 +1143,15 @@ export class UserModelService {
               timestamp: Date.now(),
             },
       ) as Message[];
+    if (req.images?.length) {
+      // pi-ai swaps images for a text placeholder on a text-only model: say so instead
+      if (!model.input.includes("image")) throw new Error(`${model.id} does not take images: pick a vision model`);
+      const last = messages.findLastIndex((m) => m.role === "user");
+      if (last < 0) throw new Error("images need a user message to ride on");
+      const turn = messages[last] as Extract<Message, { role: "user" }>;
+      const text = typeof turn.content === "string" ? turn.content : "";
+      messages[last] = { ...turn, content: [{ type: "text", text }, ...req.images.map((i) => ({ type: "image" as const, data: i.data, mimeType: i.mimeType }))] };
+    }
     const toolTrace: GenerateResult["toolTrace"] = [];
     // legacy presets write the short level "med"; pi-ai clamps unknown levels
     // to OFF (silently disabling thinking) — normalize to "medium"

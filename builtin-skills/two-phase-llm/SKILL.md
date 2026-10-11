@@ -29,6 +29,8 @@ host.llm.request("reply", {
   // optional: model: "provider/model-id" (omit = the user's default),
   // reasoning: "low", presetParams: { temperature: 0.8, max_tokens: 600 },
   // schema: { type: "object", properties: {...} }  → structured result in r.json
+  // images: [{ data: "<base64>", mimeType: "image/png" }]  → up to 4, ride on the last user turn;
+  //   a model without image input fails with r.error (pick a vision model)
 });
 // next pass: host.llm.results.reply = { text, json?, reasoning?, model, error?, usage }
 host.llm.embed("vec", { texts: ["a", "b"] });      // next pass: host.llm.embedResults.vec = number[][] | null
