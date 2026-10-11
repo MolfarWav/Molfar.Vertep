@@ -2367,7 +2367,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         body.project,
       );
     } catch (e) {
-      if (/no models configured/i.test((e as Error).message)) {
+      if (e instanceof ModelNotConfiguredError || /no models configured/i.test((e as Error).message)) {
         return c.json({ error: (e as Error).message }, 503);
       }
       throw e;
@@ -2608,7 +2608,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     try {
       agent = await getAgent(u, id, model);
     } catch (e) {
-      if (/no models configured/i.test((e as Error).message)) throw new HttpError(503, (e as Error).message);
+      if (e instanceof ModelNotConfiguredError || /no models configured/i.test((e as Error).message)) throw new HttpError(503, (e as Error).message);
       throw e;
     }
     const runKey = `${u.username}:${agent.sessionId}`;
