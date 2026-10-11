@@ -435,7 +435,14 @@ public final class MainActivity extends Activity implements EngineService.Listen
             return;
         }
         updateDone();
-        if (status == PackageInstaller.STATUS_SUCCESS || status == PackageInstaller.STATUS_FAILURE_ABORTED) return;
+        if (status == PackageInstaller.STATUS_SUCCESS) return;
+        // Play Protect closing its "never checked this developer" dialog reports
+        // the same as the person cancelling, yet the same APK opened from the
+        // browser installs: offer that way instead of closing silently
+        if (status == PackageInstaller.STATUS_FAILURE_ABORTED) {
+            showUpdateFailed(getString(R.string.update_aborted));
+            return;
+        }
         // a key the parser could not compare, refused by the system after all
         if (status == PackageInstaller.STATUS_FAILURE_CONFLICT) {
             showReinstall();

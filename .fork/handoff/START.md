@@ -47,7 +47,7 @@ Small leftovers from 0.9.4-0.9.6 (preset defaults): STATE, "Open". The studio ba
     - A visual-novel chat look ("D") as an option.
 
 ## How to work here (learned 2026-10-02)
-- The user runs the engine from `C:\Users\sulaz\Chrysalis-Engine` with the launcher, which checks out release tags. Work in a git worktree (`git worktree add -b claude/<name> .claude/worktrees/<name> HEAD`, then EnterWorktree with that path), not in the user's running checkout: uncommitted edits there stop the launcher's updates, and its tag checkout rewrites files under you.
+- The user runs the engine from `E:\Claude\Chrysalis-Engine` (the desktop; `C:\Users\sulaz\Chrysalis-Engine` links to it) with the launcher, which checks out release tags. Work in a git worktree (`git worktree add -b claude/<name> .claude/worktrees/<name> HEAD`, then EnterWorktree with that path), not in the user's running checkout: uncommitted edits there stop the launcher's updates, and its tag checkout rewrites files under you.
 - The user pushes release tags (`git tag vX.Y.Z origin/main && git push origin vX.Y.Z`); fast-forward `main` to the release commit first. Release notes: English, user-facing, by the rule in `.fork/RELEASE.md`.
 - Bash in this environment eats backslashes in inline scripts: for text with `\n`, `\0` or Windows paths, write the snippet with the Write tool and apply it from a file, or use Edit.
 - Launcher tests: separate `LOCALAPPDATA`, port 8799, `CHRYSALIS_OPEN_BROWSER=false`, a pre-made `shortcut-asked` marker (or the test puts a shortcut on the real desktop).

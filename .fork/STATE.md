@@ -18,6 +18,14 @@ Plurals: `t()` reads `{n|one|other}` by `Intl.PluralRules`; the i18n placeholder
 Plan and UI spec were in `.fork/handoff/inspector-sources/` (git history).
 The Discord player's timeouts turned out to be a Roleplay that had not finished building on their phone
 (2026-10-11); the speed work stays (measured, and it removed real 10 s cases). CLOSED.
+Android update 0.9.2 -> 0.9.7 (2026-10-11, user's Xiaomi): the in-app update was stopped by Play Protect ("never
+checked apps from this developer", "Install anyway" not tappable); OK closed it silently (the session reports
+ABORTED). Same APK downloaded from GitHub in the browser installed fine. MERGED into main (PR 3, `5f7fed7`):
+ABORTED now shows "download in the browser"; ships with 0.9.8 (it changes the installed app, so it helps from the
+update after that). Not yet seen on a real phone. For good: Android developer verification (user's Google account).
+CI lint on main was red from the `.fork/ui-assets` HTML mockups (3 duplicate CSS properties): `.fork/**/*.html`
+is out of the lint now (`878c0e2`); main CI green again. On Windows, a local `bun run test` fails the 0600 and
+`tar` tests (Windows-only, CI on Linux passes); `client-agent` needs its own `bun install` in a fresh worktree.
 
 ## Next: 0.9.8, the card editor and the user's Persona
 `.fork/handoff/card-editor/PLAN.md` ("Start here"): the studio bag data loss first, then the user's answers
@@ -109,5 +117,5 @@ Tags are pushed by the user; `release.yml` builds the archives, the APK and the 
 ## Closed with the user: do not reopen
 - UI redesign: designed by Hermes; the brief is queued (handoff 4), do not start it before the user says so.
 - Release 0.1.0 title on GitHub reads "Molfar.Vertep 0.1.0"; update checks read `tag_name`.
-- Delegation rule (Opus/Fable orchestrate, other models execute) is in `CLAUDE.md` and `~/.claude/CLAUDE.md`. `ask-model` is on the desktop only; `adaptive-agent` is a Claude Code skill pair, not for Hermes.
+- Delegation rule (Opus/Fable orchestrate, other models execute) is in `CLAUDE.md` and `~/.claude/CLAUDE.md`. `ask-model`: the personal copy on the desktop (`~/.claude/skills/ask-model`, keys in its `keys.env`) and, since 2026-10-11, a repo copy `.claude/skills/ask-model` for the laptop and cloud (keys from env; in the cloud also the hosts in Allowed domains, set by the user in the project's cloud environment); `adaptive-agent` is a Claude Code skill pair, not for Hermes.
 - Launcher: one `.bat`, source mode, update channel = latest release tag, `dev` = newest `claude/*`. Versions: significant = minor, patch = patch.

@@ -23,6 +23,7 @@ dist/
 # local Claude settings stay local; the fork's repo skills are shared
 /.claude/*
 !/.claude/skills/
+/.claude/skills/ask-model/keys.env
 .vscode/
 .idea/
 .DS_Store
