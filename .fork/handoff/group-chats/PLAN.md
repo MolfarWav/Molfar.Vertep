@@ -43,3 +43,21 @@ Trigger reply works, mutes and List mode write to the group file and take effect
 
 A Roleplay card/group format change updates `docs/DATA-FORMATS.md`, `edit-large-card` and a workspace
 task (CLAUDE.md rule).
+
+## User's answers (2026-10-11)
+- Groups must not get lost among characters: either their own place, or Characters gets a filter by card
+  type (cards already carry `molfar_card_type`: single, narrator, group...). A real group card is needed,
+  with its own settings (overriding members' first messages and more).
+- Default mode: the narrator (one reply voices all), switchable to "each in turn" (the user's favourite;
+  cards have talkativeness).
+- Chats: only the group part in 1.0.0, plus coloured dialogue and anything else worth borrowing.
+- Wanted on the group card: generating a shared scenario, auto or semi-auto.
+
+## Lorebooks in a group (read from code 2026-10-11, not run)
+- Scope = global books + every member's own and linked books + the persona's (`scopeBookIds`,
+  `src/lib/store.ts` ~67; the engine scans only `meta.lorebookIds`, `plugin.js` ~1458). Muted members'
+  books scan too.
+- A group has no book of its own: the card editor shows a Lorebook tab for a group, but group edits are
+  dropped.
+- Entry character filters match the current speaker (`plugin.js` ~1505), fine for "each in turn"; the
+  narrator mode has no single speaker, so it must treat every active member as present.
