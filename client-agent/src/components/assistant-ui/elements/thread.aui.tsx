@@ -207,7 +207,8 @@ const ThreadRoot: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
           <ThreadScrollToBottom />
           <ThreadFollowupSuggestions />
           <AskBar />
-          <AuiIf condition={(s) => s.composer.isEmpty && !s.thread.isRunning}>
+          {/* an empty chat already offers the templates as cards (desktop) or a grid (phone) */}
+          <AuiIf condition={(s) => !isNewChatView(s) && s.composer.isEmpty && !s.thread.isRunning}>
             <QuickActions />
           </AuiIf>
           <AuiIf condition={(s) => isNewChatView(s) && s.composer.isEmpty}>
@@ -282,10 +283,11 @@ function whenLabel(at: number): string {
 }
 
 const cardClass =
-  "bg-card hover:bg-muted border-border/60 fade-in slide-in-from-bottom-2 animate-in fill-mode-both flex min-h-16 min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition-colors duration-200 max-md:nth-[n+4]:hidden";
+  "bg-card hover:bg-muted border-border/60 fade-in slide-in-from-bottom-2 animate-in fill-mode-both flex min-h-16 min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition-colors duration-200";
 
 /** Starter cards on an empty chat: pick up the last chat, or start one of the
- *  task templates. A phone shows three of them, as a list. */
+ *  task templates. A phone lists the last three chats instead: its templates
+ *  are the grid above the composer. */
 const StarterCards: FC<{ project: string | null }> = ({ project }) => {
   const sessions = useAgentStore((s) => s.sessions);
   const projects = useAgentStore((s) => s.projects);
@@ -293,9 +295,11 @@ const StarterCards: FC<{ project: string | null }> = ({ project }) => {
   const templates = useTemplates();
   const pick = usePickTemplate();
   // the newest chat of this project, or of any when there is no project
-  const last: EngineSession | undefined = sessions
+  const recent: EngineSession[] = sessions
     .filter((x) => !x.archived && x.lastAt && (!project || x.project === project))
-    .sort((a, b) => (b.lastAt ?? 0) - (a.lastAt ?? 0))[0];
+    .sort((a, b) => (b.lastAt ?? 0) - (a.lastAt ?? 0))
+    .slice(0, 3);
+  const last = recent[0];
   const projectOf = (id?: string | null) => {
     const p = projects.find((x) => x.id === id);
     return p ? p.title || p.name : null;
@@ -306,24 +310,24 @@ const StarterCards: FC<{ project: string | null }> = ({ project }) => {
       data-testid="starter-cards"
       className="mt-6 grid w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
     >
-      {last ? (
-        <button type="button" className={cardClass} onClick={() => void open(last.sessionId)}>
+      {recent.map((chat, i) => (
+        <button key={chat.sessionId} type="button" className={cn(cardClass, i > 0 && "md:hidden")} onClick={() => void open(chat.sessionId)}>
           <span className="bg-primary/15 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
             <ClockCounterClockwise aria-hidden size={18} />
           </span>
           <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="line-clamp-2 text-sm font-medium">Continue: {last.title || "New chat"}</span>
+            <span className="line-clamp-2 text-sm font-medium">{i === 0 ? "Continue: " : ""}{chat.title || "New chat"}</span>
             <span className="text-muted-foreground truncate text-xs">
-              {whenLabel(last.lastAt ?? 0)}
-              {projectOf(last.project) ? ` · ${projectOf(last.project)}` : ""}
+              {whenLabel(chat.lastAt ?? 0)}
+              {projectOf(chat.project) ? ` · ${projectOf(chat.project)}` : ""}
             </span>
           </span>
         </button>
-      ) : null}
+      ))}
       {templates.slice(0, last ? 5 : 6).map((t) => {
         const Icon = templateIcon(t.id);
         return (
-          <button key={t.id} type="button" className={cardClass} onClick={() => pick(t)}>
+          <button key={t.id} type="button" className={cn(cardClass, "max-md:hidden")} onClick={() => pick(t)}>
             <span className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
               <Icon aria-hidden size={18} />
             </span>
