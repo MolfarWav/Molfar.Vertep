@@ -1,6 +1,6 @@
 /** Pictures a plugin sends with an llm request (src/plugins/runtime.ts): checked, never trimmed. */
 import { describe, expect, it } from "bun:test";
-import { PLUGIN_IMAGE_CHARS, sanitizePluginImages } from "../src/plugins/runtime";
+import { PLUGIN_IMAGE_CHARS, sanitizePluginImages } from "../src/plugins/runtime.js";
 
 describe("sanitizePluginImages", () => {
   it("passes good pictures and nothing for none", () => {
