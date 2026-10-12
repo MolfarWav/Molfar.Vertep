@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.0.2 (2026-10-12)
+
+- Molfar: `ux-review` is a built-in skill. When Molfar builds or changes an app or a plugin, it checks that a user can find, understand and use the new UI on desktop and on a phone; `app-authoring` and `finish-change` point to it. The `edit-large-card` card skill writes profile fields and lets the Roleplay app compile the card's text.
+- The Roleplay app 4.37.0 and 4.38.0 (their own CHANGELOG has the details): groups get their own colour and generate their own scenario and openings; the Chats page becomes a list grouped by time with a panel for the picked chat, and chats can be pinned; FRANKENX's prose language is a pick of 14 languages; group members differ in how much they talk.
+
 ## 1.0.1 (2026-10-12)
 
 - Connections: an OpenAI-compatible connection to a local server (llama.cpp, vLLM, LM Studio) can say its models think. The engine then sends `enable_thinking`, so a preset's reasoning level turns thinking on and Off really turns it off. Before, such a model got no thinking setting at all and could think through its whole reply limit.
