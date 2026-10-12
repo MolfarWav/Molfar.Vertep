@@ -81,6 +81,20 @@ preset asks for reasoning, false on Off). No budget field is sent: which per-req
 unknown here. Tested against a fake server (`test/custom-template-thinking.test.ts`), not against a real llama.cpp.
 Browser-checked (dark/light 1280, light 390). Text completion connections are untouched.
 
+## UX audit backlog (2026-10-12; user: fix it bit by bit, together with the next releases)
+Five external vision models reviewed screenshots (129 kept) (shell, agent page, Roleplay 4.37.0; 1280/390; all
+themes) against `ux-review`; findings checked against the code, wrong ones dropped. The document (Ukrainian,
+ranked by impact/effort, exact screens and files) is NOT in the repo: desktop
+`E:\Claude\Chrysalis-Engine\data\ux-audit\UX-AUDIT.md` (gitignored `data/`; screenshots in `screens/`, raw
+reports in `reports/`), also in the project files `/mnt/project-files/ux-audit/`. The laptop has no copy; the
+user copies it when needed. Take items into releases as the user picks; mark them done in the document.
+Top items: connection delete has no confirm (`client/src/settings.tsx` ~1586); dashboard errors show "sensor reply
+was not JSON" to users (`plugins/relations/plugin.js` ~2744); agent page "Full" is the permission mode with no
+hint (`client-agent/src/Header.tsx` ~160); Roleplay Home "no model" chip did nothing in the test run and is hidden
+on phones (`home-view.tsx`); desktop Settings dialog has no close button; Groups tab header says "Characters 0";
+stock preset shows two notices and two copy buttons; tab rows overflow on phones (Tools, card editor, preset
+editor); jargon without hints (Advanced tab, lorebooks, personas, Library/Litopys, Shortcuts).
+
 ## UX rule for UI work (2026-10-12; engine merged into main, Roleplay 4.37.0 on the fork's main `97b7c3b`, both on the user's word)
 The user's rule: every UI change is judged first by how easily a user finds, understands and uses it, desktop and phone.
 Skill `.claude/skills/ux-review/` (checklist on real components, tokens and breakpoints + a walk-through), a CLAUDE.md

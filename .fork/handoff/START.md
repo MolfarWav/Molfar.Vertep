@@ -4,6 +4,8 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+0. **UX audit backlog** (user, 2026-10-12, ongoing): take a few items into each release from the audit
+   document (STATE, "UX audit backlog", gives where it lives). Not a release of its own.
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is
    broken, the proposed shape; confirm the shape with the user first). Absorbs item 4 and the colour part of 6a.
 1c. **Group scene generation + Chats page**: released as Roleplay 4.38.0 (STATE). Left: a run of scene generation
