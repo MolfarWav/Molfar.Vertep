@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.0.4 (2026-10-12)
+
+- The Roleplay app 4.40.0 (its own CHANGELOG has the details): a group chat has its own turn settings on top of the group's defaults (a Turns button above the chat, and the generation mode in the new-chat step), so one group can be played by a narrator in one chat and turn by turn in another; "Only the member you pick" gets a "Who answers?" row above the message box; self responses and auto mode get plain names and a line of help; a narrator group left on manual answers again.
+
 ## 1.0.3 (2026-10-12)
 
 - The small fixes from the UX audit. Shell: deleting a connection asks first; desktop Settings has a close button; a connection's status dot carries a word; the models counter reads "N shown · M available" and "Show every model" is a checkbox; a hint says what the star and sliders do; "Add connection" is the primary button; the New app dialog has labels and says why Create is off; the theme menu shows a swatch per theme; an app's delete button is a 40 px trash icon on phones.

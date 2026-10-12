@@ -5,7 +5,9 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Group turns per chat: Roleplay 4.40.0 on the fork's main `ee998bb` (2026-10-12, on the user's word; ships with the next Molfar Vertep release)
+## 1.0.4: PREPARED 2026-10-12 (main fast-forwarded on the user's word; the tag v1.0.4 is the user's to push). Ships Roleplay 4.40.0.
+
+## Group turns per chat: Roleplay 4.40.0 on the fork's main `ee998bb` (2026-10-12, on the user's word)
 User report: a group on "Each in turn" + "Only when you trigger a member" "never answers"; and turn settings should
 belong to the chat, not the group card. Cause: manual mode works as designed (the send stores the user's message
 only) but its trigger hid in a member chip's popover and a staged reply bubble flashed and vanished. Now: chat meta
@@ -18,7 +20,7 @@ Follow-up the same day (user: "no labels, nothing is clear"): self responses and
 line of help ("The same member may answer twice in a row", "Keep the scene going on its own"); auto mode is hidden
 and paused under "you pick" (its bare send made nobody answer). The user looked at it and said ship it.
 
-## 1.0.3: PREPARED 2026-10-12 (main fast-forwarded on the user's word; the tag v1.0.3 is the user's to push). Ships Roleplay 4.39.0 (pushed to the fork's main `d1fde1b`): clickable Chats panel details and every S item of the UX audit (see "UX audit backlog").
+## 1.0.3: RELEASED 2026-10-12 (tag v1.0.3 pushed by the user). Ships Roleplay 4.39.0 (pushed to the fork's main `d1fde1b`): clickable Chats panel details and every S item of the UX audit (see "UX audit backlog").
 
 ## 1.0.2: RELEASED 2026-10-12 (tag v1.0.2 pushed by the user; release workflow run 26). Ships Roleplay 4.37.0 and 4.38.0 (4.38.0 pushed to the fork's main `65b38ac` on the user's word) and the built-in ux-review skill.
 Group scene generation (START.md 1c), Roleplay fork commits `fb2db99`..`e68b02d`: the group editor's Scene tab
