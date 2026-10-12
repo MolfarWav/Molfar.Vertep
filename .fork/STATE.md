@@ -66,6 +66,13 @@ preset asks for reasoning, false on Off). No budget field is sent: which per-req
 unknown here. Tested against a fake server (`test/custom-template-thinking.test.ts`), not against a real llama.cpp.
 Browser-checked (dark/light 1280, light 390). Text completion connections are untouched.
 
+## Dashboard event vocabulary, bigger (2026-10-11, in Roleplay 4.36.0 with the thinking fix)
+19 new events in `EVENT_ROWS` (`plugins/relations/plugin.js`), 3 meanings widened (protected_her, protected_her_standing,
+insult); `trust.shared_secret`-style ids count. Draft by an external model, reviewed and cut. Measured on 72 scenes
+(uk/ru/en, `/mnt/project-files/dashboard-vocab/`): DeepSeek V4.1 Flash 39 -> 2-6 turns with no usable event; Gemma 4
+26B A4B improves but swings between runs and often invents ids. +~300 tokens on the sensor prompt. Not yet: what lands
+in `other` on the user's real chats (debug `unknownEvents`).
+
 ## 0.9.11: RELEASED 2026-10-11 (tag v0.9.11 pushed by the user). Fix: with no model picked, Molfar runs the first shown model, not the catalog's first (OpenRouter "~anthropic/claude-fable-latest").
 
 ## 0.9.10: RELEASED 2026-10-11 (tag v0.9.10 pushed by the user)
