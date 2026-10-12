@@ -5,6 +5,8 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## 1.0.3: PREPARED 2026-10-12 (main fast-forwarded on the user's word; the tag v1.0.3 is the user's to push). Ships Roleplay 4.39.0 (pushed to the fork's main `d1fde1b`): clickable Chats panel details and every S item of the UX audit (see "UX audit backlog").
+
 ## 1.0.2: RELEASED 2026-10-12 (tag v1.0.2 pushed by the user; release workflow run 26). Ships Roleplay 4.37.0 and 4.38.0 (4.38.0 pushed to the fork's main `65b38ac` on the user's word) and the built-in ux-review skill.
 Group scene generation (START.md 1c), Roleplay fork commits `fb2db99`..`e68b02d`: the group editor's Scene tab
 generates the shared scenario (mode "From the cards" or "Something wild", an optional wish whose language sets the
@@ -82,7 +84,7 @@ unknown here. Tested against a fake server (`test/custom-template-thinking.test.
 Browser-checked (dark/light 1280, light 390). Text completion connections are untouched.
 
 ## UX audit backlog (2026-10-12; user: fix it bit by bit, together with the next releases)
-**Done (2026-10-12, branch `claude/clickable-chat-details-ux-s-reyv3r` in both repos, not released):** every
+**Done (2026-10-12, released in 1.0.3 / Roleplay 4.39.0):** every
 item sized S. Engine: connection delete confirm, desktop Settings close button, connection status word, models
 counter "N shown · M available", star/sliders hint, primary Add connection, New app labels, theme swatches,
 app delete as a 40 px trash icon; agent page: "Mode: Full" with what each mode does, chat list time line,

@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.0.3 (2026-10-12)
+
+- The small fixes from the UX audit. Shell: deleting a connection asks first; desktop Settings has a close button; a connection's status dot carries a word; the models counter reads "N shown · M available" and "Show every model" is a checkbox; a hint says what the star and sliders do; "Add connection" is the primary button; the New app dialog has labels and says why Create is off; the theme menu shows a swatch per theme; an app's delete button is a 40 px trash icon on phones.
+- Agent page: the mode switch reads "Mode: Full" and each mode says what it allows; chats in the list show their time; "Continue" sits on its own row above the templates; the context shows once ("context 5k of 32k · 16%"); "Apply" is "Apply proposal"; template titles wrap on phones; the phone header names its icons.
+- The Roleplay app 4.39.0 (its own CHANGELOG has the details): the Chats panel opens the cards, group, persona, preset and lorebooks it names, and the audit's small fixes across the app.
+
 ## 1.0.2 (2026-10-12)
 
 - Molfar: `ux-review` is a built-in skill. When Molfar builds or changes an app or a plugin, it checks that a user can find, understand and use the new UI on desktop and on a phone; `app-authoring` and `finish-change` point to it. The `edit-large-card` card skill writes profile fields and lets the Roleplay app compile the card's text.
