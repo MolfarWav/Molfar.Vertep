@@ -524,7 +524,7 @@ function SkillView({ skill, initialFile, scopes, onBack, onChanged, onImprove, o
   )
 }
 
-export function MemoryPanel(): ReactNode {
+export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<"memory" | "skills">("memory")
   const [data, setData] = useState<AgentMemory | null>(null)
@@ -604,8 +604,16 @@ export function MemoryPanel(): ReactNode {
 
   return (
     <>
-      <Button variant="ghost" size="icon" className="size-9 shrink-0" aria-label="Memory and skills" title="Memory and skills" onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        size={caption ? "default" : "icon"}
+        className={caption ? "h-12 w-14 shrink-0 flex-col gap-0.5 px-0 text-[10px] leading-3 font-normal" : "size-9 shrink-0"}
+        aria-label="Memory and skills"
+        title="Memory and skills"
+        onClick={() => setOpen(true)}
+      >
         <Brain size={18} />
+        {caption}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">

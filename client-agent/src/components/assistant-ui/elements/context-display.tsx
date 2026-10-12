@@ -292,10 +292,6 @@ function RingVisual() {
   );
 }
 
-function RingPercentLabel() {
-  const { percent } = useContextDisplay();
-  return <span className="font-mono tabular-nums">{Math.round(percent)}%</span>;
-}
 const ContextDisplayRing: FC<PresetProps> = ({
   modelContextWindow,
   className,
@@ -316,7 +312,6 @@ const ContextDisplayRing: FC<PresetProps> = ({
       aria-label="Context usage"
     >
       <RingVisual />
-      <RingPercentLabel />
     </ContextDisplayTrigger>
     <ContextDisplayContent side={side} />
   </ContextDisplayRoot>

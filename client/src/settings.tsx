@@ -147,7 +147,16 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
           <Tabs.List>
             <div className="flex h-full w-full flex-col justify-between">
               <div className="flex w-full flex-col gap-3 pt-3">
-                <Tabs.SectionTitle>{tr("Settings")}</Tabs.SectionTitle>
+                <div className="flex items-center justify-between pr-2">
+                  <Tabs.SectionTitle>{tr("Settings")}</Tabs.SectionTitle>
+                  <IconButton
+                    icon={<IconSmall name="outline-xmark" />}
+                    variant="ghost-muted"
+                    title={tr("Close settings")}
+                    aria-label={tr("Close settings")}
+                    onClick={() => props.onClose()}
+                  />
+                </div>
                 <div className="flex w-full flex-col gap-1.5">
                   {tabs.map((t) => (
                       <Tabs.Trigger key={t.value} value={t.value}>
@@ -1505,6 +1514,7 @@ function ApiTab(props: { initialModel?: string | null }) {
   }, [wantedConnection])
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<EngineConnection | null>(null)
+  const [deleting, setDeleting] = useState<EngineConnection | null>(null)
   const [err, setErr] = useState("")
   const [query, setQuery] = useState("")
   const [busy, setBusy] = useState(false)
@@ -1549,13 +1559,20 @@ function ApiTab(props: { initialModel?: string | null }) {
         {all.length ? <div className="flex flex-col gap-1">
             <div className="flex flex-wrap items-center gap-2">
               <input className={inputClass} placeholder={tr("Search every model…")} value={query} onChange={(e) => setQuery(e.currentTarget.value)} />
-              {filtered ? <Button variant="ghost" size="normal" disabled={busy} onClick={() => void setShown(all.filter((m) => m.shown).map((m) => `${m.provider}/${m.modelId}`), false)}>
-                  {tr("Show every model")}
-                </Button> : null}
+              <label className={cn("flex items-center gap-2 text-13 text-ink", { "cursor-pointer": filtered })}>
+                <input
+                  type="checkbox"
+                  className="size-4 shrink-0 accent-[var(--c-contrast)]"
+                  checked={!filtered}
+                  disabled={busy || !filtered}
+                  onChange={() => void setShown(all.filter((m) => m.shown).map((m) => `${m.provider}/${m.modelId}`), false)}
+                />
+                {tr("Show every model")}
+              </label>
             </div>
             <p className="text-12 text-ink-muted">
               {filtered
-                ? tr("{shown} of {total} models shown", { shown: all.filter((m) => m.shown).length, total: all.length })
+                ? tr("{shown} shown · {total} available", { shown: all.filter((m) => m.shown).length, total: all.length })
                 : tr("Nothing is chosen, so every model is shown. Tick the models you use, and only those appear in the pickers.")}
             </p>
           </div> : null}
@@ -1575,7 +1592,10 @@ function ApiTab(props: { initialModel?: string | null }) {
                         {c.credentialType === "oauth" ? tr(" · subscription") : c.hasKey || !(c.providerId || c.oauthProvider) ? "" : tr(" · needs key")}
                       </span>
                     </span>
-                    <span className={cn("size-1.5 shrink-0 rounded-full", { "bg-success": c.hasKey || !(c.providerId || c.oauthProvider), "bg-ink-faint": !c.hasKey && !!(c.providerId || c.oauthProvider) })} />
+                    <span className="flex shrink-0 items-center gap-1.5 text-11 text-ink-muted">
+                      <span className={cn("size-1.5 shrink-0 rounded-full", { "bg-success": c.hasKey || !(c.providerId || c.oauthProvider), "bg-ink-faint": !c.hasKey && !!(c.providerId || c.oauthProvider) })} />
+                      {c.hasKey || !(c.providerId || c.oauthProvider) ? tr("Connected") : tr("Needs key")}
+                    </span>
                     <IconButton
                       icon={<Icon name="pencil-line" />}
                       variant="ghost-muted"
@@ -1588,14 +1608,8 @@ function ApiTab(props: { initialModel?: string | null }) {
                       variant="ghost-muted"
                       size="small"
                       title={tr("Delete connection")}
-                      onClick={async () => {
-                        try {
-                          await connectionsApi.remove(c.id)
-                          connections.refetch()
-                        } catch (e: any) {
-                          setErr(e.message ?? String(e))
-                        }
-                      }}
+                      aria-label={tr("Delete connection")}
+                      onClick={() => setDeleting(c)}
                     />
                   </div>
                   <ConnectionModels
@@ -1620,7 +1634,22 @@ function ApiTab(props: { initialModel?: string | null }) {
           {err ? <div className="text-12 text-danger">{err}</div> : null}
         </section>
 
-        {editing === null && !adding ? <Button variant="neutral" size="normal" className="self-start gap-2" onClick={() => { setErr(""); setAdding(true) }}>
+        {deleting ? <ConfirmDeleteConnection
+            connection={deleting}
+            onClose={() => setDeleting(null)}
+            onDelete={async () => {
+              const c = deleting
+              setDeleting(null)
+              try {
+                await connectionsApi.remove(c.id)
+                connections.refetch()
+                void models.refetch()
+              } catch (e: any) {
+                setErr(e.message ?? String(e))
+              }
+            }}
+          /> : null}
+        {editing === null && !adding ? <Button variant="primary" size="normal" className="self-start gap-2" onClick={() => { setErr(""); setAdding(true) }}>
             <IconSmall name="grid-plus" />
             {tr("Add connection")}
           </Button> : editing ? <></> : <AddConnection
@@ -1632,6 +1661,22 @@ function ApiTab(props: { initialModel?: string | null }) {
                 />}
       </div>
     </Pane>
+  )
+}
+
+/** Deleting a connection takes its key and models with it, so ask first. */
+function ConfirmDeleteConnection(props: { connection: EngineConnection; onClose: () => void; onDelete: () => void | Promise<void> }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" onClick={props.onClose}>
+      <div role="alertdialog" aria-modal="true" className="flex w-full max-w-md flex-col gap-3 rounded-xl border border-line bg-panel p-4" onClick={(e) => e.stopPropagation()}>
+        <h3 className="text-14 font-medium text-ink">{tr("Delete “{name}”?", { name: props.connection.name })}</h3>
+        <p className="text-13 leading-5 text-ink-muted">{tr("Its key and its models go with it. This cannot be undone.")}</p>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost-muted" size="small" onClick={props.onClose}>{tr("Cancel")}</Button>
+          <Button variant="danger" size="small" autoFocus onClick={() => void props.onDelete()}>{tr("Delete connection")}</Button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -1683,6 +1728,7 @@ function ConnectionModels(props: {
           </> : null}
       </div>
       {open ? <div className="flex flex-col gap-0.5 px-2 pb-2">
+          <p className="px-1 pb-1 text-11 text-ink-faint">{tr("Star = quick switch, sliders = this model's settings")}</p>
           {list.slice(0, q ? 200 : 80).map((m) => {
             const ref = refOf(m)
             const isStar = starred.has(ref)
@@ -1707,11 +1753,12 @@ function ConnectionModels(props: {
                   disabled={props.busy}
                   aria-pressed={isStar}
                   title={isStar ? tr("Remove from the quick switch") : tr("Add to the quick switch")}
+                  aria-label={isStar ? tr("Remove from the quick switch") : tr("Add to the quick switch")}
                   onClick={() => props.onStar(ref, !isStar)}
                 >
                   {isStar ? "★" : "☆"}
                 </button>
-                <IconButton icon={<IconSmall name="outline-sliders" />} variant="ghost-muted" size="small" title={tr("Model settings")} onClick={() => setSetup(ref)} />
+                <IconButton icon={<IconSmall name="outline-sliders" />} variant="ghost-muted" size="small" title={tr("Model settings")} aria-label={tr("Model settings")} onClick={() => setSetup(ref)} />
               </div>
             )
           })}

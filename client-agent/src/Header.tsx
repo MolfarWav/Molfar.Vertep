@@ -159,6 +159,15 @@ function ReasoningSelect(): ReactNode {
 
 const MODE_LABEL = { normal: "Full", accept: "Accept", plan: "Plan" } as const
 
+/** What each permission mode does, as the engine runs it (src/agent/agent.ts, tools.ts): Full plans
+ *  big changes first and runs commands; Accept skips the plan step and asks before each shell
+ *  command; Plan is read-only. */
+const MODE_HELP = {
+  full: "Plans big changes first, then edits and runs commands",
+  accept: "No plan step; asks before each shell command",
+  plan: "Only reads and plans, changes nothing",
+} as const
+
 function ModeSelect({ className }: { className?: string }): ReactNode {
   const mode = useAgent((s) => s.mode)
   const setMode = useAgent((s) => s.setMode)
@@ -175,19 +184,23 @@ function ModeSelect({ className }: { className?: string }): ReactNode {
         if (next === "accept" || next === "plan" || next === "normal") setMode(next)
       }}
     >
-      <SelectTrigger className={cn("h-8 shrink-0 gap-1 rounded-full border-0 bg-transparent px-1.5 text-xs", className)} aria-label="Mode">
+      <SelectTrigger
+        className={cn("h-8 shrink-0 gap-1 rounded-full border-0 bg-transparent px-1.5 text-xs", className)}
+        aria-label="Permission mode"
+        title="Permission mode: what the agent may do without asking"
+      >
+        <span className="text-muted-foreground">Mode:</span>
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="full" className="text-xs">
-          Full
-        </SelectItem>
-        <SelectItem value="accept" className="text-xs">
-          Accept
-        </SelectItem>
-        <SelectItem value="plan" className="text-xs">
-          Plan
-        </SelectItem>
+      <SelectContent className="w-72" side="top" alignItemWithTrigger={false}>
+        {(["full", "accept", "plan"] as const).map((m) => (
+          <SelectItem key={m} value={m} className="text-xs">
+            <span className="flex flex-col gap-0.5">
+              <span className="font-medium">{capitalize(m)}</span>
+              <span className="text-muted-foreground text-[11px] leading-4 whitespace-normal">{MODE_HELP[m]}</span>
+            </span>
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   )
@@ -265,8 +278,11 @@ export function ComposerSettings(): ReactNode {
   )
 }
 
+/** 3.6k, 32k (no trailing ".0"), for the one context counter. */
+const ctxTokens = (n: number): string => compactTokens(n).replace(/\.0(?=[kM]$)/, "")
+
 /** Context fill of the last run against the model's window, as in the composer's ring:
- *  `38k / 128k` and a thin bar; amber from 75 %, red from 90 %. Hidden while unknown. */
+ *  `context 38k of 128k · 30%` and a thin bar; amber from 75 %, red from 90 %. Hidden while unknown. */
 export function ContextMeter({ compact = false }: { compact?: boolean }): ReactNode {
   const usage = useAgent((s) => s.usage)
   const { contextWindow } = useCurrentModel()
@@ -281,30 +297,31 @@ export function ContextMeter({ compact = false }: { compact?: boolean }): ReactN
       role="img"
       aria-label={`Context ${Math.round(ratio * 100)} percent full`}
     >
-      <span className="bg-muted h-1 w-14 overflow-hidden rounded-full" aria-hidden>
+      <span className={cn("bg-muted h-1 w-14 overflow-hidden rounded-full", compact && "hidden")} aria-hidden>
         <span
           className={cn("block h-full rounded-full", tone === "destructive" ? "bg-destructive" : tone === "amber" ? "bg-amber-500" : "bg-linear-to-r from-link to-amber-400")}
           style={{ width: `${Math.min(100, Math.round(ratio * 100))}%` }}
         />
       </span>
       <span className={compact ? "" : "text-foreground"}>
-        {compactTokens(used)} / {compactTokens(contextWindow)}
+        context {ctxTokens(used)} of {ctxTokens(contextWindow)} · {Math.round(ratio * 100)}%
       </span>
     </span>
   )
 }
 
 /** Green dot while the live connection holds; a red dot and "Offline" when it does not. */
-export function ConnectionDot(): ReactNode {
+export function ConnectionDot({ showWord = false }: { showWord?: boolean }): ReactNode {
   const wsDown = useAgent((s) => s.wsDown)
   return wsDown ? (
-    <span className="text-destructive flex shrink-0 items-center gap-1.5 text-xs font-medium" role="status">
+    <span className={cn("text-destructive flex shrink-0 items-center font-medium", showWord ? "h-12 w-14 flex-col justify-center gap-1.5 text-[10px] leading-3" : "gap-1.5 text-xs")} role="status">
       <span className="bg-destructive size-2 rounded-full" />
       Offline
     </span>
   ) : (
-    <span role="status" aria-label="Connected" title="Connected" className="flex size-4 shrink-0 items-center justify-center">
+    <span role="status" aria-label="Connected" title="Connected" className={cn("flex shrink-0 items-center", showWord ? "text-muted-foreground h-12 w-14 flex-col justify-center gap-1.5 text-[10px] leading-3" : "size-4 justify-center")}>
       <span className="size-2 rounded-full bg-emerald-500" />
+      {showWord ? "Connected" : null}
     </span>
   )
 }
@@ -405,9 +422,9 @@ function PhoneHeader(): ReactNode {
           {project ? <div className="text-muted-foreground truncate text-xs leading-4">{project.title}</div> : null}
           <div className="truncate text-sm leading-5 font-medium">{title}</div>
         </div>
-        <Inspector />
-        <MemoryPanel />
-        <ConnectionDot />
+        <Inspector caption="Prompts" />
+        <MemoryPanel caption="Memory" />
+        <ConnectionDot showWord />
       </div>
       {project ? (
         <div role="tablist" aria-label="Chat or project" className="bg-muted mx-4 mb-2 grid grid-cols-2 gap-1 rounded-lg p-1">
@@ -435,7 +452,7 @@ function PhoneHeader(): ReactNode {
         </span>
         <span className="ml-auto flex shrink-0 items-center gap-2">
           <ContextMeter compact />
-          {spend ? <span className="shrink-0 tabular-nums">{compactTokens(spend.tokens)} tok{priced ? ` · ${spend.unpriced ? "≥" : ""}${usd(spend.cost)}` : ""}</span> : null}
+          {spend ? <span className="shrink-0 tabular-nums" title="Tokens used by the whole chat so far">chat {compactTokens(spend.tokens)} tok{priced ? ` · ${spend.unpriced ? "≥" : ""}${usd(spend.cost)}` : ""}</span> : null}
         </span>
       </div>
     </header>

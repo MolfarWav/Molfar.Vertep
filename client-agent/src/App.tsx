@@ -104,11 +104,11 @@ export default function App(): ReactNode {
 
   const messages = useMemo(() => msgs.map(toThreadMessage), [msgs])
   const threads = useMemo(
-    () => sessions.filter((s) => !s.archived).map((s) => ({ status: "regular" as const, id: s.sessionId, title: s.title?.trim() || "Untitled" })),
+    () => sessions.filter((s) => !s.archived).map((s) => ({ status: "regular" as const, id: s.sessionId, title: s.title?.trim() || "Untitled", custom: { lastAt: s.lastAt } })),
     [sessions],
   )
   const archivedThreads = useMemo(
-    () => sessions.filter((s) => s.archived).map((s) => ({ status: "archived" as const, id: s.sessionId, title: s.title?.trim() || "Untitled" })),
+    () => sessions.filter((s) => s.archived).map((s) => ({ status: "archived" as const, id: s.sessionId, title: s.title?.trim() || "Untitled", custom: { lastAt: s.lastAt } })),
     [sessions],
   )
   const runtime = useExternalStoreRuntime({

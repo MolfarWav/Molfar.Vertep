@@ -46,7 +46,7 @@ import { currentProjectId, effectiveModel, useAgent as useAgentStore } from "@/s
 import type { EngineSession } from "@/api";
 import { RunCheckpoints } from "@/Checkpoints";
 import { RunInfo } from "@/RunInfo";
-import { compactTokens, usd } from "@/lib/format";
+import { compactTokens, usd, whenLabel } from "@/lib/format";
 import { MolfarAvatar, MolfarHalo } from "@/MolfarAvatar";
 import { ComposerProjectRow, ProjectAttachButton, ProjectContextLine, SaveToProjectAction } from "@/ProjectChat";
 import {
@@ -273,17 +273,6 @@ const ThreadWelcome: FC = () => {
   );
 };
 
-/** "Today, 18:42", "Yesterday, 18:42" or "6 Oct": when a chat was last used. */
-function whenLabel(at: number): string {
-  const d = new Date(at);
-  const day = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  const diff = Math.round((day(new Date()) - day(d)) / 86_400_000);
-  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  if (diff === 0) return `Today, ${time}`;
-  if (diff === 1) return `Yesterday, ${time}`;
-  return d.toLocaleDateString([], { day: "numeric", month: "short" });
-}
-
 const cardClass =
   "bg-card hover:bg-muted hover:border-brand-line hover:-translate-y-px border-border/60 fade-in slide-in-from-bottom-2 animate-in fill-mode-both flex min-h-16 min-w-0 items-start gap-3 rounded-xl border p-3 text-left transition duration-200";
 
@@ -308,38 +297,54 @@ const StarterCards: FC<{ project: string | null }> = ({ project }) => {
   };
   if (!last && !templates.length) return null;
   return (
-    <div
-      data-testid="starter-cards"
-      className="mt-6 grid w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
-    >
-      {recent.map((chat, i) => (
-        <button key={chat.sessionId} type="button" className={cn(cardClass, i === 0 && "border-brand-line bg-brand-soft hover:bg-brand-soft", i > 0 && "md:hidden")} onClick={() => void open(chat.sessionId)}>
-          <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", i === 0 ? "bg-brand text-brand-foreground" : "bg-brand-soft text-brand")}>
-            <ClockCounterClockwise aria-hidden size={18} />
-          </span>
-          <span className="flex min-w-0 flex-col gap-0.5">
-            <span className="line-clamp-2 text-sm font-medium">{i === 0 ? "Continue: " : ""}{chat.title || "New chat"}</span>
-            <span className="text-muted-foreground truncate text-xs">
-              {whenLabel(chat.lastAt ?? 0)}
-              {projectOf(chat.project) ? ` · ${projectOf(chat.project)}` : ""}
-            </span>
-          </span>
-        </button>
-      ))}
-      {templates.slice(0, last ? 5 : 6).map((t) => {
-        const Icon = templateIcon(t.id);
-        return (
-          <button key={t.id} type="button" className={cn(cardClass, "max-md:hidden")} onClick={() => pick(t)}>
-            <span className="bg-brand-soft text-brand flex size-9 shrink-0 items-center justify-center rounded-lg">
-              <Icon aria-hidden size={18} />
-            </span>
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-sm font-medium">{t.label}</span>
-              <span className="text-muted-foreground line-clamp-2 text-xs">{t.description}</span>
-            </span>
-          </button>
-        );
-      })}
+    <div data-testid="starter-cards" className="mt-6 flex w-full max-w-4xl flex-col gap-4">
+      {recent.length ? (
+        <section aria-label="Continue" data-testid="continue-row" className="flex flex-col gap-1.5">
+          <h2 className="text-muted-foreground text-start text-xs font-medium tracking-wide uppercase">Continue</h2>
+          <div className="flex flex-col gap-2">
+            {recent.map((chat, i) => (
+              <button
+                key={chat.sessionId}
+                type="button"
+                className={cn(cardClass, "min-h-14 w-full items-center", i === 0 ? "border-brand-line bg-brand-soft hover:bg-brand-soft" : "md:hidden")}
+                onClick={() => void open(chat.sessionId)}
+              >
+                <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", i === 0 ? "bg-brand text-brand-foreground" : "bg-brand-soft text-brand")}>
+                  <ClockCounterClockwise aria-hidden size={18} />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="line-clamp-2 text-sm font-medium">{chat.title || "New chat"}</span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    {whenLabel(chat.lastAt ?? 0)}
+                    {projectOf(chat.project) ? ` · ${projectOf(chat.project)}` : ""}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {templates.length ? (
+        <section aria-label="Start something new" className="flex flex-col gap-1.5 max-md:hidden">
+          <h2 className="text-muted-foreground text-start text-xs font-medium tracking-wide uppercase">Start something new</h2>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {templates.slice(0, 6).map((t) => {
+              const Icon = templateIcon(t.id);
+              return (
+                <button key={t.id} type="button" className={cardClass} onClick={() => pick(t)}>
+                  <span className="bg-brand-soft text-brand flex size-9 shrink-0 items-center justify-center rounded-lg">
+                    <Icon aria-hidden size={18} />
+                  </span>
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="text-sm font-medium">{t.label}</span>
+                    <span className="text-muted-foreground line-clamp-2 text-xs">{t.description}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 };
@@ -401,7 +406,7 @@ const ComposerSpend: FC = () => {
   const spend = useAgentStore((s) => s.spend)
   if (!spend) return null
   const priced = spend.cost > 0
-  const label = `${compactTokens(spend.tokens)} tok${priced ? ` · ${spend.unpriced ? "≥" : ""}${usd(spend.cost)}` : ""}`
+  const label = `chat ${compactTokens(spend.tokens)} tok${priced ? ` · ${spend.unpriced ? "≥" : ""}${usd(spend.cost)}` : ""}`
   const title = !priced
     ? `This chat used ${spend.tokens.toLocaleString()} tokens. Its model has no known price: set one in Settings to see the cost.`
     : spend.unpriced

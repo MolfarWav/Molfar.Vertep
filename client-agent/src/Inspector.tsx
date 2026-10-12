@@ -378,7 +378,7 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
   )
 }
 
-export function Inspector(): ReactNode {
+export function Inspector({ caption }: { caption?: string } = {}): ReactNode {
   const [open, setOpen] = useState(false)
   const [entries, setEntries] = useState<InspectorSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -402,8 +402,16 @@ export function Inspector(): ReactNode {
 
   return (
     <>
-      <Button variant="ghost" size="icon" className="size-9 shrink-0" aria-label="Prompt inspector" title="Prompt inspector" onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        size={caption ? "default" : "icon"}
+        className={caption ? "h-12 w-14 shrink-0 flex-col gap-0.5 px-0 text-[10px] leading-3 font-normal" : "size-9 shrink-0"}
+        aria-label="Prompt inspector"
+        title="Prompt inspector: what the model was sent"
+        onClick={() => setOpen(true)}
+      >
         <Eye size={18} />
+        {caption}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="grid-cols-1 overflow-x-hidden max-sm:max-h-[calc(100dvh-1rem)] max-sm:max-w-[calc(100%-1rem)] max-sm:p-3 sm:max-w-4xl">

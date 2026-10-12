@@ -14,6 +14,7 @@ import {
 } from "@assistant-ui/react";
 import { AppWindow, Archive, ArrowCounterClockwise, CaretRight, Check, CircleNotch, DotsThree, Folder, PencilSimple, Plus, MagnifyingGlass, Trash } from "@phosphor-icons/react";
 import { useAgent } from "@/store";
+import { whenLabel } from "@/lib/format";
 import type { ProjectSummary } from "@/api";
 import {
   forwardRef,
@@ -298,6 +299,8 @@ export const CHAT_DRAG_TYPE = "application/x-chrysalis-chat";
 export const ThreadListItem: FC = () => {
   const id = useAuiState((s) => s.threadListItem.id);
   const isRunning = useAuiState((s) => s.threadListItem.isRunning);
+  // the engine's last-use time rides in `custom` (App.tsx), so the day groups of the list stay as they are
+  const lastAt = useAuiState((s) => s.threadListItem.custom?.lastAt);
   const [isRenaming, setIsRenaming] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const restoreFocusRef = useRef(false);
@@ -316,7 +319,7 @@ export const ThreadListItem: FC = () => {
         event.dataTransfer.setData(CHAT_DRAG_TYPE, id);
         event.dataTransfer.effectAllowed = "move";
       }}
-      className="group hover:bg-muted focus-visible:bg-muted data-active:bg-brand-soft before:absolute before:inset-y-1 before:start-0 before:w-[3px] before:rounded-full before:bg-brand before:content-[''] before:hidden data-active:before:block has-focus-visible:bg-muted has-data-[state=open]:bg-muted relative flex h-8 items-center rounded-md transition-colors focus-visible:outline-none"
+      className="group hover:bg-muted focus-visible:bg-muted data-active:bg-brand-soft before:absolute before:inset-y-1 before:start-0 before:w-[3px] before:rounded-full before:bg-brand before:content-[''] before:hidden data-active:before:block has-focus-visible:bg-muted has-data-[state=open]:bg-muted relative flex min-h-8 items-center rounded-md transition-colors focus-visible:outline-none"
     >
       {isRenaming ? (
         <ThreadListItemRename
@@ -329,7 +332,7 @@ export const ThreadListItem: FC = () => {
         <ThreadListItemPrimitive.Trigger
           ref={triggerRef}
           data-slot="aui_thread-list-item-trigger"
-          className="focus-visible:ring-ring/50 flex h-full min-w-0 flex-1 items-center rounded-md px-2.5 text-start text-sm outline-none group-hover:pe-9 pointer-coarse:pe-9 group-has-focus-visible:pe-9 group-has-data-[state=open]:pe-9 group-data-active:pe-9 focus-visible:ring-1"
+          className="focus-visible:ring-ring/50 flex min-h-8 min-w-0 flex-1 items-center self-stretch rounded-md px-2.5 py-1 text-start text-sm outline-none group-hover:pe-9 pointer-coarse:pe-9 group-has-focus-visible:pe-9 group-has-data-[state=open]:pe-9 group-data-active:pe-9 focus-visible:ring-1"
         >
           {isRunning && (
             <CircleNotch
@@ -338,11 +341,18 @@ export const ThreadListItem: FC = () => {
               className="text-muted-foreground me-1.5 size-3.5 shrink-0 animate-spin"
             />
           )}
-          <span
-            data-slot="aui_thread-list-item-title"
-            className="min-w-0 flex-1 truncate"
-          >
-            <ThreadListItemPrimitive.Title fallback="New Chat" />
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span
+              data-slot="aui_thread-list-item-title"
+              className="min-w-0 truncate"
+            >
+              <ThreadListItemPrimitive.Title fallback="New Chat" />
+            </span>
+            {typeof lastAt === "number" && lastAt > 0 ? (
+              <span data-slot="aui_thread-list-item-time" className="text-muted-foreground truncate text-[11px] leading-4">
+                {whenLabel(lastAt)}
+              </span>
+            ) : null}
           </span>
           {isRunning && <span className="sr-only">Running</span>}
         </ThreadListItemPrimitive.Trigger>

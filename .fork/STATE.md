@@ -82,6 +82,16 @@ unknown here. Tested against a fake server (`test/custom-template-thinking.test.
 Browser-checked (dark/light 1280, light 390). Text completion connections are untouched.
 
 ## UX audit backlog (2026-10-12; user: fix it bit by bit, together with the next releases)
+**Done (2026-10-12, branch `claude/clickable-chat-details-ux-s-reyv3r` in both repos, not released):** every
+item sized S. Engine: connection delete confirm, desktop Settings close button, connection status word, models
+counter "N shown · M available", star/sliders hint, primary Add connection, New app labels, theme swatches,
+app delete as a 40 px trash icon; agent page: "Mode: Full" with what each mode does, chat list time line,
+Continue row above the templates, phone header captions, one context counter, "Apply proposal", wrapping tiles.
+Roleplay: see its CHANGELOG "Unreleased" (with the clickable Chats panel details). Defaults taken: Switch "on"
+is `cta` app-wide; Library is the section name, Litopys the chronicler. Found: Roleplay's "no model" chip calls
+the shell's `openSettings`, which the bridge allows only for trusted apps, so an `origin: local` install
+gets a toast instead. Left: the M/L items (phone tab rows, jargon round, chat header icons, theme follows
+shell, editor tabs), Store "Install" on an installed app (check on a normal install).
 Five external vision models reviewed screenshots (129 kept) (shell, agent page, Roleplay 4.37.0; 1280/390; all
 themes) against `ux-review`; findings checked against the code, wrong ones dropped. The document (Ukrainian,
 ranked by impact/effort, exact screens and files) is NOT in the repo: desktop

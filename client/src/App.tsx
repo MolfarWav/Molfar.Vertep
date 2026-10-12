@@ -17,7 +17,7 @@ import { UpdatesDialog, useEngineRelease } from "./updates-panel"
 import type { LaunchInfo, Me, StoreApp } from "./types"
 import { StoreDialog, WelcomeApps, useStore } from "./store"
 import { getLocale, tr, useLocale } from "./i18n/index"
-import { DEFAULT_THEME, THEME_KEY, applyStoredTheme, applyTheme, isBuiltinTheme, storedThemeId, type ShellTheme } from "./theme"
+import { DEFAULT_THEME, THEME_KEY, applyStoredTheme, applyTheme, isBuiltinTheme, storedThemeId, themeSwatch, type ShellTheme } from "./theme"
 
 type Tab = { id: string; kind: "agent" | "app" | "new"; name: string }
 // the community server, linked beside GitHub at the bottom of the apps page
@@ -792,6 +792,11 @@ function UserMenu(props: {
                     }}
                   >
                     <span className="flex size-4 shrink-0 items-center justify-center text-accent">{on ? <IconSmall name="check" /> : null}</span>
+                    <span
+                      aria-hidden="true"
+                      className="size-4 shrink-0 rounded-full border border-line"
+                      style={{ background: `linear-gradient(135deg, ${themeSwatch(c.id, props.theme.themes).base} 50%, ${themeSwatch(c.id, props.theme.themes).accent} 50%)` }}
+                    />
                     <span className="min-w-0 flex-1 truncate">{c.name}</span>
                   </button>
                 )
@@ -1380,12 +1385,12 @@ function LaunchPicker(props: {
                     <IconSmall name="info" />
                   </button>
                   <button
-                    className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-ink-faint opacity-0 transition-all hover:bg-pressed hover:text-danger group-hover/app:opacity-100 @max-4xl:opacity-100"
+                    className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-ink-faint opacity-0 transition-all hover:bg-pressed hover:text-danger group-hover/app:opacity-100 max-sm:size-10 @max-4xl:opacity-100"
                     title={tr("Delete {name}", { name: a.name || a.id })}
                     aria-label={tr("Delete {name}", { name: a.name || a.id })}
                     onClick={() => setDeleting({ id: a.id, name: a.name || a.id })}
                   >
-                    <IconSmall name="outline-xmark" />
+                    <IconSmall name="trash" />
                   </button>
                 </div>
               ))}
@@ -1730,10 +1735,17 @@ function NewAppDialog(props: { slugOf: (name: string) => string; onClose: () => 
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={props.onClose}>
       <div className="flex w-full max-w-md flex-col gap-3 rounded-xl border border-line bg-panel p-4" onClick={(e) => e.stopPropagation()}>
         {!created ? <><h3 className="text-14 font-medium text-ink">{tr("New app")}</h3>
-          <input ref={(el) => { if (el) setTimeout(() => el.focus(), 0) }} className={inputClass} placeholder={tr("app name")} value={name} onChange={(e) => setName(e.currentTarget.value)} />
-          <input className={inputClass} placeholder={tr("author (shown as “by …”)")} value={author} onChange={(e) => setAuthor(e.currentTarget.value)} />
+          <label className="flex flex-col gap-1 text-12 text-ink-muted">
+            {tr("App name")}
+            <input ref={(el) => { if (el) setTimeout(() => el.focus(), 0) }} className={inputClass} placeholder={tr("e.g. Recipe book")} value={name} onChange={(e) => setName(e.currentTarget.value)} />
+          </label>
+          <label className="flex flex-col gap-1 text-12 text-ink-muted">
+            {tr("Author (shown as “by …”)")}
+            <input className={inputClass} placeholder={tr("e.g. your name")} value={author} onChange={(e) => setAuthor(e.currentTarget.value)} />
+          </label>
           {err ? <div className="text-12 text-danger">{err}</div> : null}
-          <div className="flex justify-end gap-2">
+          <div className="flex items-center justify-end gap-2">
+            {!name.trim() && !busy ? <span className="min-w-0 flex-1 text-12 text-ink-muted">{tr("Enter a name to create")}</span> : null}
             <Button variant="ghost-muted" size="small" onClick={props.onClose}>{tr("Cancel")}</Button>
             <Button variant="neutral" size="small" disabled={busy || !name.trim()} onClick={() => void create()}>
               {busy ? tr("Creating…") : tr("Create")}

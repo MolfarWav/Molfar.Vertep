@@ -107,7 +107,7 @@ export function QuickGrid(): ReactNode {
             onClick={() => pick(t)}
           >
             <Icon aria-hidden size={18} className="text-brand shrink-0" />
-            <span className="min-w-0 truncate">{t.label}</span>
+            <span className="min-w-0 line-clamp-2 break-words leading-tight">{t.label}</span>
           </button>
         )
       })}
@@ -144,9 +144,9 @@ export function ReplyQuickActions(): ReactNode {
         Simpler
       </button>
       {!msg.checkpoints?.length ? (
-        <button type="button" className={BTN_MAIN} title="Do what Molfar proposed" onClick={() => void send("Apply what you proposed.")}>
+        <button type="button" className={BTN_MAIN} title="Carry out what Molfar proposed in this reply" aria-label="Apply proposal: carry out what Molfar proposed in this reply" onClick={() => void send("Apply what you proposed.")}>
           <Check size={13} weight="bold" aria-hidden />
-          Apply
+          Apply proposal
         </button>
       ) : null}
     </div>

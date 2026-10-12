@@ -19,6 +19,22 @@ export const BUILTIN_THEMES = ["vertep", "dark", "light"] as const
 export type BuiltinTheme = (typeof BUILTIN_THEMES)[number]
 export const DEFAULT_THEME: BuiltinTheme = "vertep"
 
+/** base + accent of each built-in, mirrored from tokens.css (a block that is not applied cannot be
+ *  read back), for the little colour circle beside a theme's name. */
+const BUILTIN_SWATCH: Record<BuiltinTheme, { base: string; accent: string }> = {
+  vertep: { base: "#0b0c11", accent: "#e2213a" },
+  dark: { base: "#121214", accent: "#7aa2f7" },
+  light: { base: "#ffffff", accent: "#2f5fbf" },
+}
+
+/** The two colours a theme is told apart by: its page colour and its accent. */
+export function themeSwatch(id: string, themes: ShellTheme[]): { base: string; accent: string } {
+  if (isBuiltinTheme(id)) return BUILTIN_SWATCH[id]
+  const t = themes.find((x) => x.id === id)
+  const fallback = BUILTIN_SWATCH[t?.scheme === "light" ? "light" : "dark"]
+  return { base: t?.colors.base ?? fallback.base, accent: t?.colors.accent ?? fallback.accent }
+}
+
 export const isBuiltinTheme = (id: string): id is BuiltinTheme => (BUILTIN_THEMES as readonly string[]).includes(id)
 
 /** The colour keys a theme file may set (the server validates the same list). */
