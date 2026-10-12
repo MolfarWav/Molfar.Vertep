@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Next Roleplay (in progress 2026-10-12, branch `claude/group-scenario-chats-page-av80x1` in both repos, not released)
+## Roleplay 4.38.0: RELEASED 2026-10-12 (pushed to the fork's main `65b38ac` on the user's word; engine unchanged)
 Group scene generation (START.md 1c), Roleplay fork commits `fb2db99`..`e68b02d`: the group editor's Scene tab
 generates the shared scenario (mode "From the cards" or "Something wild", an optional wish whose language sets the
 reply's language), then openings one at a time from the scenario (unlike the group's existing ones). Each result is
