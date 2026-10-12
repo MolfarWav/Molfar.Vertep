@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.0.4: PREPARED 2026-10-12 (main fast-forwarded on the user's word; the tag v1.0.4 is the user's to push). Ships Roleplay 4.40.0.
+## 1.0.4: RELEASED 2026-10-12 (tag v1.0.4 pushed by the user). Ships Roleplay 4.40.0. The user deleted every merged `claude/*` branch in both repos the same day.
 
 ## Group turns per chat: Roleplay 4.40.0 on the fork's main `ee998bb` (2026-10-12, on the user's word)
 User report: a group on "Each in turn" + "Only when you trigger a member" "never answers"; and turn settings should
