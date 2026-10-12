@@ -8,8 +8,8 @@ Finished work is not listed here: see STATE ("Released") and git history.
    document (STATE, "UX audit backlog", gives where it lives). Not a release of its own.
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is
    broken, the proposed shape; confirm the shape with the user first). Absorbs item 4 and the colour part of 6a.
-1c. **Group scene generation + Chats page**: released as Roleplay 4.38.0 (STATE). Left: a run of scene generation
-   on a real free model; the group editor's tabs are icon-only on phones.
+1c. **Group scene generation + Chats page**: released as Roleplay 4.38.0 (STATE). Scene generation ran on a real
+   model (user, 2026-10-12: a good scenario, the model played by it). Left: the group editor's tabs are icon-only on phones.
 1a. **1.0.1 = the phone version of the app** (user, 2026-10-11; later, scope to be set).
 1b. **Molfar, the next agent batch** (after 1.0.1): part 3 of `.fork/handoff/molfar-agent/HANDOFF.md`
    (3.7 skills that learn, then 2.5 app_screenshot) and its live checks.
