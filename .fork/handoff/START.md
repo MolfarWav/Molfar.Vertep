@@ -6,6 +6,10 @@ Finished work is not listed here: see STATE ("Released") and git history.
 ## Queue (open items only; the user picks the order unless it is written here)
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is
    broken, the proposed shape; confirm the shape with the user first). Absorbs item 4 and the colour part of 6a.
+1c. **Group scene generation** (user, 2026-10-12, "for the future"): the group editor's Scene tab has a
+   "Generate scene" button marked "soon". First the shared scenario, then the openings (they follow from
+   it). Before generating the scenario, ask the user what they want or offer modes, for example "Use
+   the cards' information" and "Something wild".
 1a. **1.0.1 = the phone version of the app** (user, 2026-10-11; later, scope to be set).
 1b. **Molfar, the next agent batch** (after 1.0.1): part 3 of `.fork/handoff/molfar-agent/HANDOFF.md`
    (3.7 skills that learn, then 2.5 app_screenshot) and its live checks.

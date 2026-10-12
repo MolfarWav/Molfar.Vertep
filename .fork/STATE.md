@@ -70,7 +70,15 @@ Browser-checked (dark/light 1280, light 390). Text completion connections are un
 The user's rule: every UI change is judged first by how easily a user finds, understands and uses it, desktop and phone.
 Skill `.claude/skills/ux-review/` (checklist on real components, tokens and breakpoints + a walk-through), a CLAUDE.md
 rule and "done means" line, a "Usability" part in the built-in `app-authoring` skill (digests updated), and a pointer
-in the Roleplay fork's AGENTS.md (same branch name there). Gaps found: no shared tap-friendly info-popover component in
+in the Roleplay fork's AGENTS.md (same branch name there).
+Round 2 (same day, same branches): `ux-review` is also a built-in skill for Molfar (`builtin-skills/ux-review`,
+`app-authoring` and `finish-change` point to it; the small-model prompt stays under 3.7k). Roleplay, manifest at
+4.37.0, not released: Characters/Groups tabs with a violet group colour (`--group` token, also group tiles and group
+chats in the Chats list); FRANKENX Prose language is a pick of 14 languages + "Same as my messages" (migration in
+`onAppUpdate` for presets that still have the text field); talkativeness: a card's own value, else (missing or the
+usual 0.5) a word-list guess from its text, shown in the group editor (`src/lib/talkativeness.ts` mirrors the engine
+plugin, test compares); a profile written without `compiled` is compiled on the app's next load, and Molfar's card
+skills write profile fields. Queued: group scene generation (START.md 1c). Gaps found: no shared tap-friendly info-popover component in
 the shell or Roleplay (hints are inline text; `title=` tooltips do nothing on phones); `size-8` icon buttons are 32 px.
 
 ## Dashboard event vocabulary, bigger (2026-10-11, in Roleplay 4.36.0 with the thinking fix)
