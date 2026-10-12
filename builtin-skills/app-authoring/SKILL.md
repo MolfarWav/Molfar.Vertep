@@ -76,6 +76,14 @@ hot-reload by mtime: nothing to call.
 - Config files are NOT run: no bundler plugins, no Vue or Svelte SFCs.
 - State: `useState` or `@preact/signals-react`. Fast refresh keeps component state, not module state.
 
+## Usability (the user's rule: easy to find, understand and use, on a phone too)
+- Put a control next to what it changes. Every option has a default that works; rare options go under a folded "More".
+- Group related controls in a bordered block with a heading. Two or three choices: show them all (radio row, segmented); four or more: a select.
+- Label in plain words; one muted line under a control says what it does. Longer help: an "i" button that opens a popover on click or tap. Never hover-only: phones have no hover.
+- Colour by meaning from the theme vars (accent for the main action, one per view; red for destructive), never colour alone, never hex.
+- Every action shows a result (loading, done, error with what to do). Destructive actions ask first or can be undone. Editable defaults get "Restore default".
+- Phones (below 768 px): tap targets at least 40 px, nothing that appears only on hover, no sideways scroll (`min-w-0` on flex children).
+
 ## Checks
 - After editing `src/` or `package.json`, call `app_check`: it waits for the build and returns ok or the errors. Never assume an edit built.
 - A stale page or a broken hot-update chain: `app_rebuild`.

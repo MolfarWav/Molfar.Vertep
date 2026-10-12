@@ -34,6 +34,7 @@ holds the rules that do not change between tasks; the handoff holds the task.
 - A new string in `client/` goes into all 14 `client/src/i18n/*.ts` files (`en.ts` with an empty value) or `test/i18n.test.ts` fails.
 - A new shell-only route: add its path to the lists in `test/security.test.ts` and `test/malicious-plugin.test.ts`.
 - A change to the Roleplay card or lorebook format (fields of `data/characters/<id>/card.json` or `data/lorebooks/<id>.json`, how a book is linked) updates, in the same change, the Roleplay fork's `docs/DATA-FORMATS.md` and Molfar's card skill `.skills/edit-large-card/SKILL.md` (copy: `.fork/app-skills/roleplay/edit-large-card/SKILL.md`), and a task for the built-in agent for the user's workspace copies. An outdated skill sends Molfar exploring the app's code: dozens of calls.
+- UI work is judged first by how easily a user finds, understands and uses it, on desktop and on a phone (user, 2026-10-12): shell, agent page, Roleplay, plugin panels, new apps. Run skill `ux-review` (`.claude/skills/ux-review/`) before building and before done.
 - The agent's system prompt is built once per agent instance: anything that changes what goes into it must `evictAgents` or change the docs/project stamp.
 - Agent write limits live in code, not in the prompt: `AGENT_WRITE_DENYLIST` (never) and `protect.ts` (ask the user first). Memory and skills change only through the confirmed tools.
 - Never a model name in a commit, file or PR. Commit style: `area: what changed, in plain words`, a body saying why, then the attribution lines the harness gives.
@@ -44,7 +45,7 @@ holds the rules that do not change between tasks; the handoff holds the task.
 ## Done means
 1. `bun run typecheck`, `bun run test`, `bun run build:client` pass.
 2. `bunx biome lint <touched files>` adds no warnings beyond the surrounding style.
-3. A UI change is checked in a real browser: skill `browser-check` (`.claude/skills/browser-check/`), dark, light and 390 px.
+3. A UI change is checked in a real browser: skill `browser-check` (`.claude/skills/browser-check/`), dark, light and 390 px, with the `ux-review` walk-through; the reply carries its "UX check" block.
 4. `.fork/STATE.md` updated; committed and pushed to the session's branch.
 
 ## Working pattern that saves cost

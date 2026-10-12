@@ -66,6 +66,13 @@ preset asks for reasoning, false on Off). No budget field is sent: which per-req
 unknown here. Tested against a fake server (`test/custom-template-thinking.test.ts`), not against a real llama.cpp.
 Browser-checked (dark/light 1280, light 390). Text completion connections are untouched.
 
+## UX rule for UI work (2026-10-12, branch `claude/ux-usability-rules-l28nbn`, not merged)
+The user's rule: every UI change is judged first by how easily a user finds, understands and uses it, desktop and phone.
+Skill `.claude/skills/ux-review/` (checklist on real components, tokens and breakpoints + a walk-through), a CLAUDE.md
+rule and "done means" line, a "Usability" part in the built-in `app-authoring` skill (digests updated), and a pointer
+in the Roleplay fork's AGENTS.md (same branch name there). Gaps found: no shared tap-friendly info-popover component in
+the shell or Roleplay (hints are inline text; `title=` tooltips do nothing on phones); `size-8` icon buttons are 32 px.
+
 ## Dashboard event vocabulary, bigger (2026-10-11, in Roleplay 4.36.0 with the thinking fix)
 19 new events in `EVENT_ROWS` (`plugins/relations/plugin.js`), 3 meanings widened (protected_her, protected_her_standing,
 insult); `trust.shared_secret`-style ids count. Draft by an external model, reviewed and cut. Measured on 72 scenes
