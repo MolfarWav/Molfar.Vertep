@@ -1,9 +1,20 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-11.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-12.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
+
+## Next Roleplay (in progress 2026-10-12, branch `claude/group-scenario-chats-page-av80x1` in both repos, not released)
+Group scene generation (START.md 1c), Roleplay fork commits `fb2db99`..`e68b02d`: the group editor's Scene tab
+generates the shared scenario (mode "From the cards" or "Something wild", an optional wish whose language sets the
+reply's language), then openings one at a time from the scenario (unlike the group's existing ones). Each result is
+an editable draft with Use / Try again / Discard, filed by the profile plugin (1.1.0) in
+`profile-drafts/group-<id>.json`; the plugin never writes the group file. Model (user, 2026-10-12): the model of the
+group's latest chat, else the app's chat model; muted members are left out; cards are cut shorter as the group
+grows. `test/rp-group-scene.test.ts`. Browser-checked (dark 1280, light 390) with a mock model; not yet run against
+a real model. Chats page redesign: three previews (A list + panel, B gallery, C by character) at
+https://claude.ai/artifact/D9LyEPuS1SHPQq2q535PD3; waiting for the user's pick before building.
 
 ## 0.9.7: RELEASED 2026-10-11 (tag v0.9.7 pushed on the user's word, release built with 6 assets; Roleplay 4.32.0 on the fork main `fa15553`)
 The prompt inspector with sources: apps send a host-only `promptSources` (`src/prompt-sources.ts`: sanitize,
@@ -77,7 +88,7 @@ chats in the Chats list); FRANKENX Prose language is a pick of 14 languages + "S
 `onAppUpdate` for presets that still have the text field); talkativeness: a card's own value, else (missing or the
 usual 0.5) a word-list guess from its text, shown in the group editor (`src/lib/talkativeness.ts` mirrors the engine
 plugin, test compares); a profile written without `compiled` is compiled on the app's next load, and Molfar's card
-skills write profile fields. Queued: group scene generation (START.md 1c). Gaps found: no shared tap-friendly info-popover component in
+skills write profile fields. Group scene generation: see "Next Roleplay" above. Gaps found: no shared tap-friendly info-popover component in
 the shell or Roleplay (hints are inline text; `title=` tooltips do nothing on phones); `size-8` icon buttons are 32 px.
 
 ## Dashboard event vocabulary, bigger (2026-10-11, in Roleplay 4.36.0 with the thinking fix)
