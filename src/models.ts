@@ -409,7 +409,8 @@ export class UserModelService {
           this.textCompletions.set(id, { name: def.name, baseUrl: def.baseUrl, promptFormat: def.promptFormat ?? "auto", ...(def.promptFormatCustom ? { promptFormatCustom: def.promptFormatCustom } : {}) });
           models.setProvider(buildProvider(id, { name: def.name, api: "openai-completions", baseUrl: def.baseUrl, models: def.models ?? "auto" }, { keyless: true, readCredential }));
         } else {
-          models.setProvider(buildProvider(id, { name: def.name, api: def.api, baseUrl: def.baseUrl, models: def.models ?? "auto" }, { keyless: true, readCredential }));
+          const templateThinking = def.thinking === true && def.api === "openai-completions" && !def.proxyOf;
+          models.setProvider(buildProvider(id, { name: def.name, api: def.api, baseUrl: def.baseUrl, models: def.models ?? "auto", ...(templateThinking ? { templateThinking } : {}) }, { keyless: true, readCredential }));
         }
       } catch (e) {
         log.warn(`[connection:${id}] failed: ${(e as Error).message}`);

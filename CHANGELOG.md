@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Connections: an OpenAI-compatible connection to a local server (llama.cpp, vLLM, LM Studio) can say its models think. The engine then sends `enable_thinking`, so a preset's reasoning level turns thinking on and Off really turns it off. Before, such a model got no thinking setting at all and could think through its whole reply limit.
+
 ## 1.0.0 (2026-10-12)
 
 - Group chats, through the Roleplay app 4.35.0 (its own CHANGELOG has the details): a group has its own card and editor, a narrator mode voices every member in one reply, each member's dialogue takes its own colour. The engine itself is the same as 0.9.11.

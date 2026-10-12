@@ -202,6 +202,8 @@ const dict = {
   "Manual list": "Elle liste",
   "Match the model": "Modele göre",
   "Model (tts-1, gpt-4o-mini-tts, playai-tts…)": "Model (tts-1, gpt-4o-mini-tts, playai-tts…)",
+  "The models think (local server)": "Modeller düşünür (yerel sunucu)",
+  "Sends enable_thinking, as llama.cpp, vLLM and LM Studio read it: a preset's reasoning level turns thinking on, Off turns it off.": "llama.cpp, vLLM ve LM Studio'nun okuduğu enable_thinking gönderir: ön ayardaki akıl yürütme düzeyi düşünmeyi açar, Kapalı kapatır.",
   "Model supports reasoning/thinking": "Model akıl yürütmeyi destekliyor",
   "Models": "Modeller",
   "Models are discovered from the endpoint. Pick Manual if the list is wrong or to set context windows.": "Modeller uç noktadan keşfedilir. Liste yanlışsa veya bağlam pencerelerini ayarlamak için Elle'yi seç.",

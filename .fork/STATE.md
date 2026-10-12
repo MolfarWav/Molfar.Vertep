@@ -50,6 +50,22 @@ README (3 languages): download and Discord badges, profile.png and persona.png r
 
 ## 1.0.0: PREPARED 2026-10-12 (main fast-forwarded; the tag v1.0.0 is the user's to push). Group chats ship as Roleplay 4.35.0 (pushed to the fork's main on the user's word); the engine is unchanged from 0.9.11. Still open for groups: scene generation, the Chats page group part, the Characters type filter, small-model prompt tweaks, a workspace-agent task for the edit-large-card skill copy, a darker palette yellow on light themes.
 
+## 1.0.1 candidate: dashboard on local thinking models (2026-10-12, Roleplay branch `claude/project-thread-eu8vz0`, not released)
+Reddit report: local Fenrir-X-26B-A4B (Gemma 4 finetune), default preset; the dashboard flooded the endpoint and came back
+empty with cut-off thinking; Russian cards answered in English. Not the 0.9.10 Soji fix (that one threw away a finished
+reply on a stream with no finish_reason; here the model spends the whole limit thinking and writes no answer). Fixed in
+the Roleplay `relations` plugin: sensor and soul rating calls take the chat preset's reasoning level, thinking budget and
+tags (a budget adds to the reply limit); an all-thinking answer names the cause; an inline `<think>` block before the JSON
+is skipped; a bulk card import no longer rates every card (one card still is); the insert and the fast note say the reply
+stays in the story's language. Inferred, not verified: a local OpenAI-compatible model the engine does not know as a
+reasoning model gets no thinking fields at all, so on such a server only the server's own settings bound the thinking.
+Engine part (same day, the user's word: "if not too big"): a chat completions connection has a "The models think (local
+server)" switch in Settings (Add and Edit; `ConnectionDef.thinking`, `templateThinking` in `src/providers/custom.ts`).
+On: every model of the connection counts as thinking and gets `chat_template_kwargs.enable_thinking` (true when the
+preset asks for reasoning, false on Off). No budget field is sent: which per-request budget field llama.cpp reads is
+unknown here. Tested against a fake server (`test/custom-template-thinking.test.ts`), not against a real llama.cpp.
+Browser-checked (dark/light 1280, light 390). Text completion connections are untouched.
+
 ## 0.9.11: RELEASED 2026-10-11 (tag v0.9.11 pushed by the user). Fix: with no model picked, Molfar runs the first shown model, not the catalog's first (OpenRouter "~anthropic/claude-fable-latest").
 
 ## 0.9.10: RELEASED 2026-10-11 (tag v0.9.10 pushed by the user)

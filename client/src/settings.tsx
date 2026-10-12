@@ -1825,6 +1825,8 @@ function EditConnection(props: { connection: EngineConnection; onDone: () => voi
   const [err, setErr] = useState("")
   const [busy, setBusy] = useState(false)
   const [format, setFormat] = useState<FormatChoice>({ id: c.promptFormat ?? "auto", custom: c.promptFormatCustom ?? EMPTY_FORMAT })
+  const thinkable = c.api === "openai-completions" && !c.proxyOf
+  const [thinking, setThinking] = useState(c.thinking === true)
   const initialModels = Array.isArray(c.models) ? c.models : []
   const [modelsMode, setModelsMode] = useState<"auto" | "manual">(Array.isArray(c.models) ? "manual" : "auto")
   const [models, setModels] = useState(
@@ -1858,6 +1860,7 @@ function EditConnection(props: { connection: EngineConnection; onDone: () => voi
         ...(key.trim() ? { key: key.trim() } : {}),
         ...(isCustom() ? { models: modelDefs() as never } : {}),
         ...(c.api === "openai-text" ? formatBody(format) : {}),
+        ...(thinkable ? { thinking } : {}),
       })
       props.onDone()
     } catch (e: any) {
@@ -1883,7 +1886,8 @@ function EditConnection(props: { connection: EngineConnection; onDone: () => voi
           <input className={inputClass} placeholder="https://…/v1" value={baseUrl} onChange={(e) => setBaseUrl(e.currentTarget.value)} />
         </label>
         <ModelsEditor mode={modelsMode} setMode={setModelsMode} models={models} setModels={setModels} />
-        {c.api === "openai-text" ? <PromptFormatEditor value={format} onChange={setFormat} /> : null}</>: null}
+        {c.api === "openai-text" ? <PromptFormatEditor value={format} onChange={setFormat} /> : null}
+        {thinkable ? <ThinkingSwitch checked={thinking} onChange={setThinking} /> : null}</>: null}
       <label className="flex flex-col gap-1 text-12 text-ink-muted">
         {c.credentialType === "oauth"
           ? tr("Signed in with a subscription (OAuth), no key needed")
@@ -2226,6 +2230,7 @@ function ProviderForm(props: { provider: ProviderPick; onBack: () => void; onDon
   // custom endpoint; the key binds to the proxy, never to the official API
   const [proxyUrl, setProxyUrl] = useState("")
   const [proxyOpen, setProxyOpen] = useState(false)
+  const [thinking, setThinking] = useState(false)
 
   const modelDefs = () =>
     modelsMode === "auto"
@@ -2253,6 +2258,7 @@ function ProviderForm(props: { provider: ProviderPick; onBack: () => void; onDon
               baseUrl: baseUrl,
               ...(modelsMode === "manual" ? { models: modelDefs() as never } : {}),
               ...(customApi() === "openai-text" ? formatBody(format) : {}),
+              ...(customApi() === "openai-completions" && thinking ? { thinking: true } : {}),
             }
           : usingProxy()
             ? {
@@ -2303,6 +2309,7 @@ function ProviderForm(props: { provider: ProviderPick; onBack: () => void; onDon
       </label>
       {isCustom() ? <ModelsEditor mode={modelsMode} setMode={setModelsMode} models={models} setModels={setModels} /> : null}
       {isCustom() && customApi() === "openai-text" ? <PromptFormatEditor value={format} onChange={setFormat} /> : null}
+      {isCustom() && customApi() === "openai-completions" ? <ThinkingSwitch checked={thinking} onChange={setThinking} /> : null}
       {isBuiltin() ? <div className="flex flex-col gap-1.5">
           <button
             type="button"
@@ -2408,6 +2415,20 @@ function PromptFormatEditor(props: { value: FormatChoice; onChange: (v: FormatCh
           <p className="text-11 leading-4 text-ink-faint sm:col-span-2">{tr("Type \\n for a newline.")}</p>
         </div> : null}
     </div>
+  )
+}
+
+/** Chat completions endpoints on a local server: the models think, and the preset's
+ *  reasoning switches it (enable_thinking), so "off" really turns it off. */
+function ThinkingSwitch(props: { checked: boolean; onChange: (on: boolean) => void }) {
+  return (
+    <label className="flex items-start gap-2 text-12 text-ink-muted">
+      <input type="checkbox" className="mt-0.5 size-3.5 shrink-0" checked={props.checked} onChange={(e) => props.onChange(e.currentTarget.checked)} />
+      <span className="flex flex-col gap-0.5">
+        <span className="text-ink">{tr("The models think (local server)")}</span>
+        <span className="text-11 leading-4 text-ink-faint">{tr("Sends enable_thinking, as llama.cpp, vLLM and LM Studio read it: a preset's reasoning level turns thinking on, Off turns it off.")}</span>
+      </span>
+    </label>
   )
 }
 

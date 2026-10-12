@@ -206,6 +206,8 @@ const dict = {
   "Manual list": "Ручний список",
   "Match the model": "Як у моделі",
   "Model (tts-1, gpt-4o-mini-tts, playai-tts…)": "Модель (tts-1, gpt-4o-mini-tts, playai-tts…)",
+  "The models think (local server)": "Моделі думають (локальний сервер)",
+  "Sends enable_thinking, as llama.cpp, vLLM and LM Studio read it: a preset's reasoning level turns thinking on, Off turns it off.": "Надсилає enable_thinking, як його читають llama.cpp, vLLM і LM Studio: рівень міркувань у пресеті вмикає роздуми, «Вимк.» вимикає.",
   "Model supports reasoning/thinking": "Модель підтримує міркування",
   "Models": "Моделі",
   "Models are discovered from the endpoint. Pick Manual if the list is wrong or to set context windows.": "Моделі визначаються з кінцевої точки. Оберіть «Ручний список», якщо перелік хибний або щоб задати контекстні вікна.",

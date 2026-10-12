@@ -208,6 +208,8 @@ const en = {
   "Manual list": "",
   "Match the model": "",
   "Model (tts-1, gpt-4o-mini-tts, playai-tts…)": "",
+  "The models think (local server)": "",
+  "Sends enable_thinking, as llama.cpp, vLLM and LM Studio read it: a preset's reasoning level turns thinking on, Off turns it off.": "",
   "Model supports reasoning/thinking": "",
   "Models": "",
   "Models are discovered from the endpoint. Pick Manual if the list is wrong or to set context windows.": "",

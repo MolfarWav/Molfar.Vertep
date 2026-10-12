@@ -44,6 +44,9 @@ export interface CustomProviderDef {
   thinkingFormat?: "openai" | "openrouter";
   /** Extra request-body fields per model, merged over the built body. */
   extraBody?: (modelId: string) => Record<string, unknown> | undefined;
+  /** Local servers (llama.cpp, vLLM, LM Studio): every model thinks, switched on and off by
+   *  chat_template_kwargs.enable_thinking. Without it such a model gets no thinking field at all. */
+  templateThinking?: boolean;
 }
 
 export interface ProvidersFile {
@@ -401,7 +404,12 @@ function catalogEntry(baseUrl: string, id: string): Model<Api> | undefined {
 function toModel(m: CustomModelDef, providerId: string, api: Api, def: CustomProviderDef): Model<Api> {
   const { baseUrl, headers } = def;
   const cacheCompat = compatFor(api, m.id, baseUrl, !!def.extraBody);
-  const withThinking = def.thinkingFormat && api === "openai-completions" ? { ...cacheCompat, thinkingFormat: def.thinkingFormat } : cacheCompat;
+  const withThinking =
+    def.templateThinking && api === "openai-completions"
+      ? { ...cacheCompat, thinkingFormat: "chat-template" as const, chatTemplateKwargs: { enable_thinking: { $var: "thinking.enabled" as const } } }
+      : def.thinkingFormat && api === "openai-completions"
+        ? { ...cacheCompat, thinkingFormat: def.thinkingFormat }
+        : cacheCompat;
   // some OpenAI-compatible hosts (Chub's Soji) end a stream without a finish_reason; the library
   // then threw the whole reply away. A custom endpoint's reply counts as done when its stream ends;
   // a finish_reason that does come is still read.
@@ -413,7 +421,7 @@ function toModel(m: CustomModelDef, providerId: string, api: Api, def: CustomPro
     api,
     provider: providerId,
     baseUrl,
-    reasoning: m.reasoning === true || known?.reasoning === true,
+    reasoning: m.reasoning === true || known?.reasoning === true || (def.templateThinking === true && api === "openai-completions"),
     input: m.vision || known?.input.includes("image") ? ["text", "image"] : ["text"],
     cost: m.cost ?? known?.cost ?? ZERO_COST,
     // 0 = unknown: the library skips its context clamp, and the client hides

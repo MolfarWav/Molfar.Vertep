@@ -202,6 +202,8 @@ const dict = {
   "Manual list": "Lista manuale",
   "Match the model": "In base al modello",
   "Model (tts-1, gpt-4o-mini-tts, playai-tts…)": "Modello (tts-1, gpt-4o-mini-tts, playai-tts…)",
+  "The models think (local server)": "I modelli ragionano (server locale)",
+  "Sends enable_thinking, as llama.cpp, vLLM and LM Studio read it: a preset's reasoning level turns thinking on, Off turns it off.": "Invia enable_thinking, come lo leggono llama.cpp, vLLM e LM Studio: un livello di ragionamento nel preset attiva il ragionamento, Off lo disattiva.",
   "Model supports reasoning/thinking": "Il modello supporta il ragionamento",
   "Models": "Modelli",
   "Models are discovered from the endpoint. Pick Manual if the list is wrong or to set context windows.": "I modelli vengono scoperti dall'endpoint. Scegli Manuale se la lista è sbagliata o per impostare le finestre di contesto.",
