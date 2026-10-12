@@ -67,7 +67,7 @@ unknown here. Tested against a fake server (`test/custom-template-thinking.test.
 Browser-checked (dark/light 1280, light 390). Text completion connections are untouched.
 
 ## UX audit backlog (2026-10-12; user: fix it bit by bit, together with the next releases)
-Five external vision models reviewed 136 screenshots (shell, agent page, Roleplay 4.37.0; 1280/390; all
+Five external vision models reviewed screenshots (129 kept) (shell, agent page, Roleplay 4.37.0; 1280/390; all
 themes) against `ux-review`; findings checked against the code, wrong ones dropped. The document (Ukrainian,
 ranked by impact/effort, exact screens and files) is NOT in the repo: desktop
 `E:\Claude\Chrysalis-Engine\data\ux-audit\UX-AUDIT.md` (gitignored `data/`; screenshots in `screens/`, raw
