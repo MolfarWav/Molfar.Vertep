@@ -13,8 +13,12 @@ an editable draft with Use / Try again / Discard, filed by the profile plugin (1
 `profile-drafts/group-<id>.json`; the plugin never writes the group file. Model (user, 2026-10-12): the model of the
 group's latest chat, else the app's chat model; muted members are left out; cards are cut shorter as the group
 grows. `test/rp-group-scene.test.ts`. Browser-checked (dark 1280, light 390) with a mock model; not yet run against
-a real model. Chats page redesign: three previews (A list + panel, B gallery, C by character) at
-https://claude.ai/artifact/D9LyEPuS1SHPQq2q535PD3; waiting for the user's pick before building.
+a real model. Chats page (user picked layout A of three previews, https://claude.ai/artifact/D9LyEPuS1SHPQq2q535PD3,
+with stronger colours): commits `32d5386`, `eba5275`. A list grouped Pinned / Today / This week / Earlier (each
+heading its own `--when-*` token), All / One-on-one / Groups chips, sorts, Select for bulk move and delete; a panel
+with Continue, Pin, New chat, Litopys chapters, the last three messages in speaker colours, persona, preset, model,
+history size, lorebooks, turns. Pins: new chat meta `pinned` (PATCH key; does not touch updatedAt). Pure logic in
+`src/lib/chat-list.ts` (`test/rp-chat-list.test.ts`). Browser-checked dark 1280, light 1280 and 390.
 
 ## 0.9.7: RELEASED 2026-10-11 (tag v0.9.7 pushed on the user's word, release built with 6 assets; Roleplay 4.32.0 on the fork main `fa15553`)
 The prompt inspector with sources: apps send a host-only `promptSources` (`src/prompt-sources.ts`: sanitize,

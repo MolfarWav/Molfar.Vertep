@@ -8,7 +8,7 @@ Finished work is not listed here: see STATE ("Released") and git history.
    broken, the proposed shape; confirm the shape with the user first). Absorbs item 4 and the colour part of 6a.
 1c. **Group scene generation + Chats page** (user, 2026-10-12): scene generation is built on the Roleplay branch
    `claude/group-scenario-chats-page-av80x1` (STATE "Next Roleplay"); left: a run on a real model. The Chats page
-   redesign waits for the user's pick of the three previews, then gets built on the same branch.
+   (layout A) is built on the same branch. Next: the user's review, then a Roleplay release on their word.
 1a. **1.0.1 = the phone version of the app** (user, 2026-10-11; later, scope to be set).
 1b. **Molfar, the next agent batch** (after 1.0.1): part 3 of `.fork/handoff/molfar-agent/HANDOFF.md`
    (3.7 skills that learn, then 2.5 app_screenshot) and its live checks.
@@ -44,8 +44,6 @@ Finished work is not listed here: see STATE ("Released") and git history.
     - Dashboard event vocabulary: the bigger one shipped in Roleplay 4.36.0
       (STATE.md). Left: what lands in `other` on real chats (debug `unknownEvents`); a fuzzy match for ids
       small models invent (`jealousy`, `check_on_her`).
-    - Better Chats page (agreed layout: list + a panel for the selected chat; story so far, last messages,
-      the technical side; pins, time groups, sorts, bulk actions).
     - Image studio inside Roleplay (generators as connections, sprites and full-body art bound to cards);
       a model arena; a game-master mode.
     - A visual-novel chat look ("D") as an option.
