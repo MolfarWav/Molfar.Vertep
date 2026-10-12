@@ -5,6 +5,17 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Group turns per chat: ON BRANCH 2026-10-12 (Roleplay fork `claude/group-turns-per-chat-vtfpbs`, not on the fork's main yet)
+User report: a group on "Each in turn" + "Only when you trigger a member" "never answers"; and turn settings should
+belong to the chat, not the group card. Cause: manual mode works as designed (the send stores the user's message
+only) but its trigger hid in a member chip's popover and a staged reply bubble flashed and vanished. Now: chat meta
+`turns` overrides the group's defaults per chat (engine `chatGroup`/`withChatTurns`, client `chatGroupSettings`/
+`mergeChatTurns`, `setChatTurns`); a "Turns" button above the chat, "Use the group's settings", the generation mode
+in the new-chat step; manual is "Only the member you pick" with a "Who answers?" row above the composer. Fixed with
+it: narrator + leftover manual never answered; `refreshChat` dropped `groupSettings`. Tests in
+`test/rp-groups.test.ts`; browser-checked dark 1280 and 390 (shots in project files `group-chats/turns-per-chat/`).
+Next: the user tries it, then the fork's main and a Roleplay version on their word.
+
 ## 1.0.3: PREPARED 2026-10-12 (main fast-forwarded on the user's word; the tag v1.0.3 is the user's to push). Ships Roleplay 4.39.0 (pushed to the fork's main `d1fde1b`): clickable Chats panel details and every S item of the UX audit (see "UX audit backlog").
 
 ## 1.0.2: RELEASED 2026-10-12 (tag v1.0.2 pushed by the user; release workflow run 26). Ships Roleplay 4.37.0 and 4.38.0 (4.38.0 pushed to the fork's main `65b38ac` on the user's word) and the built-in ux-review skill.
