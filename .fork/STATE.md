@@ -50,7 +50,7 @@ README (3 languages): download and Discord badges, profile.png and persona.png r
 
 ## 1.0.0: PREPARED 2026-10-12 (main fast-forwarded; the tag v1.0.0 is the user's to push). Group chats ship as Roleplay 4.35.0 (pushed to the fork's main on the user's word); the engine is unchanged from 0.9.11. Still open for groups: scene generation, the Chats page group part, the Characters type filter, small-model prompt tweaks, a workspace-agent task for the edit-large-card skill copy, a darker palette yellow on light themes.
 
-## 1.0.1 candidate: dashboard on local thinking models (2026-10-12, Roleplay branch `claude/project-thread-eu8vz0`, not released)
+## 1.0.1: PREPARED 2026-10-12 (main fast-forwarded; the tag v1.0.1 is the user's to push). Dashboard on local thinking models + the bigger event vocabulary, both in Roleplay 4.36.0 (pushed to the fork's main on the user's word). Local `bun run test`: 2 edge-tts tests fail in the cloud sandbox (live network 403), unrelated.
 Reddit report: local Fenrir-X-26B-A4B (Gemma 4 finetune), default preset; the dashboard flooded the endpoint and came back
 empty with cut-off thinking; Russian cards answered in English. Not the 0.9.10 Soji fix (that one threw away a finished
 reply on a stream with no finish_reason; here the model spends the whole limit thinking and writes no answer). Fixed in

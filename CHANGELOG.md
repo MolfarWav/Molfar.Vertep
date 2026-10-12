@@ -7,7 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.0.1 (2026-10-12)
+
 - Connections: an OpenAI-compatible connection to a local server (llama.cpp, vLLM, LM Studio) can say its models think. The engine then sends `enable_thinking`, so a preset's reasoning level turns thinking on and Off really turns it off. Before, such a model got no thinking setting at all and could think through its whole reply limit.
+- The Roleplay app 4.36.0 (its own CHANGELOG has the details): the relationship dashboard follows the chat preset's thinking settings and no longer comes back empty on thinking models; importing many cards no longer rates each one with a model call; a bigger event vocabulary.
 
 ## 1.0.0 (2026-10-12)
 
