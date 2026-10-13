@@ -14,6 +14,7 @@ import { SettingsBody, type TabValue } from "./settings"
 import { EngineUpdateButton } from "./server-settings"
 import { AppUpdateBanner, useAppUpdate, useAppUpdates, type AppUpdates } from "./app-update"
 import { UpdatesDialog, useEngineRelease } from "./updates-panel"
+import { BugReportDialog, recordClientError } from "./bug-report"
 import type { LaunchInfo, Me, StoreApp } from "./types"
 import { StoreDialog, WelcomeApps, useStore } from "./store"
 import { getLocale, tr, useLocale } from "./i18n/index"
@@ -136,6 +137,7 @@ function Shell(props: { theme: ThemeControl }) {
   const [settingsTab, setSettingsTab] = useState<TabValue | null>(null)
   const [settingsModel, setSettingsModel] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [bugOpen, setBugOpen] = useState(false)
   // update checks run once per shell start (and when the app list changes),
   // then on "Check now" or after an update: the launcher badges, the top-bar
   // badge and the Updates panel all read these
@@ -554,6 +556,7 @@ function Shell(props: { theme: ThemeControl }) {
                 onLogout={() => void logout()}
                 theme={props.theme}
                 onSettings={() => openSettings()}
+                onReportBug={() => setBugOpen(true)}
                 app={active?.kind === "app" ? { id: active.id, name: active.name, onPlugins: () => openPlugins(active.id) } : null}
               />
             </div>
@@ -575,6 +578,7 @@ function Shell(props: { theme: ThemeControl }) {
                 onApp={openApp}
                 updates={appUpdates}
                 engineRelease={engineRelease.release}
+                onReportBug={() => setBugOpen(true)}
                 onRefresh={refreshLaunch}
                 onCloseTab={(id) => {
                   const t = tabs.find((x) => x.id === id)
@@ -642,9 +646,20 @@ function Shell(props: { theme: ThemeControl }) {
           <AppPluginsDialog appId={pluginsFor} open={pluginsOpen} onClose={() => setPluginsOpen(false)} />
         </div> : null}
       {user ? (
+        <>
+        <BugReportDialog
+          open={bugOpen}
+          onClose={() => setBugOpen(false)}
+          context={{
+            engineVersion: launch?.engine?.version ?? null,
+            repository: launch?.engine?.repository ?? null,
+            app: active?.kind === "app" ? { id: active.id, name: active.name } : null,
+          }}
+        />
         <ModalDialog open={settingsOpen} onClose={() => setSettingsOpen(false)}>
           <SettingsBody onClose={() => setSettingsOpen(false)} me={user} initialTab={settingsTab} initialModel={settingsModel} onLogout={() => { setSettingsOpen(false); void logout() }} />
         </ModalDialog>
+        </>
       ) : null}
     </>
   )
@@ -670,6 +685,7 @@ function UserMenu(props: {
   onLogout: () => void
   theme: ThemeControl
   onSettings: () => void
+  onReportBug: () => void
   app: { id: string; name: string; onPlugins: () => void } | null
 }) {
   const [open, setOpen] = useState(false)
@@ -776,6 +792,19 @@ function UserMenu(props: {
               </span>
               {tr("Settings")}
             </button>
+            <button
+              role="menuitem"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 transition-colors hover:bg-hover"
+              onClick={() => {
+                setOpen(false)
+                props.onReportBug()
+              }}
+            >
+              <span className="flex size-4 shrink-0 items-center justify-center">
+                <IconSmall name="bug" />
+              </span>
+              {tr("Report a bug")}
+            </button>
             <div role="group" aria-label={tr("Theme")} className="my-1 flex flex-col border-y border-line py-1">
               <div className="px-2 py-1 text-11 text-ink-muted">{tr("Theme")}</div>
               {themeChoices.map((c) => {
@@ -869,11 +898,16 @@ function AppCanvas(props: {
         setLoaded(true)
       } else if (d.t === "error") {
         setRuntimeError(typeof d.text === "string" && d.text.trim() ? d.text : null)
+        if (typeof d.text === "string") recordClientError(props.tab.name, d.text)
       } else if (d.t === "app-errors") {
         // the app frame caught runtime errors; the engine stores them per
         // source rev so the agent's app_check can see what broke after a
         // clean build (fire-and-forget: this must never disturb the app)
         const events = Array.isArray(d.events) ? d.events.slice(0, 100) : []
+        for (const ev of events.slice(-10)) {
+          const text = (ev as { text?: unknown } | null)?.text
+          if (typeof text === "string") recordClientError(props.tab.name, text)
+        }
         if (events.length) void api("POST", `/v1/apps/${encodeURIComponent(props.tab.id)}/client-errors`, { events }).catch(() => undefined)
       } else if (d.t === "app-logs") {
         // console prints ride the same path; the agent reads them via app_console
@@ -1275,6 +1309,7 @@ function LaunchPicker(props: {
   onCloseTab: (id: string) => void
   updates: AppUpdates
   engineRelease: EngineRelease | null
+  onReportBug: () => void
 }) {
   const [creating, setCreating] = useState(false)
   const [importing, setImporting] = useState<{ from: StoreApp | null } | null>(null)
@@ -1480,6 +1515,14 @@ function LaunchPicker(props: {
               </svg>
               Discord
             </a>
+            <button
+              type="button"
+              onClick={props.onReportBug}
+              className="flex cursor-pointer items-center gap-1 text-ink-muted transition-colors hover:text-ink"
+            >
+              <IconSmall name="bug" size={14} />
+              {tr("Report a bug")}
+            </button>
           </div>
         ) : null}
       {creating ? <NewAppDialog
