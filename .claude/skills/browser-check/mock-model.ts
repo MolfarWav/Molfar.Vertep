@@ -5,7 +5,7 @@
 // rewinds, POST /__reset only rewinds. Usage is reported, so the composer,
 // spend and the prompt inspector have numbers to show.
 // a turn may wait `delayMs` before answering (a slow model)
-type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number };
+type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number; wordMs?: number };
 const DEFAULT: Turn[] = [
   { tool: "read_file", args: { path: "AGENTS.md" } },
   { text: "I read AGENTS.md. It describes the workspace." },
@@ -29,12 +29,17 @@ Bun.serve({
     const usage = { prompt_tokens: Math.ceil(raw.length / 4), completion_tokens: 20, total_tokens: Math.ceil(raw.length / 4) + 20 };
     if (turn.delayMs) await Bun.sleep(turn.delayMs);
     const body = new ReadableStream({
-      start(c) {
+      async start(c) {
         if ("tool" in turn) {
           c.enqueue(chunk({ ...base, choices: [{ index: 0, delta: { role: "assistant", tool_calls: [{ index: 0, id: `call_${next}`, type: "function", function: { name: turn.tool, arguments: JSON.stringify(turn.args ?? {}) } }] }, finish_reason: null }] }));
           c.enqueue(chunk({ ...base, choices: [{ index: 0, delta: {}, finish_reason: "tool_calls" }], usage }));
         } else {
-          c.enqueue(chunk({ ...base, choices: [{ index: 0, delta: { role: "assistant", content: turn.text }, finish_reason: null }] }));
+          // wordMs: stream the text a word at a time, to watch a reply being written
+          const parts = turn.wordMs ? turn.text.split(/(?<= )/) : [turn.text];
+          for (const [i, part] of parts.entries()) {
+            if (i && turn.wordMs) await Bun.sleep(turn.wordMs);
+            c.enqueue(chunk({ ...base, choices: [{ index: 0, delta: { ...(i ? {} : { role: "assistant" }), content: part }, finish_reason: null }] }));
+          }
           c.enqueue(chunk({ ...base, choices: [{ index: 0, delta: {}, finish_reason: "stop" }], usage }));
         }
         c.enqueue(enc.encode("data: [DONE]\n\n"));

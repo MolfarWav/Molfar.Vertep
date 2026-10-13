@@ -25,6 +25,16 @@ persona / model strip under the phone header is gone. The composer "+" keeps gen
 delete messages, chat files moved to the chat menu (also the desktop kebab). Dashboard strip got a gauge chip.
 Browser-checked 390 dark and light, desktop 1280 (shots: project files `ux-audit/item10/`). Not on the fork's main:
 items 8, 10 and the scroll fix wait for the user's word to ship.
+Same branch, 2026-10-13, a second Discord batch. Commit `a87ad47` (bugs): a reply hung on "…" after the phone
+hid the page (the store now races the POST against `watchForCommit`, which re-reads the chat on visibility/online);
+moving dots plus "Writing · n s" while empty; a faster typewriter; swipe facts kept per swipe in `extra.swipeMeta`
+(Stop then arrows showed one text on every swipe); relations skips a newest reply with no text; the new-chat step's
+late memory no longer overrides early picks. Commit `9058471` (features, see the fork's CHANGELOG): "Save as my
+default" preset choices (`data/preset-defaults.json`, order: step picks, the character's last chat, my default);
+"Regenerate with a hint…" (swipe body `guidance`, depth-0 system line, never stored); per-field card translate
+buttons and a lorebook translate popover; setting `replyDisplay` live/whole. Browser-checked 390 dark and light
+(shots: project files `ux-audit/discord-batch2/`). Not done on purpose: translating preset prompts (the user:
+macros and block references would break). The mock model takes `wordMs` to stream word by word.
 
 ## 1.0.4: RELEASED 2026-10-12 (tag v1.0.4 pushed by the user). Ships Roleplay 4.40.0. The user deleted every merged `claude/*` branch in both repos the same day.
 
