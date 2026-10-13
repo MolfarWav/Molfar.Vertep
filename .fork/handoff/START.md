@@ -13,7 +13,7 @@ Finished work is not listed here: see STATE ("Released") and git history.
    generating" (from `genAborts`/a live set in `src/server/app.ts`; old engines answer 404, the app degrades);
    Roleplay drops the hung POST on return and polls with a timeout, ends "Writing" with an error if the generation
    ended with no reply, and on chat open shows "Writing" + picks up the late commit. Waiting on the reporter: bridge
-   type and Roleplay version on the server (the user asks).
+   type and Roleplay version on the server (the user asks). GitHub issue #13; goes into a Tuesday bug batch (CLAUDE.md, Bugs).
 0. **UX audit backlog** (user, 2026-10-12, ongoing): take a few items into each release from the audit
    document (STATE, "UX audit backlog", gives where it lives). Not a release of its own.
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is

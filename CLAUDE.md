@@ -42,6 +42,15 @@ holds the rules that do not change between tasks; the handoff holds the task.
 - Our own catalogs: the Store list is `MolfarWav/Molfar.Vertep-Store` (`apps.json`), official apps are MolfarWav only (`OFFICIAL_SOURCES`).
 - The session's git proxy cannot delete remote branches; the user deletes old ones on GitHub.
 
+## Bugs (user, 2026-10-13)
+- Every bug lives as a GitHub issue in MolfarWav/Molfar.Vertep, label `bug` (Roleplay bugs too). The user brings
+  reports (Discord, his own); file each one as an issue in the bug form's shape: where, what happened, steps,
+  device and browser, versions, what is known, what we still need from the reporter. Check open issues for a duplicate first.
+- Fixing happens in one batch every Tuesday: one thread reads all open `bug` issues, groups them by area of the code,
+  asks reporters for what is missing, fixes the rest on one branch, one test run, one release. A fixed issue is
+  closed with the release that ships it.
+- Outside the batch only urgent bugs: lost data, the app does not start, the update is broken.
+
 ## Done means
 1. `bun run typecheck`, `bun run test`, `bun run build:client` pass.
 2. `bunx biome lint <touched files>` adds no warnings beyond the surrounding style.
