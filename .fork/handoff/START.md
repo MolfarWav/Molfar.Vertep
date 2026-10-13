@@ -4,6 +4,8 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+0. **Canvas, stage 1b = the prompt board** (user, 2026-10-13; stage 1a shipped in Roleplay 4.42.0):
+   `.fork/handoff/canvas/HANDOFF.md`. Plan first: three questions to settle with the user before any code.
 00. **Lost replies on a phone browser = 1.0.7 or a bit later** (user, 2026-10-13; Discord report, server + phone
    browser through a "bridge"). (a) "Writing" counts forever after an app switch until a reload: did NOT reproduce
    in emulation (hung send + faked visibilitychange: `watchForCommit` landed). Guess: dead keep-alive connections

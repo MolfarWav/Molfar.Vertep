@@ -5,6 +5,9 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Canvas stage 1a: RELEASED in Roleplay 4.42.0 (fork main `9e68e44`, 2026-10-13, on the user's word)
+A Canvas tab with the chat-links board (Library chats as cards, wires = continues, forks dashed), the Library map as the same board in View mode. Code in the Roleplay fork (`src/canvas-kit/`, `src/components/canvas/`); no engine change; the engine needs no release for it (an app update). Next: stage 1b, the prompt board, plan first: `.fork/handoff/canvas/HANDOFF.md`.
+
 ## Next patch (user, 2026-10-13): open problems to solve first
 - **Dashboard: remote contact (texting, calls) is not in the scene** (GitHub #16, `bug`). The sensor's `present` holds only
   people physically there and `buildInsert` returns null on an empty `present`, so a texting scene sends the model

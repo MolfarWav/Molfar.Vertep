@@ -1,0 +1,1016 @@
+<title>Canvas для Ролплею</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell (rail · palette · canvas · details), canvas = pan/zoom world with SVG wires under HTML cards. Roleplay tokens. */
+:root{
+  --bg:#fafafa;--card:#ffffff;--fg:#161616;--muted:#f1f1f2;--mfg:#6b6b6b;--line:rgb(0 0 0 / 11%);--line2:rgb(0 0 0 / 18%);
+  --primary:#2eaf5a;--on-primary:#ffffff;--danger:#d92d20;--warn:#b5650d;--warn-soft:rgb(181 101 13 / 10%);
+  --dot:rgb(0 0 0 / 9%);--wire:#9a9aa0;--shadow:0 1px 2px rgb(0 0 0 / 6%),0 4px 14px rgb(0 0 0 / 6%);
+  --k-who:#d9822b;--k-world:#1f9e8f;--k-story:#7c5cd6;--k-rules:#3b82c4;--k-send:#2eaf5a;--k-chat:#3b82c4;
+  --f-ui:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--f-mono:ui-monospace,"JetBrains Mono",Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141414;--card:#1b1b1b;--fg:#e6e6e6;--muted:#222222;--mfg:#9d9d9d;--line:#2b2b2b;--line2:#3a3a3a;
+  --primary:#54d17d;--on-primary:#0b1a10;--danger:#e5484d;--warn:#e9a24a;--warn-soft:rgb(233 162 74 / 12%);
+  --dot:rgb(255 255 255 / 7%);--wire:#6d6d73;--shadow:0 1px 2px rgb(0 0 0 / 40%),0 6px 18px rgb(0 0 0 / 30%);
+  --k-who:#f0a35a;--k-world:#3cc4b2;--k-story:#a68bf0;--k-rules:#6aaeea;--k-send:#54d17d;--k-chat:#6aaeea;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141414;--card:#1b1b1b;--fg:#e6e6e6;--muted:#222222;--mfg:#9d9d9d;--line:#2b2b2b;--line2:#3a3a3a;
+  --primary:#54d17d;--on-primary:#0b1a10;--danger:#e5484d;--warn:#e9a24a;--warn-soft:rgb(233 162 74 / 12%);
+  --dot:rgb(255 255 255 / 7%);--wire:#6d6d73;--shadow:0 1px 2px rgb(0 0 0 / 40%),0 6px 18px rgb(0 0 0 / 30%);
+  --k-who:#f0a35a;--k-world:#3cc4b2;--k-story:#a68bf0;--k-rules:#6aaeea;--k-send:#54d17d;--k-chat:#6aaeea;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:14px;line-height:1.45;overflow:hidden}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit}
+svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:52px auto 1fr auto;grid-template-rows:auto 1fr;height:100%}
+.rail{grid-row:1/3;border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:6px;padding-block:10px;background:var(--card)}
+.rail button{width:38px;height:38px;border:0;background:none;border-radius:var(--r);display:grid;place-items:center;color:var(--mfg);cursor:pointer;position:relative}
+.rail button:hover{background:var(--muted);color:var(--fg)}
+.rail button.on{background:color-mix(in srgb,var(--primary) 16%,transparent);color:var(--primary)}
+.rail .lbl{position:absolute;left:44px;white-space:nowrap;background:var(--fg);color:var(--bg);font-size:12px;padding:3px 8px;border-radius:6px;opacity:0;pointer-events:none;transition:opacity .12s}
+.rail button:hover .lbl{opacity:1}
+
+.top{grid-column:2/5;display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--card);min-width:0;flex-wrap:wrap}
+.title{font-weight:700;font-size:15px;margin-right:4px}
+.seg{display:inline-flex;background:var(--muted);border-radius:var(--r);padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:5px 11px;border-radius:6px;cursor:pointer;color:var(--mfg);display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;min-height:30px}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--fg);box-shadow:var(--shadow)}
+.ib{border:1px solid transparent;background:none;width:34px;height:34px;border-radius:var(--r);display:inline-grid;place-items:center;cursor:pointer;color:var(--fg)}
+.ib:hover:not(:disabled){background:var(--muted)}
+.ib:disabled{opacity:.35;cursor:default}
+.ib.on{background:var(--muted);border-color:var(--line)}
+.sep{width:1px;height:22px;background:var(--line)}
+.grow{flex:1}
+.zoom{display:inline-flex;align-items:center;gap:2px}
+.zoom output{font-size:12px;width:44px;text-align:center;color:var(--mfg);font-variant-numeric:tabular-nums}
+.saved{font-size:12px;color:var(--mfg);display:inline-flex;align-items:center;gap:6px;min-width:84px}
+.saved i{width:7px;height:7px;border-radius:50%;background:var(--primary)}
+.saved.busy i{background:var(--warn)}
+.btn{border:1px solid var(--line2);background:var(--card);padding:6px 12px;border-radius:var(--r);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;min-height:32px}
+.btn:hover{background:var(--muted)}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.btn.pri:hover{filter:brightness(1.05)}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,transparent)}
+.btn.ghost{border-color:transparent;background:none}
+
+
+/* board switch: the first thing to notice */
+.seg.boards{background:color-mix(in srgb,var(--primary) 12%,var(--muted));border:1px solid color-mix(in srgb,var(--primary) 35%,transparent);padding:4px}
+.seg.boards button{font-size:14px;font-weight:600;padding:6px 14px;min-height:34px;color:var(--fg)}
+.seg.boards button[aria-pressed="true"]{background:var(--primary);color:var(--on-primary)}
+.btn.tidy{background:color-mix(in srgb,var(--k-story) 16%,transparent);border-color:color-mix(in srgb,var(--k-story) 45%,transparent);color:var(--k-story)}
+.btn.tidy:hover:not(:disabled){background:color-mix(in srgb,var(--k-story) 26%,transparent)}
+.btn:disabled{opacity:.4;cursor:default}
+.boards-lbl{font-size:11.5px;color:var(--mfg);font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+
+/* side panels */
+.side{background:var(--card);border-right:1px solid var(--line);width:268px;display:flex;flex-direction:column;min-height:0;overflow:hidden;transition:width .18s}
+.side.right{border-right:0;border-left:1px solid var(--line);width:300px}
+.side.closed{width:0;border:0}
+.side-in{width:268px;display:flex;flex-direction:column;min-height:0;height:100%}
+.side.right .side-in{width:300px}
+.side h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mfg);margin:0;font-weight:600}
+.side-head{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px}
+.side-body{padding:0 12px 16px;overflow:auto;min-height:0;display:grid;gap:10px;align-content:start}
+.search{width:100%;border:1px solid var(--line2);background:var(--bg);border-radius:var(--r);padding:8px 10px;font:inherit;color:var(--fg)}
+.pal-group{display:grid;gap:6px}
+.pal-group h4{margin:6px 0 0;font-size:12px;color:var(--mfg);font-weight:600}
+.pal{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);cursor:grab;user-select:none;text-align:left;width:100%}
+.pal:hover{border-color:var(--line2);background:var(--muted)}
+.pal .sw{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;flex:none;color:#fff}
+.pal b{display:block;font-size:13px;font-weight:600}
+.pal small{display:block;color:var(--mfg);font-size:12px;line-height:1.35}
+.pal.used{opacity:.5;cursor:default}
+.empty-note{font-size:12.5px;color:var(--mfg);border:1px dashed var(--line2);border-radius:var(--r);padding:10px}
+
+/* canvas */
+.stage{position:relative;overflow:hidden;min-width:0;background:var(--bg);background-image:radial-gradient(var(--dot) 1.2px,transparent 1.2px);background-size:22px 22px;touch-action:none;user-select:none}
+.stage.panning{cursor:grabbing}
+.world{position:absolute;left:0;top:0;transform-origin:0 0}
+svg.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
+.wire{fill:none;stroke:var(--wire);stroke-width:2.2;pointer-events:none}
+.wire.off{stroke-dasharray:5 5;opacity:.6}
+.wire.sel{stroke:var(--primary);stroke-width:3}
+.wire.hot{stroke:var(--primary);stroke-width:4;opacity:.9}
+.wire-hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:pointer}
+.wire.live{stroke:var(--primary);stroke-dasharray:6 5}
+.wire.live.bad{stroke:var(--danger)}
+.wdel{position:absolute;width:26px;height:26px;border-radius:50%;border:1px solid var(--line2);background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--danger);box-shadow:var(--shadow);transform:translate(-50%,-50%)}
+
+.node{position:absolute;width:236px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);user-select:none}
+.node::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;border-radius:10px 10px 0 0;background:var(--kc)}
+.node.sel{outline:2px solid var(--primary);outline-offset:2px}
+.node.off .nbody,.node.off .nhead .nt{opacity:.5}
+.node.drop-ok{outline:2px dashed var(--primary);outline-offset:3px}
+.nhead{display:flex;align-items:center;gap:8px;padding:12px 8px 6px 12px;cursor:grab}
+.view .nhead{cursor:pointer}
+.nicon{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:#fff;background:var(--kc);flex:none}
+.nicon svg.i{width:15px;height:15px}
+.nt{flex:1;min-width:0}
+.nt b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nt small{display:block;font-size:11.5px;color:var(--mfg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nmore{width:28px;height:28px;border:0;background:none;border-radius:6px;display:grid;place-items:center;color:var(--mfg);cursor:pointer}
+.nmore:hover{background:var(--muted);color:var(--fg)}
+.nbody{padding:0 12px 10px;display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:12px;color:var(--mfg)}
+.chip{font-size:11.5px;padding:2px 7px;border-radius:999px;background:var(--muted);color:var(--mfg);font-variant-numeric:tabular-nums}
+.offword{font-size:11.5px;font-weight:600;color:var(--warn)}
+
+.tg{position:relative;width:34px;height:20px;border-radius:999px;background:var(--line2);border:0;cursor:pointer;flex:none;padding:0}
+.tg::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .12s;box-shadow:0 1px 2px rgb(0 0 0 / 30%)}
+.tg[aria-checked="true"]{background:var(--primary)}
+.tg[aria-checked="true"]::after{left:16px}
+.tg:disabled{opacity:.5;cursor:default}
+
+.port{position:absolute;width:30px;height:30px;display:grid;place-items:center;cursor:crosshair;z-index:2}
+.port i{width:14px;height:14px;border:2px solid var(--kc);background:var(--card);transition:transform .1s,box-shadow .1s}
+.port.in{left:-15px}.port.out{right:-15px}
+.port.in i{border-radius:50%}
+.port.out i{border-radius:3px;background:var(--kc)}
+.port.glow i{transform:scale(1.45);box-shadow:0 0 0 5px color-mix(in srgb,var(--primary) 30%,transparent);border-color:var(--primary)}
+.port.dim{opacity:.25}
+.view .port{cursor:default}
+
+/* output card */
+.node.out{width:260px}
+.orows{display:grid;padding:2px 0 8px}
+.orow{position:relative;display:flex;align-items:center;gap:8px;padding:5px 12px 5px 16px;font-size:12.5px}
+.orow .n{width:20px;height:20px;border-radius:6px;background:var(--muted);display:grid;place-items:center;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--mfg)}
+.orow .t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.orow.off .t{color:var(--mfg);text-decoration:line-through}
+.orow .tok{font-size:11px;color:var(--mfg);font-variant-numeric:tabular-nums}
+.orow .port{left:-15px;top:50%;transform:translateY(-50%)}
+.orow.add .t{color:var(--mfg);font-style:italic}
+.ototal{border-top:1px solid var(--line);padding:8px 12px;display:flex;justify-content:space-between;font-size:12px;color:var(--mfg)}
+.ototal b{color:var(--fg);font-variant-numeric:tabular-nums}
+
+/* overlays on stage */
+.hud{position:absolute;display:flex;gap:6px;z-index:5}
+.hud.br{right:12px;bottom:12px;align-items:flex-end}
+.minimap{width:176px;height:112px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);position:relative;overflow:hidden;cursor:pointer}
+.minimap canvas{width:100%;height:100%;display:block}
+.panel-tab{position:absolute;top:12px;z-index:5}
+.panel-tab.l{left:12px}.panel-tab.r{right:12px}
+.reason{position:fixed;z-index:50;background:var(--fg);color:var(--bg);font-size:12px;padding:5px 9px;border-radius:6px;pointer-events:none;max-width:260px;box-shadow:var(--shadow)}
+.reason.bad{background:var(--danger);color:#fff}
+.coach{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:6;background:var(--card);border:1px solid var(--line2);box-shadow:var(--shadow);border-radius:999px;padding:6px 14px;font-size:12.5px;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.problems{position:absolute;left:12px;bottom:12px;z-index:5;display:grid;gap:6px;max-width:min(520px,calc(100% - 270px))}
+.prob{display:flex;align-items:center;gap:10px;background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);color:var(--fg);border-radius:var(--r);padding:7px 8px 7px 10px;font-size:12.5px;backdrop-filter:blur(4px)}
+.prob svg{color:var(--warn)}
+.prob span{flex:1;min-width:0}
+.prob .btn{min-height:28px;padding:3px 10px;font-size:12px}
+
+.menu{position:fixed;z-index:60;background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:0 10px 30px rgb(0 0 0 / 25%);padding:6px;min-width:220px;max-width:280px;display:grid;gap:2px}
+.menu .mh{font-size:11.5px;color:var(--mfg);padding:4px 8px 6px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.menu button{border:0;background:none;text-align:left;padding:7px 8px;border-radius:6px;cursor:pointer;display:flex;gap:9px;align-items:center;font-size:13px}
+.menu button:hover,.menu button:focus-visible{background:var(--muted)}
+.menu button.d{color:var(--danger)}
+.menu button small{color:var(--mfg);display:block;font-size:11.5px}
+.menu .none{font-size:12.5px;color:var(--mfg);padding:6px 8px}
+.menu input{margin:2px 2px 4px;width:calc(100% - 4px)}
+
+/* details */
+.d-sec{display:grid;gap:8px;padding-block:4px}
+.d-title{display:flex;gap:10px;align-items:center}
+.d-title b{font-size:16px}
+.d-desc{color:var(--mfg);font-size:13px;margin:0}
+.field{display:grid;gap:4px}
+.field label{font-size:12.5px;font-weight:500}
+.field .hint{font-size:12px;color:var(--mfg)}
+.field select,.field input[type=text]{border:1px solid var(--line2);background:var(--bg);color:var(--fg);border-radius:var(--r);padding:7px 9px;font:inherit}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.callout{border:1px solid var(--line);background:var(--muted);border-radius:var(--r);padding:9px 11px;font-size:12.5px;color:var(--mfg)}
+.tips{margin:0;padding-left:18px;display:grid;gap:6px;color:var(--mfg);font-size:13px}
+.linkbtn{border:0;background:none;color:var(--primary);cursor:pointer;padding:0;font-size:13px;text-decoration:underline;text-underline-offset:2px;justify-self:start}
+.infobtn{width:24px;height:24px;border-radius:50%;border:1px solid var(--line2);background:var(--card);display:inline-grid;place-items:center;cursor:pointer;color:var(--mfg)}
+.infobtn svg.i{width:14px;height:14px}
+.pop{position:fixed;z-index:70;width:280px;background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:0 10px 30px rgb(0 0 0 / 25%);padding:12px 14px;font-size:13px}
+.pop p{margin:0 0 8px}.pop p:last-child{margin:0}
+.kbd{font-family:var(--f-mono);font-size:11.5px;border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--bg)}
+
+/* sheets, toast, tour */
+.scrim{position:fixed;inset:0;background:rgb(0 0 0 / 35%);z-index:80;display:flex;justify-content:flex-end}
+.sheet{width:min(440px,100%);height:100%;background:var(--card);border-left:1px solid var(--line);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.sheet header b{font-size:15px}
+.sheet .sb{padding:14px 16px;overflow:auto;display:grid;gap:10px;align-content:start;min-height:0}
+.prev{border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.prev .ph{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--muted);font-size:12.5px;font-weight:600}
+.prev .ph span{color:var(--mfg);font-weight:500;font-variant-numeric:tabular-nums}
+.prev pre{margin:0;padding:8px 10px;font-family:var(--f-mono);font-size:12px;white-space:pre-wrap;color:var(--mfg);max-height:90px;overflow:hidden}
+.prev.offp{opacity:.55}
+pre.json{font-family:var(--f-mono);font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:10px;white-space:pre-wrap;word-break:break-all;margin:0;max-height:60vh;overflow:auto}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:90;background:var(--fg);color:var(--bg);border-radius:10px;padding:8px 8px 8px 14px;display:flex;gap:10px;align-items:center;font-size:13px;box-shadow:var(--shadow)}
+.toast button{border:0;background:color-mix(in srgb,var(--bg) 18%,transparent);color:var(--bg);border-radius:6px;padding:5px 10px;cursor:pointer;font-weight:600}
+.tour{position:fixed;z-index:85;width:300px;background:var(--card);border:1px solid var(--primary);border-radius:12px;box-shadow:0 14px 40px rgb(0 0 0 / 30%);padding:14px 16px;display:grid;gap:8px}
+.tour .step{font-size:11.5px;color:var(--primary);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.tour b{font-size:15px}
+.tour p{margin:0;color:var(--mfg);font-size:13px}
+.tour .row{margin-top:4px}
+.confirm-inline{display:grid;gap:8px}
+
+/* phone */
+.phone-note{display:none}
+.list{display:none}
+@media (max-width:767px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto auto 1fr auto}
+  .rail{grid-row:4;grid-column:1;flex-direction:row;justify-content:space-around;border-right:0;border-top:1px solid var(--line);padding:4px 8px calc(4px + env(safe-area-inset-bottom,0px))}
+  .rail .lbl{display:none}
+  .top{grid-column:1;padding:8px 12px;gap:6px}
+  .top .desk{display:none}
+  .side{display:none}
+  .phone-note{display:flex;grid-column:1;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--muted);border-bottom:1px solid var(--line);font-size:13px;color:var(--mfg)}
+  .phone-note svg{color:var(--fg);margin-top:1px}
+  .stage{grid-column:1}
+  .app.listmode .stage{display:none}
+  .app.listmode .list{display:grid}
+  .list{grid-column:1;overflow:auto;padding:12px 12px 24px;align-content:start;gap:8px}
+  .problems{max-width:calc(100% - 24px);bottom:12px}
+  .minimap{display:none}
+  .ib{width:40px;height:40px}
+  .seg button{min-height:36px}
+}
+.li{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;position:relative;overflow:hidden}
+.li::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:var(--kc)}
+.li .nt b{white-space:normal}
+.li .mv{display:grid;gap:2px}
+.li .mv button{width:40px;height:30px;border:1px solid var(--line);background:var(--bg);border-radius:6px;display:grid;place-items:center;cursor:pointer}
+.li .mv button:disabled{opacity:.3}
+.li select{max-width:150px;border:1px solid var(--line2);background:var(--bg);color:var(--fg);border-radius:var(--r);padding:8px;font:inherit;font-size:13px;min-height:40px}
+.li .tg{width:44px;height:26px}.li .tg::after{width:22px;height:22px}.li .tg[aria-checked="true"]::after{left:20px}
+.lh{font-size:12px;color:var(--mfg);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-top:6px}
+.li.off .nt{opacity:.55}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app" id="app">
+  <nav class="rail" aria-label="Розділи Ролплею">
+    <button data-k="home"><svg class="i"><use href="#i-home"/></svg><span class="lbl">Головна</span></button>
+    <button data-k="chats"><svg class="i"><use href="#i-chat"/></svg><span class="lbl">Чати</span></button>
+    <button data-k="chars"><svg class="i"><use href="#i-user"/></svg><span class="lbl">Персонажі</span></button>
+    <button data-k="presets"><svg class="i"><use href="#i-sliders"/></svg><span class="lbl">Пресети</span></button>
+    <button data-k="lore"><svg class="i"><use href="#i-book"/></svg><span class="lbl">Лорбуки</span></button>
+    <button data-k="lib"><svg class="i"><use href="#i-scroll"/></svg><span class="lbl">Бібліотека</span></button>
+    <button class="on" aria-current="page"><svg class="i"><use href="#i-graph"/></svg><span class="lbl">Canvas</span></button>
+  </nav>
+
+  <header class="top">
+    <span class="title">Canvas</span>
+    <span class="boards-lbl desk">Полотно:</span><div class="seg boards" role="group" aria-label="Полотно">
+      <button id="b-links" aria-pressed="true"><svg class="i"><use href="#i-link"/></svg>Зв'язки чатів</button>
+      <button id="b-prompt" aria-pressed="false"><svg class="i"><use href="#i-send"/></svg>Промпт</button>
+    </div>
+    <div class="seg" role="group" aria-label="Режим">
+      <button id="m-edit" aria-pressed="true"><svg class="i"><use href="#i-pen"/></svg>Редагувати</button>
+      <button id="m-view" aria-pressed="false"><svg class="i"><use href="#i-eye"/></svg>Переглядати</button>
+    </div>
+    <div class="seg phone-only" role="group" aria-label="Вигляд" id="gl-seg" hidden>
+      <button id="v-graph" aria-pressed="false"><svg class="i"><use href="#i-graph"/></svg>Граф</button>
+      <button id="v-list" aria-pressed="true"><svg class="i"><use href="#i-list"/></svg>Список</button>
+    </div>
+    <span class="sep desk"></span>
+    <button class="ib desk" id="undo" aria-label="Скасувати" title="Скасувати (Ctrl+Z)"><svg class="i"><use href="#i-undo"/></svg></button>
+    <button class="ib desk" id="redo" aria-label="Повторити" title="Повторити (Ctrl+Shift+Z)"><svg class="i"><use href="#i-redo"/></svg></button>
+    <button class="btn tidy desk" id="tidy" title="Розкласти блоки акуратно"><svg class="i"><use href="#i-sparkle"/></svg>Впорядкувати</button>
+    <span class="grow"></span>
+    <span class="saved desk" id="saved" aria-live="polite"><i></i><span>Збережено</span></span>
+    <button class="btn desk" id="preview" hidden><svg class="i"><use href="#i-eye"/></svg>Що піде в запит</button>
+    <button class="ib desk" id="export" aria-label="Експорт полотна" title="Експорт полотна"><svg class="i"><use href="#i-export"/></svg></button>
+    <button class="ib" id="theme" aria-label="Світла чи темна тема" title="Тема"><svg class="i"><use href="#i-sun"/></svg></button>
+  </header>
+
+  <div class="phone-note" id="phone-note"><svg class="i"><use href="#i-info"/></svg><span>Будувати граф зручно лише на великому екрані. Тут можна дивитися граф і змінювати все через список.</span></div>
+
+  <aside class="side" id="left" aria-label="Блоки">
+    <div class="side-in">
+      <div class="side-head"><h3 id="pal-title">Блоки</h3><button class="ib" id="close-left" aria-label="Сховати панель блоків" title="Сховати панель ( [ )"><svg class="i"><use href="#i-pleft"/></svg></button></div>
+      <div class="side-body" id="palette"></div>
+    </div>
+  </aside>
+
+  <main class="stage" id="stage" aria-label="Полотно">
+    <div class="world" id="world"><svg class="wires" id="wires"></svg><div id="nodes"></div></div>
+    <button class="ib panel-tab l on" id="open-left" aria-label="Показати панель блоків" title="Показати панель блоків ( [ )" hidden><svg class="i"><use href="#i-pleft"/></svg></button>
+    <button class="ib panel-tab r on" id="open-right" aria-label="Показати панель деталей" title="Показати деталі ( ] )" hidden><svg class="i"><use href="#i-pright"/></svg></button>
+    <div class="problems" id="problems"></div>
+    <div class="hud br">
+      <div class="minimap" id="minimap" title="Мінікарта: клікніть, щоб перейти"><canvas id="mm"></canvas></div>
+      <div style="display:grid;gap:6px">
+        <div class="zoom" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);flex-direction:column;padding:3px">
+          <button class="ib" id="z-in" aria-label="Наблизити"><svg class="i"><use href="#i-plus"/></svg></button>
+          <output id="z-val">100%</output>
+          <button class="ib" id="z-out" aria-label="Віддалити"><svg class="i"><use href="#i-minus"/></svg></button>
+          <button class="ib" id="z-fit" aria-label="Показати все" title="Показати все"><svg class="i"><use href="#i-fit"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <section class="list" id="list" aria-label="Список кроків"></section>
+
+  <aside class="side right" id="right" aria-label="Деталі">
+    <div class="side-in">
+      <div class="side-head"><h3>Деталі</h3><button class="ib" id="close-right" aria-label="Сховати панель деталей" title="Сховати панель ( ] )"><svg class="i"><use href="#i-pright"/></svg></button></div>
+      <div class="side-body" id="details"></div>
+    </div>
+  </aside>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M5 5h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H10l-5 4v-4H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></symbol>
+  <symbol id="i-mask" viewBox="0 0 24 24"><path d="M4 5c5 1.5 11 1.5 16 0v6c0 5-4 9-8 9s-8-4-8-9z"/><path d="M8.5 11.5h2M13.5 11.5h2M9.5 15.5c1.5 1 3.5 1 5 0"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M5 4v16M12 4v16M19 4v16"/><circle cx="5" cy="9" r="2"/><circle cx="12" cy="15" r="2"/><circle cx="19" cy="7" r="2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5M9 7h6"/></symbol>
+  <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M7 3h11a2 2 0 0 1 2 2v2h-4M7 3a2 2 0 0 0-2 2v12a2 2 0 0 1-2 2h11a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2"/><path d="M9 9h4M9 13h4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a2 2 0 0 0-3-1zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-6z"/><path d="M11 14l9-10"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-graph" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="5" rx="1.5"/><rect x="14" y="15" width="7" height="5" rx="1.5"/><path d="M10 6.5h2a2 2 0 0 1 2 2v7a2 2 0 0 0 2 2"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></symbol>
+  <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></symbol>
+  <symbol id="i-pleft" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+  <symbol id="i-pright" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17.5v.5"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></symbol>
+  <symbol id="i-unlink" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7M3 3l18 18"/></symbol>
+</svg>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ico = (n) => `<svg class="i"><use href="#i-${n}"/></svg>`;
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+const phone = () => window.matchMedia("(max-width: 767px)").matches;
+
+/* ---------------- registry: one editor, a node vocabulary per board ---------------- */
+const KINDS = {
+  chat:    { label: "Чат", icon: "chat", color: "--k-chat" },
+  card:    { label: "Картка персонажа", icon: "user", color: "--k-who", group: "Хто", hint: "Опис, характер і сценарій персонажа.", info: "Усе, що модель знає про персонажа: опис, особистість, сценарій і приклади діалогів з картки. Без неї модель не знає, кого грає." },
+  persona: { label: "Персона", icon: "mask", color: "--k-who", group: "Хто", hint: "Хто ви в цій історії.", info: "Ваша персона: ім'я та опис гравця. Модель звертається до вас як до цієї персони." },
+  preset:  { label: "Секція пресета", icon: "sliders", color: "--k-rules", group: "Правила", hint: "Інструкції зі стилю й правил гри.", info: "Одна секція з вашого пресета, наприклад головний промпт або правила стилю. Вимкнення тут не змінює сам пресет." },
+  note:    { label: "Нотатка автора", icon: "pen", color: "--k-rules", group: "Правила", hint: "Коротка вказівка для цього чату.", info: "Нотатка автора: коротка вказівка, яку модель бачить біля кінця історії. Зручно для «темп повільніший» чи «зараз ніч»." },
+  lore:    { label: "Лорбук", icon: "book", color: "--k-world", group: "Світ", hint: "Записи про світ, що спрацювали.", info: "Записи лорбука, ключові слова яких з'явилися в розмові. Рушій сам вирішує, які записи спрацювали; тут ви вирішуєте, чи йдуть вони в запит цього чату." },
+  story:   { label: "Історія досі", icon: "scroll", color: "--k-story", group: "Історія", hint: "Стислий переказ з Бібліотеки.", info: "Стислий переказ попередніх сцен і розділів з Бібліотеки. Допомагає моделі пам'ятати давні події, не читаючи весь чат." },
+  memory:  { label: "Пам'ять", icon: "brain", color: "--k-story", group: "Історія", hint: "Закріплені факти чату.", info: "Довга пам'ять чату: факти, які ви або модель закріпили. Наприклад, «Мія боїться вогню»." },
+  dash:    { label: "Дашборд стосунків", icon: "heart", color: "--k-story", group: "Історія", hint: "Настрій і стосунки персонажів.", info: "Поточний стан дашборда: довіра, настрій, місце і час. Модель тримає стосунки послідовними." },
+  history: { label: "Історія чату", icon: "clock", color: "--k-story", group: "Історія", hint: "Останні повідомлення розмови.", info: "Останні повідомлення чату. Скільки саме, вирішує пресет і розмір вікна моделі." },
+  output:  { label: "Запит до моделі", icon: "send", color: "--k-send", hint: "Усе, що під'єднано сюди, йде моделі згори вниз.", info: "Фінальний запит. Кожна під'єднана частина займає свій рядок, і модель отримує їх згори вниз. Порядок змінюється стрілками в деталях або перетягуванням частини на інше місце." },
+};
+const BOARDS = {
+  links: {
+    name: "Зв'язки чатів",
+    tips: ["Протягніть дріт від квадратної точки чату до круглої точки іншого: другий чат стане продовженням першого.", "У чату може бути лише один попередній, але кілька продовжень.", "Прибрати чат з полотна не означає видалити сам чат."],
+    tour: [
+      { t: "Додайте чат", p: "Перетягніть чат з панелі ліворуч на полотно або клікніть по ньому." },
+      { t: "З'єднайте", p: "Потягніть від квадратної точки праворуч на картці до круглої точки іншого чату. Точки, куди можна, засвітяться." },
+      { t: "Перевірте", p: "Клікніть картку: праворуч видно, що вона продовжує і чим продовжена." },
+    ],
+  },
+  prompt: {
+    name: "Промпт",
+    tips: ["Під'єднайте частину до «Запиту до моделі», і вона піде моделі.", "Порядок рядків у «Запиті» і є порядком, у якому модель їх читає.", "Вимкнена частина не йде в запит лише цього чату. Пресет не змінюється."],
+    tour: [
+      { t: "Додайте частину", p: "Перетягніть блок з панелі ліворуч, наприклад «Нотатку автора»." },
+      { t: "Під'єднайте до запиту", p: "Потягніть від квадратної точки до «Запиту до моделі». Можна кинути частину просто на дріт, щоб вставити її в це місце черги." },
+      { t: "Подивіться результат", p: "Кнопка «Що піде в запит» вгорі показує частини в порядку і їхній розмір у токенах." },
+    ],
+  },
+};
+
+/* ---------------- sample data (invented) ---------------- */
+const LIB_CHATS = {
+  c1: { title: "Мія: таверна «Під дубом»", ch: "Мія", facts: 12, ago: "2 дні тому" },
+  c2: { title: "Мія: дорога на північ", ch: "Мія", facts: 9, ago: "вчора" },
+  c3: { title: "Мія: місто Кервін", ch: "Мія", facts: 15, ago: "сьогодні" },
+  c4: { title: "Бо: нічна зміна", ch: "Бо", facts: 8, ago: "5 днів тому" },
+  c5: { title: "Бо: пограбування складу", ch: "Бо", facts: 11, ago: "3 дні тому" },
+  c6: { title: "Група: осінній фестиваль", ch: "Мія, Бо, Рен", facts: 20, ago: "тиждень тому" },
+  c7: { title: "Мія: зимовий ярмарок", ch: "Мія", facts: 4, ago: "сьогодні" },
+  c8: { title: "Бо: старий борг", ch: "Бо", facts: 6, ago: "2 тижні тому" },
+};
+const PART_TEXT = {
+  card: "Мія, 24, мандрівна травниця. Тиха, спостережлива, боїться відкритого вогню…",
+  persona: "Ти Ліам, найманий провідник караванів. Говориш мало й по суті…",
+  preset: "Пиши від третьої особи, теперішній час. Не вирішуй за Ліама…",
+  note: "Темп повільніший, більше дрібних деталей міста.",
+  lore: "[Кервін] Портове місто на гирлі Сірої ріки. Варта носить сині плащі…",
+  story: "Розділ 2. Після сварки в таверні Мія й Ліам вирушили на північ…",
+  memory: "• Мія боїться вогню. • Ліам винен гроші Бо.",
+  dash: "Мія → Ліам: довіра 62, симпатія 48. Місце: ринок Кервіна. Час: вечір.",
+  history: "Ліам: Тримайся ближче, тут кишенькові злодії.\nМія: Я й сама бачу…",
+};
+function seed() {
+  return {
+    links: {
+      nodes: [
+        { id: "c1", kind: "chat", x: 40, y: 60 },
+        { id: "c2", kind: "chat", x: 340, y: 60 },
+        { id: "c3", kind: "chat", x: 640, y: 60 },
+        { id: "c4", kind: "chat", x: 40, y: 260 },
+        { id: "c5", kind: "chat", x: 340, y: 260 },
+        { id: "c6", kind: "chat", x: 340, y: 430 },
+      ],
+      edges: [{ id: "e1", from: "c1", to: "c2" }, { id: "e2", from: "c2", to: "c3" }, { id: "e3", from: "c4", to: "c5" }],
+    },
+    prompt: {
+      nodes: [
+        { id: "p-preset", kind: "preset", x: 40, y: 20, title: "Головний промпт", sub: "з пресета «Повільна історія»", on: true, tok: 310 },
+        { id: "p-card", kind: "card", x: 40, y: 120, title: "Мія", sub: "картка персонажа", on: true, tok: 820 },
+        { id: "p-persona", kind: "persona", x: 40, y: 220, title: "Ліам", sub: "ваша персона", on: true, tok: 140 },
+        { id: "p-lore", kind: "lore", x: 40, y: 320, title: "Місто Кервін", sub: "6 записів спрацювало", on: true, tok: 460 },
+        { id: "p-story", kind: "story", x: 40, y: 420, title: "Історія досі", sub: "2 розділи з Бібліотеки", on: true, tok: 380 },
+        { id: "p-memory", kind: "memory", x: 40, y: 520, title: "Пам'ять", sub: "2 закріплені факти", on: false, tok: 220 },
+        { id: "p-history", kind: "history", x: 40, y: 620, title: "Історія чату", sub: "останні 20 повідомлень", on: true, tok: 2900 },
+        { id: "p-dash", kind: "dash", x: 330, y: 560, title: "Дашборд стосунків", sub: "Мія → Ліам", on: true, tok: 190 },
+        { id: "out", kind: "output", x: 600, y: 170 },
+      ],
+      // order of edges into "out" = order sent
+      edges: ["p-preset", "p-card", "p-persona", "p-lore", "p-story", "p-memory", "p-history"].map((f, i) => ({ id: "w" + i, from: f, to: "out" })),
+    },
+  };
+}
+
+/* ---------------- state + history ---------------- */
+let data = seed();
+let board = "links";
+let mode = "edit";
+let listMode = true;
+let sel = null; // {type:'node'|'edge', id}
+const views = { links: { x: 60, y: 40, k: 1 }, prompt: { x: 60, y: 30, k: 1 } };
+const fitted = {};
+const undoStack = [], redoStack = [];
+let uid = 100;
+const B = () => data[board];
+const node = (id) => B().nodes.find((n) => n.id === id);
+const kindOf = (n) => KINDS[n.kind];
+
+function snapshot() { return JSON.stringify(data); }
+function commit(label) {
+  undoStack.push(prevSnap); if (undoStack.length > 80) undoStack.shift();
+  redoStack.length = 0; prevSnap = snapshot(); saving(); render();
+}
+let prevSnap = snapshot();
+function undo() { if (!undoStack.length) return; redoStack.push(snapshot()); data = JSON.parse(undoStack.pop()); prevSnap = snapshot(); fixSel(); saving(); render(); }
+function redo() { if (!redoStack.length) return; undoStack.push(snapshot()); data = JSON.parse(redoStack.pop()); prevSnap = snapshot(); fixSel(); saving(); render(); }
+function fixSel() { if (sel && sel.type === "node" && !node(sel.id)) sel = null; if (sel && sel.type === "edge" && !B().edges.find((e) => e.id === sel.id)) sel = null; }
+let saveT;
+function saving() {
+  const el = $("#saved"); el.classList.add("busy"); el.lastElementChild.textContent = "Зберігаю…";
+  clearTimeout(saveT); saveT = setTimeout(() => { el.classList.remove("busy"); el.lastElementChild.textContent = "Збережено"; }, 650);
+}
+
+/* ---------------- rules ---------------- */
+function titleOf(n) { return n.kind === "chat" ? LIB_CHATS[n.id].title : n.kind === "output" ? KINDS.output.label : n.title; }
+function predOf(id) { return B().edges.find((e) => e.to === id); }
+function reaches(from, target) { // walk successors from `from`; true if we hit target
+  const seen = new Set(); const st = [from];
+  while (st.length) { const c = st.pop(); if (c === target) return true; if (seen.has(c)) continue; seen.add(c); B().edges.filter((e) => e.from === c).forEach((e) => st.push(e.to)); }
+  return false;
+}
+/** Can a wire go from node a (out) to node b (in)? {ok, reason, replace} */
+function canWire(a, b) {
+  if (a === b) return { ok: false, reason: "Не можна з'єднати блок сам із собою" };
+  const na = node(a), nb = node(b);
+  if (board === "links") {
+    if (B().edges.some((e) => e.from === a && e.to === b)) return { ok: false, reason: "Ці чати вже з'єднані" };
+    if (reaches(b, a)) return { ok: false, reason: "Вийде коло: чат продовжував би сам себе" };
+    const p = predOf(b);
+    if (p) return { ok: true, replace: p.from };
+    return { ok: true };
+  }
+  if (nb.kind !== "output") return { ok: false, reason: "Частини йдуть лише в «Запит до моделі»" };
+  if (na.kind === "output") return { ok: false, reason: "«Запит» нікуди далі не йде" };
+  if (B().edges.some((e) => e.from === a)) return { ok: false, reason: "Ця частина вже в запиті" };
+  return { ok: true };
+}
+function problems() {
+  const out = [];
+  if (board === "prompt") {
+    const o = B().nodes.find((n) => n.kind === "output");
+    if (!o) out.push({ text: "Немає «Запиту до моделі»: нічого не піде моделі.", fix: { label: "Додати", run: () => addNode("output", 600, 170) } });
+    else B().nodes.filter((n) => n.kind !== "output" && !B().edges.some((e) => e.from === n.id)).forEach((n) =>
+      out.push({ text: `«${titleOf(n)}» не під'єднано, тож не йде в запит.`, node: n.id, fix: { label: "Під'єднати", run: () => { connect(n.id, o.id); } } }));
+  }
+  return out;
+}
+
+/* ---------------- actions ---------------- */
+function connect(a, b, opts = {}) {
+  const r = canWire(a, b); if (!r.ok) { toast(r.reason); return false; }
+  if (r.replace && !opts.confirmed) { confirmReplace(a, b, r.replace); return false; }
+  if (r.replace) B().edges = B().edges.filter((e) => !(e.to === b));
+  const e = { id: "e" + uid++, from: a, to: b };
+  if (opts.at != null) B().edges.splice(opts.at, 0, e); else B().edges.push(e);
+  commit("connect"); return true;
+}
+function removeEdge(id) { B().edges = B().edges.filter((e) => e.id !== id); sel = null; commit(); toast("Зв'язок прибрано", true); }
+function removeNode(id) {
+  const n = node(id); if (!n) return;
+  B().nodes = B().nodes.filter((x) => x.id !== id); B().edges = B().edges.filter((e) => e.from !== id && e.to !== id);
+  if (sel && sel.id === id) sel = null; commit();
+  toast(board === "links" ? `«${titleOf(n)}» прибрано з полотна. Сам чат лишився в Бібліотеці.` : `«${titleOf(n)}» видалено з промпта цього чату`, true);
+}
+let nextPart = 1;
+function addNode(kind, x, y, chatId) {
+  let n;
+  if (board === "links") { if (!chatId || node(chatId)) return null; n = { id: chatId, kind: "chat", x, y }; }
+  else if (kind === "output") { if (B().nodes.some((m) => m.kind === "output")) { toast("«Запит до моделі» вже є, він може бути лише один"); return null; } n = { id: "out", kind, x, y }; }
+  else { const k = KINDS[kind]; n = { id: "p-new" + nextPart++, kind, x, y, title: k.label, sub: kind === "note" ? "для цього чату" : "нова частина", on: true, tok: kind === "note" ? 40 : 200 }; }
+  B().nodes.push(n); sel = { type: "node", id: n.id }; commit(); return n;
+}
+function setOn(id, v) { const n = node(id); if (!n) return; n.on = v; commit(); }
+function moveOrder(id, d) {
+  const es = B().edges; const i = es.findIndex((e) => e.from === id && e.to === "out"); const j = i + d;
+  if (i < 0 || j < 0 || j >= es.length) return; [es[i], es[j]] = [es[j], es[i]]; commit();
+}
+function tidy() {
+  if (board === "links") {
+    const roots = B().nodes.filter((n) => !predOf(n.id));
+    let row = 0; const place = (id, col) => { const n = node(id); n.x = 40 + col * 300; n.y = 50 + row * 150; const kids = B().edges.filter((e) => e.from === id);
+      if (!kids.length) { row++; return; } kids.forEach((k, i) => { if (i) {} place(k.to, col + 1); }); };
+    roots.forEach((r) => place(r.id, 0));
+  } else {
+    const order = B().edges.map((e) => e.from); let y = 20, y2 = 20;
+    B().nodes.forEach((n) => { if (n.kind === "output") { n.x = 600; n.y = 120; } else if (order.includes(n.id)) { n.x = 40; n.y = 20 + order.indexOf(n.id) * 100; } else { n.x = 320; n.y = 500 + (y2 - 20); y2 += 100; } });
+  }
+  commit(); fit();
+}
+
+/* ---------------- render ---------------- */
+const world = $("#world"), nodesEl = $("#nodes"), wires = $("#wires"), stage = $("#stage");
+function applyView() { const v = views[board]; world.style.transform = `translate(${v.x}px,${v.y}px) scale(${v.k})`; $("#z-val").textContent = Math.round(v.k * 100) + "%"; drawMinimap(); }
+function nodeHTML(n) {
+  const k = kindOf(n); const isSel = sel && sel.type === "node" && sel.id === n.id;
+  const style = `left:${n.x}px;top:${n.y}px;--kc:var(${k.color})`;
+  if (n.kind === "chat") {
+    const c = LIB_CHATS[n.id];
+    return `<div class="node${isSel ? " sel" : ""}" data-id="${n.id}" style="${style}" tabindex="0" role="group" aria-label="Чат ${esc(c.title)}">
+      <div class="port in" data-port="in" title="Продовжує інший чат"><i></i></div>
+      <div class="nhead"><span class="nicon">${ico("chat")}</span><span class="nt"><b>${esc(c.title)}</b><small>${esc(c.ch)}</small></span>
+      <button class="nmore" data-more="${n.id}" aria-label="Дії з чатом">${ico("dots")}</button></div>
+      <div class="nbody"><span class="chip">${c.facts} фактів</span><span>${esc(c.ago)}</span></div>
+      <div class="port out" data-port="out" title="Продовжено в іншому чаті"><i></i></div></div>`;
+  }
+  if (n.kind === "output") {
+    const es = B().edges.filter((e) => e.to === n.id); let total = 0;
+    const rows = es.map((e, i) => { const p = node(e.from); if (p.on) total += p.tok;
+      return `<div class="orow${p.on ? "" : " off"}" data-row="${e.from}"><div class="port in" data-port="in" data-at="${i}"><i></i></div><span class="n">${i + 1}</span><span class="t">${esc(p.title)}</span><span class="tok">${p.on ? p.tok : "вимк."}</span></div>`; }).join("");
+    return `<div class="node out${isSel ? " sel" : ""}" data-id="${n.id}" style="${style}" tabindex="0" role="group" aria-label="Запит до моделі">
+      <div class="nhead"><span class="nicon">${ico("send")}</span><span class="nt"><b>Запит до моделі</b><small>чат «Мія: місто Кервін»</small></span>
+      <button class="nmore" data-more="${n.id}" aria-label="Дії із запитом">${ico("dots")}</button></div>
+      <div class="orows">${rows}<div class="orow add"><div class="port in" data-port="in" data-at="${es.length}"><i></i></div><span class="n">+</span><span class="t">під'єднайте сюди частину</span></div></div>
+      <div class="ototal"><span>Разом</span><b>${total.toLocaleString("uk-UA")} токенів</b></div></div>`;
+  }
+  const wired = B().edges.some((e) => e.from === n.id);
+  return `<div class="node${isSel ? " sel" : ""}${n.on ? "" : " off"}" data-id="${n.id}" style="${style}" tabindex="0" role="group" aria-label="${esc(k.label)} ${esc(n.title)}">
+    <div class="nhead"><span class="nicon">${ico(k.icon)}</span><span class="nt"><b>${esc(n.title)}</b><small>${esc(n.sub)}</small></span>
+    <button class="nmore" data-more="${n.id}" aria-label="Дії з блоком">${ico("dots")}</button></div>
+    <div class="nbody"><span>${n.on ? `<span class="chip">${n.tok} ток.</span>` : `<span class="offword">Вимкнено для цього чату</span>`}</span>
+    <button class="tg" role="switch" aria-checked="${n.on}" aria-label="Увімкнено" data-tg="${n.id}" ${mode === "view" ? "disabled" : ""}></button></div>
+    <div class="port out" data-port="out" title="${wired ? "Уже в запиті" : "Потягніть до «Запиту до моделі»"}"><i></i></div></div>`;
+}
+function render() {
+  document.body.classList.toggle("view", mode === "view");
+  $("#app").classList.toggle("view", mode === "view");
+  nodesEl.innerHTML = B().nodes.map(nodeHTML).join("");
+  drawWires(); applyView(); renderPalette(); renderDetails(); renderProblems(); renderList(); syncTop();
+}
+function portPos(el) { // world coords of a port's centre
+  const r = el.getBoundingClientRect(), w = world.getBoundingClientRect(), k = views[board].k;
+  return { x: (r.left + r.width / 2 - w.left) / k, y: (r.top + r.height / 2 - w.top) / k };
+}
+function outPort(id) { return nodesEl.querySelector(`.node[data-id="${id}"] > .port.out`); }
+function inPort(e) {
+  const n = node(e.to);
+  if (n && n.kind === "output") return nodesEl.querySelector(`.orow[data-row="${e.from}"] .port`);
+  return nodesEl.querySelector(`.node[data-id="${e.to}"] > .port.in`);
+}
+const curve = (a, b) => { const dx = Math.max(40, Math.abs(b.x - a.x) * 0.5); return `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`; };
+let hotEdge = null;
+function drawWires(live) {
+  let s = "";
+  stage.querySelectorAll(".wdel").forEach((x) => x.remove());
+  for (const e of B().edges) {
+    const po = outPort(e.from), pi = inPort(e); if (!po || !pi) continue;
+    const a = portPos(po), b = portPos(pi), d = curve(a, b), from = node(e.from);
+    const cls = ["wire"]; if (from.on === false) cls.push("off"); if (sel && sel.type === "edge" && sel.id === e.id) cls.push("sel"); if (hotEdge === e.id) cls.push("hot");
+    s += `<path class="${cls.join(" ")}" d="${d}"/><path class="wire-hit" data-edge="${e.id}" d="${d}"/>`;
+    if (sel && sel.type === "edge" && sel.id === e.id && mode === "edit") {
+      const m = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const btn = document.createElement("button"); btn.className = "wdel"; btn.innerHTML = ico("x"); btn.setAttribute("aria-label", "Прибрати зв'язок");
+      const v = views[board]; btn.style.left = v.x + m.x * v.k + "px"; btn.style.top = v.y + m.y * v.k + "px";
+      btn.onclick = (ev) => { ev.stopPropagation(); removeEdge(e.id); }; stage.appendChild(btn);
+    }
+  }
+  if (live) s += `<path class="wire live${live.bad ? " bad" : ""}" d="${curve(live.a, live.b)}"/>`;
+  wires.innerHTML = s;
+}
+function renderPalette() {
+  const p = $("#palette"); const q = (p.querySelector(".search")?.value || "").toLowerCase();
+  let html = `<input class="search" id="pal-q" type="search" placeholder="Пошук, напр. «лорбук»" aria-label="Пошук блоків" value="${esc(q)}">`;
+  if (board === "links") {
+    $("#pal-title").textContent = "Чати з Бібліотеки";
+    const free = Object.keys(LIB_CHATS).filter((id) => !node(id) && LIB_CHATS[id].title.toLowerCase().includes(q));
+    html += free.length ? `<div class="pal-group"><h4>Ще не на полотні</h4>${free.map((id) => `<button class="pal" data-add-chat="${id}" draggable="false"><span class="sw" style="background:var(--k-chat)">${ico("chat")}</span><span><b>${esc(LIB_CHATS[id].title)}</b><small>${esc(LIB_CHATS[id].ch)} · ${LIB_CHATS[id].facts} фактів</small></span></button>`).join("")}</div>`
+      : `<div class="empty-note">Усі чати вже на полотні. Нові чати з'являтимуться тут самі.</div>`;
+    html += `<div class="empty-note">Перетягніть чат на полотно або клікніть, щоб поставити його в центр.</div>`;
+  } else {
+    $("#pal-title").textContent = "Частини промпта";
+    const groups = {};
+    Object.entries(KINDS).filter(([k, v]) => v.group && (v.label.toLowerCase().includes(q) || v.hint.toLowerCase().includes(q))).forEach(([k, v]) => (groups[v.group] ||= []).push(k));
+    html += Object.entries(groups).map(([g, ks]) => `<div class="pal-group"><h4>${g}</h4>${ks.map((k) => `<button class="pal" data-add-kind="${k}"><span class="sw" style="background:var(${KINDS[k].color})">${ico(KINDS[k].icon)}</span><span><b>${KINDS[k].label}</b><small>${KINDS[k].hint}</small></span></button>`).join("")}</div>`).join("") || `<div class="empty-note">Нічого не знайдено за «${esc(q)}».</div>`;
+  }
+  const had = document.activeElement && document.activeElement.id === "pal-q";
+  p.innerHTML = html;
+  if (had) { const s = $("#pal-q"); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+}
+function renderDetails() {
+  const d = $("#details");
+  if (!sel || (sel.type === "node" && !node(sel.id))) {
+    d.innerHTML = `<div class="d-sec"><b style="font-size:15px">Як працює «${BOARDS[board].name}»</b><ul class="tips">${BOARDS[board].tips.map((t) => `<li>${t}</li>`).join("")}</ul></div>
+      <div class="callout">Клавіші: <span class="kbd">Delete</span> прибирає вибране, <span class="kbd">Ctrl</span>+<span class="kbd">Z</span> скасовує, <span class="kbd">[</span> і <span class="kbd">]</span> ховають панелі.</div>
+      <button class="linkbtn" id="tour-again">Показати підказки ще раз</button>`;
+    return;
+  }
+  if (sel.type === "edge") {
+    const e = B().edges.find((x) => x.id === sel.id); const a = node(e.from), b = node(e.to);
+    d.innerHTML = `<div class="d-sec"><div class="d-title"><span class="nicon" style="--kc:var(--k-send)">${ico("link")}</span><b>Зв'язок</b></div>
+      <p class="d-desc">${board === "links" ? `«${esc(titleOf(b))}» продовжує «${esc(titleOf(a))}».` : `«${esc(titleOf(a))}» іде в запит під номером ${B().edges.indexOf(e) + 1}.`}</p></div>
+      ${mode === "edit" ? `<button class="btn danger" id="d-del-edge">${ico("unlink")}Прибрати зв'язок</button>` : `<div class="callout">Увімкніть «Редагувати», щоб змінювати зв'язки.</div>`}`;
+    return;
+  }
+  const n = node(sel.id), k = kindOf(n), ed = mode === "edit";
+  let body = "";
+  if (n.kind === "chat") {
+    const c = LIB_CHATS[n.id], p = predOf(n.id), kids = B().edges.filter((e) => e.from === n.id);
+    body = `<p class="d-desc">${c.ch} · ${c.facts} фактів · ${c.ago}</p>
+      <div class="field"><label>Продовжує</label><div class="row"><span>${p ? esc(titleOf(node(p.from))) : `<span style="color:var(--mfg)">нічого, це початок історії</span>`}</span></div></div>
+      <div class="field"><label>Продовжено в</label>${kids.length ? kids.map((e) => `<div>${esc(titleOf(node(e.to)))}</div>`).join("") : `<span class="hint">ще ні в чому</span>`}</div>
+      <div class="callout">Зв'язок означає, що Бібліотека переносить факти й переказ з попереднього чату в цей.</div>`;
+  } else if (n.kind === "output") {
+    const es = B().edges.filter((e) => e.to === n.id);
+    body = `<p class="d-desc">${k.hint}</p><div class="field"><label>Порядок частин</label><span class="hint">Модель читає згори вниз. Стрілки міняють місце.</span>
+      ${es.map((e, i) => { const p = node(e.from); return `<div class="row" style="gap:6px"><span style="flex:1;min-width:0">${i + 1}. ${esc(p.title)}${p.on ? "" : ` <span class="offword">вимк.</span>`}</span>
+      <button class="ib" data-mv="${p.id}" data-d="-1" ${!ed || i === 0 ? "disabled" : ""} aria-label="Вище">${ico("up")}</button><button class="ib" data-mv="${p.id}" data-d="1" ${!ed || i === es.length - 1 ? "disabled" : ""} aria-label="Нижче">${ico("down")}</button></div>`; }).join("")}</div>`;
+  } else {
+    const idx = B().edges.findIndex((e) => e.from === n.id);
+    body = `<p class="d-desc">${k.hint}</p>
+      <div class="row"><div class="field"><label for="d-on">Іде в запит цього чату</label><span class="hint">${n.on ? "Увімкнено." : "Вимкнено лише для цього чату. Пресет і картка не змінюються."}</span></div>
+      <button class="tg" id="d-on" role="switch" aria-checked="${n.on}" ${ed ? "" : "disabled"}></button></div>
+      <div class="field"><label>Місце в запиті</label><span class="hint">${idx >= 0 ? `№ ${idx + 1} з ${B().edges.length}` : "Не під'єднано, тож не йде в запит."}</span></div>
+      ${n.kind === "note" ? `<div class="field"><label for="d-note">Текст нотатки</label><input type="text" id="d-note" value="${esc(PART_TEXT.note)}" ${ed ? "" : "disabled"}></div>` : `<button class="btn" id="d-open">${ico("pen")}Відкрити в ${n.kind === "card" ? "редакторі картки" : n.kind === "lore" ? "лорбуках" : n.kind === "preset" ? "пресетах" : "його розділі"}</button>`}`;
+  }
+  d.innerHTML = `<div class="d-sec"><div class="d-title"><span class="nicon" style="--kc:var(${k.color})">${ico(k.icon)}</span><b style="flex:1;min-width:0">${esc(titleOf(n))}</b>
+    <button class="infobtn" id="d-info" aria-label="Що це за блок">${ico("info")}</button></div></div>${body}
+    ${ed ? `<div class="row" style="justify-content:flex-start;gap:8px;margin-top:6px"><button class="btn" id="d-connect">${ico("link")}З'єднати з…</button><button class="btn danger" id="d-del">${ico("trash")}${n.kind === "chat" ? "Прибрати" : "Видалити"}</button></div>`
+      : `<div class="callout">Режим перегляду. Увімкніть «Редагувати», щоб змінювати.</div>`}`;
+}
+function renderProblems() {
+  const el = $("#problems"); const ps = problems();
+  el.innerHTML = ps.map((p, i) => `<div class="prob">${ico("warn")}<span>${esc(p.text)}</span>${p.node ? `<button class="btn" data-show="${p.node}">Показати</button>` : ""}${mode === "edit" ? `<button class="btn" data-fix="${i}">${p.fix.label}</button>` : ""}</div>`).join("");
+  el._ps = ps;
+}
+function renderList() {
+  const L = $("#list"); let h = "";
+  if (board === "prompt") {
+    const es = B().edges.filter((e) => e.to === "out");
+    h += `<div class="lh">Іде в запит, згори вниз</div>`;
+    h += es.map((e, i) => { const n = node(e.from), k = kindOf(n); return `<div class="li${n.on ? "" : " off"}" style="--kc:var(${k.color})">
+      <span class="nicon">${ico(k.icon)}</span><span class="nt"><b>${i + 1}. ${esc(n.title)}</b><small>${n.on ? n.tok + " ток." : "вимкнено для цього чату"}</small></span>
+      <button class="tg" role="switch" aria-checked="${n.on}" aria-label="Увімкнено: ${esc(n.title)}" data-tg="${n.id}"></button>
+      <span class="mv"><button data-mv="${n.id}" data-d="-1" aria-label="Вище" ${i === 0 ? "disabled" : ""}>${ico("up")}</button><button data-mv="${n.id}" data-d="1" aria-label="Нижче" ${i === es.length - 1 ? "disabled" : ""}>${ico("down")}</button></span></div>`; }).join("");
+    const loose = B().nodes.filter((n) => n.kind !== "output" && !B().edges.some((e) => e.from === n.id));
+    if (loose.length) h += `<div class="lh">Не йде в запит</div>` + loose.map((n) => { const k = kindOf(n); return `<div class="li" style="--kc:var(${k.color})"><span class="nicon">${ico(k.icon)}</span><span class="nt"><b>${esc(n.title)}</b><small>${k.hint}</small></span><button class="btn" data-attach="${n.id}" style="min-height:40px">${ico("plus")}Додати</button></div>`; }).join("");
+  } else {
+    h += `<div class="lh">Чати і що вони продовжують</div>`;
+    h += B().nodes.map((n) => { const c = LIB_CHATS[n.id], p = predOf(n.id);
+      const opts = B().nodes.filter((m) => m.id !== n.id && !reaches(n.id, m.id)).map((m) => `<option value="${m.id}" ${p && p.from === m.id ? "selected" : ""}>${esc(LIB_CHATS[m.id].title)}</option>`).join("");
+      return `<div class="li" style="--kc:var(--k-chat)"><span class="nicon">${ico("chat")}</span><span class="nt"><b>${esc(c.title)}</b><small>${esc(c.ch)} · ${c.facts} фактів</small></span>
+      <select data-pred="${n.id}" aria-label="Що продовжує «${esc(c.title)}»"><option value="">Початок історії</option>${opts}</select></div>`; }).join("");
+  }
+  L.innerHTML = h;
+}
+function syncTop() {
+  $("#b-links").setAttribute("aria-pressed", board === "links"); $("#b-prompt").setAttribute("aria-pressed", board === "prompt");
+  $("#m-edit").setAttribute("aria-pressed", mode === "edit"); $("#m-view").setAttribute("aria-pressed", mode === "view");
+  $("#undo").disabled = !undoStack.length; $("#redo").disabled = !redoStack.length; $("#tidy").disabled = mode === "view";
+  $("#preview").hidden = board !== "prompt";
+  $("#left").classList.toggle("closed", !panels.left || mode === "view"); $("#right").classList.toggle("closed", !panels.right);
+  $("#open-left").hidden = panels.left || mode === "view" || phone(); $("#open-right").hidden = panels.right || phone();
+  const gl = $("#gl-seg"); gl.hidden = !phone(); $("#v-graph").setAttribute("aria-pressed", !listMode); $("#v-list").setAttribute("aria-pressed", listMode);
+  $("#app").classList.toggle("listmode", phone() && listMode);
+}
+
+/* ---------------- minimap ---------------- */
+function bounds() {
+  const ns = [...nodesEl.querySelectorAll(".node")]; if (!ns.length) return { x: 0, y: 0, w: 400, h: 300 };
+  let x1 = 1e9, y1 = 1e9, x2 = -1e9, y2 = -1e9;
+  ns.forEach((el) => { const n = node(el.dataset.id); x1 = Math.min(x1, n.x); y1 = Math.min(y1, n.y); x2 = Math.max(x2, n.x + el.offsetWidth); y2 = Math.max(y2, n.y + el.offsetHeight); });
+  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+}
+function drawMinimap() {
+  const cv = $("#mm"); if (!cv.offsetWidth) return;
+  const dpr = devicePixelRatio || 1; cv.width = cv.offsetWidth * dpr; cv.height = cv.offsetHeight * dpr;
+  const g = cv.getContext("2d"); g.scale(dpr, dpr); const W = cv.offsetWidth, H = cv.offsetHeight;
+  const b = bounds(), v = views[board], sw = stage.clientWidth, sh = stage.clientHeight;
+  const vx = -v.x / v.k, vy = -v.y / v.k, vw = sw / v.k, vh = sh / v.k;
+  const X1 = Math.min(b.x, vx) - 40, Y1 = Math.min(b.y, vy) - 40, X2 = Math.max(b.x + b.w, vx + vw) + 40, Y2 = Math.max(b.y + b.h, vy + vh) + 40;
+  const s = Math.min(W / (X2 - X1), H / (Y2 - Y1)); const ox = (W - (X2 - X1) * s) / 2, oy = (H - (Y2 - Y1) * s) / 2;
+  const css = getComputedStyle(document.documentElement);
+  nodesEl.querySelectorAll(".node").forEach((el) => { const n = node(el.dataset.id); g.fillStyle = css.getPropertyValue(kindOf(n).color).trim() || "#888"; g.globalAlpha = n.on === false ? 0.35 : 0.85;
+    g.fillRect(ox + (n.x - X1) * s, oy + (n.y - Y1) * s, Math.max(3, el.offsetWidth * s), Math.max(2, el.offsetHeight * s)); });
+  g.globalAlpha = 1; g.strokeStyle = css.getPropertyValue("--fg").trim(); g.lineWidth = 1.2;
+  g.strokeRect(ox + (vx - X1) * s, oy + (vy - Y1) * s, vw * s, vh * s);
+  cv._map = { X1, Y1, s, ox, oy };
+}
+$("#minimap").addEventListener("click", (e) => {
+  const m = $("#mm")._map; if (!m) return; const r = e.currentTarget.getBoundingClientRect(); const v = views[board];
+  const wx = (e.clientX - r.left - m.ox) / m.s + m.X1, wy = (e.clientY - r.top - m.oy) / m.s + m.Y1;
+  v.x = stage.clientWidth / 2 - wx * v.k; v.y = stage.clientHeight / 2 - wy * v.k; applyView(); drawWires();
+});
+
+/* ---------------- view: pan, zoom, fit ---------------- */
+function zoomAt(f, cx, cy) {
+  const v = views[board]; const k = Math.min(2, Math.max(0.35, v.k * f)); if (cx == null) { cx = stage.clientWidth / 2; cy = stage.clientHeight / 2; }
+  v.x = cx - (cx - v.x) * (k / v.k); v.y = cy - (cy - v.y) * (k / v.k); v.k = k; applyView(); drawWires();
+}
+function fit() {
+  const b = bounds(), v = views[board], sw = stage.clientWidth, sh = stage.clientHeight; if (!sw) return;
+  const k = Math.min(1.2, Math.max(0.35, Math.min((sw - 80) / b.w, (sh - 80) / b.h)));
+  v.k = k; v.x = (sw - b.w * k) / 2 - b.x * k; v.y = (sh - b.h * k) / 2 - b.y * k; applyView(); drawWires();
+}
+function panTo(id) { const n = node(id), v = views[board]; v.x = stage.clientWidth / 2 - (n.x + 118) * v.k; v.y = stage.clientHeight / 2 - (n.y + 40) * v.k; sel = { type: "node", id }; render(); }
+stage.addEventListener("wheel", (e) => {
+  e.preventDefault(); const r = stage.getBoundingClientRect();
+  if (e.ctrlKey || e.metaKey) zoomAt(Math.exp(-e.deltaY * 0.01), e.clientX - r.left, e.clientY - r.top);
+  else { const v = views[board]; v.x -= e.deltaX; v.y -= e.deltaY; applyView(); drawWires(); }
+}, { passive: false });
+$("#z-in").onclick = () => zoomAt(1.2); $("#z-out").onclick = () => zoomAt(1 / 1.2); $("#z-fit").onclick = fit;
+
+/* ---------------- pointer: drag nodes, wires, pan ---------------- */
+let drag = null; const reasonEl = document.createElement("div"); reasonEl.className = "reason"; reasonEl.hidden = true; document.body.appendChild(reasonEl);
+function toWorld(cx, cy) { const r = stage.getBoundingClientRect(), v = views[board]; return { x: (cx - r.left - v.x) / v.k, y: (cy - r.top - v.y) / v.k }; }
+function showReason(text, x, y, bad) { reasonEl.textContent = text; reasonEl.className = "reason" + (bad ? " bad" : ""); reasonEl.hidden = false; reasonEl.style.left = x + 14 + "px"; reasonEl.style.top = y + 16 + "px"; }
+function hideReason() { reasonEl.hidden = true; }
+function setCoach(t) { let c = $(".coach"); if (!t) { c && c.remove(); return; } if (!c) { c = document.createElement("div"); c.className = "coach"; stage.appendChild(c); } c.textContent = t; }
+function edgeNear(cx, cy) { // wire path under the pointer while dragging a node
+  const els = document.elementsFromPoint(cx, cy); const hit = els.find((x) => x.classList && x.classList.contains("wire-hit")); return hit ? hit.dataset.edge : null;
+}
+function insertCheck(nid, eid) {
+  const e = B().edges.find((x) => x.id === eid); if (!e || e.from === nid || e.to === nid) return { ok: false, reason: "" };
+  if (board === "prompt") { const n = node(nid); if (n.kind === "output") return { ok: false, reason: "«Запит» не вставляється в дріт" }; if (B().edges.some((x) => x.from === nid)) return { ok: false, reason: "Ця частина вже в запиті. Порядок змінюють стрілки в деталях «Запиту»" }; return { ok: true }; }
+  if (predOf(nid)) return { ok: false, reason: "У цього чату вже є попередній. Спершу приберіть той зв'язок" };
+  if (B().edges.some((x) => x.from === nid)) return { ok: false, reason: "Цей чат уже має продовження. Вставити можна лише вільний чат" };
+  return { ok: true };
+}
+stage.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0) return; closeMenus();
+  const port = e.target.closest(".port"), nd = e.target.closest(".node"), hit = e.target.closest(".wire-hit");
+  if (e.target.closest(".nmore,.tg,.wdel,.hud,.panel-tab,.problems,button")) return;
+  if (port && mode === "edit" && port.dataset.port === "out") {
+    const id = port.closest(".node").dataset.id; const a = portPos(port);
+    drag = { type: "wire", from: id, a }; stage.setPointerCapture(e.pointerId); markTargets(id); setCoach("Відпустіть на точці, що світиться, або на порожньому місці, щоб додати новий блок"); return;
+  }
+  if (nd) {
+    const id = nd.dataset.id; sel = { type: "node", id }; nodesEl.querySelectorAll(".node.sel").forEach((x) => x.classList.remove("sel")); nd.classList.add("sel"); renderDetails(); drawWires();
+    if (mode === "edit" && e.target.closest(".nhead,.nbody,.orows,.ototal")) { const n = node(id); const w = toWorld(e.clientX, e.clientY); drag = { type: "node", id, dx: w.x - n.x, dy: w.y - n.y, moved: false, el: nd }; stage.setPointerCapture(e.pointerId); }
+    return;
+  }
+  if (hit) { sel = { type: "edge", id: hit.dataset.edge }; render(); return; }
+  sel = null; renderDetails(); nodesEl.querySelectorAll(".node.sel").forEach((x) => x.classList.remove("sel")); drawWires();
+  const v = views[board]; drag = { type: "pan", sx: e.clientX, sy: e.clientY, vx: v.x, vy: v.y }; stage.classList.add("panning"); stage.setPointerCapture(e.pointerId);
+});
+function markTargets(from) {
+  nodesEl.querySelectorAll(".port.in").forEach((p) => { const to = p.closest(".node").dataset.id; const r = canWire(from, to); p.classList.toggle("glow", r.ok); p.classList.toggle("dim", !r.ok); p._why = r.ok ? (r.replace ? `Замінить зв'язок з «${titleOf(node(r.replace))}»` : "") : r.reason; });
+  nodesEl.querySelectorAll(".port.out").forEach((p) => p.classList.add("dim"));
+}
+function clearTargets() { nodesEl.querySelectorAll(".port").forEach((p) => p.classList.remove("glow", "dim")); }
+stage.addEventListener("pointermove", (e) => {
+  if (!drag) return;
+  if (drag.type === "pan") { const v = views[board]; v.x = drag.vx + e.clientX - drag.sx; v.y = drag.vy + e.clientY - drag.sy; applyView(); drawWires(); return; }
+  if (drag.type === "node") {
+    const n = node(drag.id), w = toWorld(e.clientX, e.clientY); n.x = Math.round(w.x - drag.dx); n.y = Math.round(w.y - drag.dy); drag.moved = true;
+    drag.el.style.left = n.x + "px"; drag.el.style.top = n.y + "px";
+    drag.el.style.pointerEvents = "none"; const eid = edgeNear(e.clientX, e.clientY); drag.el.style.pointerEvents = "";
+    hotEdge = null; hideReason(); drag.el.classList.remove("drop-ok");
+    if (eid) { const r = insertCheck(drag.id, eid); if (r.ok) { hotEdge = eid; drag.el.classList.add("drop-ok"); showReason("Відпустіть, щоб вставити сюди", e.clientX, e.clientY); } else if (r.reason) showReason(r.reason, e.clientX, e.clientY, true); }
+    drawWires(); return;
+  }
+  if (drag.type === "wire") {
+    const b = toWorld(e.clientX, e.clientY); const over = document.elementFromPoint(e.clientX, e.clientY)?.closest(".port.in");
+    let bad = false; hideReason();
+    if (over) { const why = over._why; if (over.classList.contains("dim")) { bad = true; showReason(why, e.clientX, e.clientY, true); } else if (why) showReason(why, e.clientX, e.clientY); }
+    drawWires({ a: drag.a, b: over && !bad ? portPos(over) : b, bad });
+  }
+});
+stage.addEventListener("pointerup", (e) => {
+  const d = drag; drag = null; stage.classList.remove("panning"); hideReason(); setCoach(null);
+  if (!d) return;
+  if (d.type === "node") {
+    d.el.classList.remove("drop-ok");
+    if (hotEdge) { const eid = hotEdge; hotEdge = null; insertInto(d.id, eid); return; }
+    if (d.moved) commit(); else render(); return;
+  }
+  if (d.type === "wire") {
+    clearTargets(); const over = document.elementFromPoint(e.clientX, e.clientY)?.closest(".port.in");
+    if (over) { const to = over.closest(".node").dataset.id; const at = over.dataset.at != null ? +over.dataset.at : undefined; connect(d.from, to, { at }); render(); return; }
+    if (!e.target.closest || !document.elementFromPoint(e.clientX, e.clientY)?.closest(".node")) { drawWires(); quickAdd(d.from, e.clientX, e.clientY); return; }
+    drawWires();
+  }
+});
+function insertInto(nid, eid) {
+  const es = B().edges, i = es.findIndex((x) => x.id === eid), e = es[i];
+  if (board === "prompt") { es.splice(i, 0, { id: "e" + uid++, from: nid, to: e.to }); commit(); toast(`«${titleOf(node(nid))}» вставлено в запит під № ${i + 1}`); return; }
+  es.splice(i, 1, { id: "e" + uid++, from: e.from, to: nid }, { id: "e" + uid++, from: nid, to: e.to }); commit(); toast(`«${titleOf(node(nid))}» вставлено між чатами`);
+}
+
+/* ---------------- menus: quick add, node menu, connect to ---------------- */
+function closeMenus() { document.querySelectorAll(".menu,.pop").forEach((m) => m.remove()); }
+function openMenu(x, y, html, onClick) {
+  closeMenus(); const m = document.createElement("div"); m.className = "menu"; m.setAttribute("role", "menu"); m.innerHTML = html; document.body.appendChild(m);
+  const r = m.getBoundingClientRect(); m.style.left = Math.min(x, innerWidth - r.width - 8) + "px"; m.style.top = Math.min(y, innerHeight - r.height - 8) + "px";
+  m.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { closeMenus(); onClick(b.dataset); } });
+  setTimeout(() => (m.querySelector("button,input") || m).focus(), 0); return m;
+}
+function quickAdd(from, cx, cy) {
+  const w = toWorld(cx, cy);
+  if (board === "links") {
+    const free = Object.keys(LIB_CHATS).filter((id) => !node(id));
+    openMenu(cx, cy, `<div class="mh">Продовжити чатом</div>${free.length ? free.map((id) => `<button data-c="${id}">${ico("chat")}<span>${esc(LIB_CHATS[id].title)}<small>${LIB_CHATS[id].ch}</small></span></button>`).join("") : `<div class="none">Вільних чатів немає. Потягніть дріт до чату на полотні.</div>`}`,
+      (ds) => { const n = addNode("chat", w.x, w.y - 30, ds.c); if (n) connect(from, n.id); });
+  } else {
+    const o = B().nodes.find((n) => n.kind === "output");
+    openMenu(cx, cy, `<div class="mh">Куди веде дріт</div>${o ? `<div class="none">Частини йдуть лише в «Запит до моделі». Відпустіть дріт на ньому.</div>` : `<button data-k="output">${ico("send")}<span>Запит до моделі<small>створити й під'єднати</small></span></button>`}`,
+      (ds) => { const n = addNode("output", w.x, w.y - 20); if (n) connect(from, n.id); });
+  }
+}
+function connectMenu(id, cx, cy) {
+  const outs = B().nodes.filter((m) => m.id !== id).map((m) => ({ m, r: canWire(id, m.id) })).filter((x) => x.r.ok);
+  const ins = board === "links" ? B().nodes.filter((m) => m.id !== id).map((m) => ({ m, r: canWire(m.id, id) })).filter((x) => x.r.ok) : [];
+  const item = (x, dir) => `<button data-to="${x.m.id}" data-dir="${dir}">${ico(dir === "out" ? "link" : "link")}<span>${esc(titleOf(x.m))}<small>${dir === "out" ? (board === "links" ? "стане продовженням" : "піде в запит") : "цей чат продовжить його"}${x.r.replace ? ", замінить старий зв'язок" : ""}</small></span></button>`;
+  openMenu(cx, cy, `<div class="mh">З'єднати з…</div>${outs.map((x) => item(x, "out")).join("")}${ins.length ? `<div class="mh">Продовжити чат</div>${ins.map((x) => item(x, "in")).join("")}` : ""}${!outs.length && !ins.length ? `<div class="none">Немає блоків, з якими можна з'єднати.</div>` : ""}`,
+    (ds) => { if (ds.dir === "out") connect(id, ds.to, { confirmed: true }); else connect(ds.to, id, { confirmed: true }); });
+}
+function nodeMenu(id, cx, cy) {
+  const n = node(id), ed = mode === "edit";
+  openMenu(cx, cy, `<div class="mh">${esc(titleOf(n))}</div>
+    ${ed ? `<button data-a="connect">${ico("link")}<span>З'єднати з…</span></button>` : ""}
+    ${ed && n.on !== undefined ? `<button data-a="toggle">${ico("eye")}<span>${n.on ? "Вимкнути для цього чату" : "Увімкнути"}</span></button>` : ""}
+    <button data-a="details">${ico("info")}<span>Деталі</span></button>
+    ${ed ? `<button data-a="del" class="d">${ico("trash")}<span>${n.kind === "chat" ? "Прибрати з полотна" : "Видалити"}<small>${n.kind === "chat" ? "сам чат лишиться" : "можна скасувати"}</small></span></button>` : ""}`,
+    (ds) => { if (ds.a === "connect") connectMenu(id, cx, cy); if (ds.a === "toggle") setOn(id, !n.on); if (ds.a === "del") removeNode(id); if (ds.a === "details") { sel = { type: "node", id }; panels.right = true; render(); } });
+}
+function confirmReplace(a, b, old) {
+  const pa = portPos(inPortOfNode(b)); const v = views[board], r = stage.getBoundingClientRect();
+  openMenu(r.left + v.x + pa.x * v.k, r.top + v.y + pa.y * v.k, `<div class="mh">Замінити зв'язок?</div><div class="none">«${esc(titleOf(node(b)))}» уже продовжує «${esc(titleOf(node(old)))}». У чату може бути лише один попередній.</div>
+    <button data-ok="1">${ico("link")}<span>Замінити на «${esc(titleOf(node(a)))}»</span></button><button>${ico("x")}<span>Залишити як було</span></button>`,
+    (ds) => { if (ds.ok) connect(a, b, { confirmed: true }); });
+}
+function inPortOfNode(id) { return nodesEl.querySelector(`.node[data-id="${id}"] .port.in`); }
+
+/* ---------------- toast, sheets, tour ---------------- */
+let toastT;
+function toast(text, withUndo) {
+  document.querySelectorAll(".toast").forEach((t) => t.remove()); const t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status");
+  t.innerHTML = `<span>${esc(text)}</span>${withUndo ? `<button>Скасувати</button>` : ""}`; document.body.appendChild(t);
+  if (withUndo) t.querySelector("button").onclick = () => { undo(); t.remove(); };
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), withUndo ? 6000 : 3200);
+}
+function sheet(title, html) {
+  const s = document.createElement("div"); s.className = "scrim"; s.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}"><header><b>${esc(title)}</b><button class="ib" aria-label="Закрити">${ico("x")}</button></header><div class="sb">${html}</div></div>`;
+  document.body.appendChild(s); const close = () => s.remove(); s.querySelector("header .ib").onclick = close; s.addEventListener("click", (e) => { if (e.target === s) close(); });
+  s.querySelector("header .ib").focus(); return s;
+}
+function preview() {
+  const es = B().edges.filter((e) => e.to === "out"); let total = 0;
+  const items = es.map((e, i) => { const n = node(e.from); if (n.on) total += n.tok; return `<div class="prev${n.on ? "" : " offp"}"><div class="ph">${i + 1}. ${esc(n.title)}<span>${n.on ? n.tok + " ток." : "вимкнено для цього чату"}</span></div><pre>${esc(PART_TEXT[n.kind] || "…")}</pre></div>`; }).join("");
+  sheet("Що піде в запит", `<div class="callout">Чат «Мія: місто Кервін». Модель отримає ці частини згори вниз. Разом приблизно <b>${total.toLocaleString("uk-UA")}</b> токенів.</div>${items}`);
+}
+function exportJSON() {
+  const b = B(); const out = { format: "vertep-canvas", version: 1, kind: board === "links" ? "chat-links" : "prompt", title: BOARDS[board].name,
+    nodes: b.nodes.map((n) => ({ id: n.id, type: board === "links" ? "chat" : "prompt." + n.kind, x: n.x, y: n.y, params: n.on === undefined ? {} : { on: n.on } })),
+    edges: b.edges.map((e) => ({ id: e.id, from: e.from + ":out", to: e.to + ":in" })) };
+  const txt = JSON.stringify(out, null, 2);
+  const s = sheet("Експорт полотна", `<p class="d-desc">Цим файлом можна поділитися. Позиції блоків і зв'язки йдуть у файл, а самі чати й тексти лишаються у ваших даних.</p><button class="btn pri" id="copy-json">${ico("copy")}Скопіювати</button><pre class="json" id="json-out">${esc(txt)}</pre>`);
+  s.querySelector("#copy-json").onclick = async (e) => { try { await navigator.clipboard.writeText(txt); e.currentTarget.lastChild.textContent = "Скопійовано"; } catch { const r = document.createRange(); r.selectNodeContents(s.querySelector("#json-out")); getSelection().removeAllRanges(); getSelection().addRange(r); toast("Текст виділено: скопіюйте його вручну"); } };
+}
+function tour(force) {
+  const key = "vc-tour-" + board; if (!force && (store.get(key) || phone())) return;
+  let i = 0; const steps = BOARDS[board].tour;
+  const show = () => {
+    document.querySelectorAll(".tour").forEach((t) => t.remove()); if (i >= steps.length) { store.set(key, "1"); return; }
+    const t = document.createElement("div"); t.className = "tour"; t.setAttribute("role", "dialog"); t.setAttribute("aria-label", "Підказки");
+    t.innerHTML = `<span class="step">Крок ${i + 1} з ${steps.length}</span><b>${steps[i].t}</b><p>${steps[i].p}</p><div class="row"><button class="btn ghost" data-skip>Пропустити</button><button class="btn pri" data-next>${i === steps.length - 1 ? "Зрозуміло" : "Далі"}</button></div>`;
+    document.body.appendChild(t);
+    const anchor = i === 0 ? $("#left") : i === 1 ? nodesEl.querySelector(".port.out") : (board === "prompt" ? $("#preview") : $("#right"));
+    const r = (anchor && anchor.offsetWidth ? anchor : stage).getBoundingClientRect();
+    let x = i === 0 ? r.right + 12 : i === 1 ? r.right + 16 : r.left - 312, y = i === 2 && board === "prompt" ? r.bottom + 10 : r.top + 40;
+    t.style.left = Math.max(12, Math.min(x, innerWidth - 312)) + "px"; t.style.top = Math.max(12, Math.min(y, innerHeight - 200)) + "px";
+    t.querySelector("[data-next]").onclick = () => { i++; show(); }; t.querySelector("[data-skip]").onclick = () => { store.set(key, "1"); t.remove(); };
+    t.querySelector("[data-next]").focus();
+  };
+  show();
+}
+
+/* ---------------- wiring up the chrome ---------------- */
+const panels = { left: store.get("vc-left") !== "0", right: store.get("vc-right") !== "0" };
+function setPanel(side, v) { panels[side] = v; store.set("vc-" + side, v ? "1" : "0"); syncTop(); setTimeout(() => { applyView(); drawWires(); }, 200); }
+$("#close-left").onclick = () => setPanel("left", false); $("#open-left").onclick = () => setPanel("left", true);
+$("#close-right").onclick = () => setPanel("right", false); $("#open-right").onclick = () => setPanel("right", true);
+function setBoard(b) { board = b; sel = null; closeMenus(); document.querySelectorAll(".tour").forEach((t) => t.remove()); render(); requestAnimationFrame(() => { if (!fitted[board]) { fitted[board] = 1; fit(); } drawWires(); tour(); }); }
+$("#b-links").onclick = () => setBoard("links"); $("#b-prompt").onclick = () => setBoard("prompt");
+$("#m-edit").onclick = () => { if (phone()) { toast("Будувати граф можна лише на великому екрані. Тут усе змінюється через список."); return; } mode = "edit"; render(); };
+$("#m-view").onclick = () => { mode = "view"; closeMenus(); render(); };
+$("#v-graph").onclick = () => { listMode = false; render(); requestAnimationFrame(fit); };
+$("#v-list").onclick = () => { listMode = true; render(); };
+$("#undo").onclick = undo; $("#redo").onclick = redo; $("#tidy").onclick = tidy; $("#preview").onclick = preview; $("#export").onclick = exportJSON;
+$("#theme").onclick = () => { const r = document.documentElement; const dark = r.dataset.theme ? r.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches; r.dataset.theme = dark ? "light" : "dark"; store.set("vc-theme", r.dataset.theme); drawMinimap(); };
+{ const t = store.get("vc-theme"); if (t) document.documentElement.dataset.theme = t; }
+
+document.addEventListener("click", (e) => {
+  const t = e.target;
+  const more = t.closest("[data-more]"); if (more) { const r = more.getBoundingClientRect(); nodeMenu(more.dataset.more, r.left, r.bottom + 4); return; }
+  const tg = t.closest("[data-tg]"); if (tg && !tg.disabled) { setOn(tg.dataset.tg, tg.getAttribute("aria-checked") !== "true"); return; }
+  const mv = t.closest("[data-mv]"); if (mv && !mv.disabled) { moveOrder(mv.dataset.mv, +mv.dataset.d); return; }
+  const at = t.closest("[data-attach]"); if (at) { connect(at.dataset.attach, "out"); return; }
+  const sh = t.closest("[data-show]"); if (sh) { if (phone() && listMode) { listMode = false; render(); } panTo(sh.dataset.show); return; }
+  const fx = t.closest("[data-fix]"); if (fx) { $("#problems")._ps[+fx.dataset.fix].fix.run(); return; }
+  const pc = t.closest("[data-add-chat]"); if (pc && !pc._dragged) { const w = toWorld(stage.getBoundingClientRect().left + stage.clientWidth / 2, stage.getBoundingClientRect().top + stage.clientHeight / 2); addNode("chat", w.x - 118, w.y - 40, pc.dataset.addChat); return; }
+  const pk = t.closest("[data-add-kind]"); if (pk && !pk._dragged) { const w = toWorld(stage.getBoundingClientRect().left + stage.clientWidth / 2, stage.getBoundingClientRect().top + stage.clientHeight / 2); addNode(pk.dataset.addKind, w.x - 118, w.y - 40); return; }
+  if (t.closest("#tour-again")) { store.set("vc-tour-" + board, ""); tour(true); return; }
+  if (t.closest("#d-del-edge")) { removeEdge(sel.id); return; }
+  if (t.closest("#d-del")) { removeNode(sel.id); return; }
+  if (t.closest("#d-on")) { setOn(sel.id, !node(sel.id).on); return; }
+  if (t.closest("#d-connect")) { const r = t.closest("#d-connect").getBoundingClientRect(); connectMenu(sel.id, r.left - 230, r.bottom + 4); return; }
+  if (t.closest("#d-open")) { toast("У справжньому застосунку тут відкриється редактор цієї частини"); return; }
+  if (t.closest("#d-info")) { const k = kindOf(node(sel.id)); const r = t.closest("#d-info").getBoundingClientRect(); closeMenus();
+    const p = document.createElement("div"); p.className = "pop"; p.setAttribute("role", "dialog"); p.innerHTML = `<p><b>${k.label}</b></p><p>${k.info || "Чат з Бібліотеки. Зв'язок показує, що цей чат продовжує історію іншого, тож Бібліотека переносить у нього факти й переказ."}</p>`;
+    document.body.appendChild(p); p.style.left = Math.max(8, Math.min(r.left - 250, innerWidth - 290)) + "px"; p.style.top = r.bottom + 6 + "px"; return; }
+  if (!t.closest(".menu,.pop")) closeMenus();
+});
+document.addEventListener("change", (e) => {
+  const s = e.target.closest("[data-pred]"); if (!s) return; const id = s.dataset.pred;
+  B().edges = B().edges.filter((x) => x.to !== id); if (s.value) B().edges.push({ id: "e" + uid++, from: s.value, to: id }); commit(); toast(s.value ? "Зв'язок збережено" : "Тепер це початок історії", true);
+});
+document.addEventListener("input", (e) => { if (e.target.id === "pal-q") renderPalette(); });
+
+/* palette drag onto canvas */
+document.addEventListener("pointerdown", (e) => {
+  const p = e.target.closest(".pal"); if (!p || mode !== "edit") return;
+  const ghost = p.cloneNode(true); ghost.style.cssText = "position:fixed;pointer-events:none;opacity:.85;width:230px;z-index:99;box-shadow:var(--shadow)"; let started = false;
+  const sx = e.clientX, sy = e.clientY; p._dragged = false;
+  const mv = (ev) => { if (!started && Math.hypot(ev.clientX - sx, ev.clientY - sy) > 5) { started = true; p._dragged = true; document.body.appendChild(ghost); }
+    if (started) { ghost.style.left = ev.clientX - 20 + "px"; ghost.style.top = ev.clientY - 20 + "px"; } };
+  const up = (ev) => { removeEventListener("pointermove", mv); removeEventListener("pointerup", up); ghost.remove();
+    if (started) { const r = stage.getBoundingClientRect(); if (ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom) { const w = toWorld(ev.clientX, ev.clientY); p.dataset.addChat ? addNode("chat", w.x - 40, w.y - 20, p.dataset.addChat) : addNode(p.dataset.addKind, w.x - 40, w.y - 20); } }
+    setTimeout(() => (p._dragged = false), 0); };
+  addEventListener("pointermove", mv); addEventListener("pointerup", up);
+});
+
+document.addEventListener("keydown", (e) => {
+  const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName);
+  if (e.key === "Escape") { closeMenus(); document.querySelectorAll(".scrim,.tour").forEach((x) => x.remove()); if (drag && drag.type === "wire") { drag = null; clearTargets(); drawWires(); setCoach(null); hideReason(); } return; }
+  if (typing) return;
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
+  if (e.key === "[") { setPanel("left", !panels.left); return; } if (e.key === "]") { setPanel("right", !panels.right); return; }
+  if (mode !== "edit" || !sel) return;
+  if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); sel.type === "node" ? removeNode(sel.id) : removeEdge(sel.id); return; }
+  if (sel.type === "node" && e.key.startsWith("Arrow")) { e.preventDefault(); const n = node(sel.id), s = e.shiftKey ? 40 : 10; if (e.key === "ArrowLeft") n.x -= s; if (e.key === "ArrowRight") n.x += s; if (e.key === "ArrowUp") n.y -= s; if (e.key === "ArrowDown") n.y += s; commit(); nodesEl.querySelector(`.node[data-id="${n.id}"]`)?.focus(); }
+});
+nodesEl.addEventListener("focusin", (e) => { const nd = e.target.closest(".node"); if (nd && e.target === nd && (!sel || sel.id !== nd.dataset.id)) { sel = { type: "node", id: nd.dataset.id }; renderDetails(); nodesEl.querySelectorAll(".node.sel").forEach((x) => x.classList.remove("sel")); nd.classList.add("sel"); } });
+addEventListener("resize", () => { if (phone() && mode === "edit") mode = "view"; render(); });
+
+/* ---------------- boot ---------------- */
+if (phone()) mode = "view";
+render();
+requestAnimationFrame(() => { fitted[board] = 1; fit(); drawWires(); drawMinimap(); tour(); });
+})();
+</script>
