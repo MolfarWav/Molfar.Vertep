@@ -5,7 +5,9 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Script error after a card edit (Discord report, 2026-10-13): engine and Roleplay fork, branch `claude/project-thread-dzndzt` in both, not released
+## 1.0.6: PREPARED 2026-10-13 on branch `claude/project-thread-xhqa4w` (the user's word: ship the three fixes as 1.0.6, not "1.0.5a": `isNewer` and the launcher read only `X.Y.Z`). Engine = the updater fix + bug report (`p3ljej`, PR #12) + script-error fix (`dzndzt`), merged. Roleplay 4.41.1 = fork branch `claude/project-thread-xhqa4w` (`dzndzt` + version bump), 971 tests pass. Still to do: fast-forward both mains on the user's word; the user pushes tag `v1.0.6`.
+
+## Script error after a card edit (Discord report, 2026-10-13): engine and Roleplay fork, branch `claude/project-thread-dzndzt` in both, in 1.0.6 / Roleplay 4.41.1
 Report: after Molfar edited a character, the Roleplay app showed only "script error" on the character's page, froze,
 an update did not help, and Molfar could not revert to the checkpoint it named. Three causes, all reproduced in a real
 browser (shots: project files `script-error/`). (1) The Roleplay fork read card.json on trust: a profile list written
@@ -28,7 +30,7 @@ Cleanup on main the same day (the user's ask): removed `.fork/ui-assets/` (desig
 and the unused README images (five `molfar-*.gif` besides `molfar-cast.gif`, `screens/chat-light.png`); all in git history.
 The Roleplay fork's main had nothing to remove (`_frankenx.json` duplicates `frankenx.json` on purpose: the update template).
 
-## Windows self-update "Can't set time" (Discord report, 2026-10-13): branch `claude/project-thread-xhqa4w`, not released
+## Windows self-update "Can't set time" (Discord report, 2026-10-13): in 1.0.6
 A Windows 10 user pressed Update now and the update failed with one "Can't set time" warning per file.
 `src/self-update.ts` unpacked the release zip with `System32\tar.exe`; that tar exits non-zero on such
 warnings, so `execFile` rejected and the update failed. The exact reason Windows refuses the time is not
@@ -37,7 +39,7 @@ refuses `..`/absolute/drive paths); tar stays for the macOS/Linux tar.gz. Tests:
 in `test/self-update.test.ts`. Copies on 1.0.5 or older still use tar: an affected user updates by hand once
 (download the zip from the release), the fixed in-app update works from the next version on.
 
-## Bug report form (2026-10-13): branch `claude/project-thread-p3ljej`, not on main yet
+## Bug report form (2026-10-13): branch `claude/project-thread-p3ljej`, in 1.0.6
 The user is turning on GitHub Issues for Discord players. `.github/ISSUE_TEMPLATE/bug_report.yml` (inherited, still said
 "Chrysalis") is rewritten: where it happens (Roleplay / Molfar agent / engine / other app), what happened, steps,
 expected, version (Apps page footer and app details), how you run it, device model + browser (required), model and

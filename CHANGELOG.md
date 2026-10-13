@@ -5,8 +5,11 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
-## Unreleased
+## 1.0.6 (2026-10-13)
 
+- The Roleplay app 4.41.1: a card edited outside the app (by Molfar, a script or by hand) no longer takes the app down with only "Script error" on screen; a page that still fails to draw shows what went wrong, with "Copy details" and "Try again".
+- Windows: Update now no longer fails with a "Can't set time" warning for every file. The downloaded zip is unpacked by Molfar Vertep itself instead of Windows' tar.exe.
+- "Report a bug" in the account menu (also inside apps) and the Apps page footer: describe the problem, add the device and browser, take a screenshot on desktop, then open a pre-filled GitHub issue or copy the text for Discord. Versions, screen, language and the last errors the shell and apps caught go with it. Nothing is sent by the engine. The GitHub bug form is rewritten to match and links our Discord.
 - App errors in live editing now show their real message ("TypeError: … is not a function") instead of a bare "Script error.": the app's scripts load in CORS mode inside the sandboxed frame.
 - Molfar can undo its own edit of an app's data file (a card, a lorebook, settings): checkpoint restore takes the data files to put back, one by one, after you confirm. Chats and saves written since stay. Before, a restore only put back code and answered "nothing to restore" after a card edit.
 
