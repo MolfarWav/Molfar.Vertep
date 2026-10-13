@@ -5,7 +5,11 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.0.5: READY 2026-10-13, engine main fast-forwarded; the user pushes the tag v1.0.5. Ships Roleplay 4.41.0 (fork's main `8b9c8f0`, on the user's word): everything in the section below.
+## 1.0.5: RELEASED 2026-10-13 (tag v1.0.5 pushed by the user). Ships Roleplay 4.41.0 (fork's main `8b9c8f0`, on the user's word): everything in the section below.
+
+Cleanup on main the same day (the user's ask): removed `.fork/ui-assets/` (design mockups of finished work, ~3.4 MB)
+and the unused README images (five `molfar-*.gif` besides `molfar-cast.gif`, `screens/chat-light.png`); all in git history.
+The Roleplay fork's main had nothing to remove (`_frankenx.json` duplicates `frankenx.json` on purpose: the update template).
 
 ## Mobile Chromium scroll (Discord report, 2026-10-13): Roleplay fork branch `claude/mobile-chromium-scroll-ym4h2f`, commit `99544e3`, released in Roleplay 4.41.0
 Report: on Chrome/Brave (Android) the lower half of a chat does not touch-scroll; Firefox is fine; the composer

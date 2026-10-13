@@ -88,8 +88,8 @@ small model, `web_fetch` against a real site, `model_try` on a real model, Open 
 ## Decisions (the user, 2026-10-11): do not ask again
 - Design: **variant A as the base** + **the right side panel from variant C** (the project beside the
   chat; it can expand to the full width, which is the project page). **Phone: variant C's phone**
-  (segmented control Chat | Project at the top). Mockups: `.fork/ui-assets/molfar-page/variant-a.html`,
-  `variant-c.html` (+ PNGs), brief `BRIEF.md` there.
+  (segmented control Chat | Project at the top). Mockups (removed from the tree on 2026-10-13,
+  the page is built): `.fork/ui-assets/molfar-page/` in git history.
 - Abilities: everything planned for the agent before (the four open tools of the old handoff, the skill
   chip) + every ★ idea of 2026-10-11 + "skills that learn". The rest goes to the drawer below.
 
