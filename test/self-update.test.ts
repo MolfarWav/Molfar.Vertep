@@ -5,6 +5,7 @@ import path from "node:path";
 import http from "node:http";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { strToU8, zipSync } from "fflate";
 import { checkProgram, cleanUpAfterUpdate, installUpdate, pickAsset, platformTarget, restoreEngineFiles, restoreProgram, runReplacement, saveEngineFiles, swapProgram } from "../src/self-update.js";
 import { dataFormatProblem, recordDataFormat } from "../src/data-format.js";
 import { forgetRelease, latestRelease } from "../src/updates.js";
@@ -276,6 +277,37 @@ describe("installing a release", () => {
     expect(fs.readdirSync(dir).some((n) => n.startsWith("chrysalis.old"))).toBe(true);
     // and nothing is left of the work it did
     expect(fs.existsSync(path.join(dir, ".update"))).toBe(false);
+  }, 30_000);
+
+  /** The Windows download: a zip, as scripts/dist.ts writes it. */
+  const zipOf = (version: string, extra: Record<string, Uint8Array> = {}): ReturnType<typeof archiveOf> => {
+    const name = "Molfar-Vertep-9.9.9-windows-x64.zip";
+    const inner = "Molfar-Vertep-9.9.9-windows-x64";
+    const body = zipSync({
+      [`${inner}/chrysalis`]: strToU8(program(version)),
+      [`${inner}/resources/marker.txt`]: strToU8(version),
+      [`${inner}/resources/deep/empty.txt`]: new Uint8Array(0),
+      ...extra,
+    }, { level: 6 });
+    fs.writeFileSync(path.join(served, name), body);
+    return { name, url: `${base}/${name}`, size: body.length, sha256: crypto.createHash("sha256").update(body).digest("hex") };
+  };
+
+  it("unpacks the Windows zip itself, without tar", async () => {
+    const { state, restarted } = await run(zipOf("9.9.9"));
+    expect(state.phase).toBe("restarting");
+    expect(restarted()).toBe(true);
+    expect(fs.readFileSync(path.join(dir, "chrysalis"), "utf8")).toContain("9.9.9");
+    expect(fs.readFileSync(path.join(dir, "resources", "marker.txt"), "utf8")).toBe("9.9.9");
+    expect(fs.statSync(path.join(dir, "resources", "deep", "empty.txt")).size).toBe(0);
+  }, 30_000);
+
+  it("refuses a zip with a path that leaves the unpack folder", async () => {
+    const { state } = await run(zipOf("9.9.9", { "../escaped.txt": strToU8("x") }));
+    expect(state.phase).toBe("failed");
+    expect(state.error).toContain("unsafe path");
+    expect(fs.existsSync(path.join(dir, "escaped.txt"))).toBe(false);
+    expect(fs.readFileSync(path.join(dir, "chrysalis"), "utf8")).toContain("1.0.0");
   }, 30_000);
 
   it("refuses a download whose checksum does not match the release", async () => {

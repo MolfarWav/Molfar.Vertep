@@ -11,6 +11,15 @@ Cleanup on main the same day (the user's ask): removed `.fork/ui-assets/` (desig
 and the unused README images (five `molfar-*.gif` besides `molfar-cast.gif`, `screens/chat-light.png`); all in git history.
 The Roleplay fork's main had nothing to remove (`_frankenx.json` duplicates `frankenx.json` on purpose: the update template).
 
+## Windows self-update "Can't set time" (Discord report, 2026-10-13): branch `claude/project-thread-xhqa4w`, not released
+A Windows 10 user pressed Update now and the update failed with one "Can't set time" warning per file.
+`src/self-update.ts` unpacked the release zip with `System32\tar.exe`; that tar exits non-zero on such
+warnings, so `execFile` rejected and the update failed. The exact reason Windows refuses the time is not
+known (no Windows box in the cloud). Fix: the zip is unpacked in-process with fflate (`unzipTo`, streamed,
+refuses `..`/absolute/drive paths); tar stays for the macOS/Linux tar.gz. Tests: zip install + unsafe path
+in `test/self-update.test.ts`. Copies on 1.0.5 or older still use tar: an affected user updates by hand once
+(download the zip from the release), the fixed in-app update works from the next version on.
+
 ## Mobile Chromium scroll (Discord report, 2026-10-13): Roleplay fork branch `claude/mobile-chromium-scroll-ym4h2f`, commit `99544e3`, released in Roleplay 4.41.0
 Report: on Chrome/Brave (Android) the lower half of a chat does not touch-scroll; Firefox is fine; the composer
 "sometimes vanishes". Scroll cause, reproduced at 390 px with touch emulation: the expression sprite panel

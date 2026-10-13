@@ -27,6 +27,7 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
+import { Unzip, UnzipInflate } from "fflate";
 import { ENGINE_VERSION, INSTALL_KIND, IN_CONTAINER } from "./install.js";
 import { readLock } from "./lock.js";
 import { log } from "./logger.js";
@@ -125,9 +126,67 @@ function findProgram(unpacked: string, exe: string): string {
 
 async function extract(archive: string, into: string): Promise<void> {
   fs.mkdirSync(into, { recursive: true });
-  // Windows' own tar reads zip; a Git Bash tar earlier on PATH would not
-  const tar = process.platform === "win32" ? path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe") : "tar";
-  await run(tar, ["-xf", archive, "-C", into], { maxBuffer: 16 * 1024 * 1024 });
+  if (archive.endsWith(".zip")) return unzipTo(archive, into);
+  await run("tar", ["-xf", archive, "-C", into], { maxBuffer: 16 * 1024 * 1024 });
+}
+
+/** Unpack a zip (the Windows download) without an outside program. Windows'
+ *  tar.exe reads zip, but on some Windows 10 computers it warns "Can't set
+ *  time" for every file and exits with an error, which failed the update.
+ *  The release zip is written by fflate, so fflate reads it back. Streams
+ *  the archive, so the program file is never held in memory whole. */
+export function unzipTo(archive: string, into: string): void {
+  const root = path.resolve(into);
+  let failure: Error | null = null;
+  const open = new Set<number>();
+  const unzipper = new Unzip();
+  unzipper.register(UnzipInflate);
+  unzipper.onfile = (file) => {
+    if (failure) return;
+    const parts = file.name.split(/[\\/]/).filter((p) => p !== "" && p !== ".");
+    if (parts.some((p) => p === ".." || p.includes(":")) || /^[\\/]/.test(file.name)) {
+      failure = new Error(`the download holds an unsafe path: ${file.name}`);
+      return;
+    }
+    if (parts.length === 0) return;
+    const target = path.join(root, ...parts);
+    if (/[\\/]$/.test(file.name)) {
+      fs.mkdirSync(target, { recursive: true });
+      return;
+    }
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    const fd = fs.openSync(target, "wx");
+    open.add(fd);
+    file.ondata = (err, chunk, final) => {
+      if (failure) return;
+      try {
+        if (err) throw new Error(`the download is damaged: ${err.message}`);
+        fs.writeSync(fd, chunk);
+        if (final) {
+          open.delete(fd);
+          fs.closeSync(fd);
+        }
+      } catch (e) {
+        failure = e as Error;
+      }
+    };
+    file.start();
+  };
+  const fd = fs.openSync(archive, "r");
+  try {
+    for (;;) {
+      // a fresh buffer each time: the unzipper may keep part of the last one
+      const buf = Buffer.allocUnsafe(1024 * 1024);
+      const n = fs.readSync(fd, buf, 0, buf.length, null);
+      unzipper.push(buf.subarray(0, n), n === 0);
+      if (failure) throw failure;
+      if (n === 0) break;
+    }
+    if (open.size > 0) throw new Error("the download is incomplete: a file in it ends early");
+  } finally {
+    fs.closeSync(fd);
+    for (const f of open) fs.closeSync(f);
+  }
 }
 
 /** The new program must start on this computer and say it is the version the
