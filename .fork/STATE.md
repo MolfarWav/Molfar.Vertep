@@ -5,6 +5,13 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Next patch (user, 2026-10-13): open problems to solve first
+- **Dashboard: remote contact (texting, calls) is not in the scene** (GitHub #16, `bug`). The sensor's `present` holds only
+  people physically there and `buildInsert` returns null on an empty `present`, so a texting scene sends the model
+  nothing and it forgets the talk is by message. The user wants it in the next patch.
+- **Lost / garbled replies in a phone browser** (GitHub #13, START.md item 00): two generations on one chat after a reload.
+- Tuesday batch also has #14 (dice reason) and #15 ("Polish my message"), both `enhancement`, not urgent.
+
 ## 1.0.6: RELEASED 2026-10-13 (tag v1.0.6 pushed by the user, release run 30, 6 assets) (the user's word: ship the three fixes as 1.0.6, not "1.0.5a": `isNewer` and the launcher read only `X.Y.Z`). Engine = the updater fix + bug report (`p3ljej`, PR #12) + script-error fix (`dzndzt`), merged. Roleplay 4.41.1 = fork branch `claude/project-thread-xhqa4w` (`dzndzt` + version bump + the menu-scroll follow-up below), 971 tests pass. Menu scroll follow-up (Discord: "solved for main chat, still persists in the menus"; screenshot: Dashboard settings sheet, lower ~42% dead = the sprite panel's default spot): on `pointer: coarse`, `body:has([role=dialog|menu|listbox]) [data-expression-panel]` is hidden. The sprite link is inferred: a synthetic overlay test in headless Chromium did NOT reproduce a touch-action leak; the rule's toggle was checked, the real app on a phone was not. Both mains fast-forwarded on the user's word (2026-10-13); the user pushes tag `v1.0.6`. Deferred to 1.0.7: lost replies on a phone browser (START.md item 00).
 
 ## Script error after a card edit (Discord report, 2026-10-13): engine and Roleplay fork, branch `claude/project-thread-dzndzt` in both, in 1.0.6 / Roleplay 4.41.1
