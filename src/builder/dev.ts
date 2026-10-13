@@ -341,14 +341,19 @@ export class DevSession {
   }
 
   private html(meta: DevMeta): string {
+    // crossorigin: the frame's origin is opaque, so every script is
+    // cross-origin; without CORS mode an uncaught error in app code reaches
+    // the page as a bare "Script error." with no message or stack (the frame
+    // files answer with CORS). Not on runtime.js: an engine before 1.0.6
+    // serves it without CORS, and a build saved here must still load there.
     const scripts =
       `<script src="/client/builder/runtime.js"></script>` +
       (meta.depsCss ? `<link rel="stylesheet" href="./${meta.depsCss}">` : "") +
-      `<script src="./${meta.depsJs}"></script>` +
-      `<script src="./${meta.snapshot}"></script>` +
-      meta.hot.map((h) => `<script src="./${h}"></script>`).join("") +
+      `<script crossorigin src="./${meta.depsJs}"></script>` +
+      `<script crossorigin src="./${meta.snapshot}"></script>` +
+      meta.hot.map((h) => `<script crossorigin src="./${h}"></script>`).join("") +
       // a file, not inline: the app frame's policy allows no inline script
-      `<script src="./dev/boot.js?v=${meta.seq}"></script>`;
+      `<script crossorigin src="./dev/boot.js?v=${meta.seq}"></script>`;
     return fillHtml(this.plan!, () => "", scripts);
   }
 

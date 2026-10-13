@@ -493,6 +493,8 @@ const queued: number[] = [];
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const s = document.createElement("script");
+    // CORS mode, like the page's own scripts: errors keep their message
+    s.crossOrigin = "anonymous";
     s.src = src;
     s.onload = () => {
       s.remove();
