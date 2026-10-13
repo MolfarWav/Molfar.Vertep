@@ -1,11 +1,13 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-12.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-13.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Mobile Chromium scroll (Discord report, 2026-10-13): Roleplay fork branch `claude/mobile-chromium-scroll-ym4h2f`, commit `99544e3`, not on the fork's main yet
+## 1.0.5: READY 2026-10-13, engine main fast-forwarded; the user pushes the tag v1.0.5. Ships Roleplay 4.41.0 (fork's main `8b9c8f0`, on the user's word): everything in the section below.
+
+## Mobile Chromium scroll (Discord report, 2026-10-13): Roleplay fork branch `claude/mobile-chromium-scroll-ym4h2f`, commit `99544e3`, released in Roleplay 4.41.0
 Report: on Chrome/Brave (Android) the lower half of a chat does not touch-scroll; Firefox is fine; the composer
 "sometimes vanishes". Scroll cause, reproduced at 390 px with touch emulation: the expression sprite panel
 (`expression-panel.tsx`, fixed, `touch-action: none`, 42% of the window above the composer) sat at opacity 0
@@ -23,8 +25,8 @@ ring with the percent (opens chat details), labelled "Menu". The menu is a right
 Model buttons that unfold the palette inline, "This chat" actions, "Go to" sections at the bottom. The preset /
 persona / model strip under the phone header is gone. The composer "+" keeps generate and compose only; new chat,
 delete messages, chat files moved to the chat menu (also the desktop kebab). Dashboard strip got a gauge chip.
-Browser-checked 390 dark and light, desktop 1280 (shots: project files `ux-audit/item10/`). Not on the fork's main:
-items 8, 10 and the scroll fix wait for the user's word to ship.
+Browser-checked 390 dark and light, desktop 1280 (shots: project files `ux-audit/item10/`). Released in Roleplay 4.41.0 with items 8, 10
+and the scroll fix; the audit document marks them done.
 Same branch, 2026-10-13, a second Discord batch. Commit `a87ad47` (bugs): a reply hung on "…" after the phone
 hid the page (the store now races the POST against `watchForCommit`, which re-reads the chat on visibility/online);
 moving dots plus "Writing · n s" while empty; a faster typewriter; swipe facts kept per swipe in `extra.swipeMeta`

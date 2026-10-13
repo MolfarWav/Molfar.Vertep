@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.0.5 (2026-10-13)
+
+- The Roleplay app 4.41.0 (its own CHANGELOG has the details): a new phone chat header (portrait, scrolling name, a context ring, one Menu button) and a side menu; tab rows on phones show the hidden tabs; chats scroll by touch again on Chrome and Brave for Android; a reply is recovered after the phone locked or switched apps; moving dots while the model writes; swipes keep their own text after Stop; the dashboard skips empty replies; "Save as my default" for preset choices; "Regenerate with a hint"; translation per card field and per lorebook; replies shown as they are written or only when finished.
+- Browser check: the mock model can wait before answering and stream a reply word by word.
+
 ## 1.0.4 (2026-10-12)
 
 - The Roleplay app 4.40.0 (its own CHANGELOG has the details): a group chat has its own turn settings on top of the group's defaults (a Turns button above the chat, and the generation mode in the new-chat step), so one group can be played by a narrator in one chat and turn by turn in another; "Only the member you pick" gets a "Who answers?" row above the message box; self responses and auto mode get plain names and a line of help; a narrator group left on manual answers again.
