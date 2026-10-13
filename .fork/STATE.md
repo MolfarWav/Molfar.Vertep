@@ -17,7 +17,14 @@ Same branch, commit `0fa7690`: UX audit item 8 (phone tab rows): a shared `ui/sc
 with hidden tabs, adds a paging arrow and keeps the open tab in view (card, group and preset editors, samplers);
 Tools wraps its tabs. Browser-checked 390 dark and light (shots: project files `ux-audit/item8/`). The audit
 document now marks done (✅) and partly done (◐) items. Item 10 (phone chat header): four mockups for the user to
-pick from, https://claude.ai/artifact/NUdHs8aKAvJKeDMdyZDctr; nothing built yet.
+pick from, https://claude.ai/artifact/NUdHs8aKAvJKeDMdyZDctr. The user picked a mix of C and A; built in commit
+`634491c`: phone header = back, portrait (menu: card, soul, full portrait), marquee name + chat title, context
+ring with the percent (opens chat details), labelled "Menu". The menu is a right sheet: persona on top, Preset and
+Model buttons that unfold the palette inline, "This chat" actions, "Go to" sections at the bottom. The preset /
+persona / model strip under the phone header is gone. The composer "+" keeps generate and compose only; new chat,
+delete messages, chat files moved to the chat menu (also the desktop kebab). Dashboard strip got a gauge chip.
+Browser-checked 390 dark and light, desktop 1280 (shots: project files `ux-audit/item10/`). Not on the fork's main:
+items 8, 10 and the scroll fix wait for the user's word to ship.
 
 ## 1.0.4: RELEASED 2026-10-12 (tag v1.0.4 pushed by the user). Ships Roleplay 4.40.0. The user deleted every merged `claude/*` branch in both repos the same day.
 
