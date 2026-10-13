@@ -7,7 +7,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## 1.0.6 (2026-10-13)
 
-- The Roleplay app 4.41.1: a card edited outside the app (by Molfar, a script or by hand) no longer takes the app down with only "Script error" on screen; a page that still fails to draw shows what went wrong, with "Copy details" and "Try again".
+- The Roleplay app 4.41.1: a card edited outside the app (by Molfar, a script or by hand) no longer takes the app down with only "Script error" on screen; a page that still fails to draw shows what went wrong, with "Copy details" and "Try again"; on Chrome and Brave for Android the lower part of sheets and menus scrolls by touch again while an expression sprite is shown.
 - Windows: Update now no longer fails with a "Can't set time" warning for every file. The downloaded zip is unpacked by Molfar Vertep itself instead of Windows' tar.exe.
 - "Report a bug" in the account menu (also inside apps) and the Apps page footer: describe the problem, add the device and browser, take a screenshot on desktop, then open a pre-filled GitHub issue or copy the text for Discord. Versions, screen, language and the last errors the shell and apps caught go with it. Nothing is sent by the engine. The GitHub bug form is rewritten to match and links our Discord.
 - App errors in live editing now show their real message ("TypeError: … is not a function") instead of a bare "Script error.": the app's scripts load in CORS mode inside the sandboxed frame.
