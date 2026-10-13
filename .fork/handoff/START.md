@@ -44,6 +44,9 @@ Finished work is not listed here: see STATE ("Released") and git history.
    the Android service should post it). Plan and spec it first.
 10. **pi-ai upgrade** (builtin catalogs miss newer models; latest major 1.x): its own careful step on a
     branch with the full test run, the agent and every OAuth flow checked on desktop and APK.
+12. **Long-range: an RPG layer next to the Dashboard** (user, 2026-10-13; idea only): inventory, HP, skills,
+    conditions for adventure campaigns, built on the Dashboard sensor and the dice tool.
+    `.fork/handoff/rpg-layer/IDEAS.md` (what exists, ideas from Discord and SpatialEngine, open questions).
 11. **Each only on the user's word:**
     - UI redesign, next round: `.fork/handoff/ui-pr1-shell/BRIEF.md` (read its status header; ask the
       user what is still wanted; Home content and the app-to-Molfar bridge).
