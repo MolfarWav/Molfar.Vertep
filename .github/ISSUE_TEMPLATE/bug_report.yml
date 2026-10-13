@@ -1,20 +1,55 @@
 name: Bug report
-description: Something in Chrysalis does not work
+description: Something in Molfar Vertep, the Roleplay app or the Molfar agent does not work
 labels: [bug]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! A few details below save a lot of back-and-forth.
+        Remove anything private (API keys, chat text you do not want public) before posting: issues are public.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where it happens
+      options:
+        - Roleplay app
+        - Molfar (the built-in agent)
+        - Molfar Vertep itself (Apps page, Settings, sign-in, update)
+        - Another app or plugin
+        - Not sure
+    validations:
+      required: true
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: What you did, what you expected, and what happened instead.
+      description: What you saw. Copy any error message word for word.
+      placeholder: The profile page shows "script error" and the app stops responding.
     validations:
       required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, step by step, so someone else can make it happen again.
+      placeholder: |
+        1. Open the Roleplay app
+        2. Ask Molfar to edit a character
+        3. Open that character's profile
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
   - type: input
     id: version
     attributes:
       label: Version
-      description: "`chrysalis --version`, or Settings > Server"
-      placeholder: 1.0.0
+      description: >-
+        Molfar Vertep's version is at the bottom of the Apps page. For an app, open it on the
+        Apps page: its version is next to its name.
+      placeholder: Molfar Vertep 1.0.5, Roleplay 4.41.0
     validations:
       required: true
   - type: dropdown
@@ -27,13 +62,42 @@ body:
         - Linux download
         - Android app
         - Docker
-        - npm / Bun
-        - From source
+        - From source (Molfar-Vertep.bat or bun)
+        - Someone else's server (I only open it in a browser)
     validations:
       required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      description: The device model and the browser you open it in, with versions if you know them.
+      placeholder: Galaxy Z Fold 1, Chrome 129 / Windows 10, Firefox 131
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model and provider
+      description: Only if the bug is about replies, the agent or a model call.
+      placeholder: OpenRouter, the model id as shown in the model picker
+  - type: textarea
+    id: shots
+    attributes:
+      label: Screenshots or a screen recording
+      description: Drag files here. On a phone, a screenshot of the whole screen helps most.
+  - type: textarea
+    id: console
+    attributes:
+      label: Browser console errors
+      description: >-
+        On a computer press F12, open the Console tab, reproduce the bug and copy the red lines.
+        Skip this on a phone.
+      render: text
   - type: textarea
     id: log
     attributes:
-      label: Log
-      description: The end of data/logs/chrysalis.log, if it shows an error. Remove anything private first.
+      label: Server log
+      description: >-
+        If you run it yourself: the end of data/logs/chrysalis.log, or the lines in the console
+        window when the bug happened.
       render: text

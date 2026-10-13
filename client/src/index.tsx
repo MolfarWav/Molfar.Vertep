@@ -2,6 +2,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import "./theme" // first: paints the stored theme before anything renders
 import App from "./App"
+import { recordClientError } from "./bug-report"
 import "./styles/shell.css"
 
 /** Host scripts the shell needs before it renders anything: the bridge host
@@ -43,9 +44,11 @@ try {
   document.getElementById("root")!.replaceChildren(pre)
 }
 window.addEventListener("error", (e) => {
+  recordClientError("shell", String(e.message || e.error))
   document.getElementById("root")!.append(errPre("", String(e.error?.stack ?? e.message)))
 })
 window.addEventListener("unhandledrejection", (e) => {
   const reason = e.reason as { stack?: string; message?: string } | undefined
+  recordClientError("shell", String(reason?.message ?? reason))
   document.getElementById("root")!.append(errPre("async: ", `${String(reason)}\n${String(reason?.stack ?? "")}`))
 })

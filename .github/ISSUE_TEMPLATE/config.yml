@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Questions and help
+    url: https://discord.gg/NMqSehTCTs
+    about: Ask on our Discord. Use an issue for a bug or a feature request.
   - name: Security vulnerability
     url: https://github.com/MolfarWav/Molfar.Vertep/security/advisories/new
     about: Report it privately, not as an issue.

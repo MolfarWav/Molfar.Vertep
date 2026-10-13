@@ -20,6 +20,22 @@ refuses `..`/absolute/drive paths); tar stays for the macOS/Linux tar.gz. Tests:
 in `test/self-update.test.ts`. Copies on 1.0.5 or older still use tar: an affected user updates by hand once
 (download the zip from the release), the fixed in-app update works from the next version on.
 
+## Bug report form (2026-10-13): branch `claude/project-thread-p3ljej`, not on main yet
+The user is turning on GitHub Issues for Discord players. `.github/ISSUE_TEMPLATE/bug_report.yml` (inherited, still said
+"Chrysalis") is rewritten: where it happens (Roleplay / Molfar agent / engine / other app), what happened, steps,
+expected, version (Apps page footer and app details), how you run it, device model + browser (required), model and
+provider, screenshots, browser console, server log. `config.yml` adds the Discord link for questions.
+
+Same branch: an in-app "Report a bug" dialog (`client/src/bug-report.tsx`), from the account menu (also inside apps)
+and the Apps page footer. A description, device + browser (guessed from the user agent, editable), a screenshot
+through screen sharing on desktop (saved as a file; phones get a hint), details (versions incl. the open app's
+manifest version, screen, language, user agent, the last 10 errors the shell and app frames caught). "Open on GitHub"
+pre-fills the issue form by field id (URL capped at 7000 chars); "Copy for Discord" copies the same text. Nothing is
+sent by the engine. Browser-checked dark 1280, light 390, uk 390 (shots: project files `bug-report/`). The user
+plans to ship this with the updater and script-error fixes as a small release after 1.0.5.
+Known red CI, not this branch's: `test/speech.test.ts` gets 403 from the Edge read-aloud endpoint (red on main since
+1.0.4); `src/speech.ts` sends Edge version 143, a likely cause, unverified.
+
 ## Mobile Chromium scroll (Discord report, 2026-10-13): Roleplay fork branch `claude/mobile-chromium-scroll-ym4h2f`, commit `99544e3`, released in Roleplay 4.41.0
 Report: on Chrome/Brave (Android) the lower half of a chat does not touch-scroll; Firefox is fine; the composer
 "sometimes vanishes". Scroll cause, reproduced at 390 px with touch emulation: the expression sprite panel
