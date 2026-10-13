@@ -4,6 +4,16 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+00. **Lost replies on a phone browser = 1.0.7 or a bit later** (user, 2026-10-13; Discord report, server + phone
+   browser through a "bridge"). (a) "Writing" counts forever after an app switch until a reload: did NOT reproduce
+   in emulation (hung send + faked visibilitychange: `watchForCommit` landed). Guess: dead keep-alive connections
+   through the bridge also hang the watcher's GETs. (b) Reload before the reply = reply "lost", then pops up in the
+   middle after the next generation: verified in code. Pass A of send stores nothing; the engine never aborts on a
+   client disconnect, so pass B later commits user msg + reply behind the page's back. Plan: engine route "is chat X
+   generating" (from `genAborts`/a live set in `src/server/app.ts`; old engines answer 404, the app degrades);
+   Roleplay drops the hung POST on return and polls with a timeout, ends "Writing" with an error if the generation
+   ended with no reply, and on chat open shows "Writing" + picks up the late commit. Waiting on the reporter: bridge
+   type and Roleplay version on the server (the user asks).
 0. **UX audit backlog** (user, 2026-10-12, ongoing): take a few items into each release from the audit
    document (STATE, "UX audit backlog", gives where it lives). Not a release of its own.
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is
