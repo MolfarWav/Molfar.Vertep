@@ -5,6 +5,15 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Mobile Chromium scroll (Discord report, 2026-10-13): Roleplay fork branch `claude/mobile-chromium-scroll-ym4h2f`, commit `99544e3`, not on the fork's main yet
+Report: on Chrome/Brave (Android) the lower half of a chat does not touch-scroll; Firefox is fine; the composer
+"sometimes vanishes". Scroll cause, reproduced at 390 px with touch emulation: the expression sprite panel
+(`expression-panel.tsx`, fixed, `touch-action: none`, 42% of the window above the composer) sat at opacity 0
+until its image loaded; a sprite that never loads left an invisible box that ate the drag. Firefox draws a broken
+image as a small alt line, so no box. Fixed: hidden from hit testing until loaded, gone when the image fails.
+The vanishing composer did NOT reproduce in emulation (keyboard resize, focus, viewport changes all keep it);
+waiting on details from the reporter. Suspect, unverified: Brave's bottom toolbar vs the shell height.
+
 ## 1.0.4: RELEASED 2026-10-12 (tag v1.0.4 pushed by the user). Ships Roleplay 4.40.0. The user deleted every merged `claude/*` branch in both repos the same day.
 
 ## Group turns per chat: Roleplay 4.40.0 on the fork's main `ee998bb` (2026-10-12, on the user's word)
