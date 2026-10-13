@@ -96,6 +96,41 @@ describe("checkpoints", () => {
     expect(read("apps/rp/src/App.tsx")).toBe("export const App = 1;");
   });
 
+  it("the tool puts back a data file it is named (an agent's bad card edit), and only that one", async () => {
+    let answer = "Restore";
+    const asked: string[] = [];
+    const tool: AgentTool = buildCheckpointTool("mia", p.root, async (q) => { asked.push(`${q.question}\n${q.detail}`); return answer; });
+    put("apps/rp/data/characters/kit/card.json", '{"name":"Kit"}');
+    const cp = await createCheckpoint(p.root, "mia", "rp", "before: edit Kit");
+    // the agent breaks the card and adds a file; the user keeps chatting meanwhile
+    put("apps/rp/data/characters/kit/card.json", '{"name":"Kit","tags":"oops"}');
+    put("apps/rp/data/characters/kit/notes.json", "{}");
+    put("apps/rp/data/chats.json", "[1,2,3]");
+    await git.commitAll(p.root, "mia", "agent: edit Kit", true);
+
+    // no code changed: the answer lists the data files instead of "nothing to restore"
+    const listed = out(await tool.execute("t", { action: "restore", app: "rp", id: cp.id }, undefined as never));
+    expect(listed).toContain("apps/rp/data/characters/kit/card.json");
+    expect(listed).toContain("data: [");
+    expect(asked).toHaveLength(0);
+    // a path that did not change (or is outside the app's data) restores nothing
+    expect(out(await tool.execute("t", { action: "restore", app: "rp", id: cp.id, data: ["../../auth.json"] }, undefined as never))).toContain("Not restored");
+    expect(asked).toHaveLength(0);
+
+    answer = "Keep as is";
+    await tool.execute("t", { action: "restore", app: "rp", id: cp.id, data: ["data/characters/kit/card.json"] }, undefined as never);
+    expect(asked[0]).toContain("apps/rp/data/characters/kit/card.json");
+    expect(read("apps/rp/data/characters/kit/card.json")).toContain("oops");
+
+    answer = "Restore";
+    const done = out(await tool.execute("t", { action: "restore", app: "rp", id: cp.id, data: ["apps\\rp\\data\\characters\\kit\\card.json", "characters/kit/notes.json"] }, undefined as never));
+    expect(done).toContain("Restored 2 file");
+    expect(read("apps/rp/data/characters/kit/card.json")).toBe('{"name":"Kit"}');
+    expect(fs.existsSync(path.join(p.root, "apps/rp/data/characters/kit/notes.json"))).toBe(false);
+    // the chat written meanwhile stays
+    expect(read("apps/rp/data/chats.json")).toBe("[1,2,3]");
+  });
+
   it("a run that changes an app takes a checkpoint first and reports it; a run that only reads does not", async () => {
     // protected paths ask the user, and no one answers here: off for this test
     put("settings.json", JSON.stringify({ agentProtectedPaths: [] }));

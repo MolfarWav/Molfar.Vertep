@@ -5,6 +5,23 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Script error after a card edit (Discord report, 2026-10-13): engine and Roleplay fork, branch `claude/project-thread-dzndzt` in both, not released
+Report: after Molfar edited a character, the Roleplay app showed only "script error" on the character's page, froze,
+an update did not help, and Molfar could not revert to the checkpoint it named. Three causes, all reproduced in a real
+browser (shots: project files `script-error/`). (1) The Roleplay fork read card.json on trust: a profile list written
+as one string (`"nicknames": "Dzvin, Bell"`) made the Profile tab's chip field call `.filter` on a string, React
+unmounted the whole app. Fixed in the fork: `cardToCharacter` and `normalizeProfile` coerce every known field
+(string lists split, numbers to text, wrong shapes dropped, unknown keys kept); an `ErrorBoundary`
+(`ui/error-boundary.tsx`) wraps views, drawer sections and the Profile and Soul tabs with Copy details / Try again.
+(2) The engine's dev build loaded app scripts as classic cross-origin scripts in the opaque-origin frame, so every
+uncaught app error reached the page as "Script error.". Fixed: `crossorigin` on the dev page's scripts and on hot
+updates (the frame files already answer with CORS). Not on `runtime.js`: 1.0.5 serves it without CORS, and a build
+saved by this engine must still load after switching back (seen: a blank app until Rebuild). (3) Checkpoint restore
+skipped `apps/<id>/data/`, so after a card edit it said "nothing to restore". Now the tool lists data files changed
+since the checkpoint and restores the ones named in `data` (only paths git knows at either point; others untouched),
+after the confirm card. The agent page's per-run Undo still restores code only. "Update does not clear": updates
+never touch `data/`, so a broken card outlives them; the fork fix reads it anyway.
+
 ## 1.0.5: RELEASED 2026-10-13 (tag v1.0.5 pushed by the user). Ships Roleplay 4.41.0 (fork's main `8b9c8f0`, on the user's word): everything in the section below.
 
 Cleanup on main the same day (the user's ask): removed `.fork/ui-assets/` (design mockups of finished work, ~3.4 MB)

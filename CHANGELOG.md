@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- App errors in live editing now show their real message ("TypeError: … is not a function") instead of a bare "Script error.": the app's scripts load in CORS mode inside the sandboxed frame.
+- Molfar can undo its own edit of an app's data file (a card, a lorebook, settings): checkpoint restore takes the data files to put back, one by one, after you confirm. Chats and saves written since stay. Before, a restore only put back code and answered "nothing to restore" after a card edit.
+
 ## 1.0.5 (2026-10-13)
 
 - The Roleplay app 4.41.0 (its own CHANGELOG has the details): a new phone chat header (portrait, scrolling name, a context ring, one Menu button) and a side menu; tab rows on phones show the hidden tabs; chats scroll by touch again on Chrome and Brave for Android; a reply is recovered after the phone locked or switched apps; moving dots while the model writes; swipes keep their own text after Stop; the dashboard skips empty replies; "Save as my default" for preset choices; "Regenerate with a hint"; translation per card field and per lorebook; replies shown as they are written or only when finished.
