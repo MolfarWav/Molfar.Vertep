@@ -4,7 +4,8 @@
 // or the default below; POST /__turns with a JSON array replaces them and
 // rewinds, POST /__reset only rewinds. Usage is reported, so the composer,
 // spend and the prompt inspector have numbers to show.
-type Turn = { text: string } | { tool: string; args?: Record<string, unknown> };
+// a turn may wait `delayMs` before answering (a slow model)
+type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number };
 const DEFAULT: Turn[] = [
   { tool: "read_file", args: { path: "AGENTS.md" } },
   { text: "I read AGENTS.md. It describes the workspace." },
@@ -26,6 +27,7 @@ Bun.serve({
     const chunk = (o: unknown) => enc.encode(`data: ${JSON.stringify(o)}\n\n`);
     const base = { id: `c${next}`, object: "chat.completion.chunk", created: 1, model };
     const usage = { prompt_tokens: Math.ceil(raw.length / 4), completion_tokens: 20, total_tokens: Math.ceil(raw.length / 4) + 20 };
+    if (turn.delayMs) await Bun.sleep(turn.delayMs);
     const body = new ReadableStream({
       start(c) {
         if ("tool" in turn) {
