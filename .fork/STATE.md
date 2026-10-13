@@ -13,6 +13,11 @@ until its image loaded; a sprite that never loads left an invisible box that ate
 image as a small alt line, so no box. Fixed: hidden from hit testing until loaded, gone when the image fails.
 The vanishing composer did NOT reproduce in emulation (keyboard resize, focus, viewport changes all keep it);
 waiting on details from the reporter. Suspect, unverified: Brave's bottom toolbar vs the shell height.
+Same branch, commit `0fa7690`: UX audit item 8 (phone tab rows): a shared `ui/scroll-strip.tsx` fades the side
+with hidden tabs, adds a paging arrow and keeps the open tab in view (card, group and preset editors, samplers);
+Tools wraps its tabs. Browser-checked 390 dark and light (shots: project files `ux-audit/item8/`). The audit
+document now marks done (✅) and partly done (◐) items. Item 10 (phone chat header): four mockups for the user to
+pick from, https://claude.ai/artifact/NUdHs8aKAvJKeDMdyZDctr; nothing built yet.
 
 ## 1.0.4: RELEASED 2026-10-12 (tag v1.0.4 pushed by the user). Ships Roleplay 4.40.0. The user deleted every merged `claude/*` branch in both repos the same day.
 
