@@ -11,6 +11,12 @@ Cleanup on main the same day (the user's ask): removed `.fork/ui-assets/` (desig
 and the unused README images (five `molfar-*.gif` besides `molfar-cast.gif`, `screens/chat-light.png`); all in git history.
 The Roleplay fork's main had nothing to remove (`_frankenx.json` duplicates `frankenx.json` on purpose: the update template).
 
+## Bug report form (2026-10-13): branch `claude/project-thread-p3ljej`, not on main yet
+The user is turning on GitHub Issues for Discord players. `.github/ISSUE_TEMPLATE/bug_report.yml` (inherited, still said
+"Chrysalis") is rewritten: where it happens (Roleplay / Molfar agent / engine / other app), what happened, steps,
+expected, version (Apps page footer and app details), how you run it, device model + browser (required), model and
+provider, screenshots, browser console, server log. `config.yml` adds the Discord link for questions.
+
 ## Mobile Chromium scroll (Discord report, 2026-10-13): Roleplay fork branch `claude/mobile-chromium-scroll-ym4h2f`, commit `99544e3`, released in Roleplay 4.41.0
 Report: on Chrome/Brave (Android) the lower half of a chat does not touch-scroll; Firefox is fine; the composer
 "sometimes vanishes". Scroll cause, reproduced at 390 px with touch emulation: the expression sprite panel
