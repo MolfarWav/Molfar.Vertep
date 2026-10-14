@@ -1944,7 +1944,7 @@ function ImportAppDialog(props: { from: StoreApp | null; onClose: () => void; on
         {from ? <p className="truncate font-mono text-11 text-ink-faint" title={from.repository}>{from.repository}</p> : null}
         {!from && !preview && mode === "git" ? <input
           className={inputClass}
-          placeholder="https://github.com/you/your-chrysalis-app"
+          placeholder="https://github.com/you/your-vertep-app"
           value={gitUrl}
           onChange={(e) => setGitUrl(e.currentTarget.value)}
         /> : null}
@@ -2183,7 +2183,7 @@ export function AppPluginsDialog(props: { appId: string; open: boolean; onClose:
                 {!preview ? <><div className="flex gap-1.5">
                     <input
                       className={inputClass}
-                      placeholder="https://github.com/you/your-chrysalis-plugin"
+                      placeholder="https://github.com/you/your-vertep-plugin"
                       value={gitUrl}
                       onChange={(e) => setGitUrl(e.currentTarget.value)}
                     />

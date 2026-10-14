@@ -451,7 +451,7 @@ export const profileApi = {
       throw new Error(tr("Connection lost. Is the Molfar Vertep server running?"))
     }
     if (!res.ok) await reply(res)
-    const name = /filename="?([^";]+)"?/.exec(res.headers.get("content-disposition") ?? "")?.[1] ?? "chrysalis-profile.zip"
+    const name = /filename="?([^";]+)"?/.exec(res.headers.get("content-disposition") ?? "")?.[1] ?? "molfar-vertep-profile.zip"
     const url = URL.createObjectURL(await res.blob())
     const a = document.createElement("a")
     a.href = url

@@ -403,7 +403,7 @@ const dict = {
   "custom format": "사용자 지정 형식",
   "delete?": "삭제할까요?",
   "e.g. Always answer briefly. Prefer TypeScript. When editing apps, run reload after changes.": "예: 항상 짧게 답하기. TypeScript 우선. 앱을 편집한 뒤 reload 실행.",
-  "e.g. chrysalis.home, mypc.tailnet.ts.net": "예: chrysalis.home, mypc.tailnet.ts.net",
+  "e.g. vertep.home, mypc.tailnet.ts.net": "예: vertep.home, mypc.tailnet.ts.net",
   "endpoint: {url}": "엔드포인트: {url}",
   "enter the Radius gateway URL first": "먼저 Radius 게이트웨이 URL을 입력하세요",
   "enter this code at {url}": "{url}에서 이 코드를 입력하세요",

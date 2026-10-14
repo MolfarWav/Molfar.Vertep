@@ -403,7 +403,7 @@ const dict = {
   "custom format": "formato personalizzato",
   "delete?": "eliminare?",
   "e.g. Always answer briefly. Prefer TypeScript. When editing apps, run reload after changes.": "es. Rispondi sempre in breve. Preferisci TypeScript. Dopo aver modificato le app, esegui reload.",
-  "e.g. chrysalis.home, mypc.tailnet.ts.net": "es. chrysalis.home, miopc.tailnet.ts.net",
+  "e.g. vertep.home, mypc.tailnet.ts.net": "es. vertep.home, miopc.tailnet.ts.net",
   "endpoint: {url}": "endpoint: {url}",
   "enter the Radius gateway URL first": "inserisci prima l'URL del gateway Radius",
   "enter this code at {url}": "inserisci questo codice su {url}",

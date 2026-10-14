@@ -412,7 +412,7 @@ const dict = {
   "custom format": "власний формат",
   "delete?": "видалити?",
   "e.g. Always answer briefly. Prefer TypeScript. When editing apps, run reload after changes.": "напр., Завжди відповідай коротко. Віддавай перевагу TypeScript. Редагуючи застосунки, після змін запускай reload.",
-  "e.g. chrysalis.home, mypc.tailnet.ts.net": "напр., chrysalis.home, mypc.tailnet.ts.net",
+  "e.g. vertep.home, mypc.tailnet.ts.net": "напр., vertep.home, mypc.tailnet.ts.net",
   "endpoint: {url}": "кінцева точка: {url}",
   "enter the Radius gateway URL first": "спершу введіть URL шлюзу Radius",
   "enter this code at {url}": "введіть цей код на {url}",

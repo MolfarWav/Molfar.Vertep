@@ -403,7 +403,7 @@ const dict = {
   "custom format": "自定义格式",
   "delete?": "删除？",
   "e.g. Always answer briefly. Prefer TypeScript. When editing apps, run reload after changes.": "例如：始终简短回答。优先使用 TypeScript。修改应用后运行 reload。",
-  "e.g. chrysalis.home, mypc.tailnet.ts.net": "例如 chrysalis.home, mypc.tailnet.ts.net",
+  "e.g. vertep.home, mypc.tailnet.ts.net": "例如 vertep.home, mypc.tailnet.ts.net",
   "endpoint: {url}": "端点：{url}",
   "enter the Radius gateway URL first": "请先输入 Radius 网关 URL",
   "enter this code at {url}": "在 {url} 输入此代码",

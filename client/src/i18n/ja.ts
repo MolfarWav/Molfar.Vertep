@@ -403,7 +403,7 @@ const dict = {
   "custom format": "カスタム形式",
   "delete?": "削除？",
   "e.g. Always answer briefly. Prefer TypeScript. When editing apps, run reload after changes.": "例: 常に簡潔に答える。TypeScript を優先する。アプリを編集したら reload を実行する。",
-  "e.g. chrysalis.home, mypc.tailnet.ts.net": "例: chrysalis.home, mypc.tailnet.ts.net",
+  "e.g. vertep.home, mypc.tailnet.ts.net": "例: vertep.home, mypc.tailnet.ts.net",
   "endpoint: {url}": "エンドポイント: {url}",
   "enter the Radius gateway URL first": "先に Radius ゲートウェイ URL を入力してください",
   "enter this code at {url}": "{url} でこのコードを入力してください",

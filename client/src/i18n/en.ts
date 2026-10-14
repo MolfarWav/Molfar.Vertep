@@ -414,7 +414,7 @@ const en = {
   "custom format": "",
   "delete?": "",
   "e.g. Always answer briefly. Prefer TypeScript. When editing apps, run reload after changes.": "",
-  "e.g. chrysalis.home, mypc.tailnet.ts.net": "",
+  "e.g. vertep.home, mypc.tailnet.ts.net": "",
   "endpoint: {url}": "",
   "enter the Radius gateway URL first": "",
   "enter this code at {url}": "",

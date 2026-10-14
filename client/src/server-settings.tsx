@@ -349,7 +349,7 @@ export function ServerTab() {
             value={f.allowedHosts.join(", ")}
             locked={locked.allowedHosts}
             disabled={busy}
-            placeholder={tr("e.g. chrysalis.home, mypc.tailnet.ts.net")}
+            placeholder={tr("e.g. vertep.home, mypc.tailnet.ts.net")}
             onSave={(v) => void save({ allowedHosts: v.split(",").map((h) => h.trim()).filter(Boolean) })}
           />
         </Section>

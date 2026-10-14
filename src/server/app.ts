@@ -2821,7 +2821,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         avatar: avatarFile ? { bytes: fs.readFileSync(avatarFile), ext: path.extname(avatarFile).slice(1) } : null,
       });
       c.header("content-type", "application/zip");
-      c.header("content-disposition", `attachment; filename="chrysalis-${u.username}-${new Date().toISOString().slice(0, 10)}.zip"`);
+      c.header("content-disposition", `attachment; filename="molfar-vertep-${u.username}-${new Date().toISOString().slice(0, 10)}.zip"`);
       c.header("x-content-type-options", "nosniff");
       return c.body(new Uint8Array(zip));
     } catch (e) {
