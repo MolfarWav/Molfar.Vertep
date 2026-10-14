@@ -268,3 +268,42 @@ Taken from SillyCanvas (see `references-sillycanvas-lattice.md`). Part of stage 
 - **History filter**: the History part gets settings for last N messages, only the
   player or only the character, and stripping thinking blocks. The card label shows
   the filter ("last 20 · without thinking"). Defaults keep today's behaviour.
+
+## 14. Stage 1b decisions (2026-10-14)
+The user left the three questions to the orchestrator ("where it costs least and is most
+reliable"). Decided after reading `assemble()` and both plugin hooks:
+
+1. **Storage: the chat's meta**, one field `promptBoard` in `data/chats/<id>.meta.json`.
+   `assemble()` and both plugin hooks (Litopys `readChat`, relations `readChat`) already read
+   that file on every reply, so this adds no file read; it travels with the chat (copy, export,
+   delete) and leaves no orphan files. A fork inherits it: add `promptBoard` to the copied-field
+   list in the fork route (`plugins/engine/plugin.js`, the list with `parentChatId`).
+   Shape (absent = today's behaviour, unknown keys ignored):
+   ```json
+   "promptBoard": { "v": 1,
+     "off": ["section:<presetSectionId>", "card:description", "wi:<bookId>", "history",
+             "memory", "databank", "summary", "authorNote", "plugin:litopys", "plugin:relations"],
+     "history": { "lastN": 0, "only": "all", "thinking": true } }
+   ```
+   `off` holds only what the user switched off. Stage 2's Decider writes nothing here: it is
+   evaluated at assembly and its result joins `off` in memory, so a rule never edits the user's
+   switches. Part keys are stable ids, never labels (labels change with language and names).
+   Chat format change: the Roleplay fork's `docs/DATA-FORMATS.md` in the same change.
+2. **`assemble()`**: one helper `isOff(key)` built from `meta.promptBoard.off`; every place
+   that adds a part checks it first and, when off, calls `omit(kind, label, "off for this chat",
+   tokens)` instead of `addPart`, so the Sources view and "what goes into the request" show it.
+   The History filter is applied to the visible history before the context-budget trim (so the
+   trim works on what is actually sent). **No reordering in 1b**: the preset owns the order; the
+   board shows it read-only. Reordering is a later small step if the user asks for it.
+3. **Plugin inserts: each plugin checks the switch itself**, first thing in its `llmRequest`
+   hook, from the meta it already reads, and returns `null` when off. No engine change; an off
+   Litopys or Dashboard does no work at all (no vector search, no insert building). The check is
+   five lines per plugin; the engine-side alternative (dropping labelled inserts) would still run
+   the plugin and touches the engine for something only Roleplay uses.
+
+Build order (small steps, each with tests, released separately if the user wants):
+a. Data + `assemble()`: `promptBoard` field, `isOff`, the omit reasons, plugin checks, fork copy,
+   DATA-FORMATS. Route to save it (`POST` on the chat meta, validated keys). No UI yet.
+b. Token count per part and the total (from the Sources the preview already builds).
+c. The prompt board UI (`boards/prompt.ts` + adapter), switches, the "why" lines, phone list.
+d. History filter (settings on the History card).

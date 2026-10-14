@@ -6,7 +6,7 @@ History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
 ## Canvas stage 1a: RELEASED in Roleplay 4.42.0 (fork main `9e68e44`, 2026-10-13, on the user's word)
-A Canvas tab with the chat-links board (Library chats as cards, wires = continues, forks dashed), the Library map as the same board in View mode. Code in the Roleplay fork (`src/canvas-kit/`, `src/components/canvas/`); no engine change; the engine needs no release for it (an app update). Next: stage 1b, the prompt board, plan first: `.fork/handoff/canvas/HANDOFF.md`.
+A Canvas tab with the chat-links board (Library chats as cards, wires = continues, forks dashed), the Library map as the same board in View mode. Code in the Roleplay fork (`src/canvas-kit/`, `src/components/canvas/`); no engine change; the engine needs no release for it (an app update). Next: stage 1b, the prompt board: its three questions are decided (`PLAN.md` section 14, 2026-10-14: switches in chat meta, `isOff` in `assemble()`, each plugin checks its own switch; build steps a-d). Start with `.fork/handoff/canvas/HANDOFF.md`.
 
 ## 1.0.7: RELEASED 2026-10-14 (tag v1.0.7 pushed by the user, release run 31, 6 assets; Roleplay 4.43.0 on the fork main `0f79347`) (branch `claude/tuesday-bug-batch-b41slz` in both)
 Engine 1.0.7; Roleplay 4.43.0. GitHub #13, #14, #16-#20 closed with the release; #15 open for the next batch. Before the
