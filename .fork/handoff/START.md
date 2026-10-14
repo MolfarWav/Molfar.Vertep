@@ -6,16 +6,9 @@ Finished work is not listed here: see STATE ("Released") and git history.
 ## Queue (open items only; the user picks the order unless it is written here)
 0. **Canvas, stage 1b = the prompt board** (user, 2026-10-13; stage 1a shipped in Roleplay 4.42.0):
    `.fork/handoff/canvas/HANDOFF.md`. Plan first: three questions to settle with the user before any code.
-00. **Lost replies on a phone browser = 1.0.7 or a bit later** (user, 2026-10-13; Discord report, server + phone
-   browser through a "bridge"). (a) "Writing" counts forever after an app switch until a reload: did NOT reproduce
-   in emulation (hung send + faked visibilitychange: `watchForCommit` landed). Guess: dead keep-alive connections
-   through the bridge also hang the watcher's GETs. (b) Reload before the reply = reply "lost", then pops up in the
-   middle after the next generation: verified in code. Pass A of send stores nothing; the engine never aborts on a
-   client disconnect, so pass B later commits user msg + reply behind the page's back. Plan: engine route "is chat X
-   generating" (from `genAborts`/a live set in `src/server/app.ts`; old engines answer 404, the app degrades);
-   Roleplay drops the hung POST on return and polls with a timeout, ends "Writing" with an error if the generation
-   ended with no reply, and on chat open shows "Writing" + picks up the late commit. Waiting on the reporter: bridge
-   type and Roleplay version on the server (the user asks). GitHub issue #13; goes into a Tuesday bug batch (CLAUDE.md, Bugs).
+00. **Release 1.0.7 + Roleplay 4.43.0** (Tuesday bug batch, 2026-10-14): prepared on `claude/tuesday-bug-batch-b41slz` in
+   both repos (STATE, "1.0.7"). Waits for the user's word to fast-forward both mains; the tag is theirs. After the release:
+   close GitHub #13, #14, #16, #17, #18, #19, #20 with the release. #15 goes to the next batch.
 0. **UX audit backlog** (user, 2026-10-12, ongoing): take a few items into each release from the audit
    document (STATE, "UX audit backlog", gives where it lives). Not a release of its own.
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is

@@ -8,12 +8,35 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 ## Canvas stage 1a: RELEASED in Roleplay 4.42.0 (fork main `9e68e44`, 2026-10-13, on the user's word)
 A Canvas tab with the chat-links board (Library chats as cards, wires = continues, forks dashed), the Library map as the same board in View mode. Code in the Roleplay fork (`src/canvas-kit/`, `src/components/canvas/`); no engine change; the engine needs no release for it (an app update). Next: stage 1b, the prompt board, plan first: `.fork/handoff/canvas/HANDOFF.md`.
 
-## Next patch (user, 2026-10-13): open problems to solve first
-- **Dashboard: remote contact (texting, calls) is not in the scene** (GitHub #16, `bug`). The sensor's `present` holds only
-  people physically there and `buildInsert` returns null on an empty `present`, so a texting scene sends the model
-  nothing and it forgets the talk is by message. The user wants it in the next patch.
-- **Lost / garbled replies in a phone browser** (GitHub #13, START.md item 00): two generations on one chat after a reload.
-- Tuesday batch also has #14 (dice reason) and #15 ("Polish my message"), both `enhancement`, not urgent.
+## 1.0.7 = Tuesday bug batch 2026-10-14: PREPARED, not released (engine and Roleplay fork, branch `claude/tuesday-bug-batch-b41slz` in both)
+Engine 1.0.7 (package.json, CHANGELOG, `.fork/release-notes/1.0.7.md` written); Roleplay 4.43.0 (manifest, CHANGELOG). Mains NOT
+fast-forwarded and no tag: both wait for the user's word. Issues stay open until the release ships them.
+- **#18 draft wiped mid-typing** (Discord, Brave; the user saw it on Chrome). Cause verified in Chromium: the frame's storage shim
+  is seeded from the `#__storage=` snapshot the shell put in the frame URL, and the app's own `location.reload()` (new build landed,
+  engine restarted) reloads that URL, so every write since the frame opened was lost (the draft, the reload-reason note). Fix in
+  `client/public/app-bridge.js`: the hash follows each write synchronously (`history.replaceState`; a rewrite in beforeunload is too
+  late: Chromium takes the URL at the reload() call), at most 150 per 10 s. Which event reloads the reporter's page is not confirmed;
+  with the fix the reload's toast ("Reloaded: ...") now survives and will tell.
+- **#19 replies cut near 500 tokens on Chub** (`c_custom-openai-compatible`). pi-ai sends `max_completion_tokens` to unknown hosts;
+  custom connections now set `compat.maxTokensField: "max_tokens"` (not api.openai.com). That Chub ignores the other field is
+  inference; the reporter confirms after the update.
+- **#16 texting scene**: the sensor counts remote contacts as present with `chars.<name>.contact` (text/call/video/letter, carried
+  while they stay present); the insert says "Not in the same place as ..., in touch from elsewhere: X by text messages" and the
+  character block repeats it. Old default prompt kept as SENSOR_PROMPT_8.
+- **#13 lost replies**: engine `GET /v1/apps/:app/__generating?chatId=` (live count beside `genAborts`, `genDone` from the plugin
+  runtime). Roleplay: `adoptRunningGeneration` (on chat open and after each hydrate) shows "Writing" for a run the page did not
+  start; Stop on such a run only stops waiting (the user's message is not stored yet, a cancel would lose it). `watchForCommit`
+  ends the wait with an error when the engine is idle twice with no reply. Part (1) of the report (Writing counts forever) was
+  never reproduced; this covers it only if the run really ended. Reporter's bridge type still unknown.
+- **#20 phone composer**: once a draft wraps (box > 44 px), on `max-sm` the textarea takes the full row and the buttons go under it;
+  back when the box is empty.
+- **#14 dice**: `reason` (required) and `dc`; a stored dice tool equal to the old default parameters is upgraded.
+- **#17 gallery**: images go to `PUT /v1/assets`, the card keeps `/v1/assets/<id>`; data-URL items move on the next add; a failed
+  character save rolls back and names the size; app body cap 8 MB. Known gap: the Roleplay studio backup zip does not carry asset
+  bytes (true for generated pictures before too); the engine's profile backup does.
+- Not done: **#15** "Polish my message" (enhancement: a composer button, a utility-model setting, a new prompt). Next batch.
+- Tests: Roleplay 999 pass. Engine 712 pass, 3 fail: 2 edge-tts (live network 403 in the cloud), 1 bcrypt timing test that passes
+  alone (load-sensitive). Lint adds nothing on changed lines.
 
 ## 1.0.6: RELEASED 2026-10-13 (tag v1.0.6 pushed by the user, release run 30, 6 assets) (the user's word: ship the three fixes as 1.0.6, not "1.0.5a": `isNewer` and the launcher read only `X.Y.Z`). Engine = the updater fix + bug report (`p3ljej`, PR #12) + script-error fix (`dzndzt`), merged. Roleplay 4.41.1 = fork branch `claude/project-thread-xhqa4w` (`dzndzt` + version bump + the menu-scroll follow-up below), 971 tests pass. Menu scroll follow-up (Discord: "solved for main chat, still persists in the menus"; screenshot: Dashboard settings sheet, lower ~42% dead = the sprite panel's default spot): on `pointer: coarse`, `body:has([role=dialog|menu|listbox]) [data-expression-panel]` is hidden. The sprite link is inferred: a synthetic overlay test in headless Chromium did NOT reproduce a touch-action leak; the rule's toggle was checked, the real app on a phone was not. Both mains fast-forwarded on the user's word (2026-10-13); the user pushes tag `v1.0.6`. Deferred to 1.0.7: lost replies on a phone browser (START.md item 00).
 

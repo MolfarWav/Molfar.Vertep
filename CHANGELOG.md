@@ -5,6 +5,14 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## 1.0.7 (2026-10-14)
+
+- Apps: a message being typed is no longer wiped when the app reloads itself (a new build of the app landed, or the engine restarted). An app frame's storage now survives its own reload; before, every write since the frame opened was lost (GitHub #18).
+- Custom OpenAI-compatible connections send the output limit as `max_tokens`. Chub's endpoints ignored the field the library sent and cut every reply near 500 tokens (GitHub #19). `api.openai.com` keeps `max_completion_tokens`.
+- Apps can ask whether a chat's reply is still being written (`GET /v1/apps/<app>/__generating?chatId=`): Roleplay 4.43.0 uses it to keep a reply across a reload (GitHub #13).
+- An app request may carry 8 MB instead of 1 MB (GitHub #17).
+- The Roleplay app 4.43.0: a texting scene stays in the Dashboard (#16), a reply survives a reload (#13), a wider message box on phones (#20), dice rolls with a reason and difficulty (#14), gallery images in the asset store (#17).
+
 ## 1.0.6 (2026-10-13)
 
 - The Roleplay app 4.41.1: a card edited outside the app (by Molfar, a script or by hand) no longer takes the app down with only "Script error" on screen; a page that still fails to draw shows what went wrong, with "Copy details" and "Try again"; on Chrome and Brave for Android the lower part of sheets and menus scrolls by touch again while an expression sprite is shown.
