@@ -39,6 +39,7 @@
     for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
     return btoa(s);
   }
+  function textToB64(text) { return bytesToB64(new TextEncoder().encode(text)); }
   function b64ToText(b64) {
     try { return new TextDecoder().decode(b64ToBytes(b64)); } catch { return ""; }
   }
@@ -286,15 +287,46 @@
     return seed;
   }
   var seed = snapshot();
+  // The snapshot in the hash is what a reload of THIS frame starts from: the
+  // app's own location.reload() reloads the URL the shell built when it made
+  // the frame. Left stale, a reload dropped every write since then (a draft
+  // being typed, the reload-reason note). So the hash follows the writes.
+  // It must be current BEFORE reload() is called: Chromium takes the URL at
+  // the call, a rewrite in beforeunload is too late (checked in a browser).
+  // Each write rewrites at once while under 150 rewrites in 10 s (Chromium
+  // ignores replaceState past ~200 calls in 10 s; typing stays well under);
+  // past that, writes wait for the window and land as one trailing rewrite.
+  var liveStores = {};
+  var snapTimer = 0;
+  var snapTimes = [];
+  function writeSnapshot() {
+    clearTimeout(snapTimer);
+    snapTimer = 0;
+    snapTimes.push(Date.now());
+    try {
+      var params = new URLSearchParams(location.hash.slice(1));
+      params.set("__storage", textToB64(JSON.stringify({ local: liveStores.local || {}, session: liveStores.session || {} })));
+      history.replaceState(history.state, "", location.href.split("#")[0] + "#" + params.toString());
+    } catch { /* URL rewrite refused: a reload starts from the older snapshot */ }
+  }
+  function scheduleSnapshot() {
+    if (snapTimer) return;
+    var now = Date.now();
+    while (snapTimes.length && snapTimes[0] <= now - 10000) snapTimes.shift();
+    if (snapTimes.length < 150) writeSnapshot();
+    else snapTimer = setTimeout(writeSnapshot, snapTimes[0] + 10000 - now);
+  }
   function makeStorage(which, initial) {
     var data = {};
     Object.keys(initial || {}).forEach(function (k) { data[k] = String(initial[k]); });
+    liveStores[which] = data;
     function pushOp(op, key, value) {
       // posted even before the handshake: a write followed immediately by a
       // reload used to sit in a queue that died with the frame, losing the
       // write (and looping any reload guard built on it). The host accepts
       // storage before the nonce for this reason.
       post({ type: "storage", which: which, op: op, key: key, value: value });
+      scheduleSnapshot();
     }
     var methods = {
       getItem: function (k) { k = String(k); return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
