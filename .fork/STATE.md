@@ -22,7 +22,7 @@ Discord idea: a bug goes to Molfar first, and a fix that works goes to GitHub so
 - The small-model budget test moved 3.7k -> 3.75k (the fix-bug skill line).
 - Checked in Chromium (browser-check): card and dialog at 1280 dark and 390 light, no sideways scroll; the GitHub link
   carries every field and the patch; the shell block in en and uk, disabled when empty; the handoff reaches Molfar.
-  Not checked: a real model going through the whole skill. The labels `solved-by-molfar` must exist on GitHub.
+  Not checked: a real model going through the whole skill. Label `solved-by-molfar` created on GitHub (2026-10-14).
 - Tests: 707 pass; the failures are the Windows-only ones that fail on main too (0600 modes, tar, edge-tts network).
 
 ## 1.0.8: RELEASED 2026-10-14 (tag v1.0.8; Roleplay 4.44.0 `99d8270` and 4.45.0 `e964362` on the fork's main)
