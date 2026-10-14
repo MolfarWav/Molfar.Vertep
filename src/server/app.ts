@@ -5206,7 +5206,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
     for (const [k, v] of Object.entries(c.req.query())) query[k] = String(v);
     let body: unknown = undefined;
     if (c.req.method !== "GET" && c.req.method !== "HEAD") {
-      const cap = rel.startsWith("/import/") ? 220 * 1024 * 1024 : 1024 * 1024;
+      // 8 MB (1 MB before 1.0.7): a card save with its pictures inside passed 1 MB, and the
+      // engine's early 413 reads as a dropped connection in the browser (GitHub #17)
+      const cap = rel.startsWith("/import/") ? 220 * 1024 * 1024 : 8 * 1024 * 1024;
       const capped = await readCappedBody(c, cap);
       // early response without consuming the body poisons the socket for
       // keep-alive reuse — tell the client (and node) to close it
