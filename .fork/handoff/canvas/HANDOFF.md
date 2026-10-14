@@ -17,7 +17,7 @@ wires = "continues", forks as dashed locked wires, undo/redo, Tidy, Fit, Edit/Vi
 phones: View mode + a list with a "Continues" pick). The Library map is the same board in
 View mode, with "Edit links on the canvas".
 
-**Next: stage 1b, the prompt board. The three questions are answered: `PLAN.md` section 14 (2026-10-14). Old text, kept for the reasoning: do not build before the user answers the three questions
+**Stage 1b is built (2026-10-14), not released: see `.fork/STATE.md`. What follows is the original plan text. Do not build before the user answers the three questions (answered: `PLAN.md` section 14)
 below.** The user wants this part done carefully (2026-10-13): plan first, small steps.
 
 ## Stage 1b: the three questions to settle with the user first
