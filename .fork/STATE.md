@@ -35,6 +35,8 @@ fast-forwarded and no tag: both wait for the user's word. Issues stay open until
   character save rolls back and names the size; app body cap 8 MB. Known gap: the Roleplay studio backup zip does not carry asset
   bytes (true for generated pictures before too); the engine's profile backup does.
 - Not done: **#15** "Polish my message" (enhancement: a composer button, a utility-model setting, a new prompt). Next batch.
+- Browser check (Chromium, real engine + Roleplay build): #20 at 390 px dark/light and 1280 px (desktop unchanged), no sideways
+  scroll; #18 draft kept after an in-frame reload 1 s, 10 ms and 0 ms after the last key. Shots: project files `bug-batch-1014/`.
 - Tests: Roleplay 999 pass. Engine 712 pass, 3 fail: 2 edge-tts (live network 403 in the cloud), 1 bcrypt timing test that passes
   alone (load-sensitive). Lint adds nothing on changed lines.
 
