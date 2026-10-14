@@ -9,9 +9,8 @@ Finished work is not listed here: see STATE ("Released") and git history.
    behaviour preset (+ Molfar's tool), agent forge (+ Molfar's create / validate / dry run), then
    Molfar's work graph and blueprints on the forge's blocks. Items may interleave with other queue
    items while a release settles.
-0a. **Composer, the space beside a long draft** (user, 2026-10-14, for later): since 1.0.7 a wrapped draft takes the whole
-   row and the buttons sit under it, which leaves a wide empty strip beside them. Idea: put something useful there
-   (quick actions, the story nudge's choices, word count). Ask the user what before building.
+0a. **In-app guide** (user, 2026-10-14, next big item): What's new after an update, section tours, a help "?" with
+   "Show me"; Roleplay, the shell and Molfar's page; en + uk. Plan and decisions: `.fork/handoff/guide/PLAN.md`.
 0. **UX audit backlog** (user, 2026-10-12, ongoing): take a few items into each release from the audit
    document (STATE, "UX audit backlog", gives where it lives). Not a release of its own.
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is
