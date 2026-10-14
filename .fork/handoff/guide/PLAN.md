@@ -43,10 +43,15 @@ https://pyrxpia.github.io/sola-hub/ was considered and dropped; the README stays
 ## Steps (each its own release, with browser checks)
 1. **Roleplay kit + What's new + three tours**: the registry, the spotlight / sheet, the state,
    `data-guide` attributes; tours for Canvas (both boards), the Prompt board and the composer;
-   What's new for 4.44-4.46 features. Settings switches.
+   What's new for 4.44-4.46 features. Settings switches. Built (`claude/guide-kit`), plus a
+   text-only tip `new.report-bug` (user, 2026-10-14): where to report a bug (account menu, the
+   start page's footer link). A tip's `target` is optional for things outside the app frame.
+   When the bug report that Molfar processes before sending lands (another session, engine
+   `client/src/bug-report.tsx`), reword that tip, and the help "?" (step 2) gets the same item.
 2. **Roleplay help "?"** in the rail (and the phone More menu) and the remaining tours: Dashboard,
    Soul, Library, Characters / Groups, Lorebooks, presets, chat menu.
-3. **Shell**: first run (connect a model, open Roleplay), Split, Updates, Store, Report a bug; its
+3. **Shell**: first run (connect a model, open Roleplay), Split, Updates, Store, Report a bug (spotlight
+   on the account-menu item and the start-page link, with how Molfar helps write the report); its
    own "?" in the account menu. The same kit, ported to `client/`.
 4. **Molfar's page**: modes (Full / Accept / Plan), checkpoints and restore, skills, projects,
    the context counter. English only on that page today; uk added with the guide.
