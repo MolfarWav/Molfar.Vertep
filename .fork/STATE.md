@@ -5,6 +5,21 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Batch: visible names, Claude 5.5, phone headers (2026-10-14, not released)
+Engine branch `claude/names-models-ux` (worktree `.claude/worktrees/names-models-ux`, on top of the Canvas docs): `44161d7` visible
+"chrysalis" texts (network name example, profile download name, git URL examples; the npm package name in the update hint stays
+until the internal rename); `754c5af` Claude Opus, Sonnet and Haiku 5.5 added to the Anthropic catalog as copies of their closest
+sibling (`src/model-additions.ts`): pi-ai 0.85's Anthropic catalog is static and stops at Opus/Sonnet 5; pi-ai 1.2.0 has them but
+moves the system prompt and tools into system messages (`TranscriptContext`, `toolsAdded`), which breaks the agent's tool hiding
+and token budget: that upgrade stays queue item 10. Roleplay branch `claude/names-ux` (on 4.44.0): `656ad15` tab title and texts
+say Molfar Vertep; `ff41ad0` phone Characters header (switch + New; search, Filter sheet with sort and wrapped tags, More menu;
+active tags under the search) and Lorebooks (filter next to search, Import and "Active in the open chat" in a More menu, no
+bottom bar). Engine tests: the same 15 Windows-only failures as on main (tar paths, 0600 modes, edge TTS 403, git shell), none new.
+Dashboard vocabulary on the user's 8 real chats: 24 `other` events, most routine small talk; candidates for new ids seen:
+introducing oneself / learning a name, inviting to meet, standing one's ground ("I am not your student"), an ultimatum, a veiled
+leverage threat ("I know what controls you"); one `significant` event came with an empty quote. Asked the user before adding.
+UX audit document (desktop copy): items 1-8 and 10 now marked done; item 9 (jargon) open.
+
 ## Canvas stage 1b: RELEASED in Roleplay 4.44.0 (fork main `99d8270`, fast-forward from `claude/canvas-prompt-board`, 2026-10-14, on the user's word)
 Four commits on top of Roleplay 4.43.0 (`0f79347`): `b971efa` per-chat prompt switches (chat meta `promptBoard`, `assemble()` skips and labels, Litopys and Dashboard check their own switch); `f2415d2` chat-links board starts empty, a shelf on the left (search, sort, drag on and off, "with linked chats"); `f01ff84` keyed sources + `sources.board` in the preview + the history filter, and off books drop even when global or persona-bound; `ea8b418` the Prompt board UI (cards with switches and tokens, "Request to the model" with numbered rows and wires, details with reasons and the history filter, phone list). 1016 tests pass, typecheck clean, browser-checked dark, light, 390 px (shots in `E:\Claude\canvas-shots\`, not in the repo). Release commit `99d8270` (CHANGELOG 4.44.0, manifest). No engine change needed. Left out on purpose: reordering (decided: the preset owns order), Litopys/Dashboard tokens show only at send time. Decisions and steps: `.fork/handoff/canvas/PLAN.md` section 14.
 
