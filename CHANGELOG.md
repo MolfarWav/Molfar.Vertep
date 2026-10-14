@@ -5,6 +5,13 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## 1.0.8 (2026-10-14)
+
+- Anthropic connections list Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5. The bundled pi-ai catalog stops at Opus 5 and Sonnet 5; the engine adds the newer models as copies of their closest sibling with their own limits and prices (`src/model-additions.ts`) until the pi-ai 1.x upgrade.
+- Visible names say Molfar Vertep: the network name example in Settings, the profile download (`molfar-vertep-<user>-<date>.zip`) and the git URL examples.
+- The Roleplay app 4.44.0: the Canvas Prompt board (every part of a chat's request with its tokens, per-chat switches, the history filter; switched-off Litopys, Dashboard and lorebooks do no work), and the Chat links board filled one chat at a time from a list.
+- The Roleplay app 4.45.0: quick moves (Continue, Write for me, Another) and the big editor under a long draft, a half-screen big editor, compact phone pages for Characters and Lorebooks, a clearer empty Library, readable group dialogue colours on light themes, five more Dashboard events.
+
 ## 1.0.7 (2026-10-14)
 
 - Apps: a message being typed is no longer wiped when the app reloads itself (a new build of the app landed, or the engine restarted). An app frame's storage now survives its own reload; before, every write since the frame opened was lost (GitHub #18).

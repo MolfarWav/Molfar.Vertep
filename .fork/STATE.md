@@ -5,6 +5,15 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## 1.0.8: RELEASED 2026-10-14 (tag v1.0.8; Roleplay 4.44.0 `99d8270` and 4.45.0 `e964362` on the fork's main)
+Engine: Claude 5.5 in the Anthropic catalog (`src/model-additions.ts`), visible names. Roleplay 4.44.0: Canvas stage 1b (Prompt board,
+switches, history filter, the chat-links shelf). Roleplay 4.45.0: composer quick moves + half-screen big editor, phone Characters and
+Lorebooks pages, empty Library, Soul without the Molfar rating buttons, Advanced hints, group colours on light themes, group editor tab
+names, five Dashboard events. UX audit (desktop copy, gitignored `data/ux-audit/UX-AUDIT.md`): done items removed; open are item 9
+(jargon: Lorebooks, Personas, Tools) and six rows (Light shell vs Roleplay theme, button colours across screens, 11 editor tabs, red
+lorebook switches, preset internal ids, Tools tab rows). Open questions for the user: small-model prompt problems in group chats
+(no examples yet). Next by the roadmap: settle 4.44/4.45, then Decider (`.fork/handoff/canvas/PLAN.md` section 15).
+
 ## Batch: visible names, Claude 5.5, phone headers (2026-10-14, not released)
 Engine branch `claude/names-models-ux` (worktree `.claude/worktrees/names-models-ux`, on top of the Canvas docs): `44161d7` visible
 "chrysalis" texts (network name example, profile download name, git URL examples; the npm package name in the update hint stays
