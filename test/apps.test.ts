@@ -138,7 +138,7 @@ describe("curated providers", () => {
     const prov = buildProvider("nanogpt", { ...CURATED_PROVIDERS["nanogpt"]!, models: [{ id: "anthropic/claude-x", reasoning: true }, { id: "zai/glm-x" }] }, { codeDefined: true });
     const models = prov.getModels() as readonly { id: string; compat?: { cacheControlFormat?: string; thinkingFormat?: string; supportsFinishReason?: boolean } }[];
     // the endpoint places cache breakpoints itself, so no inline markers
-    expect(models[0]?.compat).toEqual({ thinkingFormat: "openrouter", supportsFinishReason: false });
+    expect(models[0]?.compat).toEqual({ thinkingFormat: "openrouter", maxTokensField: "max_tokens", supportsFinishReason: false });
 
     const bodies: Record<string, unknown>[] = [];
     const fakeFetch = async (_url: unknown, init?: { body?: unknown }) => {
@@ -154,6 +154,26 @@ describe("curated providers", () => {
     expect(bodies[0]?.reasoning).toEqual({ effort: "low" });
     // other routes cache implicitly; the switch would steer them off subscription upstreams
     expect(bodies[1]?.prompt_caching).toBeUndefined();
+  });
+
+  it("a custom OpenAI-compatible endpoint gets the output limit as max_tokens (#19)", async () => {
+    const { buildProvider } = await import("../src/providers/custom.js");
+    const bodies: Record<string, unknown>[] = [];
+    const fakeFetch = async (_url: unknown, init?: { body?: unknown }) => {
+      bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return new Response("nope", { status: 400 });
+    };
+    const context = { messages: [{ role: "user" as const, content: "hi", timestamp: 0 }] };
+    for (const baseUrl of ["https://inference.chub.ai/v1", "https://api.openai.com/v1"]) {
+      const prov = buildProvider("c_x", { name: "x", api: "openai-completions", baseUrl, models: [{ id: "soji" }] });
+      const model = prov.getModels()[0]!;
+      for await (const ev of prov.streamSimple(model, context, { apiKey: "k", fetch: fakeFetch as never, maxTokens: 2048 })) if (ev.type === "error" || ev.type === "done") break;
+    }
+    // Chub reads only max_tokens and cut replies near 500 tokens without it
+    expect(bodies[0]?.max_tokens).toBe(2048);
+    expect(bodies[0]?.max_completion_tokens).toBeUndefined();
+    // OpenAI itself keeps the newer field
+    expect(bodies[1]?.max_completion_tokens).toBe(2048);
   });
 
   it("turns on prompt caching for Anthropic models behind a custom OpenAI-compatible endpoint", async () => {

@@ -413,7 +413,12 @@ function toModel(m: CustomModelDef, providerId: string, api: Api, def: CustomPro
   // some OpenAI-compatible hosts (Chub's Soji) end a stream without a finish_reason; the library
   // then threw the whole reply away. A custom endpoint's reply counts as done when its stream ends;
   // a finish_reason that does come is still read.
-  const compat = api === "openai-completions" ? { ...withThinking, supportsFinishReason: false } : withThinking;
+  // The output limit goes out as `max_tokens`: the library sends `max_completion_tokens` to any
+  // host it does not know, and servers that read only `max_tokens` (Chub's Soji and mobile) then
+  // cut every reply at their own default, near 500 tokens (GitHub #19). OpenAI itself keeps the
+  // newer field, which its reasoning models require.
+  const maxTokensField = /^https?:\/\/api\.openai\.com(\/|$)/i.test(baseUrl) ? {} : { maxTokensField: "max_tokens" as const };
+  const compat = api === "openai-completions" ? { ...withThinking, ...maxTokensField, supportsFinishReason: false } : withThinking;
   const known = catalogEntry(baseUrl, m.id);
   const model: Model<Api> = {
     id: m.id,
