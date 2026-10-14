@@ -8,9 +8,9 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 ## Canvas stage 1a: RELEASED in Roleplay 4.42.0 (fork main `9e68e44`, 2026-10-13, on the user's word)
 A Canvas tab with the chat-links board (Library chats as cards, wires = continues, forks dashed), the Library map as the same board in View mode. Code in the Roleplay fork (`src/canvas-kit/`, `src/components/canvas/`); no engine change; the engine needs no release for it (an app update). Next: stage 1b, the prompt board, plan first: `.fork/handoff/canvas/HANDOFF.md`.
 
-## 1.0.7 = bug batch 2026-10-14: both mains fast-forwarded on the user's word; the tag `v1.0.7` is the user's to push (branch `claude/tuesday-bug-batch-b41slz` in both)
-Engine 1.0.7 (package.json, CHANGELOG, `.fork/release-notes/1.0.7.md`); Roleplay 4.43.0 (manifest, CHANGELOG). Issues close once the
-tag's release is built. An external review (GLM through `ask-model`) found 4 real problems, fixed: a generation now counts as
+## 1.0.7: RELEASED 2026-10-14 (tag v1.0.7 pushed by the user, release run 31, 6 assets; Roleplay 4.43.0 on the fork main `0f79347`) (branch `claude/tuesday-bug-batch-b41slz` in both)
+Engine 1.0.7; Roleplay 4.43.0. GitHub #13, #14, #16-#20 closed with the release; #15 open for the next batch. Before the
+release, an external review (GLM through `ask-model`) found 4 real problems, fixed: a generation now counts as
 running until its route ends (the commit comes in a later pass), an adopted reply refreshes after Stop, contact is reported every
 turn and a new scene drops a carried one, gallery migration only when the add saves. Not taken: an unhandled rejection in
 `adoptRunningGeneration` (refreshChat catches its own errors) and the >150 writes/10 s burst (by design; typing stays far below).
