@@ -11,7 +11,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 - Custom OpenAI-compatible connections send the output limit as `max_tokens`. Chub's endpoints ignored the field the library sent and cut every reply near 500 tokens (GitHub #19). `api.openai.com` keeps `max_completion_tokens`.
 - Apps can ask whether a chat's reply is still being written (`GET /v1/apps/<app>/__generating?chatId=`): Roleplay 4.43.0 uses it to keep a reply across a reload (GitHub #13).
 - An app request may carry 8 MB instead of 1 MB (GitHub #17).
-- The Roleplay app 4.43.0: a texting scene stays in the Dashboard (#16), a reply survives a reload (#13), a wider message box on phones (#20), dice rolls with a reason and difficulty (#14), gallery images in the asset store (#17).
+- The Roleplay app 4.43.0: a texting scene stays in the Dashboard (#16), a reply survives a reload (#13), a full-width message box for long drafts (#20), dice rolls with a reason and difficulty (#14), gallery images in the asset store (#17).
 
 ## 1.0.6 (2026-10-13)
 

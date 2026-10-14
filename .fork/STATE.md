@@ -28,7 +28,7 @@ fast-forwarded and no tag: both wait for the user's word. Issues stay open until
   start; Stop on such a run only stops waiting (the user's message is not stored yet, a cancel would lose it). `watchForCommit`
   ends the wait with an error when the engine is idle twice with no reply. Part (1) of the report (Writing counts forever) was
   never reproduced; this covers it only if the run really ended. Reporter's bridge type still unknown.
-- **#20 phone composer**: once a draft wraps (box > 44 px), on `max-sm` the textarea takes the full row and the buttons go under it;
+- **#20 composer**: once a draft wraps (box > 44 px), at every width (the user, desktop screenshot) the textarea takes the full row and the buttons go under it;
   back when the box is empty.
 - **#14 dice**: `reason` (required) and `dc`; a stored dice tool equal to the old default parameters is upgraded.
 - **#17 gallery**: images go to `PUT /v1/assets`, the card keeps `/v1/assets/<id>`; data-URL items move on the next add; a failed
