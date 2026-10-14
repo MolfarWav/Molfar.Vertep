@@ -817,6 +817,12 @@ export async function runPluginRoute(
   const zipBox = zipOk ? new PluginSandbox() : null;
   const box = zipBox ?? sandbox;
   const zipLimits = zipOk ? { executionTimeoutMs: 120_000, memoryLimitBytes: 512 * 1024 * 1024 } : {};
+  // a generation ends when the ROUTE ends, not when its model call does: the commit comes in a
+  // later pass, and a page asking "still generating?" in that gap gave up on a live reply (#13)
+  const started: unknown[] = [];
+  const routeDeps: PluginRuntimeDeps = deps.abortCtlFor
+    ? { ...deps, abortCtlFor: (tag) => { const sig = deps.abortCtlFor!(tag); if (sig) started.push(tag); return sig; }, genDone: undefined }
+    : deps;
   try {
     // ?siblingtools=1: expose the tool DEFINITIONS a wantsTools:true llm request
     // from this plugin would carry (defs only — execution stays host-side), so a
@@ -875,10 +881,11 @@ export async function runPluginRoute(
           ...(typeof out.contentType === "string" ? { contentType: out.contentType } : {}),
         };
       }
-      results = await runPassRequests(plugin, r, deps, caps, "route");
+      results = await runPassRequests(plugin, r, routeDeps, caps, "route");
     }
     return null;
   } finally {
+    for (const tag of started) deps.genDone?.(tag);
     if (zipBox) await zipBox.dispose();
   }
 }
