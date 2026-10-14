@@ -420,6 +420,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
    *  or not) is discarded — the client owns what a cancelled reply keeps and
    *  commits it itself through the cancelled route. */
   const cancelledGens = new Set<string>();
+  /** Generations running right now, by the same key (a count: a group turn can overlap). Unlike
+   *  genAborts nothing lingers here, so a page that lost its request (a reload, a phone that
+   *  slept) can ask whether its chat is still being written (GitHub #13). */
+  const liveGens = new Map<string, number>();
 
   const getAppDeps = (u: UserRecord, appId: string): PluginRuntimeDeps => {
     const base = getPluginDeps(u);
@@ -439,7 +443,15 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
           ctl = new AbortController();
           genAborts.set(key, ctl);
         }
+        liveGens.set(key, (liveGens.get(key) ?? 0) + 1);
         return ctl.signal;
+      },
+      genDone: (tag) => {
+        const key = abortKey(tag);
+        if (!key) return;
+        const n = (liveGens.get(key) ?? 1) - 1;
+        if (n > 0) liveGens.set(key, n);
+        else liveGens.delete(key);
       },
       consumeCancel: (tag) => {
         const key = abortKey(tag);
@@ -5113,6 +5125,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
     if (!ctl) return c.json({ ok: true, active: false });
     ctl.abort();
     return c.json({ ok: true, active: true });
+  });
+
+  // is a generation for this chat running right now: a page that lost its request (reload, a
+  // phone that slept) shows "Writing" and waits for the commit instead of losing the reply (#13)
+  app.get("/v1/apps/:appId/__generating", (c) => {
+    const u = c.get("user");
+    const chatId = c.req.query("chatId");
+    if (!chatId) return c.json({ error: "chatId required" }, 400);
+    return c.json({ generating: (liveGens.get(`${u.username}|${c.req.param("appId")}|${chatId}`) ?? 0) > 0 });
   });
 
   // app route dispatch: /v1/apps/<activeAppId>/<rest...> → bundled plugins with

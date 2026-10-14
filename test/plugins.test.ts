@@ -207,6 +207,39 @@ export function uiPanel(ctx) {
     expect(typeof seen[0]!.executeTool).toBe("function");
   }, 30_000);
 
+  it("a streamed generation reports its end, failed or not, so the engine knows the chat is idle (#13)", async () => {
+    writePlugin(
+      "streamer",
+      { name: "S", version: "1", permissions: ["routes", "llm"], origin: "local" },
+      `export function handleRoute(req, host) {
+        const r = host.llm.results.a;
+        if (r) return { status: 200, json: { text: r.text } };
+        host.llm.request("a", { messages: [{ role: "user", content: "go" }], stream: { chatId: "c1", name: "x" } });
+        return { __llmPending: true };
+      }`,
+    );
+    const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+    const live: string[] = [];
+    let during = -1;
+    for (const fail of [false, true]) {
+      const fakeModels = {
+        generate: async () => {
+          during = live.length;
+          if (fail) throw new Error("boom");
+          return { text: "OK", model: "fake/model", usage: { input: 1, output: 1, cacheRead: 0, cacheWrite: 0, costTotal: 0 } };
+        },
+      };
+      await runPluginRoute(plugin, { method: "POST", path: "/go", query: {}, body: {} }, {
+        ...deps(),
+        models: fakeModels as never,
+        abortCtlFor: (tag) => { live.push((tag as { chatId: string }).chatId); return new AbortController().signal; },
+        genDone: (tag) => { live.splice(live.indexOf((tag as { chatId: string }).chatId), 1); },
+      });
+      expect(during).toBe(1);
+      expect(live).toEqual([]);
+    }
+  }, 30_000);
+
   it("llm tool bridge: defs are stripped without the tools permission", async () => {
     writePlugin(
       "toolless",

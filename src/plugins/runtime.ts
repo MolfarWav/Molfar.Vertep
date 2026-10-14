@@ -105,6 +105,8 @@ export interface PluginRuntimeDeps {
    *  descriptor's chatId by the dispatch layer). Cancelling aborts the
    *  provider stream; the kernel salvages whatever partial text exists. */
   abortCtlFor?: (tag: unknown) => AbortSignal | null;
+  /** The generation `abortCtlFor` started for this tag has ended (answered, failed or cancelled). */
+  genDone?: (tag: unknown) => void;
   /** One-shot: was this streamed generation cancelled? Consumed when read —
    *  a cancelled generation's result is DISCARDED (error result, no commit);
    *  the client owns what a cancelled reply keeps and writes it itself. */
@@ -785,6 +787,8 @@ async function runPassRequests(
       const msg = (e as Error).message;
       log.warn(`[plugin:${plugin.id}] llm "${key}" failed: ${msg}`);
       results.llm[key] = emptyGeneration(msg);
+    } finally {
+      if (abortSignal && streamTag) deps.genDone?.(streamTag);
     }
   }
   return results;
