@@ -5,6 +5,26 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Send a fix from Molfar (for 1.0.9, branch `claude/bug-solution`, not merged; 1.0.9 also takes the in-app guide from `claude/guide-plan`)
+Discord idea: a bug goes to Molfar first, and a fix that works goes to GitHub so it ships for everyone. User's choices
+(2026-10-14): a pre-filled form (nothing sent by the engine), the entry in the bug dialog, description + patch.
+- Shell "Report a bug" dialog: an "Ask Molfar first" block (needs "What happened") opens a new agent chat with the
+  report ("Bug report: ... (skill fix-bug)", version, device, recent errors).
+- Built-in skill `fix-bug`: checkpoint "bug: ...", reproduce, smallest fix, the user tries it, then `bug_solution`.
+- Tool `bug_solution` (`src/agent/bug-solution.ts`; small mode: app group): solved, problem, cause, fix, verify, app,
+  checkpoint. Its card on the agent page (`client-agent/src/BugSolution.tsx`, shown outside the folded step list):
+  "It works, send the fix" / "Still broken", or "Report it on GitHub" when not solved. The dialog fetches
+  `GET /v1/agent/bug-patch` (the app's code since the checkpoint, data/ .memory .skills .project never; git-apply
+  format, checked by a test), shows files with warnings (secret, local path, user name; shared with
+  `scripts/publish-app.ts`), then opens `.github/ISSUE_TEMPLATE/solution.yml` pre-filled; a patch too long for the
+  link is downloaded as `.patch` to drag in.
+- Engine bugs Molfar cannot edit end as `solved: false` with what it found (the ordinary bug form).
+- The small-model budget test moved 3.7k -> 3.75k (the fix-bug skill line).
+- Checked in Chromium (browser-check): card and dialog at 1280 dark and 390 light, no sideways scroll; the GitHub link
+  carries every field and the patch; the shell block in en and uk, disabled when empty; the handoff reaches Molfar.
+  Not checked: a real model going through the whole skill. The labels `solved-by-molfar` must exist on GitHub.
+- Tests: 707 pass; the failures are the Windows-only ones that fail on main too (0600 modes, tar, edge-tts network).
+
 ## 1.0.8: RELEASED 2026-10-14 (tag v1.0.8; Roleplay 4.44.0 `99d8270` and 4.45.0 `e964362` on the fork's main)
 Engine: Claude 5.5 in the Anthropic catalog (`src/model-additions.ts`), visible names. Roleplay 4.44.0: Canvas stage 1b (Prompt board,
 switches, history filter, the chat-links shelf). Roleplay 4.45.0: composer quick moves + half-screen big editor, phone Characters and

@@ -35,6 +35,7 @@ import {
   type ToolGroup,
 } from "./small-window.js";
 import { buildCheckpointTool, changedSince, createCheckpoint, type Checkpoint } from "./checkpoints.js";
+import { buildBugSolutionTool } from "./bug-solution.js";
 import { LANGUAGE_RULE, PRECEDENCE_RULE } from "./prompt-rules.js";
 import { resetAllowed } from "./protect.js";
 import { readSandboxSettings } from "../sandbox/network.js";
@@ -464,6 +465,7 @@ export class UserAgent {
     ];
     tools.push(...buildMemoryTools(username, paths, { ...(opts.ask ? { ask: opts.ask } : {}) }));
     tools.push(buildCheckpointTool(username, paths.root, opts.ask));
+    tools.push(buildBugSolutionTool(username, paths.root));
     if (isAdmin) {
       tools.push(...buildAdminTools(users, {
         ...(opts.settings ? { settings: opts.settings } : {}),
