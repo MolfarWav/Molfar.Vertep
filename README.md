@@ -88,6 +88,20 @@ A good part of the Roleplay app you see below was made exactly like this: we ask
     <td><b>A card in fields.</b> The Profile tab splits a character into sections: identity, appearance, personality, behavior, goals, background, relationships and more. Switch off what you don't need, so a small model pays only for what is on. "Structure it" sorts an old card's text into the fields, "Fill empty" asks the model for the blanks, "Read from picture" fills appearance from the portrait. The card still saves as plain text, so every other app reads it.</td>
     <td><b>Your persona, the same way.</b> Personas get the same fields, plus five short questions that write the description for you. "Structure it" sorts a pasted persona into the fields.</td>
   </tr>
+  <tr>
+    <td><img src=".github/assets/screens/prompt-board.png" alt="The Prompt board: every part of a chat's request with its tokens" /></td>
+    <td><img src=".github/assets/screens/chat-links.png" alt="The Chat links board with chats as cards and a list on the left" /></td>
+  </tr>
+  <tr>
+    <td><b>The Prompt board.</b> Canvas shows every part of a chat's request in order, with its tokens and the total. Switch any part off for this chat only, see why something was taken or left out, and trim the history: the last N messages, only yours or only the character's, without thinking blocks. A part you switch off costs nothing: Litopys, the dashboard or a lorebook then does no work for that chat.</td>
+    <td><b>A map of your stories.</b> Chats that continue each other are cards joined by wires. Drag chats in from a searchable list, one at a time or with their whole chain; a chat that continues another gets the earlier story as backstory.</td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src=".github/assets/screens/quick-moves.png" alt="Quick moves under a long draft" /></td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>Quick moves.</b> Under a long draft: Continue, Write for me (Undo brings your draft back), Another reply, and a big editor for half the screen or all of it.</td>
+  </tr>
 </table>
 
 There is more in the small details: "Story, move" makes the next reply push the plot instead of just reacting to you; lorebooks match by keywords or by meaning; presets, regex scripts, personas, a data bank for long documents.
