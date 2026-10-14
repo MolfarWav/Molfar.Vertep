@@ -4,8 +4,11 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
-0. **Canvas, stage 1b = the prompt board** (user, 2026-10-13; stage 1a shipped in Roleplay 4.42.0):
-   `.fork/handoff/canvas/HANDOFF.md`. Plan first: three questions to settle with the user before any code.
+0. **Canvas, after stage 1b** (1b shipped in Roleplay 4.44.0, 2026-10-14): the agreed order is in
+   `.fork/handoff/canvas/PLAN.md` section 15: settle 4.44.0, Decider (+ Molfar's tool), character
+   behaviour preset (+ Molfar's tool), agent forge (+ Molfar's create / validate / dry run), then
+   Molfar's work graph and blueprints on the forge's blocks. Items may interleave with other queue
+   items while a release settles.
 0a. **Composer, the space beside a long draft** (user, 2026-10-14, for later): since 1.0.7 a wrapped draft takes the whole
    row and the buttons sit under it, which leaves a wide empty strip beside them. Idea: put something useful there
    (quick actions, the story nudge's choices, word count). Ask the user what before building.
