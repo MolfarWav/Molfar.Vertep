@@ -6,8 +6,8 @@ Finished work is not listed here: see STATE ("Released") and git history.
 ## Queue (open items only; the user picks the order unless it is written here)
 0. **Canvas, stage 1b = the prompt board** (user, 2026-10-13; stage 1a shipped in Roleplay 4.42.0):
    `.fork/handoff/canvas/HANDOFF.md`. Plan first: three questions to settle with the user before any code.
-00. **Release 1.0.7 + Roleplay 4.43.0** (Tuesday bug batch, 2026-10-14): prepared on `claude/tuesday-bug-batch-b41slz` in
-   both repos (STATE, "1.0.7"). Waits for the user's word to fast-forward both mains; the tag is theirs. After the release:
+00. **Release 1.0.7 + Roleplay 4.43.0** (Tuesday bug batch, 2026-10-14): both mains fast-forwarded (STATE, "1.0.7");
+   the user pushes tag `v1.0.7`. After the release:
    close GitHub #13, #14, #16, #17, #18, #19, #20 with the release. #15 goes to the next batch.
 0a. **Composer, the space beside a long draft** (user, 2026-10-14, for later): since 1.0.7 a wrapped draft takes the whole
    row and the buttons sit under it, which leaves a wide empty strip beside them. Idea: put something useful there

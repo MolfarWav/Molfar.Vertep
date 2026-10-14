@@ -8,9 +8,12 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 ## Canvas stage 1a: RELEASED in Roleplay 4.42.0 (fork main `9e68e44`, 2026-10-13, on the user's word)
 A Canvas tab with the chat-links board (Library chats as cards, wires = continues, forks dashed), the Library map as the same board in View mode. Code in the Roleplay fork (`src/canvas-kit/`, `src/components/canvas/`); no engine change; the engine needs no release for it (an app update). Next: stage 1b, the prompt board, plan first: `.fork/handoff/canvas/HANDOFF.md`.
 
-## 1.0.7 = Tuesday bug batch 2026-10-14: PREPARED, not released (engine and Roleplay fork, branch `claude/tuesday-bug-batch-b41slz` in both)
-Engine 1.0.7 (package.json, CHANGELOG, `.fork/release-notes/1.0.7.md` written); Roleplay 4.43.0 (manifest, CHANGELOG). Mains NOT
-fast-forwarded and no tag: both wait for the user's word. Issues stay open until the release ships them.
+## 1.0.7 = bug batch 2026-10-14: both mains fast-forwarded on the user's word; the tag `v1.0.7` is the user's to push (branch `claude/tuesday-bug-batch-b41slz` in both)
+Engine 1.0.7 (package.json, CHANGELOG, `.fork/release-notes/1.0.7.md`); Roleplay 4.43.0 (manifest, CHANGELOG). Issues close once the
+tag's release is built. An external review (GLM through `ask-model`) found 4 real problems, fixed: a generation now counts as
+running until its route ends (the commit comes in a later pass), an adopted reply refreshes after Stop, contact is reported every
+turn and a new scene drops a carried one, gallery migration only when the add saves. Not taken: an unhandled rejection in
+`adoptRunningGeneration` (refreshChat catches its own errors) and the >150 writes/10 s burst (by design; typing stays far below).
 - **#18 draft wiped mid-typing** (Discord, Brave; the user saw it on Chrome). Cause verified in Chromium: the frame's storage shim
   is seeded from the `#__storage=` snapshot the shell put in the frame URL, and the app's own `location.reload()` (new build landed,
   engine restarted) reloads that URL, so every write since the frame opened was lost (the draft, the reload-reason note). Fix in
@@ -37,8 +40,7 @@ fast-forwarded and no tag: both wait for the user's word. Issues stay open until
 - Not done: **#15** "Polish my message" (enhancement: a composer button, a utility-model setting, a new prompt). Next batch.
 - Browser check (Chromium, real engine + Roleplay build): #20 at 390 px dark/light and 1280 px (desktop unchanged), no sideways
   scroll; #18 draft kept after an in-frame reload 1 s, 10 ms and 0 ms after the last key. Shots: project files `bug-batch-1014/`.
-- Tests: Roleplay 999 pass. Engine 712 pass, 3 fail: 2 edge-tts (live network 403 in the cloud), 1 bcrypt timing test that passes
-  alone (load-sensitive). Lint adds nothing on changed lines.
+- Tests: Roleplay 999 pass. Engine 713 pass, 2 fail: edge-tts (live network 403 in the cloud). Lint adds nothing on changed lines.
 
 ## 1.0.6: RELEASED 2026-10-13 (tag v1.0.6 pushed by the user, release run 30, 6 assets) (the user's word: ship the three fixes as 1.0.6, not "1.0.5a": `isNewer` and the launcher read only `X.Y.Z`). Engine = the updater fix + bug report (`p3ljej`, PR #12) + script-error fix (`dzndzt`), merged. Roleplay 4.41.1 = fork branch `claude/project-thread-xhqa4w` (`dzndzt` + version bump + the menu-scroll follow-up below), 971 tests pass. Menu scroll follow-up (Discord: "solved for main chat, still persists in the menus"; screenshot: Dashboard settings sheet, lower ~42% dead = the sprite panel's default spot): on `pointer: coarse`, `body:has([role=dialog|menu|listbox]) [data-expression-panel]` is hidden. The sprite link is inferred: a synthetic overlay test in headless Chromium did NOT reproduce a touch-action leak; the rule's toggle was checked, the real app on a phone was not. Both mains fast-forwarded on the user's word (2026-10-13); the user pushes tag `v1.0.6`. Deferred to 1.0.7: lost replies on a phone browser (START.md item 00).
 
