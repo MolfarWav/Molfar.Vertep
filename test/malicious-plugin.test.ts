@@ -190,7 +190,7 @@ describe("exfiltration ways out of an app page", () => {
       "/v1/auth/users", "/v1/git/log", "/v1/sandbox", "/v1/apps", "/v1/apps/other/chats",
       "/v1/apps/roleplay", "/v1/apps/roleplay/tree", "/v1/apps/roleplay/plugins", "/v1/apps/roleplay/install",
       "/v1/apps/roleplay/dev", "/v1/apps/roleplay/update", "/v1/apps/roleplay/updates",
-      "/v1/apps/roleplay/build", "/v1/apps/roleplay/build/fs", "/v1/apps/roleplay/build/output",
+      "/v1/apps/roleplay/build", "/v1/apps/roleplay/build/fs", "/v1/apps/roleplay/build/output", "/v1/apps/roleplay/build/ack",
       "/v1/apps/roleplay/rev", "/v1/apps/roleplay/activate", "/v1/apps/roleplay/rename",
       "/v1/apps/roleplay/export", "/v1/apps/roleplay/exports",
       "/v1/settings/connections", "/v1/plugins",

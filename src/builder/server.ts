@@ -463,6 +463,22 @@ function writeStatus(distDir: string, out: BuilderOutput, rev: string, builder?:
 }
 
 /**
+ * A builder found nothing to rebuild for the sources at `rev` (an edit no
+ * module reads: a test, a doc): record that dist is current for them, so the
+ * next page open does not run a full build and reload the app for nothing.
+ * Only a good development build whose files are all present is carried
+ * forward; anything else still builds. False when it was not recorded.
+ */
+export function ackUnchangedBuild(appDir: string, rev: string): boolean {
+  const status = readBuildStatus(appDir);
+  if (!status?.ok || status.errors.length || status.mode !== "development") return false;
+  if (!fs.existsSync(path.join(appDir, "dist", "index.html")) || !readDevMeta(appDir)) return false;
+  if (status.rev === rev) return true;
+  fs.writeFileSync(path.join(appDir, "dist", STATUS), JSON.stringify({ ...status, rev, at: Date.now() }));
+  return true;
+}
+
+/**
  * Write a builder's output into the app's dist/. A full build is staged
  * beside dist and swapped in; a hot update is written in place. A failed
  * build leaves dist alone and records its errors.
