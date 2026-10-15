@@ -24,6 +24,9 @@ the current code; GitHub #21-#32 (bug label; #31 enhancement). Roleplay branch c
   (BUG-017, a design decision on asset cleanup). Not done: a shell-owned fallback copy for a refused draft (a full shell
   reload still loses a refused draft; the warning says so).
 - Tests: engine 731 pass, 2 fail (edge-tts live network 403 in the cloud, as in 1.0.7); Roleplay 1023 pass.
+- Browser check (Chromium, real engine + Roleplay built in the browser): refused draft shows the amber line with Copy at
+  1280 and 390 px (wraps to two lines, no sideways scroll), gone after space frees; an in-frame reload keeps the draft.
+  Roleplay's own theme stays dark in the "light" runs (only the shell changes). Shots were in the cloud scratchpad, not kept.
 
 ## 1.0.8: RELEASED 2026-10-14 (tag v1.0.8; Roleplay 4.44.0 `99d8270` and 4.45.0 `e964362` on the fork's main)
 Engine: Claude 5.5 in the Anthropic catalog (`src/model-additions.ts`), visible names. Roleplay 4.44.0: Canvas stage 1b (Prompt board,
