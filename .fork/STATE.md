@@ -5,6 +5,12 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Release 1.0.9 plan (user, 2026-10-15)
+One release gathers everything in flight once each branch is fixed and checked: engine `claude/bug-solution`,
+`claude/guide-plan`, `claude/affectionate-pasteur-421374` (restored apps re-check themselves), `claude/discord-bugs`
+(cloud, the Discord tracker); Roleplay fork `claude/mobile-fixes` and `claude/discord-bugs` (cut from mobile-fixes)
+as one Roleplay version. 1.0.8 is already out (tag v1.0.8, 2026-10-14), so nothing goes into it.
+
 ## Phone fixes (2026-10-15, Roleplay fork branch `claude/mobile-fixes`, not merged; the user adds more phone reports through the day)
 `b483d08`: Profile Structure it reply limit 4000 -> 12000 (Fill 8000), braces before the JSON no longer hide it, the
 error says "cut off" vs "not JSON"; shell refusals ("not allowed for this app") explained; number fields keep the typed
