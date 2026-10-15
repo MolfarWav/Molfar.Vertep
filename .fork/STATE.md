@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.0.9: release branch `claude/release-1.0.9` (2026-10-15, on the user's word "збирай все до купи і пушимо 1.0.9")
+## 1.0.9: RELEASED 2026-10-15 (tag v1.0.9 on `22c5576`, pushed on the user's word; Roleplay 4.46.0 on the fork main `785de49`; issues closed)
 Engine = main + `claude/bug-solution`, `claude/guide-plan`, `claude/affectionate-pasteur-421374` (restored apps re-check
 themselves), `claude/recursing-kare-666e77` (app page header at 390 px), `claude/discord-bugs` (Discord tracker); the only
 code conflict was the shell-only route list in test/security.test.ts (bug-patch + build/ack, both kept). Roleplay 4.46.0 =
