@@ -68,6 +68,7 @@ export function QuickActions(): ReactNode {
   return (
     <div
       aria-label="Quick actions"
+      data-guide="agent.quick"
       // one row that scrolls sideways on a narrow screen; the scrollbar is
       // hidden because the cut-off chip already says there is more
       className="-mb-2 hidden w-full overflow-x-auto overscroll-x-contain md:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -96,7 +97,7 @@ export function QuickGrid(): ReactNode {
   const pick = usePickTemplate()
   if (!templates.length) return null
   return (
-    <div aria-label="Quick actions" data-testid="quick-grid" className="grid grid-cols-2 gap-2 md:hidden">
+    <div aria-label="Quick actions" data-testid="quick-grid" data-guide="agent.quick" className="grid grid-cols-2 gap-2 md:hidden">
       {templates.slice(0, 4).map((t) => {
         const Icon = templateIcon(t.id)
         return (

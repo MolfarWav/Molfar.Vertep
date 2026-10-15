@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { ThreadListPrimitive, useAuiState } from "@assistant-ui/react"
-import { AppWindow, CaretRight, Folder, MagnifyingGlass, Plus } from "@phosphor-icons/react"
+import { AppWindow, CaretRight, Folder, MagnifyingGlass, Plus, Question } from "@phosphor-icons/react"
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { projectsApi, type ProjectSummary } from "./api"
 import { MolfarAvatar } from "./MolfarAvatar"
 import { currentProjectId, useAgent } from "./store"
+import { openHelp } from "./guide/events"
 
 const OPEN_KEY = "agent-ui-projects-open"
 
@@ -66,11 +67,11 @@ export function focusSidebarSearch(): void {
   }, 80)
 }
 
-function RailButton({ label, onClick, active, primary, children }: { label: string; onClick: () => void; active?: boolean; primary?: boolean; children: ReactNode }): ReactNode {
+function RailButton({ label, onClick, active, primary, guide, children }: { label: string; onClick: () => void; active?: boolean; primary?: boolean; guide?: string; children: ReactNode }): ReactNode {
   return (
     <Tooltip>
       <TooltipTrigger
-        render={<Button variant="ghost" size="icon" aria-label={label} aria-current={active ? "page" : undefined} className={cn("size-9 rounded-lg", active && "bg-brand-soft text-brand ring-brand-line ring-1", primary && "bg-brand text-brand-foreground hover:bg-brand/90 hover:text-brand-foreground size-9 rounded-full")} onClick={onClick} />}
+        render={<Button variant="ghost" size="icon" aria-label={label} data-guide={guide} aria-current={active ? "page" : undefined} className={cn("size-9 rounded-lg", active && "bg-brand-soft text-brand ring-brand-line ring-1", primary && "bg-brand text-brand-foreground hover:bg-brand/90 hover:text-brand-foreground size-9 rounded-full")} onClick={onClick} />}
       >
         {children}
       </TooltipTrigger>
@@ -95,7 +96,7 @@ export function SidebarRail(): ReactNode {
         <RailButton label="New chat" primary onClick={() => newChat()}>
           <Plus size={18} />
         </RailButton>
-        <RailButton label="Search chats" onClick={focusSidebarSearch}>
+        <RailButton label="Search chats" guide="agent.search" onClick={focusSidebarSearch}>
           <MagnifyingGlass size={18} />
         </RailButton>
         <div className="bg-border my-1 h-px w-6 shrink-0" />
@@ -105,6 +106,11 @@ export function SidebarRail(): ReactNode {
           </RailButton>
         ))}
       </nav>
+      <div className="flex shrink-0 justify-center pb-2">
+        <RailButton label="Help" guide="agent.help" onClick={openHelp}>
+          <Question size={18} />
+        </RailButton>
+      </div>
     </TooltipProvider>
   )
 }
@@ -142,7 +148,7 @@ function NewProject(): ReactNode {
         if (!next) setError(null)
       }}
     >
-      <PopoverTrigger render={<Button variant="ghost" size="icon-xs" aria-label="New project" title="New project" />}>
+      <PopoverTrigger render={<Button variant="ghost" size="icon-xs" aria-label="New project" title="New project" data-guide="agent.new-project" />}>
         <Plus />
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64">
@@ -329,9 +335,9 @@ export function Sidebar(): ReactNode {
         <Plus className="size-4 shrink-0" weight="bold" />
         <span className="flex-1 text-start">New chat</span>
       </Button>
-      <ThreadListSearch value={search} onValueChange={setSearch} placeholder="Search chats" aria-label="Search chats" data-sidebar-search="" />
+      <ThreadListSearch value={search} onValueChange={setSearch} placeholder="Search chats" aria-label="Search chats" data-sidebar-search="" data-guide="agent.search" />
 
-      <div className="text-muted-foreground flex items-center justify-between ps-2.5 pe-1 pt-3 pb-1 text-[11px] font-medium tracking-wider uppercase">
+      <div data-guide="agent.projects" className="text-muted-foreground flex items-center justify-between ps-2.5 pe-1 pt-3 pb-1 text-[11px] font-medium tracking-wider uppercase">
         <span>Projects</span>
         <NewProject />
       </div>
@@ -358,6 +364,19 @@ export function Sidebar(): ReactNode {
         </div>
       </div>
       <ThreadListArchived />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground mt-2 h-9 justify-start gap-2 px-3 md:hidden"
+        data-guide="agent.help"
+        onClick={() => {
+          useAgent.getState().setSidebar(false)
+          openHelp()
+        }}
+      >
+        <Question className="size-4" />
+        Help
+      </Button>
     </ThreadListPrimitive.Root>
   )
 }

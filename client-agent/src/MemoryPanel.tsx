@@ -6,6 +6,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { GUIDE_PANEL_EVENT } from "./guide/events"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -527,6 +528,17 @@ function SkillView({ skill, initialFile, scopes, onBack, onChanged, onImprove, o
 export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<"memory" | "skills">("memory")
+  // the guide's "Show me" opens and closes this dialog
+  useEffect(() => {
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<{ name: string; open: boolean }>).detail
+      if (d.name !== "memory" && d.name !== "skills") return
+      setOpen(d.open)
+      if (d.open) setTab(d.name)
+    }
+    window.addEventListener(GUIDE_PANEL_EVENT, on)
+    return () => window.removeEventListener(GUIDE_PANEL_EVENT, on)
+  }, [])
   const [data, setData] = useState<AgentMemory | null>(null)
   const [skill, setSkill] = useState<AgentSkill | null>(null)
   const [creating, setCreating] = useState(false)
@@ -609,6 +621,7 @@ export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
         size={caption ? "default" : "icon"}
         className={caption ? "h-12 w-14 shrink-0 flex-col gap-0.5 px-0 text-[10px] leading-3 font-normal" : "size-9 shrink-0"}
         aria-label="Memory and skills"
+        data-guide="agent.memory"
         title="Memory and skills"
         onClick={() => setOpen(true)}
       >

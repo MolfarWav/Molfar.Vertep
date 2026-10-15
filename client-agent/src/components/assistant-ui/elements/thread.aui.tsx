@@ -325,7 +325,7 @@ const StarterCards: FC<{ project: string | null }> = ({ project }) => {
         </section>
       ) : null}
       {templates.length ? (
-        <section aria-label="Start something new" className="flex flex-col gap-1.5 max-md:hidden">
+        <section aria-label="Start something new" data-guide="agent.quick" className="flex flex-col gap-1.5 max-md:hidden">
           <h2 className="text-muted-foreground text-start text-xs font-medium tracking-wide uppercase">Start something new</h2>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {templates.slice(0, 6).map((t) => {
@@ -475,6 +475,7 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
         <ComposerPrimitive.AttachmentDropzone asChild>
           <div
             data-slot="aui_composer-shell"
+            data-guide="agent.composer"
             className="border-border/60 data-[dragging=true]:border-ring focus-within:border-border dark:border-muted-foreground/15 dark:focus-within:border-muted-foreground/30 flex w-full cursor-text flex-col gap-2 rounded-(--composer-radius) border bg-(--composer-bg) p-(--composer-padding) transition-[border-color] data-[dragging=true]:border-dashed data-[dragging=true]:bg-[color-mix(in_oklab,var(--color-accent)_50%,var(--color-background))]"
           >
             <ComposerProjectRow />

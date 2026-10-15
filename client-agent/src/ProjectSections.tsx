@@ -112,7 +112,7 @@ function Shell({ id, icon, title, aside, summary, children, className, ...rest }
   if (layout === "phone") {
     const open = openId === id
     return (
-      <section className={cn("bg-card min-w-0 rounded-xl border", className)} data-section={id} {...rest}>
+      <section className={cn("bg-card min-w-0 rounded-xl border", className)} data-section={id} data-guide={`agent.section.${id}`} {...rest}>
         <button type="button" aria-expanded={open} className="flex min-h-12 w-full items-center gap-3 px-3.5 text-start" onClick={() => toggle(id)}>
           <span className="text-brand/80 shrink-0 [&_svg]:size-[18px]">{icon}</span>
           <span className="font-heading shrink-0 text-sm font-normal">{title}</span>
@@ -124,7 +124,7 @@ function Shell({ id, icon, title, aside, summary, children, className, ...rest }
     )
   }
   return (
-    <section className={cn("bg-card min-w-0 rounded-xl border p-4", className)} data-section={id} {...rest}>
+    <section className={cn("bg-card min-w-0 rounded-xl border p-4", className)} data-section={id} data-guide={`agent.section.${id}`} {...rest}>
       <h3 className="font-heading mb-2.5 flex items-baseline justify-between gap-3 text-base font-normal">
         <span className="flex shrink-0 items-center gap-2">
           <span className="text-brand/80 [&_svg]:size-4 [&_svg]:translate-y-0.5">{icon}</span>

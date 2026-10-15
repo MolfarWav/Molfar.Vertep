@@ -93,12 +93,12 @@ export function GuideHost(props: {
     if (!hydrated || card || !props.engineVersion) return
     const r = whatsNew(TIPS, guide, props.engineVersion, usedBefore)
     if (r.tips.length > 0) setCard({ tips: r.tips, index: 0, lastVersion: r.lastVersion })
-    else if (guide?.lastVersion !== r.lastVersion) saveGuideState({ ...guide, lastVersion: r.lastVersion })
+    else if (guide?.lastVersion !== r.lastVersion) saveGuideState((g) => ({ ...g, lastVersion: r.lastVersion }))
   }, [hydrated, guide, usedBefore, card, props.engineVersion])
 
   const closeCard = useCallback(() => {
     if (!card) return
-    saveGuideState(markSeen(guideNow(), card.tips.map((tip) => tip.id), card.lastVersion))
+    saveGuideState((g) => markSeen(g, card.tips.map((tip) => tip.id), card.lastVersion))
     setCard(null)
     setSpot(null)
     menu("close")
@@ -208,7 +208,7 @@ export function GuideHost(props: {
     const tip = steps[index]
     if (!tip) return null
     const finish = () => {
-      saveGuideState(markTourDone(guideNow(), spot.tourId))
+      saveGuideState((g) => markTourDone(g, spot.tourId))
       setSpot(null)
     }
     // a step whose target went away meanwhile is passed over

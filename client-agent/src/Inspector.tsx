@@ -2,6 +2,7 @@
 // kept them (in its memory only, newest first, at most 20). A row is one
 // request; opening it shows what the model saw, message by message, with a
 // token estimate for each and the share of the context window it took.
+import { GUIDE_PANEL_EVENT } from "./guide/events"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -380,6 +381,15 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
 
 export function Inspector({ caption }: { caption?: string } = {}): ReactNode {
   const [open, setOpen] = useState(false)
+  // the guide's "Show me" opens and closes this dialog
+  useEffect(() => {
+    const on = (e: Event) => {
+      const d = (e as CustomEvent<{ name: string; open: boolean }>).detail
+      if (d.name === "inspector") setOpen(d.open)
+    }
+    window.addEventListener(GUIDE_PANEL_EVENT, on)
+    return () => window.removeEventListener(GUIDE_PANEL_EVENT, on)
+  }, [])
   const [entries, setEntries] = useState<InspectorSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
@@ -407,6 +417,7 @@ export function Inspector({ caption }: { caption?: string } = {}): ReactNode {
         size={caption ? "default" : "icon"}
         className={caption ? "h-12 w-14 shrink-0 flex-col gap-0.5 px-0 text-[10px] leading-3 font-normal" : "size-9 shrink-0"}
         aria-label="Prompt inspector"
+        data-guide="agent.inspector"
         title="Prompt inspector: what the model was sent"
         onClick={() => setOpen(true)}
       >

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "../ui/button"
 import { tr } from "../i18n/index"
 import { GUIDE_BASELINE, resetTours } from "./guide"
-import { guideNow, saveGuideState, useGuideState } from "./state"
+import { saveGuideState, useGuideState } from "./state"
 
 export function GuideSection() {
   const { state: guide } = useGuideState()
@@ -24,7 +24,10 @@ export function GuideSection() {
           type="checkbox"
           className="mt-0.5 size-4 shrink-0 accent-current"
           checked={guide?.showTours !== false}
-          onChange={(e) => saveGuideState({ ...guideNow(), showTours: e.target.checked })}
+          onChange={(e) => {
+            const checked = e.target.checked
+            saveGuideState((g) => ({ ...g, showTours: checked }))
+          }}
         />
         <span className="flex min-w-0 flex-col">
           {tr("Show tours on a first visit")}
@@ -36,7 +39,7 @@ export function GuideSection() {
           variant="neutral"
           size="small"
           onClick={() => {
-            saveGuideState(resetTours(guideNow()))
+            saveGuideState((g) => resetTours(g))
             say(tr("Tours will show again."))
           }}
         >
@@ -46,7 +49,7 @@ export function GuideSection() {
           variant="neutral"
           size="small"
           onClick={() => {
-            saveGuideState({ ...guideNow(), seen: [], lastVersion: GUIDE_BASELINE })
+            saveGuideState((g) => ({ ...g, seen: [], lastVersion: GUIDE_BASELINE }))
             say(tr("What's new will show again."))
           }}
         >

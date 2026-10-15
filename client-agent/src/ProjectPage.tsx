@@ -153,7 +153,7 @@ function PageView({ detail, tab, setTab }: { detail: ProjectDetail; tab: TabId; 
               ? "A project is the app's folder: what you put here reaches every chat started in it."
               : "What you put here reaches every chat started in this project."}
           </p>
-          <div role="tablist" aria-label="Project sections" className="mt-4 flex gap-1 overflow-x-auto border-b">
+          <div role="tablist" aria-label="Project sections" data-guide="agent.project-tabs" className="mt-4 flex gap-1 overflow-x-auto border-b">
             {tabs.map((t) => (
               <button
                 key={t.id}

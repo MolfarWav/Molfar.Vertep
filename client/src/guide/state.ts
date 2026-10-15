@@ -1,53 +1,27 @@
 // The guide's state: the `guide` key of the user's settings (/v1/settings), so two machines
-// on one account do not repeat each other. A small module store the host, the Settings
-// block and the tests of the shell can share.
+// on one account do not repeat each other. The Molfar page (another document of the same
+// account) writes it too, so a save is a change applied on the stored state (store-core.ts).
 import { useSyncExternalStore } from "react"
 import { api } from "../api"
 import type { GuideState } from "./guide"
+import { createGuideStore, type GuideChange } from "./store-core"
 
-let state: GuideState | undefined
-let loaded = false
-const listeners = new Set<() => void>()
-const emit = () => {
-  for (const l of listeners) l()
-}
-const subscribe = (l: () => void) => {
-  listeners.add(l)
-  return () => {
-    listeners.delete(l)
-  }
-}
+const store = createGuideStore({
+  get: () => api<{ guide?: GuideState | null }>("GET", "/v1/settings").then((r) => r.guide ?? undefined),
+  put: (guide) => api("PUT", "/v1/settings", { guide }),
+})
 
-/** Read the stored state once the user is signed in. A failure leaves the default (no state). */
-export async function loadGuideState(): Promise<void> {
-  try {
-    const r = await api<{ guide?: GuideState | null }>("GET", "/v1/settings")
-    state = r.guide ?? undefined
-  } catch {
-    state = undefined
-  }
-  loaded = true
-  emit()
-}
+export const loadGuideState = store.load
+export const clearGuideState = store.clear
+export const guideNow = store.state
 
-/** Sign-out: forget it, so the next account loads its own. */
-export function clearGuideState(): void {
-  state = undefined
-  loaded = false
-  emit()
-}
-
-export const guideNow = (): GuideState | undefined => state
-
-/** Show the new state at once and write it; a failed write keeps the local copy for this visit. */
-export function saveGuideState(next: GuideState): void {
-  state = next
-  emit()
-  void api("PUT", "/v1/settings", { guide: next }).catch(() => undefined)
+/** Show the change at once and write it on top of what is stored (never losing the other frame's ids). */
+export const saveGuideState = (change: GuideChange): void => {
+  void store.save(change)
 }
 
 export function useGuideState(): { state: GuideState | undefined; loaded: boolean } {
-  const s = useSyncExternalStore(subscribe, () => state, () => undefined)
-  const l = useSyncExternalStore(subscribe, () => loaded, () => false)
+  const s = useSyncExternalStore(store.subscribe, store.state, () => undefined)
+  const l = useSyncExternalStore(store.subscribe, store.loaded, () => false)
   return { state: s, loaded: l }
 }

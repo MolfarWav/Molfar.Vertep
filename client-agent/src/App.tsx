@@ -12,6 +12,8 @@ import { Dialog } from "@base-ui/react/dialog"
 import { Info, WarningCircle, X } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { Header, SidebarToggle, useIsDesktop } from "./Header"
+import { GuideHost } from "./guide/guide-host"
+import { GuidePlace } from "./guide/place"
 import { MemoryPanel } from "./MemoryPanel"
 import { ProjectPane } from "./ProjectPage"
 import { Sidebar, SidebarRail } from "./Sidebar"
@@ -188,9 +190,13 @@ export default function App(): ReactNode {
 
   const fullPage = view.kind === "project"
   const showPane = desktop && !fullPage && !!projectId && pane.open
+  // where the guide's tours belong: the project page (full page, or a phone's Project tab) or the chat
+  const guidePlace = fullPage || (!desktop && phoneTab === "project" && !!projectId) ? "agent.project" : "agent.chat"
 
   return (
     <AssistantRuntimeProvider runtime={runtime} config={toolConfig}>
+      <GuidePlace place={guidePlace} />
+      <GuideHost />
       <div className="bg-background text-foreground flex h-dvh overflow-hidden">
         <aside
           aria-label="Conversations"

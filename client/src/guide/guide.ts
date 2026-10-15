@@ -19,11 +19,17 @@ export interface GuideOpen {
   section?: string
   /** Opens the account menu (top right) first: its items are inside it. */
   menu?: 'account'
+  /** The Molfar page only: what to open on it first (a dialog or a view; the page defines the names). */
+  panel?: string
 }
 
 /** The help list's groups, in the order the list shows them. */
 export const HELP_GROUPS = ['start', 'apps', 'models', 'molfar', 'updates', 'help'] as const
 export type HelpGroup = (typeof HELP_GROUPS)[number]
+
+/** The Molfar page (client-agent) lists its own groups. */
+export const AGENT_HELP_GROUPS = ['chat', 'safety', 'context', 'memory', 'projects', 'help'] as const
+export type AgentHelpGroup = (typeof AGENT_HELP_GROUPS)[number]
 
 export interface Tip {
   id: string
@@ -38,12 +44,12 @@ export interface Tip {
   /** For "Show me" (What's new and the help list). */
   open?: GuideOpen
   /** The help list's group: a tip with one is listed under "?", searchable. */
-  help?: HelpGroup
+  help?: HelpGroup | AgentHelpGroup
   /** Extra words the help search matches (synonyms, other apps' names for it). */
   keywords?: Text
 }
 
-export type Place = 'shell.home' | 'shell.app' | 'shell.settings' | 'shell.store'
+export type Place = 'shell.home' | 'shell.app' | 'shell.settings' | 'shell.store' | 'agent.chat' | 'agent.project'
 
 export interface Tour {
   id: string
@@ -150,17 +156,18 @@ export const tipText = (text: Text, locale: string): string => (locale === 'uk' 
 
 /** The help list for a search: tips with a group whose title, body or keywords contain
  *  every word of the query (either language, so a mixed query still finds), in group
- *  order, then registry order. An empty query lists everything. */
-export function searchHelp(tips: Tip[], query: string): Tip[] {
+ *  order, then registry order. An empty query lists everything. `groups` is the page's own
+ *  group list (the Molfar page passes AGENT_HELP_GROUPS); the shell's is the default. */
+export function searchHelp(tips: Tip[], query: string, groups: readonly string[] = HELP_GROUPS): Tip[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean)
   const hay = (tip: Tip) =>
     [tip.title.en, tip.title.uk, tip.body.en, tip.body.uk, tip.keywords?.en ?? '', tip.keywords?.uk ?? '']
       .join(' ')
       .toLowerCase()
-  const order = (tip: Tip) => HELP_GROUPS.indexOf(tip.help as HelpGroup)
+  const order = (tip: Tip) => groups.indexOf(tip.help as string)
   return tips
     .map((tip, i) => ({ tip, i }))
-    .filter(({ tip }) => tip.help && words.every((w) => hay(tip).includes(w)))
+    .filter(({ tip }) => tip.help && groups.includes(tip.help) && words.every((w) => hay(tip).includes(w)))
     .sort((a, b) => order(a.tip) - order(b.tip) || a.i - b.i)
     .map(({ tip }) => tip)
 }

@@ -6,9 +6,20 @@ import { X } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { guideTarget } from "@/guide/events";
 
-function Dialog({ ...props }: DialogPrimitive.Root.Props) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+function Dialog({ onOpenChange, ...props }: DialogPrimitive.Root.Props) {
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      // pressing a button of the guide (it floats above the dialog) is not a click outside
+      onOpenChange={(open, details) => {
+        if (!open && guideTarget(details?.event)) return;
+        onOpenChange?.(open, details);
+      }}
+      {...props}
+    />
+  );
 }
 
 function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {

@@ -13,7 +13,7 @@ export function ContextActions() {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger render={<Button variant="ghost" size="icon" className="text-muted-foreground size-8 rounded-full" aria-label="Context actions" />}>
+      <PopoverTrigger render={<Button variant="ghost" size="icon" className="text-muted-foreground size-8 rounded-full" aria-label="Context actions" data-guide="agent.compact" />}>
         <ArrowsIn className="size-4" />
       </PopoverTrigger>
       <PopoverContent side="top" align="end">

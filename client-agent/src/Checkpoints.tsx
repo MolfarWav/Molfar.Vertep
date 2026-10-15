@@ -19,7 +19,7 @@ export function RunCheckpoints(): ReactNode {
   const list = at < 0 ? undefined : msgs[at]?.checkpoints
   if (!list?.length || msgs[at]?.streaming) return null
   return (
-    <div className="text-muted-foreground ms-2 grid gap-0.5 pt-1 text-xs" data-testid="run-checkpoints">
+    <div className="text-muted-foreground ms-2 grid gap-0.5 pt-1 text-xs" data-testid="run-checkpoints" data-guide="agent.run-checkpoints">
       {list.map((cp) => {
         const later = msgs.slice(at + 1).some((m) => m.checkpoints?.some((c) => c.app === cp.app))
         return (

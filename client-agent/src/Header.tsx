@@ -2,13 +2,14 @@ import { ModelSelector, type ModelOption } from "@/components/assistant-ui/eleme
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CaretDown, Folder, MagnifyingGlass, SidebarSimple } from "@phosphor-icons/react"
+import { CaretDown, Folder, MagnifyingGlass, Question, SidebarSimple } from "@phosphor-icons/react"
 import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react"
 import { focusSidebarSearch } from "./Sidebar"
 import { compactTokens, usd } from "@/lib/format"
 import { CommandItem } from "@/components/ui/command"
 import { currentProjectId, effectiveModel, effectiveReasoning, useAgent } from "./store"
 import { Inspector } from "./Inspector"
+import { openHelp } from "./guide/events"
 import { MemoryPanel } from "./MemoryPanel"
 import { cn, shortModelName } from "@/lib/utils"
 
@@ -84,6 +85,7 @@ export function ModelPicker({ wide = false }: { wide?: boolean }): ReactNode {
       }}
     >
       <ModelSelector.Trigger
+        data-guide="agent.model"
         variant="ghost"
         size="sm"
         className={cn("h-8 min-w-0 shrink gap-1 rounded-full px-2 [&>span]:truncate [&>span]:gap-1.5", wide ? "max-w-full" : "max-w-60")}
@@ -187,6 +189,7 @@ function ModeSelect({ className }: { className?: string }): ReactNode {
       <SelectTrigger
         className={cn("h-8 shrink-0 gap-1 rounded-full border-0 bg-transparent px-1.5 text-xs", className)}
         aria-label="Permission mode"
+        data-guide="agent.mode"
         title="Permission mode: what the agent may do without asking"
       >
         <span className="text-muted-foreground">Mode:</span>
@@ -243,7 +246,7 @@ function PhoneComposerChip(): ReactNode {
   return (
     <Popover>
       <PopoverTrigger
-        render={<Button variant="ghost" size="sm" className="h-9 min-w-0 max-w-full shrink justify-start gap-1 rounded-full px-2.5 text-xs font-normal" aria-label="Model, reasoning and mode" />}
+        render={<Button variant="ghost" size="sm" className="h-9 min-w-0 max-w-full shrink justify-start gap-1 rounded-full px-2.5 text-xs font-normal" aria-label="Model, reasoning and mode" data-guide="agent.mode agent.model" />}
       >
         <span className="truncate font-medium">{name ?? "Model"}</span>
         {hasLevels ? <span className="text-muted-foreground shrink-0">· {capitalize(reasoning)}</span> : null}
@@ -292,6 +295,7 @@ export function ContextMeter({ compact = false }: { compact?: boolean }): ReactN
   const tone = ratio >= 0.9 ? "destructive" : ratio >= 0.75 ? "amber" : "normal"
   return (
     <span
+      data-guide="agent.context"
       className={cn("flex shrink-0 items-center gap-2 text-xs tabular-nums", tone === "destructive" ? "text-destructive" : tone === "amber" ? "text-amber-500" : "text-muted-foreground")}
       title={`Context: ${used.toLocaleString()} of ${contextWindow.toLocaleString()} tokens (${Math.round(ratio * 100)} %)`}
       role="img"
@@ -382,10 +386,14 @@ function DesktopHeader(): ReactNode {
             <MagnifyingGlass size={18} />
           </Button>
           <MemoryPanel />
+          <Button variant="ghost" size="icon" className="size-9 shrink-0" aria-label="Help" title="Help" data-guide="agent.help" onClick={openHelp}>
+            <Question size={18} />
+          </Button>
           {project ? (
             <Button
               variant="ghost"
               size="icon"
+              data-guide="agent.project-pane-toggle"
               className={cn("size-9 shrink-0", paneOpen && "bg-muted")}
               aria-label={paneOpen ? "Hide the project pane" : "Show the project pane"}
               aria-pressed={paneOpen}
