@@ -5,6 +5,18 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## 1.0.9 in progress, all local, nothing pushed (user, 2026-10-15: push and release everything together)
+Engine branch `claude/guide-plan` (worktree `.claude/worktrees/readme-canvas`): bug-solution merged (`0619b42`),
+launcher fix for GitHub #33 (`8c5ed71`: stops when git refuses the folder, offers safe.directory for that one folder,
+README notes; tested with GIT_TEST_ASSUME_DIFFERENT_OWNER and a temp global config, a path with "(x86)" included),
+guide step 3 = the shell (`4cd1d07`: `client/src/guide/`, state in `/v1/settings` `guide` checked by
+`src/guide-state.ts`, What's new 1.0.9, first-run tour (connect a model), tours home/app/settings/store, Help in the
+account menu and start-page footer, Settings > General > Guide; texts fact-checked; shots `E:\Claude\guide-shots\step3\`).
+Tests 729 pass, 15 known Windows-only failures. Roleplay fork `claude/guide-kit` (worktree `E:\Claude\rp-guide`) has
+steps 1-2 + `0e287b5` (bug tip names Ask Molfar first). Left for the release: Roleplay 4.46.0 (manifest, CHANGELOG,
+merge), engine 1.0.9 (package.json, CHANGELOG, release notes incl. #33, close #33 with it), pushes on the user's word.
+Guide steps 4 (Molfar's page) and 5 (Molfar's skill) remain in `.fork/handoff/guide/PLAN.md`.
+
 ## In-app guide, steps 1-2: built, not released, not pushed (Roleplay fork branch `claude/guide-kit`, `b2b8981`, on 4.45.0)
 Step 2 (`b2b8981`, 2026-10-15, local commit in the worktree `E:\Claude\rp-guide`; another session works in the main
 fork checkout on `claude/mobile-fixes`): help "?" (rail above Settings, phone More sheet, phone chat menu): 44+ items in
