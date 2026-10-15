@@ -68,10 +68,11 @@ describe("whatsNew", () => {
     expect(whatsNew(tips, undefined, "1.0.9", false)).toEqual({ tips: [], lastVersion: "1.0.9" });
   });
   it("someone who used the engine before the guide gets what is newer than the baseline", () => {
-    expect(GUIDE_BASELINE).toBe("1.0.8");
-    const r = whatsNew(tips, undefined, "1.0.9", true);
-    expect(r.tips.map((t) => t.id)).toEqual(["a"]);
-    expect(r.lastVersion).toBe("1.0.9");
+    // tips at or below the baseline are old news; newer ones up to this build show
+    const around = [tip("old", { since: GUIDE_BASELINE }), tip("new", { since: "99.0.0" }), tip("later", { since: "99.1.0" })];
+    const r = whatsNew(around, undefined, "99.0.0", true);
+    expect(r.tips.map((t) => t.id)).toEqual(["new"]);
+    expect(r.lastVersion).toBe("99.0.0");
   });
   it("never shows a tip from a version this build does not have yet", () => {
     expect(whatsNew(tips, { lastVersion: "1.0.8" }, "1.0.8", true).tips).toEqual([]);

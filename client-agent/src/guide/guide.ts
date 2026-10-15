@@ -87,7 +87,7 @@ export function compareVersions(a: string, b: string): number {
 /** The engine version before the guide. Someone who already used the engine (an app
  *  installed or a model connected) but has no `lastVersion` gets What's new for what
  *  came after this. */
-export const GUIDE_BASELINE = '1.0.8'
+export const GUIDE_BASELINE = '1.0.9'
 
 /**
  * The tips What's new should show now, oldest first, and the `lastVersion` to store

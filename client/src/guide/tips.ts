@@ -13,7 +13,7 @@ export const TIPS: Tip[] = [
   // ---- What's new ----
   {
     id: "new.ask-molfar",
-    since: "1.0.9",
+    since: "1.0.10",
     target: "menu.report-bug",
     open: { view: "home", menu: "account" },
     help: "help",
@@ -29,7 +29,7 @@ export const TIPS: Tip[] = [
   },
   {
     id: "new.help",
-    since: "1.0.9",
+    since: "1.0.10",
     target: "menu.help",
     open: { view: "home", menu: "account" },
     help: "help",
