@@ -5,7 +5,16 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## In-app guide, step 1: built, not released (Roleplay fork branch `claude/guide-kit`, `df3561b`, on 4.45.0)
+## In-app guide, steps 1-2: built, not released, not pushed (Roleplay fork branch `claude/guide-kit`, `b2b8981`, on 4.45.0)
+Step 2 (`b2b8981`, 2026-10-15, local commit in the worktree `E:\Claude\rp-guide`; another session works in the main
+fork checkout on `claude/mobile-fixes`): help "?" (rail above Settings, phone More sheet, phone chat menu): 44+ items in
+7 groups, search en/uk + keywords, Show me; tours for chat menu, Dashboard, Soul, Library, Characters, Groups,
+Lorebooks, Presets; Show me opens chat panels, editor tabs, Groups list, a book/preset, the commands reference.
+Every text was fact-checked against the code by a second pass (12 wrong, 9 loose, fixed). Tests 1030 pass, 1 expected
+fail (APP_VERSION). Browser-checked (shots `E:\Claude\guide-shots\step2\` and `fix\`). Inventory of features:
+`E:\Claude\rp-guide-inventory.md` (outside the repo). The user's plan (2026-10-15): steps 2 and 3, then push and
+release everything together with engine 1.0.9 (bug-solution already merged into `claude/guide-plan`, local).
+Step 1 notes:
 Plan: `.fork/handoff/guide/PLAN.md`. Decided with the user 2026-10-14: state in the app setting `guide` (not localStorage),
 a player with chats and no state gets What's new for everything after 4.43.0 (a fresh install gets none, only tours),
 own small spotlight kit (no library). Code: `src/lib/guide.ts` (format and logic), `src/lib/guide-tips.ts` (5 What's new
