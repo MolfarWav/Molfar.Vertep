@@ -14,6 +14,13 @@ names, five Dashboard events. UX audit (desktop copy, gitignored `data/ux-audit/
 lorebook switches, preset internal ids, Tools tab rows). Open questions for the user: small-model prompt problems in group chats
 (no examples yet). Next by the roadmap: settle 4.44/4.45, then Decider (`.fork/handoff/canvas/PLAN.md` section 15).
 
+## App detail header on phones (2026-10-15, branch `claude/recursing-kare-666e77`, not released)
+Launcher's app detail pane (`AppDetail` in `client/src/App.tsx`): below the `@4xl` container width the name + Launch share the
+first row and Repository / export / update check wrap to a row of their own; name and size line truncate; Launch, back, export and
+the update button are 40 px tall on phones. Explicit `[40px]`: the shell's `--spacing` is scaled, `size-10` there is 32.5 px. Desktop
+row unchanged. Browser-checked 390 px light (ru default, uk) and 1280 px dark. Not touched: the size line's "files"/"KB" are
+untranslated, the launcher footer wraps in Ukrainian at 390 px.
+
 ## Batch: visible names, Claude 5.5, phone headers (2026-10-14, not released)
 Engine branch `claude/names-models-ux` (worktree `.claude/worktrees/names-models-ux`, on top of the Canvas docs): `44161d7` visible
 "chrysalis" texts (network name example, profile download name, git URL examples; the npm package name in the update hint stays
