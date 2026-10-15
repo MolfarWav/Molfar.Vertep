@@ -14,6 +14,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { patchWarnings } from "../src/agent/bug-solution.ts";
 import { mergeFile } from "../src/apps/git.ts";
 import { readBaseline, readCodeTree, readInstallSource } from "../src/apps/update.ts";
 import { userPaths } from "../src/paths.ts";
@@ -80,20 +81,7 @@ const isText = (b: Buffer): boolean => !b.subarray(0, 8000).includes(0);
 const LOCKFILE = /(^|\/)(bun\.lockb?|package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$/;
 
 /** What a reviewer should look at before publishing a file. */
-function warnings(rel: string, body: Buffer | undefined): string[] {
-  const out: string[] = [];
-  if (LOCKFILE.test(rel)) out.push("lockfile: do not copy, run bun install in the clone");
-  if (rel.startsWith(".skills/")) out.push("app skill: publish only if it is general, not about this user");
-  if (!body) return out;
-  if (body.length > 1024 * 1024) out.push(`large (${Math.round(body.length / 1024)} KB)`);
-  if (!isText(body)) return out;
-  const text = body.toString("utf8");
-  if (/^(<<<<<<<|>>>>>>>) /m.test(text)) out.push("conflict markers");
-  if (/(sk-[A-Za-z0-9_-]{16,}|ghp_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY|(api[_-]?key|secret|token|password)["']?\s*[:=]\s*["'][^"'\s]{8,})/i.test(text)) out.push("looks like a secret");
-  if (/[A-Za-z]:[\\/]{1,2}Users[\\/]|\/home\/[a-z]|\/Users\/[a-z]/.test(text)) out.push("absolute local path");
-  if (new RegExp(`\\b${user.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(text)) out.push(`mentions the user name "${user}"`);
-  return out;
-}
+const warnings = (rel: string, body: Buffer | undefined): string[] => patchWarnings(rel, body, user);
 
 function header(): void {
   console.log(`app ${appId} (user ${user}): workspace v${manifest.version ?? "?"}, baseline v${baseline.version}`);

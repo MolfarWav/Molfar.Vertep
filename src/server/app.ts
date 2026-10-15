@@ -37,6 +37,7 @@ import { normalizeAskOption } from "../agent/tools.js";
 import { findMentionables, mentionedFiles } from "../agent/mentions.js";
 import * as projects from "../agent/projects.js";
 import * as checkpoints from "../agent/checkpoints.js";
+import { solutionPatch } from "../agent/bug-solution.js";
 import * as protect from "../agent/protect.js";
 import * as inspector from "../inspector.js";
 import * as profileBackup from "../profile-backup.js";
@@ -2931,6 +2932,19 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return c.json({ ok: true, id: l.id });
     } catch (e) {
       return projectError(c, e);
+    }
+  });
+
+  // A bug Molfar fixed: the app's code since the checkpoint taken before the
+  // fix, for the user to review and send (agent/bug-solution.ts). Read-only.
+  app.get("/v1/agent/bug-patch", async (c) => {
+    const appId = c.req.query("app") ?? "";
+    const cpId = c.req.query("checkpoint") ?? "";
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(appId) || !cpId) return c.json({ error: "app and checkpoint are required" }, 400);
+    try {
+      return c.json(await solutionPatch(c.get("paths").root, c.get("user").username, appId, cpId));
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 404);
     }
   });
 

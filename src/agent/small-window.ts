@@ -53,6 +53,7 @@ const GROUP_OF: Record<string, ToolGroup> = {
   app_rebuild: "app",
   app_console: "app",
   checkpoint: "app",
+  bug_solution: "app",
   plugin_log: "app",
   app_request: "app",
   model_try: "app",
@@ -101,6 +102,7 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
   web_fetch: "Read a public web page as plain text (internet must be on in Settings).",
   run_budget: "Before a big task (app code or 4+ files): steps, one-line plan, files; writes wait for the user's go.",
   checkpoint: "Save or restore an app's code: create before risky work, list, restore (asks the user). data/ is never touched.",
+  bug_solution: "Close a reported bug (skill fix-bug): solved, problem, cause, fix, app + the checkpoint taken before the fix; the user gets a card to send it.",
   skill_propose: "Propose a new skill or a full rewrite; the user saves or skips it. Load skill-authoring first.",
   skill_edit: "Change part of a skill: exact old text to new text; the user saves or skips it.",
   memory_propose:

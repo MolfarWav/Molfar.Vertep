@@ -1,0 +1,48 @@
+name: Fix found by Molfar
+description: A bug Molfar fixed in your copy, with the change, so it can ship for everyone
+labels: [bug, solved-by-molfar]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Molfar filled this in from the fix it made in your copy. Read it before posting: issues are public.
+        If the patch did not fit, drag the .patch file Molfar Vertep saved into the Patch field.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause
+    validations:
+      required: true
+  - type: textarea
+    id: fix
+    attributes:
+      label: What Molfar changed
+    validations:
+      required: true
+  - type: textarea
+    id: verify
+    attributes:
+      label: How to check it
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: Molfar Vertep 1.0.9, Roleplay 4.44.0
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+  - type: textarea
+    id: patch
+    attributes:
+      label: Patch
+      description: The app's code changes, relative to the app's own repository.
+      render: diff

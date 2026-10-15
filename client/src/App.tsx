@@ -648,6 +648,7 @@ function Shell(props: { theme: ThemeControl }) {
       {user ? (
         <>
         <BugReportDialog
+          onAskMolfar={(prompt) => askAgent(prompt, "start")}
           open={bugOpen}
           onClose={() => setBugOpen(false)}
           context={{

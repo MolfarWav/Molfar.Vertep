@@ -111,19 +111,19 @@ async function captureScreen(): Promise<Blob | null> {
 
 const canCapture = () => typeof navigator !== "undefined" && typeof navigator.mediaDevices?.getDisplayMedia === "function" && !/Android|iPhone|iPad|iPod/.test(navigator.userAgent)
 
-export function BugReportDialog(props: { open: boolean; onClose: () => void; context: BugReportContext }) {
+export function BugReportDialog(props: { open: boolean; onClose: () => void; context: BugReportContext; onAskMolfar?: (prompt: string) => void }) {
   // a fresh body (empty text, the latest errors) each time it opens; the
   // panel itself stays mounted so the overlay can play its exit
   const [round, setRound] = useState(0)
   useEffect(() => { if (props.open) setRound((r) => r + 1) }, [props.open])
   return (
     <ModalDialog open={props.open} onClose={props.onClose}>
-      <BugReportBody key={round} context={props.context} onClose={props.onClose} />
+      <BugReportBody key={round} context={props.context} onClose={props.onClose} {...(props.onAskMolfar ? { onAskMolfar: props.onAskMolfar } : {})} />
     </ModalDialog>
   )
 }
 
-function BugReportBody(props: { context: BugReportContext; onClose: () => void }) {
+function BugReportBody(props: { context: BugReportContext; onClose: () => void; onAskMolfar?: (prompt: string) => void }) {
   const { context } = props
   const [what, setWhat] = useState("")
   const [device, setDevice] = useState(() => describeBrowser(navigator.userAgent))
@@ -169,6 +169,21 @@ function BugReportBody(props: { context: BugReportContext; onClose: () => void }
   const openGitHub = () => {
     const url = issueUrl(context.repository, { what: what.trim(), version, device, console: [details, errorText].filter(Boolean).join("\n\n") })
     window.open(url, "_blank", "noopener")
+  }
+  // Molfar gets the same facts as the issue, and the skill that ends in a
+  // "send the fix" card (builtin-skills/fix-bug)
+  const askMolfar = () => {
+    if (!what.trim() || !props.onAskMolfar) return
+    props.onAskMolfar([
+      "Bug report: find and fix this in my copy (skill fix-bug).",
+      "",
+      what.trim(),
+      "",
+      context.app ? `App: ${context.app.name} (${context.app.id})` : "",
+      details,
+      errorText ? `\nRecent errors:\n${errorText}` : "",
+    ].filter((l, i, a) => l !== "" || a[i - 1] !== "").join("\n").trim())
+    props.onClose()
   }
   const copy = () => {
     void navigator.clipboard?.writeText(asText).then(() => {
@@ -241,6 +256,15 @@ function BugReportBody(props: { context: BugReportContext; onClose: () => void }
             {[details, errorText ? `\nRecent errors:\n${errorText}` : ""].join("\n").trim()}
           </pre>
         </details>
+
+        {props.onAskMolfar ? <div className="flex flex-col gap-1.5 rounded-md border border-line bg-panel p-2.5">
+            <span className="text-12 font-medium text-ink">{tr("Ask Molfar first")}</span>
+            <span className="text-11 text-ink-faint">{tr("Molfar looks for the cause and tries to fix it in your copy. If the fix works, you send the fix instead of a report.")}</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="neutral" size="small" disabled={!what.trim()} onClick={askMolfar}>{tr("Ask Molfar")}</Button>
+              {!what.trim() ? <span className="text-11 text-ink-faint">{tr("Describe what happened first.")}</span> : null}
+            </div>
+          </div> : null}
 
         <div className="flex flex-col gap-1">
           <div className="flex flex-wrap justify-end gap-2">

@@ -5,6 +5,43 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Release 1.0.9 plan (user, 2026-10-15)
+One release gathers everything in flight once each branch is fixed and checked: engine `claude/bug-solution`,
+`claude/guide-plan`, `claude/affectionate-pasteur-421374` (restored apps re-check themselves),
+`claude/recursing-kare-666e77` (app page header at 390 px; full tests not run yet), `claude/discord-bugs`
+(cloud, the Discord tracker); Roleplay fork `claude/mobile-fixes` and `claude/discord-bugs` (cut from mobile-fixes)
+as one Roleplay version. 1.0.8 is already out (tag v1.0.8, 2026-10-14), so nothing goes into it.
+
+## Phone fixes (2026-10-15, Roleplay fork branch `claude/mobile-fixes`, not merged; the user adds more phone reports through the day)
+`b483d08`: Profile Structure it reply limit 4000 -> 12000 (Fill 8000), braces before the JSON no longer hide it, the
+error says "cut off" vs "not JSON"; shell refusals ("not allowed for this app") explained; number fields keep the typed
+text while focused (no "07500"); the context ring and out-of-context line use the model's window (they used the
+preset's 8192); phone composer two rows (Write for me + big editor beside "+"/send; Continue/Another in "+").
+Cause of "not allowed" on the user's phone, confirmed by the user: the profile was moved there through a Settings
+backup, and a restored app is not official (`restored: true` in its `.source.json`) until an update whose code matches
+the official tree lands. An up-to-date app never gets that update: engine follow-up to offer "reinstall the official
+version" (proposed as a separate session, not started).
+
+## Send a fix from Molfar (for 1.0.9, branch `claude/bug-solution`, not merged; 1.0.9 also takes the in-app guide from `claude/guide-plan`)
+Discord idea: a bug goes to Molfar first, and a fix that works goes to GitHub so it ships for everyone. User's choices
+(2026-10-14): a pre-filled form (nothing sent by the engine), the entry in the bug dialog, description + patch.
+- Shell "Report a bug" dialog: an "Ask Molfar first" block (needs "What happened") opens a new agent chat with the
+  report ("Bug report: ... (skill fix-bug)", version, device, recent errors).
+- Built-in skill `fix-bug`: checkpoint "bug: ...", reproduce, smallest fix, the user tries it, then `bug_solution`.
+- Tool `bug_solution` (`src/agent/bug-solution.ts`; small mode: app group): solved, problem, cause, fix, verify, app,
+  checkpoint. Its card on the agent page (`client-agent/src/BugSolution.tsx`, shown outside the folded step list):
+  "It works, send the fix" / "Still broken", or "Report it on GitHub" when not solved. The dialog fetches
+  `GET /v1/agent/bug-patch` (the app's code since the checkpoint, data/ .memory .skills .project never; git-apply
+  format, checked by a test), shows files with warnings (secret, local path, user name; shared with
+  `scripts/publish-app.ts`), then opens `.github/ISSUE_TEMPLATE/solution.yml` pre-filled; a patch too long for the
+  link is downloaded as `.patch` to drag in.
+- Engine bugs Molfar cannot edit end as `solved: false` with what it found (the ordinary bug form).
+- The small-model budget test moved 3.7k -> 3.75k (the fix-bug skill line).
+- Checked in Chromium (browser-check): card and dialog at 1280 dark and 390 light, no sideways scroll; the GitHub link
+  carries every field and the patch; the shell block in en and uk, disabled when empty; the handoff reaches Molfar.
+  Not checked: a real model going through the whole skill. Label `solved-by-molfar` created on GitHub (2026-10-14).
+- Tests: 707 pass; the failures are the Windows-only ones that fail on main too (0600 modes, tar, edge-tts network).
+
 ## 1.0.8: RELEASED 2026-10-14 (tag v1.0.8; Roleplay 4.44.0 `99d8270` and 4.45.0 `e964362` on the fork's main)
 Engine: Claude 5.5 in the Anthropic catalog (`src/model-additions.ts`), visible names. Roleplay 4.44.0: Canvas stage 1b (Prompt board,
 switches, history filter, the chat-links shelf). Roleplay 4.45.0: composer quick moves + half-screen big editor, phone Characters and

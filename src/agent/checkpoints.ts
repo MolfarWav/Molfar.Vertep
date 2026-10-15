@@ -86,7 +86,7 @@ export async function createCheckpoint(root: string, username: string, app: stri
 }
 
 /** The app's code files at a commit (what a restore compares). */
-const codeAt = (root: string, oid: string, app: string) => git.treeFiles(root, oid, `apps/${app}`, (rel) => KEPT.test(rel));
+export const codeAt = (root: string, oid: string, app: string) => git.treeFiles(root, oid, `apps/${app}`, (rel) => KEPT.test(rel));
 
 /** The app's data files at a commit. */
 const dataAt = (root: string, oid: string, app: string) => git.treeFiles(root, oid, `apps/${app}/data`);

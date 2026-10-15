@@ -7,6 +7,7 @@ import {
 import { CodeDiff, parseDiff } from "@/components/assistant-ui/elements/code-diff"
 import { ToolFallback } from "@/components/assistant-ui/elements/tool-fallback.aui"
 import type { ReactNode } from "react"
+import { BugSolutionTool } from "./BugSolution"
 
 export interface ToolResult {
   ok: boolean
@@ -45,6 +46,8 @@ const EditTool: ToolCallMessagePartComponent<Record<string, unknown>, ToolResult
 const toolkit = defineToolkit({
   edit_file: { render: EditTool },
   write_file: { render: EditTool },
+  // the card asks the user to act: outside the folded step list
+  bug_solution: { render: BugSolutionTool, display: "standalone" },
 })
 
 export const toolConfig = AuiConfig({ tools: Tools({ toolkit }) })
