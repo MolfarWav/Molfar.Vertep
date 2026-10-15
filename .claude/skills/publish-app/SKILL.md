@@ -63,6 +63,11 @@ In the clone:
   version's `CHANGELOG.md` section is written from the published commits,
   user-facing, in the CHANGELOG's own style. Never copy the workspace's
   `CHANGELOG.md`.
+- Roleplay's guide: set `APP_VERSION` in `src/lib/guide-tips.ts` to the new
+  version (its test compares it with the manifest). A published feature the
+  user decides with gets a tip there with `since` = the new version, so What's
+  new shows it once; tips Molfar added without `since` get it now if they are
+  new. The app's AGENTS.md, "The in-app guide", has the format.
 - Commit `Roleplay X.Y.Z: what changed, in plain words`, body saying why and
   that it came from the user's workspace, then the attribution lines.
 

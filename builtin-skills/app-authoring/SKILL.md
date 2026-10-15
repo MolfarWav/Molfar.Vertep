@@ -78,6 +78,7 @@ hot-reload by mtime: nothing to call.
 
 ## Usability
 - The user's rule: a UI change is judged first by how easily people find, understand and use it, on a phone too. Load skill `ux-review` before you add a control and before you call it done.
+- An app with an in-app guide (Roleplay: `src/lib/guide-tips.ts`; its AGENTS.md, "The in-app guide", says how): a feature the user decides with gets a tip in the same change, so the help list and What's new point it out. The tip says only what the code does; check it against your code before done.
 
 ## Checks
 - After editing `src/` or `package.json`, call `app_check`: it waits for the build and returns ok or the errors. Never assume an edit built.
