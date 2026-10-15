@@ -153,6 +153,8 @@ Releases up to 0.9.0 named their archives `Chrysalis-<version>-<system>`; self-u
 
 On Windows you can also run from source with one file: put `Molfar-Vertep.bat` (in the repository root) in any folder and double-click it. It installs Git and Bun if they are missing, downloads Molfar Vertep next to itself, offers each new release before installing it, builds what changed, offers a desktop shortcut and opens Molfar Vertep in your browser. `Molfar-Vertep.bat dev` follows the newest work in progress instead of releases. Folder names with spaces or in any language are fine.
 
+If Git says the folder has *dubious ownership* (another Windows user owns it: common on a second drive, a USB stick, or a folder made as administrator), the launcher stops and offers to trust that one folder. To do it yourself, run `git config --global --add safe.directory "D:/path/to/Molfar-Vertep"` with your folder's path (forward slashes), then start the launcher again.
+
 On macOS, start with `start.command`, not `chrysalis`. These builds do not carry a signature macOS accepts, so opening `chrysalis` directly is blocked or closes straight away with `killed`. `start.command` clears the download flag, signs the program for that Mac and starts it; use it again after each update.
 
 The Android APK is debug-signed, so it cannot update an installed copy: remove the old app first (export your apps' backups before that, because uninstalling deletes the app's data).
@@ -181,6 +183,8 @@ bun install
 bun run build:client
 bun start
 ```
+
+On Windows, if a `git` command answers "detected dubious ownership in repository", trust the folder first with the `git config --global --add safe.directory ...` line Git prints, then go on.
 
 `bun run dev` restarts on every change. `bun run test` runs the tests and `bun run typecheck` checks every project.
 

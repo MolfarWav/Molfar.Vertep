@@ -180,6 +180,9 @@ if not defined MV_TOOLS_DONE (
 
 :app_ready
 cd /d "%APP%" || goto fail
+rem nothing below works when git refuses the folder: stop here, not at Bun
+call :git_trust
+if errorlevel 1 goto fail
 if not exist "%MV_STATE%" mkdir "%MV_STATE%" >nul 2>nul
 >"%MV_STATE%\app-path.txt" echo(%APP%
 rem a copy cloned before the repository was renamed follows it under its new name
@@ -373,6 +376,48 @@ rem without an answer, and always with the "yes" option.
 if defined MV_YES exit /b 1
 choice /c YN /t 20 /d Y /m "%~1"
 exit /b %errorlevel%
+
+rem :git_trust  ->  errorlevel 0 when git works in the current folder. Git refuses
+rem a folder another Windows user owns ("dubious ownership": a second drive, a USB
+rem stick, a folder made as administrator). Trusting this one folder is offered,
+rem never every folder. No paths inside ( ) blocks: one with ")" would end the block.
+:git_trust
+set "MV_GITERR=%TEMP%\molfar-vertep-git-%RANDOM%.txt"
+git rev-parse --git-dir >nul 2>"%MV_GITERR%"
+if errorlevel 1 goto git_refused
+del /q "%MV_GITERR%" 2>nul
+exit /b 0
+:git_refused
+findstr /i /c:"safe.directory" "%MV_GITERR%" >nul
+if not errorlevel 1 goto git_untrusted
+type "%MV_GITERR%"
+del /q "%MV_GITERR%" 2>nul
+echo Git cannot read the Molfar Vertep folder:
+echo   %CD%
+exit /b 1
+:git_untrusted
+del /q "%MV_GITERR%" 2>nul
+echo.
+echo Git does not trust this folder, because another Windows user owns it
+echo ^(common on a second drive, a USB stick or a folder made as administrator^):
+echo   %CD%
+echo Molfar Vertep can tell Git to trust this one folder.
+call :ask "Trust this folder"
+if errorlevel 2 goto git_trust_declined
+git config --global --add safe.directory "%CD:\=/%"
+git rev-parse --git-dir >nul 2>nul
+if errorlevel 1 goto git_trust_failed
+echo Git trusts the folder now.
+exit /b 0
+:git_trust_declined
+echo Nothing was changed. To trust the folder yourself, run:
+echo   git config --global --add safe.directory "%CD:\=/%"
+echo then start this file again.
+exit /b 1
+:git_trust_failed
+echo Git still refuses the folder. Run this yourself, then start this file again:
+echo   git config --global --add safe.directory "%CD:\=/%"
+exit /b 1
 
 rem :version VAR  ->  the version in package.json
 :version
