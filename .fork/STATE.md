@@ -15,6 +15,7 @@ account menu and start-page footer, Settings > General > Guide; texts fact-check
 Tests 729 pass, 15 known Windows-only failures. Roleplay fork `claude/guide-kit` (worktree `E:\Claude\rp-guide`) has
 steps 1-2 + `0e287b5` (bug tip names Ask Molfar first). Left for the release: Roleplay 4.46.0 (manifest, CHANGELOG,
 merge), engine 1.0.9 (package.json, CHANGELOG, release notes incl. #33, close #33 with it), pushes on the user's word.
+Issue #34 (Roleplay install EPERM on `apps/.staging/roleplay`, same reporter and drive `E:/oldfar` as #33): `21ca606` clearDir (retry, move aside, a clear 409 naming the folder), checked on Windows with a held file. Root cause on their machine unknown; questions for the reporter drafted, not posted yet. Close #34 with 1.0.9 only if the reporter confirms.
 Guide step 4 = Molfar's page (`52f915e`, 2026-10-15): `client-agent/src/guide/` (copies of the pure shell modules:
 the agent builder cannot import from client/, `test/guide-agent.test.ts` fails on drift), Help in the header / phone
 sidebar, tours agent.chat and agent.project, 21 help items, safety texts fact-checked; shared state store
