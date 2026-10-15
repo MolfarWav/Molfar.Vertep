@@ -20,7 +20,7 @@ the agent builder cannot import from client/, `test/guide-agent.test.ts` fails o
 sidebar, tours agent.chat and agent.project, 21 help items, safety texts fact-checked; shared state store
 (`store-core.ts`: a save is a change re-applied on a fresh GET, serialized, a failed save does not block later ones).
 No What's new on that page (the shell's owns `lastVersion`). Shots `E:\Claude\guide-shots\step4\`. Tests 746 pass,
-15 known Windows-only failures. Guide step 5 (Molfar's skill: tips for what he builds) remains in the plan.
+15 known Windows-only failures. Guide step 5 done (`4d46cfc` app-authoring skill + publish-app skill; Roleplay AGENTS.md "The in-app guide" `36f5f0b`): all 5 guide steps built. A workspace copy of app-authoring, if the user has one, would shadow the builtin.
 
 ## In-app guide, steps 1-2: built, not released, not pushed (Roleplay fork branch `claude/guide-kit`, `b2b8981`, on 4.45.0)
 Step 2 (`b2b8981`, 2026-10-15, local commit in the worktree `E:\Claude\rp-guide`; another session works in the main

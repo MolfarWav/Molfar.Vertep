@@ -55,7 +55,7 @@ https://pyrxpia.github.io/sola-hub/ was considered and dropped; the README stays
    own "?" in the account menu. The same kit, ported to `client/`.
 4. **Molfar's page**: modes (Full / Accept / Plan), checkpoints and restore, skills, projects,
    the context counter. English only on that page today; uk added with the guide.
-5. **Molfar's skill**: tips for what he builds.
+5. **Molfar's skill**: tips for what he builds. DONE (2026-10-15, local): app-authoring skill, Roleplay AGENTS.md, publish-app bumps APP_VERSION.
 
 ## Content
 The feature list per surface is the first job of each step: walk the app, list every feature a
