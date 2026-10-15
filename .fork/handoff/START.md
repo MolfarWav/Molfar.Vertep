@@ -11,6 +11,17 @@ Finished work is not listed here: see STATE ("Released") and git history.
    items while a release settles.
 0a. **In-app guide** (user, 2026-10-14, next big item): What's new after an update, section tours, a help "?" with
    "Show me"; Roleplay, the shell and Molfar's page; en + uk. Plan and decisions: `.fork/handoff/guide/PLAN.md`.
+0b. **Preset picker and Choices panel (Roleplay)** (user, 2026-10-15, seen on the Molfar preset):
+   - Preset list: the second line shows "187/187 on · 1 · 33k ctx" (sections on, temperature, context). Show
+     instead about how many tokens the preset takes right now with this chat's picks (`presetCosts`, POST
+     /preset-costs). "N/N on" says little for presets that switch sections by conditions: count what the
+     picks actually send, or drop it.
+   - Choices panel: hovering an option shows only "adds about N tokens". Give an option a short optional
+     `hint` (what the block does, one line), shown on hover and on tap / long-press on a phone, with the
+     token cost after it. New field on `PromptVariableChoice`: docs/DATA-FORMATS.md, the Marinara import,
+     the preset editor (edit the hint) and the preset skill change with it. Then write hints for the
+     Molfar and FRANKENX options (a cheap-model job, checked against each block's text).
+   - The chat picker on the Prompt board: `.fork/handoff/canvas/PLAN.md` section 16.
 0. **UX audit backlog** (user, 2026-10-12, ongoing): take a few items into each release from the audit
    document (STATE, "UX audit backlog", gives where it lives). Not a release of its own.
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is
