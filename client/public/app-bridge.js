@@ -78,6 +78,7 @@
     if (d.type === "init") {
       nonce = d.nonce;
       ready = true;
+      if (d.storage && typeof d.storage === "object") reconcileStorage(d.storage);
       var q = initQueue;
       initQueue = [];
       for (var i = 0; i < q.length; i++) q[i]();
@@ -92,6 +93,7 @@
       return;
     }
     if (d.type === "ws-event") deliverWs(d);
+    else if (d.type === "storage-ack") storageAck(d);
   });
 
   // ---------- shell ----------
@@ -282,8 +284,9 @@
       if (raw) seed = JSON.parse(b64ToText(decodeURIComponent(raw))) || seed;
     } catch { /* empty */ }
     if (!seed || typeof seed !== "object") seed = { local: {}, session: {} };
-    if (!seed.local) seed.local = {};
-    if (!seed.session) seed.session = {};
+    if (!seed.local || typeof seed.local !== "object") seed.local = {};
+    if (!seed.session || typeof seed.session !== "object") seed.session = {};
+    if (!seed.unsaved || typeof seed.unsaved !== "object") seed.unsaved = {};
     return seed;
   }
   var seed = snapshot();
@@ -296,6 +299,8 @@
   // Each write rewrites at once while under 150 rewrites in 10 s (Chromium
   // ignores replaceState past ~200 calls in 10 s; typing stays well under);
   // past that, writes wait for the window and land as one trailing rewrite.
+  // The hash can still be behind (that trailing window, a refused rewrite):
+  // the shell's copy settles it after the handshake, see reconcileStorage.
   var liveStores = {};
   var snapTimer = 0;
   var snapTimes = [];
@@ -305,9 +310,12 @@
     snapTimes.push(Date.now());
     try {
       var params = new URLSearchParams(location.hash.slice(1));
-      params.set("__storage", textToB64(JSON.stringify({ local: liveStores.local || {}, session: liveStores.session || {} })));
+      var snap = { local: liveStores.local || {}, session: liveStores.session || {} };
+      if (unsavedCount()) snap.unsaved = unsaved;
+      if (resyncAt) snap.resync = resyncAt;
+      params.set("__storage", textToB64(JSON.stringify(snap)));
       history.replaceState(history.state, "", location.href.split("#")[0] + "#" + params.toString());
-    } catch { /* URL rewrite refused: a reload starts from the older snapshot */ }
+    } catch { /* URL rewrite refused: a reload starts from the older snapshot, then reconciles */ }
   }
   function scheduleSnapshot() {
     if (snapTimer) return;
@@ -316,44 +324,172 @@
     if (snapTimes.length < 150) writeSnapshot();
     else snapTimer = setTimeout(writeSnapshot, snapTimes[0] + 10000 - now);
   }
+
+  // Write acknowledgements. Every write carries an opId; the shell answers
+  // with storage-ack once its own copy is written, or with the reason it
+  // refused (the app's share is full, the browser's quota is spent). A
+  // refused value stays in frame memory and in the hash, listed in
+  // `unsaved`, and the app hears about it: window.chrysalisStorage.unsaved()
+  // and a "chrysalis:storage" event. Only the ack of a key's newest write
+  // counts, so a late ack never marks newer text saved.
+  var opSeq = 0;
+  var lastOp = { local: {}, session: {} };
+  var unsaved = { local: {}, session: {} };
+  ["local", "session"].forEach(function (w) {
+    var u = seed.unsaved[w];
+    if (u && typeof u === "object") Object.keys(u).forEach(function (k) { unsaved[w][k] = String(u[k]); });
+  });
+  // keys the app wrote (or a clear it ran) since this document started: newer
+  // than anything the shell sends in the handshake
+  var touched = { local: {}, session: {} };
+  var cleared = { local: false, session: false };
+  var storageRead = false;
+  var resyncAt = typeof seed.resync === "number" ? seed.resync : 0;
+  var bootAt = Date.now();
+  function unsavedCount() {
+    return Object.keys(unsaved.local).length + Object.keys(unsaved.session).length;
+  }
+  function unsavedList() {
+    var out = [];
+    ["local", "session"].forEach(function (w) {
+      Object.keys(unsaved[w]).forEach(function (k) { out.push({ storage: w, key: k, reason: unsaved[w][k] }); });
+    });
+    return out;
+  }
+  function announceUnsaved() {
+    try { window.dispatchEvent(new CustomEvent("chrysalis:storage", { detail: { unsaved: unsavedList() } })); } catch { /* no events */ }
+  }
+  function storageAck(d) {
+    var which = d.which === "session" ? "session" : "local";
+    if (typeof d.opId !== "number") return;
+    var before = JSON.stringify(unsaved[which]);
+    if (d.op === "clear") {
+      if (d.accepted) Object.keys(unsaved[which]).forEach(function (k) { if (!(lastOp[which][k] > d.opId)) delete unsaved[which][k]; });
+    } else if (typeof d.key === "string" && lastOp[which][d.key] === d.opId) {
+      if (d.accepted) delete unsaved[which][d.key];
+      else unsaved[which][d.key] = typeof d.reason === "string" ? d.reason : "refused";
+    }
+    if (JSON.stringify(unsaved[which]) === before) return;
+    scheduleSnapshot();
+    announceUnsaved();
+  }
+  window.chrysalisStorage = Object.freeze({
+    /** Writes the shell refused: [{ storage: "local"|"session", key, reason }].
+     *  The values are still in this page's storage, not in the shell's. */
+    unsaved: function () { return unsavedList(); },
+  });
+
+  // After the handshake the shell's copy says what a reload should have
+  // started from. The hash may be behind it (a trailing rewrite that never
+  // ran, a refused rewrite, another tab of the same app): keys the app has
+  // not written since this document started take the shell's value. Keys the
+  // shell refused keep the frame's value and are offered to it again. When
+  // the app already read storage, the corrected snapshot needs one reload to
+  // reach it; a second within 10 s is not taken (no loop), the app then gets
+  // "storage" events for the keys that changed.
+  function reconcileStorage(host) {
+    if (reconcileStorage.done) return;
+    reconcileStorage.done = true;
+    var changed = [];
+    var retry = [];
+    ["local", "session"].forEach(function (w) {
+      var hostNs = host[w] && typeof host[w] === "object" ? host[w] : {};
+      var data = liveStores[w];
+      if (!data || cleared[w]) return;
+      var keys = {};
+      Object.keys(hostNs).forEach(function (k) { keys[k] = 1; });
+      Object.keys(data).forEach(function (k) { keys[k] = 1; });
+      Object.keys(keys).forEach(function (k) {
+        if (touched[w][k]) return;
+        if (Object.prototype.hasOwnProperty.call(unsaved[w], k)) {
+          if (Object.prototype.hasOwnProperty.call(data, k)) retry.push([w, k]);
+          return;
+        }
+        var want = Object.prototype.hasOwnProperty.call(hostNs, k) ? String(hostNs[k]) : undefined;
+        var have = Object.prototype.hasOwnProperty.call(data, k) ? data[k] : undefined;
+        if (want === have) return;
+        if (want === undefined) delete data[k];
+        else data[k] = want;
+        changed.push([w, k, have, want]);
+      });
+    });
+    retry.forEach(function (r) { pushOp(r[0], "set", r[1], liveStores[r[0]][r[1]]); });
+    if (!changed.length) return;
+    // a handshake that came late (the shell registered the frame slowly) does
+    // not reload under a user who may already be typing
+    var reload = storageRead && Date.now() - bootAt < 3000 && !(resyncAt && Date.now() - resyncAt < 10000);
+    if (reload) resyncAt = Date.now();
+    writeSnapshot();
+    if (reload) {
+      try { location.reload(); return; } catch { /* fall through to events */ }
+    }
+    changed.forEach(function (c) {
+      try {
+        window.dispatchEvent(new StorageEvent("storage", { key: c[1], oldValue: c[2] === undefined ? null : c[2], newValue: c[3] === undefined ? null : c[3], url: location.href }));
+      } catch { /* no StorageEvent */ }
+    });
+  }
+
+  function pushOp(which, op, key, value) {
+    // posted even before the handshake: a write followed immediately by a
+    // reload used to sit in a queue that died with the frame, losing the
+    // write (and looping any reload guard built on it). The host accepts
+    // storage before the nonce for this reason.
+    var opId = ++opSeq;
+    if (op === "clear") {
+      cleared[which] = true;
+      lastOp[which] = {};
+    } else {
+      touched[which][key] = 1;
+      lastOp[which][key] = opId;
+    }
+    post({ type: "storage", which: which, op: op, key: key, value: value, opId: opId });
+    scheduleSnapshot();
+  }
   function makeStorage(which, initial) {
     var data = {};
     Object.keys(initial || {}).forEach(function (k) { data[k] = String(initial[k]); });
     liveStores[which] = data;
-    function pushOp(op, key, value) {
-      // posted even before the handshake: a write followed immediately by a
-      // reload used to sit in a queue that died with the frame, losing the
-      // write (and looping any reload guard built on it). The host accepts
-      // storage before the nonce for this reason.
-      post({ type: "storage", which: which, op: op, key: key, value: value });
-      scheduleSnapshot();
+    var has = function (k) { return Object.prototype.hasOwnProperty.call(data, k); };
+    // An unchanged write is not sent: a store that persists on every state
+    // change (stream ticks) would spend the hash rewrites on nothing. A value
+    // the shell refused is sent again: it may fit now.
+    function set(k, v) {
+      if (has(k) && data[k] === v && !Object.prototype.hasOwnProperty.call(unsaved[which], k)) return;
+      data[k] = v;
+      pushOp(which, "set", k, v);
+    }
+    function remove(k) {
+      if (!has(k) && !Object.prototype.hasOwnProperty.call(unsaved[which], k)) return;
+      delete data[k];
+      pushOp(which, "remove", k, null);
     }
     var methods = {
-      getItem: function (k) { k = String(k); return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
-      setItem: function (k, v) { k = String(k); data[k] = String(v); pushOp("set", k, data[k]); },
-      removeItem: function (k) { k = String(k); delete data[k]; pushOp("remove", k, null); },
-      clear: function () { Object.keys(data).forEach(function (k) { delete data[k]; }); pushOp("clear", null, null); },
-      key: function (i) { return Object.keys(data)[i] || null; },
+      getItem: function (k) { storageRead = true; k = String(k); return has(k) ? data[k] : null; },
+      setItem: function (k, v) { set(String(k), String(v)); },
+      removeItem: function (k) { remove(String(k)); },
+      clear: function () { Object.keys(data).forEach(function (k) { delete data[k]; }); pushOp(which, "clear", null, null); },
+      key: function (i) { storageRead = true; return Object.keys(data)[i] || null; },
     };
     return new Proxy(data, {
       get: function (t, p) {
-        if (p === "length") return Object.keys(t).length;
+        if (p === "length") { storageRead = true; return Object.keys(t).length; }
         if (typeof p === "string" && methods[p]) return methods[p];
         if (typeof p === "symbol") return t[p];
+        storageRead = true;
         return Object.prototype.hasOwnProperty.call(t, p) ? t[p] : undefined;
       },
-      set: function (t, p, v) {
+      set: function (_t, p, v) {
         if (typeof p !== "string" || methods[p]) return true;
-        t[p] = String(v);
-        pushOp("set", p, t[p]);
+        set(p, String(v));
         return true;
       },
-      deleteProperty: function (t, p) {
-        delete t[p];
-        pushOp("remove", String(p), null);
+      deleteProperty: function (_t, p) {
+        remove(String(p));
         return true;
       },
-      has: function (t, p) { return p in t || (typeof p === "string" && !!methods[p]); },
+      has: function (t, p) { storageRead = true; return p in t || (typeof p === "string" && !!methods[p]); },
+      ownKeys: function (t) { storageRead = true; return Reflect.ownKeys(t); },
     });
   }
   try { Object.defineProperty(window, "localStorage", { value: makeStorage("local", seed.local), configurable: true }); } catch { /* frozen */ }

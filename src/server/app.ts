@@ -65,7 +65,7 @@ import { ensureLookWatcher, stopLookWatcher } from "./look-watch.js";
 import { assertPublicHost } from "../net-guard.js";
 import { listShellThemes } from "../themes.js";
 import { installApp, hasPackages, healPackages, installMissingPackages, packagesBusy } from "../apps/packages.js";
-import { appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, readBuildStatus, readDevMeta, sourceRev, takeLease, writeClientErrors, writeClientLogs, writeOutput } from "../builder/server.js";
+import { ackUnchangedBuild, appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, readBuildStatus, readDevMeta, sourceRev, takeLease, writeClientErrors, writeClientLogs, writeOutput } from "../builder/server.js";
 import { builderAsset, builderFrameCsp, builderVersion } from "../builder/assets.js";
 import type { FsOp } from "../builder/fs.js";
 
@@ -4899,6 +4899,20 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       ...(out.errors.length ? { errors: out.errors.slice(0, 5) } : {}),
     });
     return c.json({ ok: true });
+  });
+
+  // The builder ran and nothing changed (GitHub #32): dist stays as it is and
+  // its status takes the new revision. Same holder rule as the output PUT; the
+  // revision must still be the sources' current one, or a change landed since
+  // and its own build follows.
+  app.post("/v1/apps/:id/build/ack", async (c) => {
+    const a = buildableApp(c);
+    if (!a) return c.json({ error: "app not found" }, 404);
+    const body = await c.req.json<{ holder?: unknown; rev?: unknown }>().catch(() => ({}) as { holder?: unknown; rev?: unknown });
+    const u = c.get("user");
+    if (typeof body.holder !== "string" || leaseHolder(buildKey(u, a.id)) !== body.holder) return c.json({ error: "another tab is building this app" }, 409);
+    if (typeof body.rev !== "string" || body.rev !== sourceRev(a.dir)) return c.json({ error: "the sources changed since this build" }, 409);
+    return c.json({ acked: ackUnchangedBuild(a.dir, body.rev) });
   });
 
   app.post("/v1/apps/:id/install", async (c) => {

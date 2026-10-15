@@ -1,6 +1,6 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-14.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-15.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
@@ -51,6 +51,28 @@ vs manifest 4.45.0 until the release bumps it. Browser-checked dark, light, 390 
 Rough edges: on a phone the Canvas links tour has one visible step (list mode); the What's new card on Home overlaps the
 Achievements card; the `new.guide` tip's rail target is inside More on phones (centered bubble). Release (4.46.0: manifest,
 CHANGELOG, merge to the fork's main) on the user's word. Next: step 2 (help "?" and the remaining tours).
+## Discord bug tracker (2026-10-15, not released): engine and Roleplay branch `claude/discord-bugs` in both
+Input: `.fork/handoff/bug-tracker/TRACKER.md` on `claude/discord-bug-tracker` (12 findings, a public audit). All 12 real in
+the current code; GitHub #21-#32 (bug label; #31 enhancement). Roleplay branch cut from `claude/mobile-fixes` (not main).
+- Fixed, Roleplay: #21/#22 (BUG-001/002) Dashboard and Litopys rankers index the scene once (`sceneMatcher`,
+  `scanMatcherM3b`); same order as the pairwise scan on 1,200 random rankings, 40,000-word differential test. #23 (BUG-008)
+  a fitting insert removes the old trimmed notice (dashboard test 13 changed). #29 (BUG-015) "Write for me" result kept per
+  chat with the draft it started from (`composerDrafts`, `lib/drafts.ts`), goes in only over that draft, else offered.
+  #30 (BUG-016) `sendMessage` returns sent / not-sent / stopped (checked against the refreshed transcript); not-sent puts
+  text and attachments back. Persist skips unchanged writes (`quietStorage`).
+- Fixed, engine: #25/#27/#28 (BUG-011/013/014) `app-bridge*.js`: unchanged writes not sent; every write gets a storage-ack
+  (accepted or `app-share-full` / `browser-quota`); refused keys stay in the frame + hash, `window.chrysalisStorage.unsaved()`
+  and a `chrysalis:storage` event; the handshake (`init`) carries the shell's copy and a reloaded frame takes it for keys it
+  has not written (one guarded reload if the app already read storage). Roleplay shows an amber "not saved" line with Copy.
+  #32 (BUG-018) `POST /v1/apps/:id/build/ack`: an unchanged build records its revision (lease holder, current rev, good dev
+  build only); shell-only route added to the security lists.
+- Open: #24 (BUG-010, needs the reporter's "Reloaded: ..." toast text), #26 (BUG-012, needs logs if it recurs), #31
+  (BUG-017, a design decision on asset cleanup). Not done: a shell-owned fallback copy for a refused draft (a full shell
+  reload still loses a refused draft; the warning says so).
+- Tests: engine 731 pass, 2 fail (edge-tts live network 403 in the cloud, as in 1.0.7); Roleplay 1023 pass.
+- Browser check (Chromium, real engine + Roleplay built in the browser): refused draft shows the amber line with Copy at
+  1280 and 390 px (wraps to two lines, no sideways scroll), gone after space frees; an in-frame reload keeps the draft.
+  Roleplay's own theme stays dark in the "light" runs (only the shell changes). Shots were in the cloud scratchpad, not kept.
 
 ## 1.0.8: RELEASED 2026-10-14 (tag v1.0.8; Roleplay 4.44.0 `99d8270` and 4.45.0 `e964362` on the fork's main)
 Engine: Claude 5.5 in the Anthropic catalog (`src/model-additions.ts`), visible names. Roleplay 4.44.0: Canvas stage 1b (Prompt board,
