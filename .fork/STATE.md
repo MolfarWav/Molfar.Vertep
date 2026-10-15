@@ -18,12 +18,17 @@ lorebook switches, preset internal ids, Tools tab rows). Open questions for the 
 Branch `claude/affectionate-pasteur-421374`. The user moved a profile desktop -> phone through a Settings backup: every app came
 back `restored: true` (its baseline came with the file), so Roleplay was unofficial and the bridge refused every shell link
 ("not allowed for this app"). Only an update that landed could clear it, and an app at the latest version is never offered one.
-Now: `GET /v1/apps/:id/updates` and `/v1/launch` report `restored` (only for an official source); the launcher row shows a
-"Check needed" badge, the app page a note with "Check against official version" -> confirm -> the update route with
-strategy `theirs` at any head. For a restored app that strategy is an exact replace (`replaceTree` in `src/apps/update.ts`:
-files only the app has are deleted too, the backup's baseline decides nothing); `restored` clears only when the code tree
-equals the repository's (unchanged gate); `data/` is never touched; the reply carries `official`. Tests in
-`test/app-store.test.ts` (plain update keeps edits -> still restored; theirs -> official; community source never reported).
+Now automatic (the user: a move that needs a manual step makes no sense): both update checks (`GET /v1/apps/updates`, run
+on shell load, and `GET /v1/apps/:id/updates`) call `verifyRestored` for an official app still marked restored: a shallow
+clone of the branch head, plugin sources stamped, `readCodeTree` + `sameTree` against the app. Match -> `restored` cleared
+and the baseline replaced by the fetched tree; the shell refreshes `/v1/launch`. No match -> `restored: "differs"`
+(remembered per remote head + code hash, so no clone on every load); no answer -> `"unchecked"`, tried on the next check.
+Only those two show the "Check needed" badge and a note on the app page: "differs" -> "Replace with official version" ->
+confirm -> the update route with `theirs` at any head, which for a restored app is an exact replace (`replaceTree` in
+`src/apps/update.ts`; the backup's baseline decides nothing); "unchecked" -> "Check again". An app behind the branch head
+counts as "differs" (a clone only fetches the head); a plain Update clears it too when the code was not edited. Tests in
+`test/app-store.test.ts` (match -> official by itself with the fetched baseline; differs; no answer; plain update keeps
+edits; theirs -> official; community source never reported nor cleared).
 The Roleplay side (fork branch `claude/mobile-fixes`) explains the refusal. Seen in passing: the app page header at 390 px
 is cramped (size line wraps per word, "Launch" cut off) - not touched here.
 

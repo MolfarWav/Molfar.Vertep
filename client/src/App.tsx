@@ -143,6 +143,13 @@ function Shell(props: { theme: ThemeControl }) {
   // badge and the Updates panel all read these
   const [updatesOpen, setUpdatesOpen] = useState(false)
   const appUpdates = useAppUpdates(launch)
+  // the update check makes a restored official app official again when its
+  // code is the repository's: the app list then says so
+  const verifiedRestored = (launch?.apps ?? []).some((a) => a.restored && !appUpdates.loading && !appUpdates.restored(a.id))
+  useEffect(() => {
+    if (verifiedRestored) void refreshLaunch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshLaunch is rebuilt every render
+  }, [verifiedRestored])
   const engineRelease = useEngineRelease(launch?.engine?.admin === true)
   const updatesWaiting = appUpdates.count + (engineRelease.release?.newer ? 1 : 0)
   // one plugins dialog for the whole shell: the app toolbar opens it on
@@ -1399,7 +1406,7 @@ function LaunchPicker(props: {
                           >
                             {tr("Official App")}
                           </span> : null}
-                        {a.restored ? <span
+                        {a.restored && updates.restored(a.id) ? <span
                             className="shrink-0 rounded-full bg-warning-soft/30 px-1.5 py-px text-9 font-medium tracking-wide text-ink"
                             title={tr("Restored from a backup: links to Settings and Molfar are off until it is checked against its official version.")}
                           >

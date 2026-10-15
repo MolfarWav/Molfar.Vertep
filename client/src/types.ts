@@ -43,4 +43,6 @@ export interface AppUpdate {
   available: boolean
   remoteHead?: string | null
   error?: string
+  /** an official app restored from a file that is not official yet */
+  restored?: "differs" | "unchecked"
 }
