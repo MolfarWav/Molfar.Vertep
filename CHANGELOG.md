@@ -5,6 +5,15 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## 1.0.9 (2026-10-15)
+
+- Molfar fixes a reported bug: "Ask Molfar first" in the bug dialog opens a chat with the report and the `fix-bug` skill; the `bug_solution` card opens a pre-filled GitHub solution form with the app's code since the checkpoint as a patch (`GET /v1/agent/bug-patch`), or the ordinary report when it was not fixed.
+- A restored official app checks itself against its repository on both update checks and becomes official again when the code matches; changed code gets "Check needed" with a confirmed exact "Replace with official version", a failed check gets "Check again".
+- App storage over the bridge: unchanged writes are not sent, each write is acknowledged or refused with a reason (`window.chrysalisStorage.unsaved()`, `chrysalis:storage`), and a reloaded frame takes the shell's newer copy (Discord tracker BUG-011/013/014, #25, #27, #28).
+- An unchanged build records its revision (`POST /v1/apps/:id/build/ack`, shell only), so an edit no module reads no longer causes a full build and reload on the next open (BUG-018, #32).
+- The app page header fits a 390 px screen.
+- The Roleplay app 4.46.0: What's new and short tours, safer drafts (Write for me bound to its chat and draft, failed sends restored, an unsaved-draft line), a two-row phone composer, number fields without a stuck 0, the context ring on the model's window, Structure it on long cards, faster Dashboard and Litopys ranking (#21-#23, #29, #30).
+
 ## 1.0.8 (2026-10-14)
 
 - Anthropic connections list Claude Opus 5.5, Sonnet 5.5 and Haiku 5.5. The bundled pi-ai catalog stops at Opus 5 and Sonnet 5; the engine adds the newer models as copies of their closest sibling with their own limits and prices (`src/model-additions.ts`) until the pi-ai 1.x upgrade.

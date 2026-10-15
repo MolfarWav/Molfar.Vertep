@@ -5,12 +5,13 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Release 1.0.9 plan (user, 2026-10-15)
-One release gathers everything in flight once each branch is fixed and checked: engine `claude/bug-solution`,
-`claude/guide-plan`, `claude/affectionate-pasteur-421374` (restored apps re-check themselves),
-`claude/recursing-kare-666e77` (app page header at 390 px; full tests not run yet), `claude/discord-bugs`
-(cloud, the Discord tracker); Roleplay fork `claude/mobile-fixes` and `claude/discord-bugs` (cut from mobile-fixes)
-as one Roleplay version. 1.0.8 is already out (tag v1.0.8, 2026-10-14), so nothing goes into it.
+## 1.0.9: release branch `claude/release-1.0.9` (2026-10-15, on the user's word "збирай все до купи і пушимо 1.0.9")
+Engine = main + `claude/bug-solution`, `claude/guide-plan`, `claude/affectionate-pasteur-421374` (restored apps re-check
+themselves), `claude/recursing-kare-666e77` (app page header at 390 px), `claude/discord-bugs` (Discord tracker); the only
+code conflict was the shell-only route list in test/security.test.ts (bug-patch + build/ack, both kept). Roleplay 4.46.0 =
+fork branch `claude/release-4.46.0` (`785de49`): main + `claude/discord-bugs` (which contains `claude/mobile-fixes`) +
+`claude/guide-kit`; 1035 tests pass. Notes `.fork/release-notes/1.0.9.md`. GitHub #21-#23, #25, #27-#30, #32 close with the
+release; #24, #26, #31 stay open (need the reporter's data / a design decision). The sections below describe each part.
 
 ## Phone fixes (2026-10-15, Roleplay fork branch `claude/mobile-fixes`, not merged; the user adds more phone reports through the day)
 `b483d08`: Profile Structure it reply limit 4000 -> 12000 (Fill 8000), braces before the JSON no longer hide it, the
