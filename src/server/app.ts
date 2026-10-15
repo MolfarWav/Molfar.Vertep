@@ -69,6 +69,7 @@ import { appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, readBuildStatus, rea
 import { builderAsset, builderFrameCsp, builderVersion } from "../builder/assets.js";
 import type { FsOp } from "../builder/fs.js";
 import { parseGuideState } from "../guide-state.js";
+import { clearDir, FolderBusyError, sweepMovedAside } from "../clear-dir.js";
 
 export interface AppEnv {
   /** peerAddress: the connecting peer, injected by the server entry. Proxied
@@ -3408,7 +3409,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // active. A git-source app update replaces it (that's the "modified"
   // warning on the app's update banner).
   const stagePlugin = async (gitUrl: string, staging: string): Promise<{ head: string; manifest: Record<string, unknown> } | { error: string; status: number }> => {
-    fs.rmSync(staging, { recursive: true, force: true });
+    try {
+      await clearDir(staging);
+    } catch (e) {
+      if (e instanceof FolderBusyError) return { error: e.message, status: 409 };
+      throw e;
+    }
     let head: string;
     try {
       head = await gitClone(gitUrl, staging); // head BEFORE stripVcs drops .git
@@ -3458,11 +3464,11 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       : null;
     if (!staged) {
       const r = await stagePlugin(gitUrl, staging);
-      if ("error" in r) { fs.rmSync(staging, { recursive: true, force: true }); return c.json({ error: r.error }, r.status as 422); }
+      if ("error" in r) { await clearDir(staging).catch(() => undefined); return c.json({ error: r.error }, r.status as 422); }
       // fresh clone (the preview's staging was gone): it must be the commit the
       // user reviewed, or the permissions they approved describe different code
       if (reviewedHead && r.head !== reviewedHead) {
-        fs.rmSync(staging, { recursive: true, force: true });
+        await clearDir(staging).catch(() => undefined);
         return c.json({ error: "the repository moved since the preview — run the import again to review what changed" }, 409);
       }
       staged = r;
@@ -3951,8 +3957,15 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const slug = requestedId || (gitUrl.split(/[/:]/).pop() ?? "app").replace(/\.git$/, "").toLowerCase().replace(/[^a-z0-9-]/g, "") || "app";
     const staging = path.join(p.apps, ".staging", slug);
 
+    // a leftover an earlier import could not remove is cleared, retried, or moved aside
+    sweepMovedAside(path.join(p.apps, ".staging"));
     if (!body.confirm) {
-      fs.rmSync(staging, { recursive: true, force: true });
+      try {
+        await clearDir(staging);
+      } catch (e) {
+        if (e instanceof FolderBusyError) return c.json({ error: e.message }, 409);
+        throw e;
+      }
       try {
         const head = await gitClone(gitUrl, staging, ref);
         stripVcs(staging);
@@ -3966,7 +3979,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
           plugins: previewPlugins(staging, staged.plugins),
         });
       } catch (e) {
-        fs.rmSync(staging, { recursive: true, force: true });
+        await clearDir(staging).catch(() => undefined);
         return c.json({ error: `clone failed: ${(e as Error).message}` }, 502);
       }
     }
@@ -3976,7 +3989,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     let head: string | null = null;
     if (!staged) {
       try {
-        fs.rmSync(staging, { recursive: true, force: true });
+        await clearDir(staging);
+      } catch (e) {
+        if (e instanceof FolderBusyError) return c.json({ error: e.message }, 409);
+        throw e;
+      }
+      try {
         head = await gitClone(gitUrl, staging, ref);
         stripVcs(staging);
         fs.writeFileSync(path.join(staging, ".staged-head"), head + "\n", "utf8");
@@ -3990,7 +4008,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       // preview and the code installed here are two different things, and the
       // confirm click would pre-grant capabilities nobody ever saw.
       if (reviewedHead && head !== reviewedHead) {
-        fs.rmSync(staging, { recursive: true, force: true });
+        await clearDir(staging).catch(() => undefined);
         return c.json({ error: "the repository moved since the preview — run the import again to review what changed" }, 409);
       }
     }
