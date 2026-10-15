@@ -7,7 +7,8 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 
 ## Release 1.0.9 plan (user, 2026-10-15)
 One release gathers everything in flight once each branch is fixed and checked: engine `claude/bug-solution`,
-`claude/guide-plan`, `claude/affectionate-pasteur-421374` (restored apps re-check themselves), `claude/discord-bugs`
+`claude/guide-plan`, `claude/affectionate-pasteur-421374` (restored apps re-check themselves),
+`claude/recursing-kare-666e77` (app page header at 390 px; full tests not run yet), `claude/discord-bugs`
 (cloud, the Discord tracker); Roleplay fork `claude/mobile-fixes` and `claude/discord-bugs` (cut from mobile-fixes)
 as one Roleplay version. 1.0.8 is already out (tag v1.0.8, 2026-10-14), so nothing goes into it.
 
