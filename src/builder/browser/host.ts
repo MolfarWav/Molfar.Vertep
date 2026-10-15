@@ -414,7 +414,18 @@ class AppBuild {
       return;
     }
     if (output.unchanged) {
-      this.status((output.errors as BuildMessage[] | undefined)?.length ? { phase: "error", errors: output.errors as BuildMessage[] } : { phase: "ready" });
+      const errors = (output.errors as BuildMessage[] | undefined) ?? [];
+      this.status(errors.length ? { phase: "error", errors } : { phase: "ready" });
+      // nothing to write, but the revision moved (an edit no module reads):
+      // say dist is current for it, or the next open runs a full build and
+      // reloads the app for nothing. Never for a result with errors.
+      if (!errors.length) {
+        try {
+          await api(`${this.base()}/ack`, { method: "POST", body: JSON.stringify({ holder: this.holder, rev }) });
+        } catch {
+          /* a change landed since, or the lease moved: its own build follows */
+        }
+      }
       return;
     }
     try {

@@ -268,27 +268,44 @@
     } catch { /* fall through */ }
     return { local: {}, session: {} };
   }
+  /** false when the browser refused the write (its quota is spent). */
   function writeStorage(username, appId, store) {
-    try { localStorage.setItem(storageKey(username, appId), JSON.stringify(store)); } catch { /* quota */ }
+    try {
+      localStorage.setItem(storageKey(username, appId), JSON.stringify(store));
+      return true;
+    } catch {
+      return false;
+    }
   }
   /** One app's storage share of the shell origin's quota. localStorage is
    *  one budget for the shell and every app; an app filling it would break
    *  everyone else's saves (and its snapshot rides the frame URL). */
   var MAX_APP_STORAGE = 2 * 1024 * 1024;
-  function handleStorage(record, d) {
+  /** Apply one storage write; the frame learns the outcome (storage-ack) so
+   *  a refused draft is not shown as saved. */
+  function handleStorage(record, source, d) {
     var store = readStorage(record.username, record.appId);
     var ns = d.which === "session" ? store.session : store.local;
+    var result = { accepted: true, reason: null };
     if (d.op === "set" && typeof d.key === "string") {
       var prev = Object.prototype.hasOwnProperty.call(ns, d.key) ? ns[d.key] : undefined;
       ns[d.key] = String(d.value);
       if (JSON.stringify(store).length > MAX_APP_STORAGE) {
         if (prev === undefined) delete ns[d.key]; else ns[d.key] = prev;
-        return;
+        result = { accepted: false, reason: "app-share-full" };
       }
     }
     else if (d.op === "remove" && typeof d.key === "string") delete ns[d.key];
     else if (d.op === "clear") store[d.which === "session" ? "session" : "local"] = {};
-    writeStorage(record.username, record.appId, store);
+    if (result.accepted && !writeStorage(record.username, record.appId, store)) result = { accepted: false, reason: "browser-quota" };
+    // an older bridge (a page cached across an update) sends no opId and expects no answer
+    if (typeof d.opId === "number") {
+      send(source, {
+        __chrysalis: 1, type: "storage-ack", opId: d.opId, op: d.op,
+        which: d.which === "session" ? "session" : "local",
+        key: typeof d.key === "string" ? d.key : null, accepted: result.accepted, reason: result.reason,
+      });
+    }
   }
 
   window.addEventListener("message", function (e) {
@@ -297,7 +314,9 @@
     var d = e.data;
     if (!d || d.__chrysalis !== 1) return;
     if (d.type === "hello") {
-      send(e.source, { __chrysalis: 1, type: "init", nonce: record.nonce });
+      // the shell's copy of the app's storage rides along: a frame that
+      // reloaded itself from an older hash snapshot catches up with it
+      send(e.source, { __chrysalis: 1, type: "init", nonce: record.nonce, storage: readStorage(record.username, record.appId) });
       return;
     }
     // storage is accepted BEFORE the handshake: a write followed immediately
@@ -305,7 +324,7 @@
     // registered source window is the gate, and storage carries no authority
     // beyond the app's own data, so the nonce adds nothing here.
     if (d.type === "storage") {
-      handleStorage(record, d);
+      handleStorage(record, e.source, d);
       return;
     }
     if (d.nonce !== record.nonce) return;

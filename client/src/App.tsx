@@ -146,6 +146,13 @@ function Shell(props: { theme: ThemeControl }) {
   // badge and the Updates panel all read these
   const [updatesOpen, setUpdatesOpen] = useState(false)
   const appUpdates = useAppUpdates(launch)
+  // the update check makes a restored official app official again when its
+  // code is the repository's: the app list then says so
+  const verifiedRestored = (launch?.apps ?? []).some((a) => a.restored && !appUpdates.loading && !appUpdates.restored(a.id))
+  useEffect(() => {
+    if (verifiedRestored) void refreshLaunch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refreshLaunch is rebuilt every render
+  }, [verifiedRestored])
   const engineRelease = useEngineRelease(launch?.engine?.admin === true)
   const updatesWaiting = appUpdates.count + (engineRelease.release?.newer ? 1 : 0)
   // one plugins dialog for the whole shell: the app toolbar opens it on
@@ -1463,6 +1470,12 @@ function LaunchPicker(props: {
                           >
                             {tr("Official App")}
                           </span> : null}
+                        {a.restored && updates.restored(a.id) ? <span
+                            className="shrink-0 rounded-full bg-warning-soft/30 px-1.5 py-px text-9 font-medium tracking-wide text-ink"
+                            title={tr("Restored from a backup: links to Settings and Molfar are off until it is checked against its official version.")}
+                          >
+                            {tr("Check needed")}
+                          </span> : null}
                         {updates.has(a.id) ? <span
                             className="shrink-0 rounded-full bg-warning-soft/30 px-1.5 py-px text-9 font-medium tracking-wide text-ink"
                             title={tr("Update available")}
@@ -1729,9 +1742,11 @@ function AppDetail(props: {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+      {/* narrow pane (phones): name and Launch share the first row, the
+          secondary actions wrap to a row of their own below */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
         <button
-          className="hidden size-7 cursor-pointer items-center justify-center rounded-md text-ink-muted hover:bg-hover @max-4xl:flex"
+          className="hidden size-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-ink-muted hover:bg-hover @max-4xl:flex @max-4xl:size-[40px]"
           onClick={props.onBack}
           aria-label={tr("Back to apps")}
         >
@@ -1739,23 +1754,23 @@ function AppDetail(props: {
         </button>
         <div className="min-w-0 flex-1">
           <p className="truncate text-14 font-medium text-ink">{props.appId}</p>
-          <p className="text-11 text-ink-faint">
+          <p className="truncate text-11 text-ink-faint">
             {detail.loading ? tr("reading files…") : `${stats().files} files · ~${stats().kb} KB`}
             {detail.data?.manifest?.version ? ` · v${detail.data.manifest.version}` : ""}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="order-last flex w-full flex-wrap items-center gap-1.5 @4xl:order-none @4xl:w-auto @4xl:shrink-0">
           {props.repository ? <a
               href={props.repository!}
               target="_blank"
               rel="noreferrer noopener"
-              className="rounded-md px-2 py-1 text-12 text-ink-muted hover:bg-hover hover:text-ink"
+              className="flex items-center rounded-md px-2 py-1 text-12 text-ink-muted hover:bg-hover hover:text-ink @max-4xl:h-[40px]"
               title={props.repository}
             >
               {tr("Repository ↗")}
             </a> : null}
           <button
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-ink-faint hover:bg-hover hover:text-ink disabled:opacity-50"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-ink-faint hover:bg-hover hover:text-ink disabled:opacity-50 @max-4xl:size-[40px]"
             title={tr("Export app")}
             aria-label={tr("Export app")}
             disabled={exporting}
@@ -1766,6 +1781,7 @@ function AppDetail(props: {
           {canUpdate ? <Button
               variant="ghost-muted"
               size="small"
+              className="@max-4xl:min-h-[40px]"
               disabled={updates.state === "checking" || updates.state === "updating"}
               onClick={() => void update.check()}
             >
@@ -1777,13 +1793,13 @@ function AppDetail(props: {
                     ? tr("Updating…")
                     : tr("Check for updates")}
             </Button> : null}
-          <Button variant="neutral" size="small" onClick={props.onLaunch}>
-            <span className="flex items-center gap-1.5">
-              <IconSmall name="outline-square-arrow" size="small" />
-              {tr("Launch")}
-            </span>
-          </Button>
         </div>
+        <Button variant="neutral" size="small" className="shrink-0 @max-4xl:min-h-[40px]" onClick={props.onLaunch}>
+          <span className="flex items-center gap-1.5">
+            <IconSmall name="outline-square-arrow" size="small" />
+            {tr("Launch")}
+          </span>
+        </Button>
       </div>
       {exportErr ? <div className="border-b border-line px-4 py-1.5 text-11 text-danger">{tr("Export failed: {message}", { message: exportErr })}</div> : null}
       <AppUpdateBanner update={update} />

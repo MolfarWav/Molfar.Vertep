@@ -1,11 +1,11 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-14.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-15.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.0.9 in progress, all local, nothing pushed (user, 2026-10-15: push and release everything together)
+## 1.0.10 = the guide in the shell and on Molfar's page, #33, #34 (1.0.9 shipped without them, 2026-10-15)
 Engine branch `claude/guide-plan` (worktree `.claude/worktrees/readme-canvas`): bug-solution merged (`0619b42`),
 launcher fix for GitHub #33 (`8c5ed71`: stops when git refuses the folder, offers safe.directory for that one folder,
 README notes; tested with GIT_TEST_ASSUME_DIFFERENT_OWNER and a temp global config, a path with "(x86)" included),
@@ -42,6 +42,23 @@ vs manifest 4.45.0 until the release bumps it. Browser-checked dark, light, 390 
 Rough edges: on a phone the Canvas links tour has one visible step (list mode); the What's new card on Home overlaps the
 Achievements card; the `new.guide` tip's rail target is inside More on phones (centered bubble). Release (4.46.0: manifest,
 CHANGELOG, merge to the fork's main) on the user's word. Next: step 2 (help "?" and the remaining tours).
+## 1.0.9: RELEASED 2026-10-15 (tag v1.0.9 on `22c5576`, pushed on the user's word; Roleplay 4.46.0 on the fork main `785de49`; issues closed)
+Engine = main + `claude/bug-solution`, `claude/guide-plan`, `claude/affectionate-pasteur-421374` (restored apps re-check
+themselves), `claude/recursing-kare-666e77` (app page header at 390 px), `claude/discord-bugs` (Discord tracker); the only
+code conflict was the shell-only route list in test/security.test.ts (bug-patch + build/ack, both kept). Roleplay 4.46.0 =
+fork branch `claude/release-4.46.0` (`785de49`): main + `claude/discord-bugs` (which contains `claude/mobile-fixes`) +
+`claude/guide-kit`; 1035 tests pass. Notes `.fork/release-notes/1.0.9.md`. GitHub #21-#23, #25, #27-#30, #32 close with the
+release; #24, #26, #31 stay open (need the reporter's data / a design decision). The sections below describe each part.
+
+## Phone fixes (2026-10-15, Roleplay fork branch `claude/mobile-fixes`, not merged; the user adds more phone reports through the day)
+`b483d08`: Profile Structure it reply limit 4000 -> 12000 (Fill 8000), braces before the JSON no longer hide it, the
+error says "cut off" vs "not JSON"; shell refusals ("not allowed for this app") explained; number fields keep the typed
+text while focused (no "07500"); the context ring and out-of-context line use the model's window (they used the
+preset's 8192); phone composer two rows (Write for me + big editor beside "+"/send; Continue/Another in "+").
+Cause of "not allowed" on the user's phone, confirmed by the user: the profile was moved there through a Settings
+backup, and a restored app is not official (`restored: true` in its `.source.json`) until an update whose code matches
+the official tree lands. An up-to-date app never gets that update: engine follow-up to offer "reinstall the official
+version" (proposed as a separate session, not started).
 
 ## Send a fix from Molfar (for 1.0.9, branch `claude/bug-solution`, not merged; 1.0.9 also takes the in-app guide from `claude/guide-plan`)
 Discord idea: a bug goes to Molfar first, and a fix that works goes to GitHub so it ships for everyone. User's choices
@@ -62,6 +79,38 @@ Discord idea: a bug goes to Molfar first, and a fix that works goes to GitHub so
   carries every field and the patch; the shell block in en and uk, disabled when empty; the handoff reaches Molfar.
   Not checked: a real model going through the whole skill. Label `solved-by-molfar` created on GitHub (2026-10-14).
 - Tests: 707 pass; the failures are the Windows-only ones that fail on main too (0600 modes, tar, edge-tts network).
+## In-app guide, step 1: built, not released (Roleplay fork branch `claude/guide-kit`, `df3561b`, on 4.45.0)
+Plan: `.fork/handoff/guide/PLAN.md`. Decided with the user 2026-10-14: state in the app setting `guide` (not localStorage),
+a player with chats and no state gets What's new for everything after 4.43.0 (a fresh install gets none, only tours),
+own small spotlight kit (no library). Code: `src/lib/guide.ts` (format and logic), `src/lib/guide-tips.ts` (5 What's new
+tips, tours for Canvas links, Prompt board, composer; en + uk; `APP_VERSION`), `src/components/guide/` (host, spotlight,
+card, Settings → Guide block, place hook), `data-guide` attributes. Tests 1027 pass; the one failure is APP_VERSION 4.46.0
+vs manifest 4.45.0 until the release bumps it. Browser-checked dark, light, 390 px, uk (shots `E:\Claude\guide-shots\`).
+Rough edges: on a phone the Canvas links tour has one visible step (list mode); the What's new card on Home overlaps the
+Achievements card; the `new.guide` tip's rail target is inside More on phones (centered bubble). Release (4.46.0: manifest,
+CHANGELOG, merge to the fork's main) on the user's word. Next: step 2 (help "?" and the remaining tours).
+## Discord bug tracker (2026-10-15, not released): engine and Roleplay branch `claude/discord-bugs` in both
+Input: `.fork/handoff/bug-tracker/TRACKER.md` on `claude/discord-bug-tracker` (12 findings, a public audit). All 12 real in
+the current code; GitHub #21-#32 (bug label; #31 enhancement). Roleplay branch cut from `claude/mobile-fixes` (not main).
+- Fixed, Roleplay: #21/#22 (BUG-001/002) Dashboard and Litopys rankers index the scene once (`sceneMatcher`,
+  `scanMatcherM3b`); same order as the pairwise scan on 1,200 random rankings, 40,000-word differential test. #23 (BUG-008)
+  a fitting insert removes the old trimmed notice (dashboard test 13 changed). #29 (BUG-015) "Write for me" result kept per
+  chat with the draft it started from (`composerDrafts`, `lib/drafts.ts`), goes in only over that draft, else offered.
+  #30 (BUG-016) `sendMessage` returns sent / not-sent / stopped (checked against the refreshed transcript); not-sent puts
+  text and attachments back. Persist skips unchanged writes (`quietStorage`).
+- Fixed, engine: #25/#27/#28 (BUG-011/013/014) `app-bridge*.js`: unchanged writes not sent; every write gets a storage-ack
+  (accepted or `app-share-full` / `browser-quota`); refused keys stay in the frame + hash, `window.chrysalisStorage.unsaved()`
+  and a `chrysalis:storage` event; the handshake (`init`) carries the shell's copy and a reloaded frame takes it for keys it
+  has not written (one guarded reload if the app already read storage). Roleplay shows an amber "not saved" line with Copy.
+  #32 (BUG-018) `POST /v1/apps/:id/build/ack`: an unchanged build records its revision (lease holder, current rev, good dev
+  build only); shell-only route added to the security lists.
+- Open: #24 (BUG-010, needs the reporter's "Reloaded: ..." toast text), #26 (BUG-012, needs logs if it recurs), #31
+  (BUG-017, a design decision on asset cleanup). Not done: a shell-owned fallback copy for a refused draft (a full shell
+  reload still loses a refused draft; the warning says so).
+- Tests: engine 731 pass, 2 fail (edge-tts live network 403 in the cloud, as in 1.0.7); Roleplay 1023 pass.
+- Browser check (Chromium, real engine + Roleplay built in the browser): refused draft shows the amber line with Copy at
+  1280 and 390 px (wraps to two lines, no sideways scroll), gone after space frees; an in-frame reload keeps the draft.
+  Roleplay's own theme stays dark in the "light" runs (only the shell changes). Shots were in the cloud scratchpad, not kept.
 
 ## 1.0.8: RELEASED 2026-10-14 (tag v1.0.8; Roleplay 4.44.0 `99d8270` and 4.45.0 `e964362` on the fork's main)
 Engine: Claude 5.5 in the Anthropic catalog (`src/model-additions.ts`), visible names. Roleplay 4.44.0: Canvas stage 1b (Prompt board,
@@ -71,6 +120,30 @@ names, five Dashboard events. UX audit (desktop copy, gitignored `data/ux-audit/
 (jargon: Lorebooks, Personas, Tools) and six rows (Light shell vs Roleplay theme, button colours across screens, 11 editor tabs, red
 lorebook switches, preset internal ids, Tools tab rows). Open questions for the user: small-model prompt problems in group chats
 (no examples yet). Next by the roadmap: settle 4.44/4.45, then Decider (`.fork/handoff/canvas/PLAN.md` section 15).
+
+## Restored apps can become official again (2026-10-15, not released)
+Branch `claude/affectionate-pasteur-421374`. The user moved a profile desktop -> phone through a Settings backup: every app came
+back `restored: true` (its baseline came with the file), so Roleplay was unofficial and the bridge refused every shell link
+("not allowed for this app"). Only an update that landed could clear it, and an app at the latest version is never offered one.
+Now automatic (the user: a move that needs a manual step makes no sense): both update checks (`GET /v1/apps/updates`, run
+on shell load, and `GET /v1/apps/:id/updates`) call `verifyRestored` for an official app still marked restored: a shallow
+clone of the branch head, plugin sources stamped, `readCodeTree` + `sameTree` against the app. Match -> `restored` cleared
+and the baseline replaced by the fetched tree; the shell refreshes `/v1/launch`. No match -> `restored: "differs"`
+(remembered per remote head + code hash, so no clone on every load); no answer -> `"unchecked"`, tried on the next check.
+Only those two show the "Check needed" badge and a note on the app page: "differs" -> "Replace with official version" ->
+confirm -> the update route with `theirs` at any head, which for a restored app is an exact replace (`replaceTree` in
+`src/apps/update.ts`; the backup's baseline decides nothing); "unchecked" -> "Check again". An app behind the branch head
+counts as "differs" (a clone only fetches the head); a plain Update clears it too when the code was not edited. Tests in
+`test/app-store.test.ts` (match -> official by itself with the fetched baseline; differs; no answer; plain update keeps
+edits; theirs -> official; community source never reported nor cleared).
+The Roleplay side (fork branch `claude/mobile-fixes`) explains the refusal. Seen in passing: the app page header at 390 px
+is cramped (size line wraps per word, "Launch" cut off) - not touched here.
+## App detail header on phones (2026-10-15, branch `claude/recursing-kare-666e77`, not released)
+Launcher's app detail pane (`AppDetail` in `client/src/App.tsx`): below the `@4xl` container width the name + Launch share the
+first row and Repository / export / update check wrap to a row of their own; name and size line truncate; Launch, back, export and
+the update button are 40 px tall on phones. Explicit `[40px]`: the shell's `--spacing` is scaled, `size-10` there is 32.5 px. Desktop
+row unchanged. Browser-checked 390 px light (ru default, uk) and 1280 px dark. Not touched: the size line's "files"/"KB" are
+untranslated, the launcher footer wraps in Ukrainian at 390 px.
 
 ## Batch: visible names, Claude 5.5, phone headers (2026-10-14, not released)
 Engine branch `claude/names-models-ux` (worktree `.claude/worktrees/names-models-ux`, on top of the Canvas docs): `44161d7` visible
