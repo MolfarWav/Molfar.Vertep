@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.0.10 = the guide in the shell and on Molfar's page, #33, #34 (1.0.9 shipped without them, 2026-10-15)
+## 1.0.10 = the guide in the shell and on Molfar's page, #33, #34: main fast-forwarded 2026-10-15, the tag `v1.0.10` is the user's (Roleplay 4.47.0 on the fork's main)
 Engine branch `claude/guide-plan` (worktree `.claude/worktrees/readme-canvas`): bug-solution merged (`0619b42`),
 launcher fix for GitHub #33 (`8c5ed71`: stops when git refuses the folder, offers safe.directory for that one folder,
 README notes; tested with GIT_TEST_ASSUME_DIFFERENT_OWNER and a temp global config, a path with "(x86)" included),
