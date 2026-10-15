@@ -5,6 +5,16 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Phone fixes (2026-10-15, Roleplay fork branch `claude/mobile-fixes`, not merged; the user adds more phone reports through the day)
+`b483d08`: Profile Structure it reply limit 4000 -> 12000 (Fill 8000), braces before the JSON no longer hide it, the
+error says "cut off" vs "not JSON"; shell refusals ("not allowed for this app") explained; number fields keep the typed
+text while focused (no "07500"); the context ring and out-of-context line use the model's window (they used the
+preset's 8192); phone composer two rows (Write for me + big editor beside "+"/send; Continue/Another in "+").
+Cause of "not allowed" on the user's phone, confirmed by the user: the profile was moved there through a Settings
+backup, and a restored app is not official (`restored: true` in its `.source.json`) until an update whose code matches
+the official tree lands. An up-to-date app never gets that update: engine follow-up to offer "reinstall the official
+version" (proposed as a separate session, not started).
+
 ## Send a fix from Molfar (for 1.0.9, branch `claude/bug-solution`, not merged; 1.0.9 also takes the in-app guide from `claude/guide-plan`)
 Discord idea: a bug goes to Molfar first, and a fix that works goes to GitHub so it ships for everyone. User's choices
 (2026-10-14): a pre-filled form (nothing sent by the engine), the entry in the bug dialog, description + patch.
