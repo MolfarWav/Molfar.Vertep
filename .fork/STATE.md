@@ -15,7 +15,12 @@ account menu and start-page footer, Settings > General > Guide; texts fact-check
 Tests 729 pass, 15 known Windows-only failures. Roleplay fork `claude/guide-kit` (worktree `E:\Claude\rp-guide`) has
 steps 1-2 + `0e287b5` (bug tip names Ask Molfar first). Left for the release: Roleplay 4.46.0 (manifest, CHANGELOG,
 merge), engine 1.0.9 (package.json, CHANGELOG, release notes incl. #33, close #33 with it), pushes on the user's word.
-Guide steps 4 (Molfar's page) and 5 (Molfar's skill) remain in `.fork/handoff/guide/PLAN.md`.
+Guide step 4 = Molfar's page (`52f915e`, 2026-10-15): `client-agent/src/guide/` (copies of the pure shell modules:
+the agent builder cannot import from client/, `test/guide-agent.test.ts` fails on drift), Help in the header / phone
+sidebar, tours agent.chat and agent.project, 21 help items, safety texts fact-checked; shared state store
+(`store-core.ts`: a save is a change re-applied on a fresh GET, serialized, a failed save does not block later ones).
+No What's new on that page (the shell's owns `lastVersion`). Shots `E:\Claude\guide-shots\step4\`. Tests 746 pass,
+15 known Windows-only failures. Guide step 5 (Molfar's skill: tips for what he builds) remains in the plan.
 
 ## In-app guide, steps 1-2: built, not released, not pushed (Roleplay fork branch `claude/guide-kit`, `b2b8981`, on 4.45.0)
 Step 2 (`b2b8981`, 2026-10-15, local commit in the worktree `E:\Claude\rp-guide`; another session works in the main
