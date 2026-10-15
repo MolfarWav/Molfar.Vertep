@@ -601,4 +601,15 @@ describe("installing from the store", () => {
     expect(((await (await call("/v1/settings")).json()) as { storeSeen: string | null }).storeSeen).toBe("2026-09-13");
     expect((await call("/v1/settings", { method: "PUT", body: JSON.stringify({ storeSeen: "soon" }) })).status).toBe(400);
   });
+
+  it("keeps the shell guide's state and refuses anything else under that key", async () => {
+    type G = { guide: unknown };
+    expect(((await (await call("/v1/settings")).json()) as G).guide).toBeNull();
+    const guide = { seen: ["new.split", "new.split"], tours: ["shell.home"], lastVersion: "1.0.9", showTours: false };
+    expect((await call("/v1/settings", { method: "PUT", body: JSON.stringify({ guide }) })).status).toBe(200);
+    expect(((await (await call("/v1/settings")).json()) as G).guide).toEqual({ ...guide, seen: ["new.split"] });
+    for (const bad of [{ seen: "x" }, { seen: ["<script>"] }, { lastVersion: "next" }, { showTours: "yes" }, { extra: 1 }, [], { seen: Array(301).fill("a") }]) {
+      expect((await call("/v1/settings", { method: "PUT", body: JSON.stringify({ guide: bad }) })).status, JSON.stringify(bad).slice(0, 40)).toBe(400);
+    }
+  });
 });

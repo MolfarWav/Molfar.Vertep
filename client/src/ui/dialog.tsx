@@ -4,6 +4,7 @@ import { cn } from "./cn"
 import { IconButton } from "./button"
 import { Icon } from "./icon"
 import { tr } from "../i18n/index"
+import { guideTarget } from "../guide/events"
 
 export interface ModalDialogProps {
   open: boolean
@@ -17,8 +18,9 @@ export function ModalDialog({ open, onClose, children }: ModalDialogProps) {
   return (
     <Base.Root
       open={open}
-      onOpenChange={(next) => {
-        if (!next) onClose()
+      onOpenChange={(next, details) => {
+        // pressing a button of the guide (it floats above the dialog) is not a click outside
+        if (!next && !guideTarget(details?.event)) onClose()
       }}
     >
       <Base.Portal>

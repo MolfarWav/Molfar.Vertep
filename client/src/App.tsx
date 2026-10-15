@@ -18,6 +18,9 @@ import { BugReportDialog, recordClientError } from "./bug-report"
 import type { LaunchInfo, Me, StoreApp } from "./types"
 import { StoreDialog, WelcomeApps, useStore } from "./store"
 import { getLocale, tr, useLocale } from "./i18n/index"
+import { GuideHost } from "./guide/guide-host"
+import { GUIDE_MENU_EVENT, GUIDE_STORE_EVENT, openHelp } from "./guide/events"
+import { GuidePlace, useGuidePlace } from "./guide/place"
 import { DEFAULT_THEME, THEME_KEY, applyStoredTheme, applyTheme, isBuiltinTheme, storedThemeId, themeSwatch, type ShellTheme } from "./theme"
 
 type Tab = { id: string; kind: "agent" | "app" | "new"; name: string }
@@ -473,7 +476,7 @@ function Shell(props: { theme: ThemeControl }) {
             </button>
             {/* one strip for both layouts: tabs with an accent underline on
                 desktop, a compact segmented control on phones */}
-            <nav ref={tabNavRef} className="no-scrollbar flex min-w-0 flex-1 items-stretch overflow-x-auto max-md:items-center" aria-label={tr("Tabs")}>
+            <nav ref={tabNavRef} data-guide="header.tabs" className="no-scrollbar flex min-w-0 flex-1 items-stretch overflow-x-auto max-md:items-center" aria-label={tr("Tabs")}>
               <div className="flex h-full w-max items-stretch gap-1.5 max-md:h-8">
               {tabs.map((t, i) => (
                   <div key={t.id}
@@ -532,10 +535,11 @@ function Shell(props: { theme: ThemeControl }) {
             <div className="ml-auto flex shrink-0 items-center gap-0.5 pl-1">
               {/* the open app's toolbar (Split, Fullscreen, Plugins, Rebuild)
                   renders here; phones keep those actions in the account menu */}
-              <div ref={setActionsSlot} className="flex items-center gap-0.5 max-md:hidden" />
+              <div ref={setActionsSlot} data-guide="app.toolbar" className="flex items-center gap-0.5 max-md:hidden" />
               <button
                 className="relative flex h-[30px] w-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[3px] text-ink-muted transition-colors hover:bg-hover hover:text-ink"
                 onClick={() => setUpdatesOpen(true)}
+                data-guide="header.updates"
                 title={tr("Updates")}
                 aria-label={tr("Updates")}
               >
@@ -545,6 +549,7 @@ function Shell(props: { theme: ThemeControl }) {
               <button
                 className="flex h-[30px] w-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[3px] text-ink-muted transition-colors hover:bg-hover hover:text-ink max-md:hidden"
                 onClick={() => openSettings()}
+                data-guide="header.settings"
                 title={tr("Settings")}
                 aria-label={tr("Settings")}
               >
@@ -561,6 +566,7 @@ function Shell(props: { theme: ThemeControl }) {
               />
             </div>
           </header>
+          {active?.kind === "app" ? <GuidePlace place="shell.app" /> : null}
           <main
             className="grid min-h-0 min-w-0 flex-1"
             style={{
@@ -647,6 +653,20 @@ function Shell(props: { theme: ThemeControl }) {
         </div> : null}
       {user ? (
         <>
+        <GuideHost
+          engineVersion={launch?.engine?.version ?? null}
+          apps={launch ? launch.apps.map((a) => a.id) : null}
+          actions={{
+            goHome,
+            openAgent,
+            openApp: (id) => {
+              const target = id ?? (active?.kind === "app" ? active.id : launch?.apps[0]?.id)
+              if (target) openApp(target)
+            },
+            openSettings: (section) => openSettings(section as TabValue | undefined),
+            closeSettings: () => setSettingsOpen(false),
+          }}
+        />
         <BugReportDialog
           onAskMolfar={(prompt) => askAgent(prompt, "start")}
           open={bugOpen}
@@ -694,14 +714,31 @@ function UserMenu(props: {
   const app = props.app
   const btnRef = useRef<HTMLButtonElement>(null)
   const [pos, setPos] = useState<{ top: string; right: string } | null>(null)
-  const toggle = () => {
-    if (!open && btnRef.current) {
+  const place = () => {
+    if (btnRef.current) {
       const r = btnRef.current.getBoundingClientRect()
       setPos({ top: `${r.bottom + 6}px`, right: `${window.innerWidth - r.right}px` })
     }
-    if (!open) void props.theme.load() // pick up themes added since the shell started
+  }
+  const toggle = () => {
+    if (!open) {
+      place()
+      void props.theme.load() // pick up themes added since the shell started
+    }
     setOpen(!open)
   }
+  // the guide opens and closes the menu to point at its items
+  // biome-ignore lint/correctness/useExhaustiveDependencies: place only reads a ref and sets state
+  useEffect(() => {
+    const on = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === "open") {
+        place()
+        setOpen(true)
+      } else setOpen(false)
+    }
+    window.addEventListener(GUIDE_MENU_EVENT, on)
+    return () => window.removeEventListener(GUIDE_MENU_EVENT, on)
+  }, [])
   const themeChoices: { id: string; name: string }[] = [
     { id: "vertep", name: tr("Vertep") },
     { id: "dark", name: tr("Dark") },
@@ -717,6 +754,7 @@ function UserMenu(props: {
         style={{ height: "32px" }}
         className="ml-1 max-w-[160px] gap-1.5 rounded-[3px] border border-line px-2 font-heading max-md:ml-0 max-md:gap-1 max-md:px-1.5"
         title={tr("Account")}
+        data-guide="header.account header.settings"
         aria-haspopup="menu"
         aria-expanded={open ? "true" : "false"}
         onClick={toggle}
@@ -795,6 +833,21 @@ function UserMenu(props: {
             </button>
             <button
               role="menuitem"
+              data-guide="menu.help"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 transition-colors hover:bg-hover"
+              onClick={() => {
+                setOpen(false)
+                openHelp()
+              }}
+            >
+              <span className="flex size-4 shrink-0 items-center justify-center">
+                <IconSmall name="info" />
+              </span>
+              {tr("Help")}
+            </button>
+            <button
+              role="menuitem"
+              data-guide="menu.report-bug"
               className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 transition-colors hover:bg-hover"
               onClick={() => {
                 setOpen(false)
@@ -806,7 +859,7 @@ function UserMenu(props: {
               </span>
               {tr("Report a bug")}
             </button>
-            <div role="group" aria-label={tr("Theme")} className="my-1 flex flex-col border-y border-line py-1">
+            <div role="group" data-guide="menu.theme" aria-label={tr("Theme")} className="my-1 flex flex-col border-y border-line py-1">
               <div className="px-2 py-1 text-11 text-ink-muted">{tr("Theme")}</div>
               {themeChoices.map((c) => {
                 const on = props.theme.id === c.id
@@ -956,6 +1009,7 @@ function AppCanvas(props: {
       {props.actionsSlot && props.showActions ? createPortal(
         <>
           <button
+            data-guide="app.split"
             className={BAR_BUTTON + (props.split ? " text-ink!" : "")}
             title={props.split ? tr("Unsplit, back to full width") : tr("Split right: Molfar left, this app live on the right")}
             onClick={props.onSplit}
@@ -1319,6 +1373,13 @@ function LaunchPicker(props: {
   const [browsing, setBrowsing] = useState(false)
   const [welcomeSkipped, setWelcomeSkipped] = useState(false)
   const store = useStore()
+  useGuidePlace("shell.home", !!props.launch)
+  // the guide asks for the Store from outside ("Show me")
+  useEffect(() => {
+    const on = () => setBrowsing(true)
+    window.addEventListener(GUIDE_STORE_EVENT, on)
+    return () => window.removeEventListener(GUIDE_STORE_EVENT, on)
+  }, [])
   const updates = props.updates
   const apps = props.launch?.apps ?? []
   const welcome = !!props.launch && apps.length === 0 && !welcomeSkipped
@@ -1364,6 +1425,7 @@ function LaunchPicker(props: {
           >
             <p className={sectionLabel}>{tr("System")}</p>
             <button
+              data-guide="home.molfar"
               className="flex items-center gap-3 rounded-lg border border-line px-4 py-3 text-left transition-colors hover:bg-hover"
               onClick={props.onAgent}
             >
@@ -1375,6 +1437,7 @@ function LaunchPicker(props: {
             </button>
 
             <p className={sectionLabel}>{tr("Your apps")}</p>
+            <div data-guide="home.apps" className="flex flex-col gap-1.5">
             {props.launch && !apps.length ? <p className="px-1 text-12 text-ink-faint">{tr("No apps yet.")}</p> : null}
             {apps.map((a) => (
                 <div key={a.id}
@@ -1430,9 +1493,12 @@ function LaunchPicker(props: {
                   </button>
                 </div>
               ))}
+            </div>
 
             <p className={sectionLabel}>{tr("Add")}</p>
+            <div data-guide="home.add" className="flex flex-col gap-1.5">
             {store.list?.enabled !== false ? <button
+                data-guide="home.store"
                 className="flex items-center gap-3 rounded-lg border border-dashed border-line px-4 py-3 text-left transition-colors hover:bg-hover"
                 onClick={() => setBrowsing(true)}
               >
@@ -1447,6 +1513,7 @@ function LaunchPicker(props: {
               </button> : null}
             <div className="grid grid-cols-2 gap-1.5">
               <button
+                data-guide="home.new-app"
                 className="flex flex-col gap-1.5 rounded-lg border border-dashed border-line px-3 py-3 text-left transition-colors hover:bg-hover"
                 onClick={() => setCreating(true)}
               >
@@ -1455,6 +1522,7 @@ function LaunchPicker(props: {
                 <span className="text-11 leading-4 text-ink-muted">{tr("a starter Molfar builds out with you")}</span>
               </button>
               <button
+                data-guide="home.import-app"
                 className="flex flex-col gap-1.5 rounded-lg border border-dashed border-line px-3 py-3 text-left transition-colors hover:bg-hover"
                 onClick={() => setImporting({ from: null })}
               >
@@ -1462,6 +1530,7 @@ function LaunchPicker(props: {
                 <span className="text-13 font-medium text-ink">{tr("Import app")}</span>
                 <span className="text-11 leading-4 text-ink-muted">{tr("from git or a backup file")}</span>
               </button>
+            </div>
             </div>
           </div>
 
@@ -1490,7 +1559,7 @@ function LaunchPicker(props: {
       </div>
       {props.launch?.engine ? (
           <div className="flex items-center gap-2 px-1 pb-1 pt-0.5 text-11 text-ink-faint">
-            <span>{tr("Molfar Vertep v{version}", { version: props.launch.engine.version })}</span>
+            <span data-guide="home.version">{tr("Molfar Vertep v{version}", { version: props.launch.engine.version })}</span>
             {props.launch.engine.admin ? <EngineUpdateButton release={props.engineRelease} /> : null}
             {props.launch.engine.repository ? <a
                 href={props.launch.engine.repository}
@@ -1518,11 +1587,21 @@ function LaunchPicker(props: {
             </a>
             <button
               type="button"
+              data-guide="home.report-bug"
               onClick={props.onReportBug}
               className="flex cursor-pointer items-center gap-1 text-ink-muted transition-colors hover:text-ink"
             >
               <IconSmall name="bug" size={14} />
               {tr("Report a bug")}
+            </button>
+            <button
+              type="button"
+              data-guide="home.help"
+              onClick={openHelp}
+              className="flex cursor-pointer items-center gap-1 text-ink-muted transition-colors hover:text-ink"
+            >
+              <IconSmall name="info" size={14} />
+              {tr("Help")}
             </button>
           </div>
         ) : null}

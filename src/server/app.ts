@@ -68,6 +68,7 @@ import { installApp, hasPackages, healPackages, installMissingPackages, packages
 import { appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, readBuildStatus, readDevMeta, sourceRev, takeLease, writeClientErrors, writeClientLogs, writeOutput } from "../builder/server.js";
 import { builderAsset, builderFrameCsp, builderVersion } from "../builder/assets.js";
 import type { FsOp } from "../builder/fs.js";
+import { parseGuideState } from "../guide-state.js";
 
 export interface AppEnv {
   /** peerAddress: the connecting peer, injected by the server entry. Proxied
@@ -1795,16 +1796,19 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
             ? settings.autoCompact
             : true,
       smallModelMode: isSmallModelMode(settings.smallModelMode) ? settings.smallModelMode : "auto",
+      guide: parseGuideState(settings.guide),
     });
   });
 
   app.put("/v1/settings", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown }>().catch(() => null) ?? {};
-    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body)) {
-      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact or smallModelMode required" }, 400);
+    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; guide?: unknown }>().catch(() => null) ?? {};
+    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("guide" in body)) {
+      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode or guide required" }, 400);
     }
+    const guide = body.guide === undefined ? undefined : parseGuideState(body.guide);
+    if (guide === null) return c.json({ error: "guide must be { seen?, tours?, lastVersion?, showTours? }" }, 400);
     if (body.smallModelMode !== undefined && !isSmallModelMode(body.smallModelMode)) {
       return c.json({ error: "smallModelMode must be auto, on or off" }, 400);
     }
@@ -1838,6 +1842,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.reasoning !== undefined) settings.reasoning = body.reasoning;
     if (body.autoCompact !== undefined) settings.autoCompact = body.autoCompact;
     if (body.smallModelMode !== undefined) settings.smallModelMode = body.smallModelMode;
+    if (guide !== undefined) settings.guide = guide;
     fs.writeFileSync(p.settings, JSON.stringify(settings, null, 2) + "\n");
     const changes: string[] = [];
     if (body.launchDefault !== undefined) changes.push("launch default");
@@ -1846,8 +1851,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.reasoning !== undefined) changes.push("thinking level");
     if (body.autoCompact !== undefined) changes.push("auto-compact");
     if (body.smallModelMode !== undefined) changes.push("small-model mode");
+    if (guide !== undefined) changes.push("guide");
     await git.commitAll(p.root, u.username, `settings: ${changes.join(", ")}`).catch(() => undefined);
-    evictAgents(u.username); // agents snapshot model + reasoning at creation
+    // agents snapshot model + reasoning at creation; the guide's state is not in their prompt
+    if (changes.some((x) => x !== "guide")) evictAgents(u.username);
     return c.json({ ok: true });
   });
 

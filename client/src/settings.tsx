@@ -45,6 +45,8 @@ import type { Me } from "./types"
 import { ServerTab } from "./server-settings"
 import { ModelPanel } from "./model-panel"
 import { LOCALES, getLocale, setLocale, tr, useLocale, type Locale } from "./i18n/index"
+import { GuideSection } from "./guide/guide-settings"
+import { useGuidePlace } from "./guide/place"
 
 export const inputClass =
   "min-w-0 flex-1 rounded-lg border border-line bg-panel px-3 py-1.5 text-13 text-ink outline-none placeholder:text-ink-faint focus:border-line-focus"
@@ -90,6 +92,7 @@ export type TabValue = "general" | "backup" | "api" | "models" | "speech" | "age
 export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; initialModel?: string | null; onLogout: () => void }) {
   // "models" was its own tab before 0.9.2: it lives in the connections tab now
   const asked = props.initialTab === "models" ? "api" : props.initialTab
+  useGuidePlace("shell.settings")
   const [tab, setTab] = useState<TabValue>(asked ?? "api")
   const tabs: Array<{ value: TabValue; label: string; icon: ReactNode }> = [
     { value: "general", label: tr("General"), icon: <IconSmall name="outline-sliders" /> },
@@ -159,7 +162,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
                 </div>
                 <div className="flex w-full flex-col gap-1.5">
                   {tabs.map((t) => (
-                      <Tabs.Trigger key={t.value} value={t.value}>
+                      <Tabs.Trigger key={t.value} value={t.value} data-guide={`settings.${t.value}`}>
                         {t.icon}
                         {t.label}
                       </Tabs.Trigger>
@@ -233,6 +236,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
                   <div className="flex flex-col gap-1.5">
                     {tabs.map((t) => (
                         <button key={t.value}
+                          data-guide={`settings.${t.value}`}
                           className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-14 text-ink transition-colors hover:bg-hover active:bg-pressed"
                           onClick={() => setOpenSection(t.value)}
                         >
@@ -466,6 +470,7 @@ function GeneralTab(props: { me: Me; onLogout: () => void }) {
     <Pane title={tr("General")} description={tr("Your account for this Molfar Vertep.")}>
       <div className="flex flex-col gap-6 pb-4">
         <LanguageSection />
+        <GuideSection />
         <AccountSection me={props.me} onLogout={props.onLogout} />
       </div>
     </Pane>
@@ -1649,7 +1654,7 @@ function ApiTab(props: { initialModel?: string | null }) {
               }
             }}
           /> : null}
-        {editing === null && !adding ? <Button variant="primary" size="normal" className="self-start gap-2" onClick={() => { setErr(""); setAdding(true) }}>
+        {editing === null && !adding ? <Button variant="primary" size="normal" className="self-start gap-2" data-guide="settings.add-connection" onClick={() => { setErr(""); setAdding(true) }}>
             <IconSmall name="grid-plus" />
             {tr("Add connection")}
           </Button> : editing ? <></> : <AddConnection
@@ -1797,7 +1802,7 @@ function VisionModelSection(props: { models: ModelDetails[] }) {
     }
   }
   return (
-    <section className="flex flex-col gap-1.5 rounded-lg border border-line p-3" data-testid="vision-model">
+    <section className="flex flex-col gap-1.5 rounded-lg border border-line p-3" data-testid="vision-model" data-guide="settings.vision">
       <h3 className="text-13 font-medium text-ink">{tr("Vision model")}</h3>
       <p className="text-11 text-ink-faint">{tr("Apps send pictures to this model, for example to describe a character from the portrait. Auto takes the cheapest model that reads pictures.")}</p>
       <select
@@ -1834,7 +1839,7 @@ function QuickSwitch(props: { favorites: ModelFavorite[]; models: ModelDetails[]
     props.onSave(next)
   }
   return (
-    <section className="flex flex-col gap-1.5 rounded-lg border border-line p-3" data-testid="quick-switch">
+    <section className="flex flex-col gap-1.5 rounded-lg border border-line p-3" data-testid="quick-switch" data-guide="settings.quick-switch">
       <h3 className="text-13 font-medium text-ink">★ {tr("Quick switch")}</h3>
       <p className="text-11 text-ink-faint">{tr("The models you switch between in chats. Star them in the lists below; a name of your own is optional.")}</p>
       {props.favorites.length === 0 ? <div className="text-12 text-ink-faint">{tr("Nothing starred yet.")}</div> : null}

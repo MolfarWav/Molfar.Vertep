@@ -9,6 +9,7 @@ import { Button } from "./ui/button"
 import { IconSmall } from "./ui/icon"
 import { cn } from "./ui/cn"
 import { tr } from "./i18n/index"
+import { useGuidePlace } from "./guide/place"
 
 const STORE_REPOSITORY = "https://github.com/MolfarWav/Molfar.Vertep-Store"
 
@@ -91,6 +92,7 @@ export function StoreDialog(props: {
   }, [store.markSeen])
 
   const apps = store.list?.apps ?? []
+  useGuidePlace("shell.store", apps.length > 0)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 max-md:items-end" onClick={props.onClose}>
@@ -105,6 +107,7 @@ export function StoreDialog(props: {
             className="flex size-8 cursor-pointer items-center justify-center rounded-md text-ink-faint hover:bg-hover hover:text-ink disabled:opacity-50"
             title={tr("Refresh")}
             aria-label={tr("Refresh")}
+            data-guide="store.refresh"
             disabled={store.loading}
             onClick={() => void store.reload(true)}
           >
@@ -124,7 +127,7 @@ export function StoreDialog(props: {
           <p className="text-13 text-ink-muted">{tr("The Store is turned off in this server's config.yaml.")}</p>
         ) : null}
         {store.loading && !apps.length ? <p className="text-13 text-ink-faint">{tr("Loading the Store…")}</p> : null}
-        <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain">
+        <ul data-guide="store.list" className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain">
           {apps.map((a) => (
             <li key={a.id} className="flex flex-col gap-1.5 rounded-lg border border-line p-3">
               <div className="flex items-center gap-1.5">
@@ -137,7 +140,7 @@ export function StoreDialog(props: {
                     {tr("Open")}
                   </Button>
                 ) : (
-                  <Button variant="neutral" size="small" onClick={() => props.onInstall(a)}>
+                  <Button variant="neutral" size="small" data-guide="store.install" onClick={() => props.onInstall(a)}>
                     {tr("Install")}
                   </Button>
                 )}
@@ -204,7 +207,7 @@ export function WelcomeApps(props: { store: StoreState; onDone: (ids: string[]) 
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-4 pb-4">
+    <div data-guide="home.welcome" className="mx-auto flex w-full max-w-lg flex-col gap-4 pb-4">
       <p className="text-13 text-ink-muted">{tr("Pick apps to start with. You can add more from the Store any time.")}</p>
       {store.loading && !official.length ? <p className="text-13 text-ink-faint">{tr("Loading the Store…")}</p> : null}
       {store.list?.error ? (
