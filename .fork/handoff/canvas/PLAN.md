@@ -344,3 +344,10 @@ Why Molfar's tools come with each board and not at the end: one small tool per b
 current; a single big skill at the end would cover three systems at once, and an outdated skill sends
 Molfar exploring the code (CLAUDE.md). Why the deep canvas merges with the forge: subgraphs, extra
 model calls and a shelf of saved systems are the forge itself; two runners would mean two formats.
+
+## 16. Small fixes for the boards (user, 2026-10-15)
+- **Prompt board, chat picker** ("PROMPT Chat" dropdown): a plain `<select>` with every chat, no search and
+  no filter, so it is hard to use with many chats. Labels repeat the name ("Vivian Stein – Vivian Stein",
+  "Group: A, B – Group: A, B") and two chats of the same character look identical. Wanted: a searchable
+  picker (type to filter by character or chat title), recent chats first, groups told apart, and a
+  second line that tells same-character chats apart (chat title or last message date). Check on a phone.
