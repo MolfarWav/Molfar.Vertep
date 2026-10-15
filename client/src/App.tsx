@@ -1399,6 +1399,12 @@ function LaunchPicker(props: {
                           >
                             {tr("Official App")}
                           </span> : null}
+                        {a.restored ? <span
+                            className="shrink-0 rounded-full bg-warning-soft/30 px-1.5 py-px text-9 font-medium tracking-wide text-ink"
+                            title={tr("Restored from a backup: links to Settings and Molfar are off until it is checked against its official version.")}
+                          >
+                            {tr("Check needed")}
+                          </span> : null}
                         {updates.has(a.id) ? <span
                             className="shrink-0 rounded-full bg-warning-soft/30 px-1.5 py-px text-9 font-medium tracking-wide text-ink"
                             title={tr("Update available")}

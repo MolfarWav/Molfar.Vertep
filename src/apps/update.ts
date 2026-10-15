@@ -305,6 +305,20 @@ export async function mergeTrees(
   return { writes, merged, conflicts };
 }
 
+/** The writes that make an app's code exactly `theirs`: every file that
+ *  differs takes their copy, and a file they do not have is deleted. For an
+ *  app restored from a file, whose recorded baseline came with the file and
+ *  so proves nothing: the plain "theirs" merge trusts that baseline and keeps
+ *  files only the app has. */
+export function replaceTree(ours: Tree, theirs: Tree): MergeOutcome {
+  const writes = new Map<string, Buffer | null>();
+  for (const rel of new Set([...ours.keys(), ...theirs.keys()])) {
+    const t = theirs.get(rel);
+    if (!same(ours.get(rel), t)) writes.set(rel, t ?? null);
+  }
+  return { writes, merged: [], conflicts: [] };
+}
+
 export function applyWrites(appDir: string, writes: Map<string, Buffer | null>): void {
   const root = path.resolve(appDir);
   for (const [rel, body] of writes) {

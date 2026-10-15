@@ -14,6 +14,19 @@ names, five Dashboard events. UX audit (desktop copy, gitignored `data/ux-audit/
 lorebook switches, preset internal ids, Tools tab rows). Open questions for the user: small-model prompt problems in group chats
 (no examples yet). Next by the roadmap: settle 4.44/4.45, then Decider (`.fork/handoff/canvas/PLAN.md` section 15).
 
+## Restored apps can become official again (2026-10-15, not released)
+Branch `claude/affectionate-pasteur-421374`. The user moved a profile desktop -> phone through a Settings backup: every app came
+back `restored: true` (its baseline came with the file), so Roleplay was unofficial and the bridge refused every shell link
+("not allowed for this app"). Only an update that landed could clear it, and an app at the latest version is never offered one.
+Now: `GET /v1/apps/:id/updates` and `/v1/launch` report `restored` (only for an official source); the launcher row shows a
+"Check needed" badge, the app page a note with "Check against official version" -> confirm -> the update route with
+strategy `theirs` at any head. For a restored app that strategy is an exact replace (`replaceTree` in `src/apps/update.ts`:
+files only the app has are deleted too, the backup's baseline decides nothing); `restored` clears only when the code tree
+equals the repository's (unchanged gate); `data/` is never touched; the reply carries `official`. Tests in
+`test/app-store.test.ts` (plain update keeps edits -> still restored; theirs -> official; community source never reported).
+The Roleplay side (fork branch `claude/mobile-fixes`) explains the refusal. Seen in passing: the app page header at 390 px
+is cramped (size line wraps per word, "Launch" cut off) - not touched here.
+
 ## Batch: visible names, Claude 5.5, phone headers (2026-10-14, not released)
 Engine branch `claude/names-models-ux` (worktree `.claude/worktrees/names-models-ux`, on top of the Canvas docs): `44161d7` visible
 "chrysalis" texts (network name example, profile download name, git URL examples; the npm package name in the update hint stays
