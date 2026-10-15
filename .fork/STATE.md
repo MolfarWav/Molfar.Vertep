@@ -41,6 +41,16 @@ Discord idea: a bug goes to Molfar first, and a fix that works goes to GitHub so
   carries every field and the patch; the shell block in en and uk, disabled when empty; the handoff reaches Molfar.
   Not checked: a real model going through the whole skill. Label `solved-by-molfar` created on GitHub (2026-10-14).
 - Tests: 707 pass; the failures are the Windows-only ones that fail on main too (0600 modes, tar, edge-tts network).
+## In-app guide, step 1: built, not released (Roleplay fork branch `claude/guide-kit`, `df3561b`, on 4.45.0)
+Plan: `.fork/handoff/guide/PLAN.md`. Decided with the user 2026-10-14: state in the app setting `guide` (not localStorage),
+a player with chats and no state gets What's new for everything after 4.43.0 (a fresh install gets none, only tours),
+own small spotlight kit (no library). Code: `src/lib/guide.ts` (format and logic), `src/lib/guide-tips.ts` (5 What's new
+tips, tours for Canvas links, Prompt board, composer; en + uk; `APP_VERSION`), `src/components/guide/` (host, spotlight,
+card, Settings → Guide block, place hook), `data-guide` attributes. Tests 1027 pass; the one failure is APP_VERSION 4.46.0
+vs manifest 4.45.0 until the release bumps it. Browser-checked dark, light, 390 px, uk (shots `E:\Claude\guide-shots\`).
+Rough edges: on a phone the Canvas links tour has one visible step (list mode); the What's new card on Home overlaps the
+Achievements card; the `new.guide` tip's rail target is inside More on phones (centered bubble). Release (4.46.0: manifest,
+CHANGELOG, merge to the fork's main) on the user's word. Next: step 2 (help "?" and the remaining tours).
 
 ## 1.0.8: RELEASED 2026-10-14 (tag v1.0.8; Roleplay 4.44.0 `99d8270` and 4.45.0 `e964362` on the fork's main)
 Engine: Claude 5.5 in the Anthropic catalog (`src/model-additions.ts`), visible names. Roleplay 4.44.0: Canvas stage 1b (Prompt board,
