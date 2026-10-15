@@ -61,6 +61,24 @@ names, five Dashboard events. UX audit (desktop copy, gitignored `data/ux-audit/
 lorebook switches, preset internal ids, Tools tab rows). Open questions for the user: small-model prompt problems in group chats
 (no examples yet). Next by the roadmap: settle 4.44/4.45, then Decider (`.fork/handoff/canvas/PLAN.md` section 15).
 
+## Restored apps can become official again (2026-10-15, not released)
+Branch `claude/affectionate-pasteur-421374`. The user moved a profile desktop -> phone through a Settings backup: every app came
+back `restored: true` (its baseline came with the file), so Roleplay was unofficial and the bridge refused every shell link
+("not allowed for this app"). Only an update that landed could clear it, and an app at the latest version is never offered one.
+Now automatic (the user: a move that needs a manual step makes no sense): both update checks (`GET /v1/apps/updates`, run
+on shell load, and `GET /v1/apps/:id/updates`) call `verifyRestored` for an official app still marked restored: a shallow
+clone of the branch head, plugin sources stamped, `readCodeTree` + `sameTree` against the app. Match -> `restored` cleared
+and the baseline replaced by the fetched tree; the shell refreshes `/v1/launch`. No match -> `restored: "differs"`
+(remembered per remote head + code hash, so no clone on every load); no answer -> `"unchecked"`, tried on the next check.
+Only those two show the "Check needed" badge and a note on the app page: "differs" -> "Replace with official version" ->
+confirm -> the update route with `theirs` at any head, which for a restored app is an exact replace (`replaceTree` in
+`src/apps/update.ts`; the backup's baseline decides nothing); "unchecked" -> "Check again". An app behind the branch head
+counts as "differs" (a clone only fetches the head); a plain Update clears it too when the code was not edited. Tests in
+`test/app-store.test.ts` (match -> official by itself with the fetched baseline; differs; no answer; plain update keeps
+edits; theirs -> official; community source never reported nor cleared).
+The Roleplay side (fork branch `claude/mobile-fixes`) explains the refusal. Seen in passing: the app page header at 390 px
+is cramped (size line wraps per word, "Launch" cut off) - not touched here.
+
 ## Batch: visible names, Claude 5.5, phone headers (2026-10-14, not released)
 Engine branch `claude/names-models-ux` (worktree `.claude/worktrees/names-models-ux`, on top of the Canvas docs): `44161d7` visible
 "chrysalis" texts (network name example, profile download name, git URL examples; the npm package name in the update hint stays

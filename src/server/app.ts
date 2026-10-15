@@ -11,7 +11,7 @@ import { PluginStoreService } from "../plugins/store.js";
 import { discoverPlugins, discoverAppPlugins, runPluginHook, runPluginHookOutcome, runPluginRoute, runPluginTool, readPluginExport, syncSchedules, stopSchedules, invalidatePluginCache, collectSiblingTools, collectSiblingLlmHooks, mergeToolBridges, type LoadedPlugin, type PluginRuntimeDeps, type PluginToolBridge } from "../plugins/runtime.js";
 import { McpRegistry, WEB_SEARCH_PRESET, readStdioApprovals, stdioFingerprint, writeStdioApproval, type CredentialMap, type McpServerConfig } from "../mcp/registry.js";
 import { listApps, readApp, createAppSkeleton, renameAppDir, appTree, validateAppManifest, hashAppTree, type AppInfo } from "../apps/manager.js";
-import { UPDATE_STRATEGIES, applyWrites, discardDir, discardStaleStaging, mergeBrief, restoreWrites, forgetInstall, mergeTrees, moveInstall, readBaseline, readCodeTree, readInstallSource, readPendingUpgrade, recoverBaseline, satisfiesRange, seedDataTemplates, writeBaseline, writeInstallSource, writePendingUpgrade, type InstallSource } from "../apps/update.js";
+import { UPDATE_STRATEGIES, applyWrites, discardDir, discardStaleStaging, mergeBrief, restoreWrites, forgetInstall, mergeTrees, moveInstall, readBaseline, readCodeTree, readInstallSource, readPendingUpgrade, recoverBaseline, replaceTree, satisfiesRange, seedDataTemplates, writeBaseline, writeInstallSource, writePendingUpgrade, type InstallSource } from "../apps/update.js";
 import { OFFICIAL_SOURCES, createCatalog, forkOf, isOfficialSource, normalizeGitUrl } from "../apps/store.js";
 import { gitClone, gitRemoteHead, isValidGitRef, isValidGitUrl, remoteManifest, stripVcs } from "../apps/git.js";
 import { BACKUP_MAX_BYTES, BACKUP_META_DIR, BackupError, buildBackup, extractBackup, locateBackup, type BackupMeta } from "../apps/backup.js";
@@ -1744,6 +1744,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         author: a.manifest.author ?? null,
         official: officialApp(p, a),
         repository: installSourceOf(p, a)?.git ?? null,
+        // official code restored from a file, waiting for its check
+        restored: (() => { const s = readInstallSource(p.appUpstream, a.id); return !!s?.restored && isOfficialSource(s.git, officialSources); })(),
       })),
       engine: { ...ENGINE_INFO, admin: c.get("user").role === "admin" },
       agent: true, // the agent tab is always available (kernel-level)
@@ -4059,17 +4061,69 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     return false;
   };
 
+  /** An app restored from a file is official again by itself when its code is
+   *  byte for byte the official repository's: the engine clones the branch's
+   *  head and compares, nothing from the backup counts. "differs" is
+   *  remembered per head and code, so an edited app is not cloned on every
+   *  check; "unchecked" (no network, a slow repository) is tried again. */
+  type RestoredState = "official" | "differs" | "unchecked";
+  const restoredChecks = new Map<string, { key: string; state: RestoredState }>();
+  const restoredRuns = new Map<string, Promise<RestoredState>>();
+  const verifyRestored = (u: UserRecord, p: UserPaths, info: AppInfo, source: InstallSource): Promise<RestoredState> => {
+    const key = `${u.username}/${info.id}`;
+    let run = restoredRuns.get(key);
+    if (!run) {
+      run = (async (): Promise<RestoredState> => {
+        const head = await gitRemoteHead(source.git, source.ref).catch(() => null);
+        if (!head) return "unchecked";
+        const stamp = `${head}:${hashAppTree(info.dir) ?? ""}`;
+        if (restoredChecks.get(key)?.key === stamp) return "differs";
+        const stagingRoot = path.join(p.apps, ".staging");
+        const warn = (m: string) => log.warn(`[apps] ${key}: ${m}`);
+        discardStaleStaging(stagingRoot, `${info.id}.verify-`, warn);
+        const staging = path.join(stagingRoot, `${info.id}.verify-${Date.now().toString(36)}`);
+        try {
+          const cloned = await gitClone(source.git, staging, source.ref);
+          stripVcs(staging);
+          stampPluginSources(staging, source.git, cloned);
+          const theirs = readCodeTree(staging);
+          if (!sameTree(readCodeTree(info.dir), theirs)) {
+            restoredChecks.set(key, { key: stamp, state: "differs" });
+            return "differs";
+          }
+          // the backup's baseline is replaced by the one just fetched
+          writeBaseline(p.appUpstream, info.id, readStaged(staging)?.manifest.version ?? info.manifest.version, theirs);
+          writeInstallSource(p.appUpstream, info.id, { git: source.git, ref: source.ref });
+          restoredChecks.delete(key);
+          log.info(`[apps] ${key}: matches its official repository, official again`);
+          return "official";
+        } catch (e) {
+          warn(`could not check against its repository: ${(e as Error).message}`);
+          return "unchecked";
+        } finally {
+          discardDir(staging, warn);
+        }
+      })().finally(() => restoredRuns.delete(key));
+      restoredRuns.set(key, run);
+    }
+    // a slow clone keeps going; the answer now is "not yet"
+    return Promise.race([run, new Promise<RestoredState>((resolve) => setTimeout(() => resolve("unchecked"), 60_000))]);
+  };
+  /** null when the app is not an official app restored from a file. */
+  const restoredState = async (u: UserRecord, p: UserPaths, info: AppInfo, source: InstallSource): Promise<RestoredState | null> =>
+    source.restored && isOfficialSource(source.git, officialSources) ? verifyRestored(u, p, info, source) : null;
+
   // Update check for the launcher: one ls-remote per app, in parallel, for
   // the badge on every row. Results are reused for a minute so reopening the
   // launcher does not repeat the round trips; `fresh=1` after an update.
-  const updateChecks = new Map<string, { at: number; signature: string; apps: { id: string; available: boolean; remoteHead?: string | null; error?: string }[] }>();
+  const updateChecks = new Map<string, { at: number; signature: string; apps: { id: string; available: boolean; remoteHead?: string | null; error?: string; restored?: RestoredState }[] }>();
   app.get("/v1/apps/updates", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
     const entries = listApps(p.apps)
       .map((app) => ({ app, source: installSourceOf(p, app) }))
       .filter((e): e is { app: AppInfo; source: InstallSource } => e.source !== null);
-    const signature = entries.map((e) => `${e.app.id}:${e.source.git}:${e.source.ref}:${e.app.manifest.source?.head ?? ""}`).join("|");
+    const signature = entries.map((e) => `${e.app.id}:${e.source.git}:${e.source.ref}:${e.app.manifest.source?.head ?? ""}:${e.source.restored ? "r" : ""}`).join("|");
     const cached = updateChecks.get(u.username);
     if (c.req.query("fresh") !== "1" && cached?.signature === signature && Date.now() - cached.at < 60_000) {
       return c.json({ apps: cached.apps });
@@ -4077,11 +4131,14 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const slow = (ms: number) => new Promise<never>((_, reject) => setTimeout(() => reject(new Error("the repository did not answer in time")), ms));
     const apps = await Promise.all(entries.map(async ({ app, source }) => {
       const localHead = app.manifest.source?.head ?? null;
+      // an official app restored from a file is checked on the way
+      const restored = await restoredState(u, p, app, source);
+      const flag = restored && restored !== "official" ? { restored } : {};
       try {
         const remoteHead = await Promise.race([gitRemoteHead(source.git, source.ref), slow(15_000)]);
-        return { id: app.id, available: !!remoteHead && remoteHead !== localHead, remoteHead };
+        return { id: app.id, available: !!remoteHead && remoteHead !== localHead, remoteHead, ...flag };
       } catch (e) {
-        return { id: app.id, available: false, error: (e as Error).message };
+        return { id: app.id, available: false, error: (e as Error).message, ...flag };
       }
     }));
     updateChecks.set(u.username, { at: Date.now(), signature, apps });
@@ -4091,11 +4148,16 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // Update check: asks the app's repository for its head (ls-remote only).
   // Nothing local moves.
   app.get("/v1/apps/:id/updates", async (c) => {
+    const u = c.get("user");
     const p = c.get("paths");
     const info = readApp(p.apps, c.req.param("id"));
     if (!info) return c.json({ error: "app not found" }, 404);
     const source = installSourceOf(p, info);
     if (!source) return c.json({ supported: false });
+    // restored from a file: checked against the official repository first;
+    // what is left ("differs", "unchecked") the shell explains
+    const check = await restoredState(u, p, info, source);
+    const restored = check && check !== "official" ? check : false;
     const modified = codeModified(p, info);
     const localHead = info.manifest.source?.head ?? null;
     try {
@@ -4112,13 +4174,14 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         remoteHead,
         upToDate,
         modified,
+        restored,
         available: incoming?.version ?? null,
         engine: incoming?.engine ?? null,
         engineOk: incoming?.engine ? satisfiesRange(incoming.engine, APP_API_VERSION) : true,
         engineVersion: APP_API_VERSION,
       });
     } catch (e) {
-      return c.json({ supported: true, repository: source.git, error: (e as Error).message }, 200);
+      return c.json({ supported: true, repository: source.git, restored, error: (e as Error).message }, 200);
     }
   });
 
@@ -4320,9 +4383,13 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     }
     const theirs = readCodeTree(incoming);
     const ours = readCodeTree(info.dir);
+    // "theirs" on a restored app is a re-check against the repository: the
+    // code becomes exactly the official tree. Its baseline came with the
+    // backup, so it may not decide which files stay.
+    const replace = !!source.restored && strategy === "theirs";
     let result: Awaited<ReturnType<typeof mergeTrees>>;
     try {
-      result = await mergeTrees(base, ours, theirs, strategy, { base: `v${from}`, theirs: `v${to}` });
+      result = replace ? replaceTree(ours, theirs) : await mergeTrees(base, ours, theirs, strategy, { base: `v${from}`, theirs: `v${to}` });
     } catch (e) {
       dropStaging();
       return c.json({ error: `merge failed: ${(e as Error).message}` }, 500);
@@ -4373,14 +4440,16 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       const installed = await installApp(info.dir);
       if (!installed.ok) warnings.push(`Its packages did not install (${installed.log.split("\n").filter(Boolean).slice(-2).join(" ")}). Open the app to try again.`);
     }
-    if (source.restored && sameTree(readCodeTree(info.dir), theirs)) writeInstallSource(p.appUpstream, id, { git: source.git, ref: source.ref });
+    // official again only when the code on disk IS the repository's tree
+    const verified = !!source.restored && sameTree(readCodeTree(info.dir), theirs);
+    if (verified) writeInstallSource(p.appUpstream, id, { git: source.git, ref: source.ref });
     invalidatePluginCache();
     evictAgents(u.username);
     const upgradeFailed = await runAppUpdateHooks(u, p, id, from, to);
     // what failed now is retried before the app's next request
     upgradeRetries.delete(`${u.username}/${id}`);
     const note = !result.conflicts.length ? "" : strategy === "agent" ? `, ${result.conflicts.length} conflicts left for the agent` : strategy === "mine" ? `, your side kept in ${result.conflicts.length} conflicts` : "";
-    await git.commitAll(p.root, u.username, `app(${id}): updated v${from} → v${to}${strategy === "theirs" ? ", your edits replaced" : ""}${note}`);
+    await git.commitAll(p.root, u.username, replace ? `app(${id}): replaced with the official v${to}` : `app(${id}): updated v${from} → v${to}${strategy === "theirs" ? ", your edits replaced" : ""}${note}`);
     bus.emit(u.username, "app_changed", { app: id, updated: true });
     const link = `${source.git} (commit ${head.slice(0, 10)})`;
     return c.json({
@@ -4390,6 +4459,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       strategy,
       merged: result.merged,
       conflicts: result.conflicts,
+      official: isOfficialSource(source.git, officialSources) && (!source.restored || verified),
       ...(upgradeFailed.length ? { upgradeFailed } : {}),
       ...(warnings.length ? { warnings } : {}),
       ...(strategy === "agent" && result.conflicts.length ? { agentPrompt: mergeBrief({ id: info.id, name: info.manifest.name }, from, to, result.conflicts, { base, ours }, before, link) } : {}),

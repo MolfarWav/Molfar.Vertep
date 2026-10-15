@@ -10,7 +10,7 @@ export interface Me {
 
 export interface LaunchInfo {
   engine?: { version: string; repository: string | null; admin?: boolean }
-  apps: { id: string; name?: string; kind?: string; author?: string | null; official?: boolean; repository?: string | null }[]
+  apps: { id: string; name?: string; kind?: string; author?: string | null; official?: boolean; repository?: string | null; restored?: boolean }[]
   default?: string | null
 }
 
@@ -43,4 +43,6 @@ export interface AppUpdate {
   available: boolean
   remoteHead?: string | null
   error?: string
+  /** an official app restored from a file that is not official yet */
+  restored?: "differs" | "unchecked"
 }

@@ -322,6 +322,92 @@ describe("installing from the store", () => {
     expect((await launchApps()).find((a) => a.id === "studio-2")?.official).toBe(true);
   }, 60_000);
 
+  it("a restored app at the latest version is checked against its repository: taking it whole makes it official, kept edits do not", async () => {
+    const url = await publish("desk", { name: "Desk", version: "1.0.0", kind: "app" });
+    const id = await importApp(url);
+    const p = userPaths(dataDir, "alice");
+    const dir = path.join(p.apps, id);
+    const official = readCodeTree(dir);
+    const officialPlugin = fs.readFileSync(path.join(dir, "plugins", "api", "plugin.js"), "utf8");
+    fs.mkdirSync(path.join(dir, "data"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "data", "notes.json"), "{\"kept\":true}");
+    // as a profile restore leaves it: the same head, the baseline that came
+    // with the backup, and code edited since. A merge, even one taking
+    // "theirs" on conflicts, keeps edits the update itself does not touch.
+    fs.writeFileSync(path.join(dir, "plugins", "api", "plugin.js"), "export function handleRoute() { return { status: 200, json: { edited: true } }; }");
+    fs.writeFileSync(path.join(dir, "extra.js"), "export const added = 1;\n");
+    writeInstallSource(p.appUpstream, id, { git: url, ref: "HEAD", restored: true });
+    writeBaseline(p.appUpstream, id, "1.0.0", official);
+    expect((await launchApps()).find((a) => a.id === id)?.official).toBe(false);
+
+    // the automatic check finds the code is not the repository's
+    const check = (await (await call(`/v1/apps/${id}/updates`)).json()) as { upToDate: boolean; restored: string | false };
+    expect(check).toMatchObject({ upToDate: true, restored: "differs" });
+    expect(readInstallSource(p.appUpstream, id)?.restored).toBe(true);
+
+    // a plain update keeps the edits, so the app stays unofficial
+    const kept = (await (await call(`/v1/apps/${id}/update`, { method: "POST", body: "{}" })).json()) as { status: string; official: boolean };
+    expect(kept).toMatchObject({ status: "applied", official: false });
+    expect(readInstallSource(p.appUpstream, id)?.restored).toBe(true);
+    expect(fs.existsSync(path.join(dir, "extra.js"))).toBe(true);
+
+    // taking the repository's version whole, at the same head, replaces the
+    // code exactly, whatever the backup's baseline says: both edits go
+    const taken = (await (await call(`/v1/apps/${id}/update`, { method: "POST", body: JSON.stringify({ strategy: "theirs" }) })).json()) as { status: string; official: boolean };
+    expect(taken).toMatchObject({ status: "applied", official: true });
+    expect(fs.readFileSync(path.join(dir, "plugins", "api", "plugin.js"), "utf8")).toBe(officialPlugin);
+    expect(fs.existsSync(path.join(dir, "extra.js"))).toBe(false);
+    expect([...readCodeTree(dir).keys()].sort()).toEqual([...official.keys()].sort());
+    expect(fs.readFileSync(path.join(dir, "data", "notes.json"), "utf8")).toBe("{\"kept\":true}");
+    expect(readInstallSource(p.appUpstream, id)).toEqual({ git: url, ref: "HEAD" });
+    expect((await launchApps()).find((a) => a.id === id)?.official).toBe(true);
+    const after = (await (await call(`/v1/apps/${id}/updates`)).json()) as { restored: string | false };
+    expect(after.restored).toBe(false);
+  }, 60_000);
+
+  it("a restored app whose code is the repository's becomes official by itself on the update check", async () => {
+    const url = await publish("lamp", { name: "Lamp", version: "1.0.0", kind: "app" });
+    const id = await importApp(url);
+    const p = userPaths(dataDir, "alice");
+    const dir = path.join(p.apps, id);
+    const official = readCodeTree(dir);
+    // as a profile restore leaves it, with a baseline from the backup that
+    // says something else: it must not count
+    writeInstallSource(p.appUpstream, id, { git: url, ref: "HEAD", restored: true });
+    writeBaseline(p.appUpstream, id, "0.9.0", new Map([["forged.js", Buffer.from("x")]]));
+    const list = (await (await call("/v1/apps/updates?fresh=1")).json()) as { apps: { id: string; restored?: string }[] };
+    expect(list.apps.find((a) => a.id === id)?.restored).toBeUndefined();
+    expect(readInstallSource(p.appUpstream, id)).toEqual({ git: url, ref: "HEAD" });
+    expect((await launchApps()).find((a) => a.id === id)?.official).toBe(true);
+    // the baseline is the one fetched, not the backup's
+    const base = readBaseline(p.appUpstream, id);
+    expect(base?.version).toBe("1.0.0");
+    expect([...(base?.files.keys() ?? [])].sort()).toEqual([...official.keys()].sort());
+  }, 60_000);
+
+  it("a restored app whose repository does not answer stays restored and is checked again later", async () => {
+    const url = await publish("gone", { name: "Gone", version: "1.0.0", kind: "app" });
+    const id = await importApp(url);
+    const p = userPaths(dataDir, "alice");
+    fs.rmSync(path.join(repoDir, "owner", "gone.git"), { recursive: true, force: true });
+    writeInstallSource(p.appUpstream, id, { git: url, ref: "HEAD", restored: true });
+    const check = (await (await call(`/v1/apps/${id}/updates`)).json()) as { restored: string | false };
+    expect(check.restored).toBe("unchecked");
+    expect(readInstallSource(p.appUpstream, id)?.restored).toBe(true);
+    expect((await launchApps()).find((a) => a.id === id)?.official).toBe(false);
+  }, 60_000);
+
+  it("a restored community app is never reported for the official check", async () => {
+    const url = await publish("side", { name: "Side", version: "1.0.0", kind: "app" }, "someone");
+    const id = await importApp(url);
+    const p = userPaths(dataDir, "alice");
+    writeInstallSource(p.appUpstream, id, { git: url, ref: "HEAD", restored: true });
+    const check = (await (await call(`/v1/apps/${id}/updates`)).json()) as { restored: string | false };
+    expect(check.restored).toBe(false);
+    // nor made official by a matching tree
+    expect(readInstallSource(p.appUpstream, id)?.restored).toBe(true);
+  }, 60_000);
+
   it("imports an app zipped by hand, and refuses a zip that reaches outside its folder", async () => {
     const manifest = strToU8(JSON.stringify({ name: "Hand Made", version: "0.1.0", kind: "app" }));
     const p = userPaths(dataDir, "alice");

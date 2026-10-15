@@ -7,6 +7,7 @@ import { tr } from "./i18n/index"
 import type { AppUpdate, LaunchInfo } from "./types"
 import { Button } from "./ui/button"
 import { cn } from "./ui/cn"
+import { IconSmall } from "./ui/icon"
 import { useResource } from "./use-resource"
 
 export type Conflict = { path: string; reason: string }
@@ -26,6 +27,8 @@ export type UpdateReply = {
   /** plugins whose data upgrade failed; it is tried again when the app opens */
   upgradeFailed?: { plugin: string; error: string }[]
   warnings?: string[]
+  /** the app is official after this update */
+  official?: boolean
 }
 
 export type UpdateState =
@@ -47,7 +50,7 @@ export type UpdateState =
     }
   | { state: "updating" }
   | { state: "conflicts"; from: string; to: string; conflicts: Conflict[] }
-  | { state: "applied"; to: string; strategy: UpdateStrategy; merged: number; conflicts: number; problems: string[] }
+  | { state: "applied"; to: string; strategy: UpdateStrategy; merged: number; conflicts: number; problems: string[]; verified: boolean }
   | {
       state: "dep-review"
       strategy: UpdateStrategy
@@ -69,7 +72,15 @@ export type AppUpdateHandle = {
   /** apply the update; resolves to the state it ended in */
   run: (strategy?: UpdateStrategy, reviewed?: { head: string | null } | null) => Promise<UpdateState>
   reset: () => void
+  /** an official app restored from a file that the engine could not confirm
+   *  as official: its code differs, or the repository did not answer. The
+   *  shell's links stay off until
+   *  its code is checked against the repository */
+  restored: RestoredCheck | null
 }
+
+/** Why an official app restored from a file is still not official. */
+export type RestoredCheck = "differs" | "unchecked"
 
 /** One app's update flow. `onUpdated` runs after the files changed (before the
  *  state says so); `onAskAgent` gets the agent's brief for a merge it was asked
@@ -79,6 +90,7 @@ export function useAppUpdate(
   opts: { onUpdated?: () => void | Promise<void>; onAskAgent?: (prompt: string) => void } = {},
 ): AppUpdateHandle {
   const [state, setState] = useState<UpdateState>({ state: "idle" })
+  const [restored, setRestored] = useState<RestoredCheck | null>(null)
   const latest = useRef<UpdateState>(state)
   const callbacks = useRef(opts)
   callbacks.current = opts
@@ -100,12 +112,14 @@ export function useAppUpdate(
         available?: string | null
         remoteHead?: string | null
         modified?: boolean | null
+        restored?: false | RestoredCheck
         engineOk?: boolean
         engine?: string | null
         engineVersion?: string
         error?: string
       }>("GET", `/v1/apps/${encodeURIComponent(appId)}/updates`)
       if (!r.supported) return set({ state: "error", message: tr("This app has no update source.") })
+      setRestored(r.restored || null)
       if (r.error) return set({ state: "error", message: r.error })
       if (r.upToDate) return set({ state: "current" })
       return set({
@@ -152,7 +166,9 @@ export function useAppUpdate(
         ...(r.upgradeFailed?.length ? [tr("Some of its data was not upgraded yet and will be tried again when the app opens: {plugins}", { plugins: r.upgradeFailed.map((f) => `${f.plugin} (${f.error})`).join(", ") })] : []),
         ...(r.warnings ?? []),
       ]
-      const next = set({ state: "applied", to: r.to ?? "", strategy, merged: r.merged?.length ?? 0, conflicts: r.conflicts?.length ?? 0, problems })
+      const verified = !!restored && r.official === true
+      if (verified) setRestored(null)
+      const next = set({ state: "applied", to: r.to ?? "", strategy, merged: r.merged?.length ?? 0, conflicts: r.conflicts?.length ?? 0, problems, verified })
       if (r.agentPrompt) callbacks.current.onAskAgent?.(r.agentPrompt)
       return next
     } catch (e: any) {
@@ -160,13 +176,62 @@ export function useAppUpdate(
     }
   }
 
-  return { state, current: () => latest.current, check, run, reset: () => void set({ state: "idle" }) }
+  return { state, current: () => latest.current, check, run, reset: () => void set({ state: "idle" }), restored }
 }
 
 /** The banner for each state of the flow. `inset` sits it inside a card (the
  *  Updates panel) instead of as a bar under a header (the app page); `hide`
  *  leaves states out when the caller draws them itself. */
 export function AppUpdateBanner(props: { update: AppUpdateHandle; inset?: boolean; hide?: UpdateState["state"][] }) {
+  const s = props.update.state.state
+  const note = props.update.restored && (s === "current" || s === "available" || s === "applied" || s === "error")
+  return (
+    <>
+      {note ? <RestoredNote update={props.update} inset={props.inset} /> : null}
+      <StateBanner {...props} />
+    </>
+  )
+}
+
+/** An official app restored from a backup is official again once the engine
+ *  finds its code is the repository's. When it is not: code that differs gets
+ *  one button replacing it with the repository's, after saying what that
+ *  costs; a check that could not run gets another try. */
+function RestoredNote(props: { update: AppUpdateHandle; inset?: boolean }) {
+  const [asking, setAsking] = useState(false)
+  const differs = props.update.restored === "differs"
+  const frame = props.inset ? "rounded-md border border-warning/40 px-2.5" : "border-b border-line px-4"
+  return (
+    <div className={cn("flex flex-col gap-2 bg-warning-soft/10 py-2.5 text-12", frame)}>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+        <IconSmall name="info" size="small" className="shrink-0 text-warning" />
+        <span className="min-w-0 flex-1 basis-56 text-ink">
+          {differs
+            ? tr("Restored from a backup, and its code differs from its official version: links to Settings and Molfar stay off until the code is replaced with the official one.")
+            : tr("Restored from a backup: links to Settings and Molfar are off until it is checked against its official version.")}
+        </span>
+        {!asking ? <Button variant="neutral" size="small" onClick={() => (differs ? setAsking(true) : void props.update.check())}>
+            {differs ? tr("Replace with official version") : tr("Check again")}
+          </Button> : null}
+      </div>
+      {asking ? <>
+          <p className="text-11 text-ink-muted">
+            {tr("Its code becomes exactly the official version. Changes made to the app's code are replaced and stay in the workspace history. Chats, characters and other data are kept.")}
+          </p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="ghost-muted" size="small" onClick={() => setAsking(false)}>
+              {tr("Cancel")}
+            </Button>
+            <Button variant="danger" size="small" onClick={() => { setAsking(false); void props.update.run("theirs") }}>
+              {tr("Replace code")}
+            </Button>
+          </div>
+        </> : null}
+    </div>
+  )
+}
+
+function StateBanner(props: { update: AppUpdateHandle; inset?: boolean; hide?: UpdateState["state"][] }) {
   const { update } = props
   const s = update.state
   if (props.hide?.includes(s.state)) return null
@@ -218,6 +283,15 @@ export function AppUpdateBanner(props: { update: AppUpdateHandle; inset?: boolea
             {tr("Ask Molfar to merge")}
           </Button>
         </div>
+      </div>
+    )
+  }
+  if (s.state === "applied" && s.verified) {
+    return (
+      <div className={cn("py-1.5 text-11 text-success", frame)}>
+        {s.strategy !== "theirs" ? tr("Updated to v{version}.", { version: s.to }) + " " : ""}
+        {tr("Checked: it matches its official version, so links to Settings and Molfar work again. Reopen the app if it is open.")}
+        {s.problems.map((problem) => <p key={problem} className="mt-1 text-danger">{problem}</p>)}
       </div>
     )
   }
@@ -293,6 +367,8 @@ export type AppUpdates = {
   has: (id: string) => boolean
   /** how many apps have an update waiting */
   count: number
+  /** is this official app, restored from a file, still waiting for its check */
+  restored: (id: string) => boolean
   /** ask again, skipping the engine's cache; resolves when the list is in */
   refresh: () => Promise<void>
 }
@@ -312,5 +388,6 @@ export function useAppUpdates(launch: LaunchInfo | null): AppUpdates {
       .list(true)
       .then((r) => updates.mutate(r))
       .catch(() => undefined)
-  return { list, loading: updates.loading, has: (id: string) => ids.has(id), count: ids.size, refresh }
+  const restored = new Set(list.filter((u) => u.restored).map((u) => u.id))
+  return { list, loading: updates.loading, has: (id: string) => ids.has(id), count: ids.size, restored: (id: string) => restored.has(id), refresh }
 }
