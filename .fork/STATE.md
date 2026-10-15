@@ -78,6 +78,12 @@ counts as "differs" (a clone only fetches the head); a plain Update clears it to
 edits; theirs -> official; community source never reported nor cleared).
 The Roleplay side (fork branch `claude/mobile-fixes`) explains the refusal. Seen in passing: the app page header at 390 px
 is cramped (size line wraps per word, "Launch" cut off) - not touched here.
+## App detail header on phones (2026-10-15, branch `claude/recursing-kare-666e77`, not released)
+Launcher's app detail pane (`AppDetail` in `client/src/App.tsx`): below the `@4xl` container width the name + Launch share the
+first row and Repository / export / update check wrap to a row of their own; name and size line truncate; Launch, back, export and
+the update button are 40 px tall on phones. Explicit `[40px]`: the shell's `--spacing` is scaled, `size-10` there is 32.5 px. Desktop
+row unchanged. Browser-checked 390 px light (ru default, uk) and 1280 px dark. Not touched: the size line's "files"/"KB" are
+untranslated, the launcher footer wraps in Ukrainian at 390 px.
 
 ## Batch: visible names, Claude 5.5, phone headers (2026-10-14, not released)
 Engine branch `claude/names-models-ux` (worktree `.claude/worktrees/names-models-ux`, on top of the Canvas docs): `44161d7` visible
