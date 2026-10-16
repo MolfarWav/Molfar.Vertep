@@ -43,9 +43,9 @@ export class ProfileError extends Error {
 }
 
 /** Parts of the credentials dir that travel in the clear. */
-const PLAIN_PRIVATE = ["connections.json", "speech.json", "sandbox.json"] as const;
+export const PLAIN_PRIVATE = ["connections.json", "speech.json", "sandbox.json"] as const;
 /** Parts that travel only encrypted. mcp.json can carry tokens in headers. */
-const SECRET_FILES = ["auth.json", "mcp.json"] as const;
+export const SECRET_FILES = ["auth.json", "mcp.json"] as const;
 
 /** From a workspace's .git, only history: never config (core.fsmonitor,
  *  core.hooksPath and friends run commands) and never hooks. */
@@ -61,7 +61,7 @@ function gitEntryAllowed(rel: string): boolean {
 }
 
 /** What a profile backup leaves out: derived and throwaway folders. */
-function skippedInWorkspace(rel: string): boolean {
+export function skippedInWorkspace(rel: string): boolean {
   const segs = rel.split("/");
   const head = segs[0] ?? "";
   return (

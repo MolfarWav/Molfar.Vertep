@@ -37,7 +37,7 @@ type Tree = Map<string, Buffer>;
 
 /** Paths an update never reads or writes. The root manifest carries install
  *  provenance and is replaced whole by the caller. */
-function outsideCode(rel: string): boolean {
+export function outsideCode(rel: string): boolean {
   const segs = rel.split("/");
   const head = segs[0] ?? "";
   return (
