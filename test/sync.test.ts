@@ -157,6 +157,8 @@ describe("push and pull between two devices", () => {
     const groups = (err as ConflictError).groups;
     expect(groups).toHaveLength(1);
     expect(groups[0]!.files).toEqual(["w/apps/roleplay/data/chats/c1.jsonl"]);
+    // named after the chat, from the meta file beside it
+    expect(groups[0]!.title).toBe("First");
     // the meta file did not collide: nothing was written before the choice
     expect(read(a, "apps/roleplay/data/chats/c1.meta.json")).toBe('{"title":"First"}');
 

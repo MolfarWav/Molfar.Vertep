@@ -202,6 +202,8 @@ Apps run in a sandbox and reach the engine only through a short list of allowed 
 
 To move an app to another device, or keep a copy before uninstalling, use **Export app** in its info pane, then **Import app > Backup file** on the other side. The backup carries the app's data and keeps updating from where it came from.
 
+To play on two devices, finish on one and go on on the other: **Sync devices** in the account menu (Settings > Sync). Sign in with Google once on each device; press **Push** when you stop and **Pull** on the other device. The sync lives in a folder in your own Google Drive, and only what changed travels after the first time. If the same chat changed on both devices, you choose which version to keep; the other is saved in `data/backups/sync-conflicts`. API keys travel only when you switch them on, encrypted with a passphrase that never leaves your devices. Admins can sync through a folder instead (Syncthing, Google Drive for desktop, a USB stick).
+
 Molfar Vertep keeps your data in its own folder, so an update never touches it.
 
 - Updates button in the top bar: shows a badge when anything is newer and opens one panel with Molfar Vertep itself (for admins) and every app installed from a repository. Each row shows the current and new version, a link to the changes and an Update button; "Update all" goes through the apps one by one. If your own edits overlap with an update, you choose: keep yours, take the update, or ask the agent to merge. Checks run when Molfar Vertep starts and on "Check now". See [CHANGELOG.md](CHANGELOG.md) for details.

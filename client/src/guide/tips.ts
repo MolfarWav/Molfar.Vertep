@@ -12,6 +12,22 @@ export const ONLY_WITHOUT_MODEL: readonly string[] = ["tour.home.model"]
 export const TIPS: Tip[] = [
   // ---- What's new ----
   {
+    id: "new.sync",
+    since: "1.1.0",
+    target: "menu.sync",
+    open: { view: "home", menu: "account" },
+    help: "start",
+    keywords: {
+      en: "sync synchronize google drive phone desktop push pull another device continue game carry move",
+      uk: "синхронізація синк google drive диск телефон комп’ютер відправити отримати інший пристрій продовжити гру перенести",
+    },
+    title: { en: "Carry your games between devices", uk: "Ігри між пристроями" },
+    body: {
+      en: "Sync devices in the account menu: sign in with Google once on each device. When you stop playing, press Push; on the other device press Pull and go on. Only what changed travels after the first time. If the same chat changed on both devices, you choose which version to keep, and the other one is saved in data/backups. API keys travel only if you switch them on, locked with a passphrase you type on each device.",
+      uk: "«Синхронізація пристроїв» у меню облікового запису: увійдіть у Google один раз на кожному пристрої. Коли закінчуєте грати, натисніть «Відправити»; на іншому пристрої натисніть «Отримати» й грайте далі. Після першого разу передається лише змінене. Якщо той самий чат змінився на обох пристроях, ви вибираєте, яку версію лишити, а інша зберігається в data/backups. Ключі API передаються, лише якщо ви це ввімкнете, і замкнені парольною фразою, яку ви вводите на кожному пристрої.",
+    },
+  },
+  {
     id: "new.ask-molfar",
     since: "1.0.10",
     target: "menu.report-bug",
@@ -518,6 +534,15 @@ export const TIPS: Tip[] = [
     },
   },
   {
+    id: "tour.settings.sync",
+    target: "settings.sync",
+    title: { en: "Sync", uk: "Синхронізація" },
+    body: {
+      en: "Push your games to Google Drive here and pull them on your phone or another computer. Only what changed travels.",
+      uk: "Тут ви відправляєте ігри на Google Drive і отримуєте їх на телефоні чи іншому комп’ютері. Передається лише змінене.",
+    },
+  },
+  {
     id: "tour.store.list",
     target: "store.list",
     title: { en: "Apps to install", uk: "Застосунки для встановлення" },
@@ -549,6 +574,6 @@ export const TIPS: Tip[] = [
 export const TOURS: Tour[] = [
   { id: "shell.home", place: "shell.home", steps: ["tour.home.model", "tour.home.welcome", "tour.home.apps", "tour.home.molfar", "tour.home.add"] },
   { id: "shell.app", place: "shell.app", steps: ["tour.app.tabs", "tour.app.split", "tour.app.toolbar", "tour.app.menu"] },
-  { id: "shell.settings", place: "shell.settings", steps: ["tour.settings.api", "tour.settings.agent", "tour.settings.general", "tour.settings.backup"] },
+  { id: "shell.settings", place: "shell.settings", steps: ["tour.settings.api", "tour.settings.agent", "tour.settings.general", "tour.settings.backup", "tour.settings.sync"] },
   { id: "shell.store", place: "shell.store", steps: ["tour.store.list", "tour.store.install", "tour.store.refresh"] },
 ]

@@ -2,7 +2,7 @@
 // Phosphor glyph so a rename here never ripples into markup.
 import type { ComponentPropsWithoutRef } from "react"
 import {
-  ArrowClockwise, ArrowLeft, ArrowSquareOut, ArrowUUpLeft, Brain, CaretDown, CaretLeft, CaretRight,
+  ArrowClockwise, ArrowsClockwise, ArrowLeft, ArrowSquareOut, ArrowUUpLeft, Brain, CaretDown, CaretLeft, CaretRight,
   Chat, ChatCircle, Check, CheckCircle, CloudArrowUp, Code, Columns, Copy, DownloadSimple, FolderPlus, GearSix, HardDrives, Info,
   Books, Bug, Lock, PencilSimpleLine, Plus, PlusSquare, Prohibit, SignOut, SlidersHorizontal,
   SpeakerHigh, SquaresFour, Storefront, TerminalWindow, Trash, X,
@@ -28,6 +28,7 @@ const glyphs = {
   "pencil-line": PencilSimpleLine,
   providers: SquaresFour,
   rebuild: ArrowClockwise,
+  sync: ArrowsClockwise,
   server: HardDrives,
   speaker: SpeakerHigh,
   store: Storefront,

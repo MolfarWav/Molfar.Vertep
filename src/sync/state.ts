@@ -40,7 +40,8 @@ const cachePath = (credDir: string): string => path.join(credDir, "sync-cache.js
 
 function defaultName(): string {
   const h = os.hostname().replace(/\.local$/i, "").slice(0, 40);
-  return h || "This device";
+  // phones often answer "localhost"
+  return h && h !== "localhost" ? h : "This device";
 }
 
 export function readState(credDir: string): SyncState {

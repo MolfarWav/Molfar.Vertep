@@ -42,7 +42,7 @@ for (const m of code.matchAll(/data-guide=(?:"([^"]+)"|\{`([^`]+)`\})/g)) {
   const v = m[1] ?? m[2] ?? "";
   if (v.includes("$" + "{")) {
     // settings.${t.value}: one per Settings section
-    for (const tab of ["general", "backup", "api", "speech", "agent", "memory", "mcp", "developer", "server", "users"]) drawn.add(v.replace("$" + "{t.value}", tab));
+    for (const tab of ["general", "backup", "sync", "api", "speech", "agent", "memory", "mcp", "developer", "server", "users"]) drawn.add(v.replace("$" + "{t.value}", tab));
   } else for (const name of v.split(/\s+/)) drawn.add(name);
 }
 

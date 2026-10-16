@@ -78,8 +78,7 @@ export function workspacePathOk(rel: string): boolean {
   const segs = rel.split("/");
   for (const s of segs) {
     if (!SEGMENT.test(s) || s === "." || s === ".." || s.trim() !== s || s.endsWith(".")) return false;
-    // eslint-disable-next-line no-control-regex
-    if (/[\u0000-\u001f]/.test(s)) return false;
+    if ([...s].some((ch) => ch.charCodeAt(0) < 32)) return false;
     // names Windows gives to devices
     if (/^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i.test(s)) return false;
   }
@@ -209,6 +208,8 @@ export interface ConflictGroup {
   app: string | null;
   /** a short readable label */
   label: string;
+  /** the thing's own name, read from this device's copy when there is one */
+  title?: string;
   files: string[];
 }
 

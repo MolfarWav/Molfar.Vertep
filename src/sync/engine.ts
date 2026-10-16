@@ -141,8 +141,27 @@ export async function check(ctx: SyncContext): Promise<CheckResult> {
     behind: !!head && head.rev !== state.base?.rev,
     push: { files: p.up.length, bytes: bytesOf(local, p.up) },
     pull: { files: p.down.length, bytes: bytesOf(remote, p.down) },
-    conflicts: groupConflicts(p.conflicts),
+    conflicts: titled(ctx.paths, groupConflicts(p.conflicts)),
   };
+}
+
+/** A readable name for a conflict: the title or name in the thing's JSON
+ *  file as this device has it (a chat's meta, a card), when there is one. */
+function titled(p: UserPaths, groups: ConflictGroup[]): ConflictGroup[] {
+  return groups.map((g) => {
+    // a chat's .jsonl collides alone; its name is in the .meta.json beside it
+    for (const k of new Set([...g.files, `${g.id}.meta.json`, `${g.id}.json`])) {
+      if (!k.endsWith(".json") || !k.startsWith("w/")) continue;
+      const abs = diskPath(p, k);
+      try {
+        if (!abs || fs.statSync(abs).size > 256 * 1024) continue;
+        const j = JSON.parse(fs.readFileSync(abs, "utf8")) as { title?: unknown; name?: unknown };
+        const t = typeof j.title === "string" ? j.title : typeof j.name === "string" ? j.name : "";
+        if (t.trim()) return { ...g, title: t.trim().slice(0, 120) };
+      } catch { /* not there or not JSON */ }
+    }
+    return g;
+  });
 }
 
 // ---------- push ----------
@@ -320,7 +339,7 @@ export async function pull(ctx: SyncContext, opts: { rev?: number; resolutions?:
   if (opts.rev !== undefined && opts.rev !== head.rev) throw new SyncError("the sync changed since you looked: check again", 409);
   const remote = compareRemote(manifest);
   const pl = plan(local, state.base?.files ?? {}, remote, state.scope);
-  const groups = groupConflicts(pl.conflicts);
+  const groups = titled(ctx.paths, groupConflicts(pl.conflicts));
   const choiceOf = (g: ConflictGroup): Choice | undefined => opts.resolutions?.[g.id] ?? opts.all;
   if (groups.some((g) => !choiceOf(g))) throw new ConflictError(groups, head.rev);
 

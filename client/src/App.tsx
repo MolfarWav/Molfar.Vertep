@@ -568,6 +568,7 @@ function Shell(props: { theme: ThemeControl }) {
                 onLogout={() => void logout()}
                 theme={props.theme}
                 onSettings={() => openSettings()}
+                onSync={() => openSettings("sync")}
                 onReportBug={() => setBugOpen(true)}
                 app={active?.kind === "app" ? { id: active.id, name: active.name, onPlugins: () => openPlugins(active.id) } : null}
               />
@@ -713,6 +714,7 @@ function UserMenu(props: {
   onLogout: () => void
   theme: ThemeControl
   onSettings: () => void
+  onSync: () => void
   onReportBug: () => void
   app: { id: string; name: string; onPlugins: () => void } | null
 }) {
@@ -837,6 +839,20 @@ function UserMenu(props: {
                 <IconSmall name="settings-gear" />
               </span>
               {tr("Settings")}
+            </button>
+            <button
+              role="menuitem"
+              data-guide="menu.sync"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 transition-colors hover:bg-hover"
+              onClick={() => {
+                setOpen(false)
+                props.onSync()
+              }}
+            >
+              <span className="flex size-4 shrink-0 items-center justify-center">
+                <IconSmall name="sync" />
+              </span>
+              {tr("Sync devices")}
             </button>
             <button
               role="menuitem"
