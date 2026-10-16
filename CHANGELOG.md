@@ -5,6 +5,12 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## Unreleased (1.1.0)
+
+- Apps install on drives git does not trust (exFAT USB drives, folders another account owns): git commands the engine runs in a repository it made itself carry `-c safe.directory` for that folder only (#34).
+- App frames may start workers from `blob:` URLs (`worker-src blob:`): Roleplay's display regex scripts run in one and were silently blocked, so blocks a preset hides stayed visible (#36).
+- Plugins: `host.zip.build([{ name, text }])` packs a zip natively and returns it as base64, without a permission; Roleplay's export uses it (#37).
+
 ## 1.0.10 (2026-10-15)
 
 - The in-app guide in the shell (`client/src/guide/`): What's new after an engine update, a first-run tour that starts with connecting a model, tours for the start page, an open app, Settings and the Store, and Help (account menu, start page footer) with a searchable list and Show me. Settings → General → Guide turns tours off or replays them.

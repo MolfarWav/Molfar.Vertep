@@ -4,6 +4,10 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+00. **1.1.0** (user, 2026-10-16): the fixes are on `claude/v110-fixes` (engine) and `claude/v110` (Roleplay
+   4.48.0), see STATE. Next: Drive sync, its own session from `.fork/handoff/sync/PLAN.md` (GitHub #38),
+   on a branch cut from `claude/v110-fixes`; then one release 1.1.0 with Roleplay 4.48.0, on the user's word.
+   Items 0b (option hints, preset list tokens) and the Canvas chat picker (canvas PLAN section 16) are done there.
 0. **Canvas, after stage 1b** (1b shipped in Roleplay 4.44.0, 2026-10-14): the agreed order is in
    `.fork/handoff/canvas/PLAN.md` section 15: settle 4.44.0, Decider (+ Molfar's tool), character
    behaviour preset (+ Molfar's tool), agent forge (+ Molfar's create / validate / dry run), then

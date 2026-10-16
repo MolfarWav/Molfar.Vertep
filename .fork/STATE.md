@@ -1,9 +1,32 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-15.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-16.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
+
+## 1.1.0 in progress (2026-10-16): fixes + Drive sync, released together at the end, on the user's word
+Engine branch `claude/v110-fixes` (pushed; from main 1.0.10 + the plan notes): #34 `-c safe.directory` for the
+engine's own repositories (app clones, workspace gc) on drives git does not trust, test with
+GIT_TEST_ASSUME_DIFFERENT_OWNER; #36 app frame CSP `worker-src blob:` (Roleplay's display regex ran in a blob
+worker the CSP blocked, so no display regex ever worked; checked in headless Edge); #37 `host.zip.build` (native zip
+for plugins, no permission; app-authoring skill + digest updated). Checks: typecheck, build:client pass; tests 770
+pass, 15 known Windows-only failures. Drive sync (#38): brief `.fork/handoff/sync/PLAN.md`, its own session and
+branch cut from `claude/v110-fixes`.
+Roleplay fork branch `claude/v110` (pushed; worktree `E:\Claude\rp-v110`, from main 4.47.0), CHANGELOG "Unreleased
+(4.48.0)": Molfar as a second built-in read-only preset (`data/presets/molfar.json` = `_molfar.json`, 8 regex
+scripts in `data/regex/molfar-*.json` + update template `data/_molfar-regex.json`, onAppUpdate 4.48.0 seeds them);
+option `hint` field (types, editor, Marinara import, Choices panel list line / chip tooltip + line, DATA-FORMATS)
+with hints for all 260 FRANKENX and Molfar options (drafted by an external model, checked) and a 4.48.0 migration
+that fills them into read-only built-in copies; preset picker shows tokens with the chat's picks; Canvas Prompt
+board searchable chat picker; #35 dashboard notice with counts; #37 export uses host.zip.build (8 MB: 20 s -> 1.2 s
+in the real sandbox). Tests 1044 pass. Browser check by a subagent: shots `E:\Claude\guide-shots\v110\` (uk strings
+not shot; the tooltip's cost line not exercised with the mock model). Manifest still 4.47.0: the release bumps it.
+Molfar converter (ST preset -> Vertep) lives in the session scratchpad only; the source preset is
+`E:\Obsidian\Vault\Projects\RP\assets\molfar\Molfar-2026-09-26.json`, the result also at `Molfar-vertep.json` there.
+The user's workspace `presets/molfar.json` was replaced by the built-in version (it was the session's own install).
+Left for the release: Roleplay 4.48.0 (manifest, merge), engine 1.1.0 (package.json, CHANGELOG, release notes),
+close #34 (if the reporter confirms), #35, #36, #37 with it.
 
 ## 1.0.10 = the guide in the shell and on Molfar's page, #33, #34: main fast-forwarded 2026-10-15, the tag `v1.0.10` is the user's (Roleplay 4.47.0 on the fork's main)
 Engine branch `claude/guide-plan` (worktree `.claude/worktrees/readme-canvas`): bug-solution merged (`0619b42`),
