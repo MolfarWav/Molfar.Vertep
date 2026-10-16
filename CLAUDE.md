@@ -28,6 +28,7 @@ holds the rules that do not change between tasks; the handoff holds the task.
 - `client/`: the shell (Settings etc.), 14 locales. `client-agent/`: the agent page, English only.
 - `builtin-skills/`: skills shipped to the built-in agent (a workspace copy of the same name replaces one).
 - `.fork/`: notes, handoffs, release notes. `Molfar-Vertep.bat` (repo root): the launcher for running from source.
+- Website https://molfarwav.github.io/ (repo MolfarWav/MolfarWav.github.io, Pages from `main`): source in `.fork/site/` (`HANDOFF.md`); `sh .fork/site/assemble.sh` builds `dist/`, copy it into a clone of the site repo and push. Its privacy page is the one the Google sign-in for Drive sync points to (client In production since 2026-10-16, scope `drive.file` only): change it only together with what the app does. Never remove `google7bf33d86b7cf3f3c.html` (Search Console verification).
 
 ## Rules
 - Never commit `bun.lock` or `client-agent/bun.lock`: `bun install` rewrites them; `git checkout` them back.
