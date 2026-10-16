@@ -29,7 +29,7 @@
 import { parentPort } from "node:worker_threads";
 import fs from "node:fs";
 import path from "node:path";
-import { unzipSync } from "fflate";
+import { unzipSync, zipSync } from "fflate";
 
 const utf8 = new TextDecoder("utf-8");
 import variant from "@jitl/quickjs-ng-wasmfile-release-sync";
@@ -206,11 +206,37 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
     // entries to app data — the kernel never interprets app formats.
     const zipSvc = (() => {
       const denied = () => { throw new Error("permission \"zip\" not granted (add \"zip\" to manifest permissions)"); };
-      if (!zipAllowed) return { entries: denied, list: denied };
+      // build() packs text the plugin already holds: no payload, no disk, so no permission
+      if (!zipAllowed) return { entries: denied, list: denied, build: buildZip };
       return {
         list: () => Object.keys(zipEntries()).length,
         entries: () => zipEntries(),
+        build: buildZip,
       };
+      /** [{ name, text }] -> a zip (stored, no compression) as base64. Native, so a backup of a
+       *  few megabytes no longer runs out the route's time limit in the interpreter. Names are
+       *  relative paths without "..", the same rule the reader applies. */
+      function buildZip(list) {
+        if (!Array.isArray(list)) throw new Error("zip.build([{ name, text }])");
+        if (list.length > 60000) throw new Error("zip.build: too many entries (over 60000)");
+        const MAX_TOTAL = 256 * 1024 * 1024;
+        let total = 0;
+        const entries = {};
+        for (const item of list) {
+          const name = item && typeof item.name === "string" ? item.name : "";
+          const text = item && typeof item.text === "string" ? item.text : null;
+          if (!name || text === null) throw new Error("zip.build: every entry needs a name and a text");
+          if (name.startsWith("/") || name.includes("\\") || name.split("/").some((s) => s === "" || s === "." || s === "..")) {
+            throw new Error(`zip.build: bad entry name ${JSON.stringify(name).slice(0, 80)}`);
+          }
+          if (Object.hasOwn(entries, name)) throw new Error(`zip.build: duplicate entry ${JSON.stringify(name).slice(0, 80)}`);
+          const bytes = Buffer.from(text, "utf8");
+          total += bytes.length;
+          if (total > MAX_TOTAL) throw new Error("zip.build: more than 256 MB of content");
+          entries[name] = [bytes, { level: 0, mtime: new Date(1980, 0, 1) }];
+        }
+        return Buffer.from(zipSync(entries)).toString("base64");
+      }
       function zipEntries() {
         if (!zipBase64 || typeof zipBase64 !== "string") throw new Error("no zip payload provided");
         if (zipBase64.length > 200 * 1024 * 1024 / 0.75) throw new Error("zip payload too large (200MB cap)");

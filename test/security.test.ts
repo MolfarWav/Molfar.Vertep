@@ -422,6 +422,39 @@ describe("S5 zip hardening", () => {
     expect(r.ok).toBe(true);
     expect((r.out as { names: string[] }).names).toEqual(["ok.txt"]);
   });
+
+  it("zip.build packs text natively without the zip grant, and refuses path-shaped names", async () => {
+    const { unzipSync, strFromU8 } = await import("fflate");
+    const { sandbox } = await import("../src/plugins/sandbox.js");
+    const run = (list: string) =>
+      sandbox.eval({
+        source: `export function onTick(_ctx, host){ try { return { b64: host.zip.build(${list}) }; } catch (e) { return { err: String(e.message) }; } }`,
+        hook: "onTick",
+        ctx: {},
+        storeSnapshot: {},
+        storeAllowed: false,
+        llmAllowed: false,
+        zipAllowed: false,
+      });
+    // a few megabytes of prose (non-ASCII) in many entries: well inside the route time
+    const big = `[${Array.from({ length: 40 }, (_, i) => `{ name: "chats/c${i}.jsonl", text: "Привіт — “quoted” ".repeat(20000) }`).join(",")}]`;
+    const ok = await run(big);
+    expect(ok.ok).toBe(true);
+    const files = unzipSync(Buffer.from((ok.out as { b64: string }).b64, "base64"));
+    expect(Object.keys(files)).toHaveLength(40);
+    expect(strFromU8(files["chats/c7.jsonl"]!).startsWith("Привіт — “quoted” ")).toBe(true);
+    for (const bad of ['"../evil.txt"', '"/abs.txt"', '"a//b.txt"', '"a\\\\b.txt"', '"./x.txt"']) {
+      const r = await run(`[{ name: ${bad}, text: "x" }]`);
+      expect((r.out as { err?: string }).err).toMatch(/bad entry name/);
+    }
+    expect(((await run('[{ name: "a.txt", text: "1" }, { name: "a.txt", text: "2" }]')).out as { err?: string }).err).toMatch(/duplicate/);
+    // the reading side still needs the grant
+    const read = await sandbox.eval({
+      source: `export function onTick(_ctx, host){ try { host.zip.entries(); return {}; } catch (e) { return { err: String(e.message) }; } }`,
+      hook: "onTick", ctx: {}, storeSnapshot: {}, storeAllowed: false, llmAllowed: false, zipAllowed: false,
+    });
+    expect((read.out as { err?: string }).err).toMatch(/not granted/);
+  }, { timeout: 60_000 });
 });
 
 describe("S5 http body caps (streamed, pre-buffer)", () => {

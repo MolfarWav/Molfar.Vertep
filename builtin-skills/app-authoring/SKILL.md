@@ -62,10 +62,11 @@ works the same way. Details and templates: skill `two-phase-llm`.
 ## Host API
 - `host.fs`: read, write, readBase64, list, remove. Scoped to the app's `data/` for bundled plugins.
 - `host.store`: get, put, delete, keys (persists).
+- `host.zip.build([{ name, text }])`: a zip of those texts as base64, built natively (use it for exports: a zip built in plugin JS runs out the route time limit at a few MB); no permission. `host.zip.entries()` reads an uploaded zip (permission `zip`).
 - `host.llm.request` / `host.llm.results`; `host.net` (permission `network`): method, headers, body, form, json, binary, timeout, maxBytes, redirects; results carry status, headers, json/text/base64. Optional manifest `networkHosts` allowlist.
 - `host.log`.
 
-Permissions: `routes`, `tools`, `llm`, `store`, `fs`, `schedule`, `hooks`, `network`.
+Permissions: `routes`, `tools`, `llm`, `store`, `fs`, `zip`, `schedule`, `hooks`, `network`.
 Imported plugins need grants; origin `local` is trusted. Plugins and manifests
 hot-reload by mtime: nothing to call.
 
