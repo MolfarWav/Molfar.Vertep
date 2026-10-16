@@ -65,6 +65,8 @@ afterEach(() => {
     expect(html).toContain("app-bridge.js");
     const csp = res.headers.get("content-security-policy") ?? "";
     expect(csp).toContain("connect-src 'none'");
+    // blob workers only (display regex runs in one); no worker from any other source
+    expect(csp).toContain("worker-src blob:;");
     expect(csp).toContain("frame-ancestors http://localhost");
     // response-level sandbox: the document is opaque-origin even if the URL is
     // opened top-level (bookmark, PWA window, popup), so it can never read

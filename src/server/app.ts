@@ -4626,6 +4626,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     `style-src ${origin} 'unsafe-inline'; ` +
     `img-src ${origin} blob: data:; media-src ${origin} blob: data:; font-src ${origin} data:; ` +
     "connect-src 'none'; " +
+    // Workers from blob: URLs (apps run user regex in one so a bad pattern cannot freeze the tab).
+    // Without worker-src the browser falls back to script-src, which has no blob:. A blob worker
+    // inherits this policy, so connect-src 'none' holds inside it too.
+    "worker-src blob:; " +
     `frame-ancestors ${origin}; base-uri 'none'; form-action 'none'; ` +
     // honoured where implemented (Chromium ignores it; see app-bridge.js)
     "webrtc 'block'";
