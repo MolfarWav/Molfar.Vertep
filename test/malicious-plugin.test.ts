@@ -50,6 +50,13 @@ describe("hostile plugin with every permission", () => {
     // secret and a dangling write symlink to a path outside
     fs.symlinkSync("/etc/passwd", path.join(appData, "passwd-link"));
     fs.symlinkSync(path.join(dir, "outside.txt"), path.join(appData, "dangling"));
+    // a folder link out of the jail (a junction on Windows), and a plain nested file for the
+    // batched stat, which checks folders once and must still catch the link
+    fs.mkdirSync(path.join(dir, "outdir"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "outdir", "secret.txt"), "secret");
+    fs.symlinkSync(path.join(dir, "outdir"), path.join(appData, "outdir-link"), "junction");
+    fs.mkdirSync(path.join(appData, "nested"), { recursive: true });
+    fs.writeFileSync(path.join(appData, "nested", "deep.txt"), "abc");
 
     const d = deps();
     d.store.namespace("victim").put("victim-secret", "do-not-read");
@@ -98,6 +105,9 @@ describe("hostile plugin with every permission", () => {
       "fs-stat-outside",
       "fs-stat-abs",
       "fs-stat-symlink",
+      "fs-stat-many-outside",
+      "fs-stat-many-symlink",
+      "fs-stat-many-dirlink",
       "fs-read-symlink",
       "fs-write-symlink",
       "fs-write-outside",
@@ -112,6 +122,8 @@ describe("hostile plugin with every permission", () => {
     expect(checks["fs-write-inside"]).toMatchObject({ ok: true, value: "hello" });
     // stat sees the app's own files (size, folder flag, a change time) and says null for a missing one
     expect(checks["fs-stat-inside"]).toMatchObject({ ok: true, value: "5,false,true,null" });
+    // ...and a list of paths answers a list in the same order
+    expect(checks["fs-stat-many-inside"]).toMatchObject({ ok: true, value: "5:false,null,3:false,0:true" });
     expect(fs.readFileSync(path.join(appData, "inside.txt"), "utf8")).toBe("hello");
 
     // nothing reached the host filesystem

@@ -114,6 +114,10 @@ export function uiPanel(ctx, host) {
   attack("fs-stat-outside", function () { return JSON.stringify(host.fs.stat("../../../../credentials/admin/auth.json")); });
   attack("fs-stat-abs", function () { return JSON.stringify(host.fs.stat("/etc/passwd")); });
   attack("fs-stat-symlink", function () { return JSON.stringify(host.fs.stat("passwd-link")); });
+  attack("fs-stat-many-outside", function () { return JSON.stringify(host.fs.stat(["inside.txt", "../../../../credentials/admin/auth.json"])); });
+  attack("fs-stat-many-symlink", function () { return JSON.stringify(host.fs.stat(["inside.txt", "passwd-link"])); });
+  attack("fs-stat-many-dirlink", function () { return JSON.stringify(host.fs.stat(["outdir-link/secret.txt"])); });
+  attack("fs-stat-many-inside", function () { return host.fs.stat(["inside.txt", "missing.txt", "nested/deep.txt", "nested"]).map(function (s) { return s ? s.size + ":" + s.dir : "null"; }).join(","); });
   attack("fs-stat-inside", function () { const s = host.fs.stat("inside.txt"); return s.size + "," + s.dir + "," + (s.mtimeMs > 0) + "," + host.fs.stat("missing.txt"); });
 
   attack("store-foreign-read", function () {

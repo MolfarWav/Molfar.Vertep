@@ -363,12 +363,40 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
         },
         list: (rel = ".") => { try { return fs.readdirSync(within(rel)).sort(); } catch (e) { scrub(e, rel); } },
         // size and change time without reading the file: lets an app keep a derived index and
-        // re-read only what changed since (whoever changed it: the app, Molfar, a sync pull)
+        // re-read only what changed since (whoever changed it: the app, Molfar, a sync pull).
+        // A list of paths answers with a list, in one call: per path, the call into the sandbox
+        // and the realpath walk cost ~3 ms, and an index of 2,000 cards spent 6 s on them alone.
         stat: (rel) => {
-          const full = within(rel);
-          let st;
-          try { st = fs.statSync(full); } catch (e) { if (e && e.code === "ENOENT") return null; scrub(e, rel); }
-          return { size: st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
+          const one = (r) => {
+            const full = within(r);
+            let st;
+            try { st = fs.statSync(full); } catch (e) { if (e && e.code === "ENOENT") return null; scrub(e, r); }
+            return { size: st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
+          };
+          if (!Array.isArray(rel)) return one(rel);
+          if (rel.length > 100000) throw new Error("fs.stat: at most 100000 paths at once");
+          // A path below the root with no link anywhere along it cannot leave the root, so the
+          // folders on the way are checked once each (lstat) instead of resolving every path.
+          // Anything with a link on it, or that looks odd, takes the single-path check above.
+          const plainDirs = new Set([fsRoot]);
+          const plainDir = (dir) => {
+            if (plainDirs.has(dir)) return true;
+            if (dir === path.dirname(dir) || !dir.startsWith(fsRoot + path.sep)) return false;
+            if (!plainDir(path.dirname(dir))) return false;
+            let st;
+            try { st = fs.lstatSync(dir); } catch { return false; }
+            if (st.isSymbolicLink() || !st.isDirectory()) return false;
+            plainDirs.add(dir);
+            return true;
+          };
+          return rel.map((r) => {
+            const full = path.resolve(fsRoot, String(r));
+            if (full === fsRoot || !full.startsWith(fsRoot + path.sep) || !plainDir(path.dirname(full))) return one(r);
+            let st;
+            try { st = fs.lstatSync(full); } catch (e) { if (e && e.code === "ENOENT") return null; return one(r); }
+            if (st.isSymbolicLink()) return one(r);
+            return { size: st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
+          });
         },
         remove: (rel) => {
           const full = within(rel);
