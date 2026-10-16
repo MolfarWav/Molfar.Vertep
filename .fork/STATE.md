@@ -10,7 +10,9 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 the whole site repo into `.fork/site/dist/`, pushed to the site repo's `main`. Search Console verification file
 `google7bf33d86b7cf3f3c.html` is live (2026-10-16, the user reports it works). The consent screen is In production
 (checked by the user 2026-10-16). Sync branch docs (`.fork/handoff/sync/DESIGN.md`, `GOOGLE-CLIENT.md` on
-`claude/nostalgic-mccarthy-136fe6`) still describe Testing: update them with the 1.1.0 release. Details: `.fork/site/HANDOFF.md`.
+`claude/nostalgic-mccarthy-136fe6`) still describe Testing: update them with the 1.1.0 release.
+The engine branch with the site source, these notes and the CLAUDE.md line is `claude/hopeful-mccarthy-39ropd`:
+merge it into main together with 1.1.0 (user, 2026-10-16), not before. Details: `.fork/site/HANDOFF.md`.
 
 ## 1.0.10 = the guide in the shell and on Molfar's page, #33, #34: main fast-forwarded 2026-10-15, the tag `v1.0.10` is the user's (Roleplay 4.47.0 on the fork's main)
 Engine branch `claude/guide-plan` (worktree `.claude/worktrees/readme-canvas`): bug-solution merged (`0619b42`),
