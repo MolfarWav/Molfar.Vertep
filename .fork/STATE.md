@@ -5,6 +5,30 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Large libraries, P0 (#46): BUILT, not released (2026-10-16)
+Why: a long-time SillyTavern player has 2,000+ cards; Roleplay's `/bootstrap` read every card whole in a 64 MB
+sandbox and did not start past ~700 (measured). Findings and the importer plan (P1, not started): `.fork/handoff/st-import/FINDINGS.md`;
+P0 design: `.fork/handoff/st-import/P0-DESIGN.md`. Decided with the user: P0 first as its own release; big chats later
+split invisibly into segment files inside Roleplay (with P1).
+Engine branch `claude/slim-start-engine` (pushed, from main 1.1.1): `host.fs.stat` (one path, or a list in one call:
+per-path calls cost ~3 ms each), local app cache `apps/<app>/data/.cache/` (no git, profile backup, sync, app backup),
+app-authoring skill + digests. Typecheck passes; tests: only the known Windows-only failures and load flakes (each
+re-run alone passes except `app page arms the source watcher`, which fails on main too).
+Roleplay branch `claude/slim-start` (worktree `E:\Claude\rp-slim`, from main 4.48.0), CHANGELOG "Unreleased (4.49.0)":
+summaries at start from a sharded index in `data/.cache/characters-index/` (checked by size+mtime, so Molfar's and
+sync's edits show), whole card on open/chat/export/duplicate, guard against saving a summary (store + plugin 409),
+portraits on demand, import in batches of 25, chat counts per card counted once. 2,000 cards: warm start ~0.7-1.8 s
+(1-1.7 MB), first start builds the index in ~25 s in the background. Tests 1053 pass. Browser-checked by a subagent
+(shots `E:\Claude\guide-shots\slim-start\`): data safety checks pass (favorite on an unopened card keeps its texts).
+Roleplay commits `57a4a87`, `7a2ea69` (pushed). A second browser pass checked the UX fixes (filling line, portrait
+placeholders, spinner, "~" tokens, search over the first 1,000 characters of a description): shots `fix-*`.
+Left: release (engine 1.1.2 + Roleplay 4.49.0, both on the user's word), close #46 with it.
+Dashboard threads (checked 2026-10-16 on the user's request): the sensor closes a thread only when the model lists it in
+`resolved` (plus a "Thread check" every 5 turns); nothing expires; at the open limit new threads are dropped silently.
+In the user's 8 chats the sensor closed 2 threads in ~40 turns, the user closed others by hand. Bug #47: a hand-added
+thread comes back open the turn after the sensor resolves it (Tuesday batch). Proposed, not decided: keep a history of
+resolved threads (they vanish after one turn now); retire threads left open after several thread checks.
+
 ## 1.1.1: RELEASED 2026-10-16 on the user's word (branch `claude/v111-fixes` from main 1.1.0, main fast-forwarded, tag v1.1.1; notes `.fork/release-notes/1.1.1.md`), urgent part of #45
 The phone's first real push (2026-10-16) met a leftover development test push in the user's Drive (removed), then
 pushed into that folder after it was moved to the trash: Drive takes uploads into a trashed folder. Fixed: `DriveStore.readHead`
