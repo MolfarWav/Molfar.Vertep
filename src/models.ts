@@ -20,6 +20,7 @@ import { inspectAssistantMessage, inspectRequest, inspectResult, type InspectorE
 import { type PromptSources, systemPartsFor } from "./prompt-sources.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
+import { ImageError, endpointGenerate, imageEndpoint, listEndpointModels, listImageEndpoints, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, type ListedImageModel } from "./images.js";
 import { blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
 
 /** File-backed CredentialStore over the user's auth.json (outside git). */
@@ -90,6 +91,10 @@ const OPENROUTER_PROVIDER_ID = "openrouter";
 const OPENROUTER_EMBED_URL = "https://openrouter.ai/api/v1/embeddings";
 export const DEFAULT_EMBED_MODEL = "text-embedding-3-small";
 export const DEFAULT_OPENROUTER_EMBED_MODEL = "qwen/qwen3-embedding-4b";
+
+/** NanoGPT image models: provider id in refs, and their `api`. */
+const NANOGPT_IMAGES = "nanogpt";
+const NANOGPT_IMAGES_API = "nanogpt-images";
 
 /** Hosts whose chat endpoint serves a builtin image catalog. */
 const IMAGE_CATALOG_HOSTS: readonly { host: string; catalog: string }[] = [{ host: "openrouter.ai", catalog: "openrouter" }];
@@ -1615,8 +1620,56 @@ export class UserModelService {
         out.push({ provider: src.id, id: String(m.id), label: (m as { name?: string }).name ?? String(m.id), api: String(m.api), connectionName: src.name });
       }
     }
+    // NanoGPT's catalog and the user's image endpoints are asked over the
+    // network, all at once; one that is down or refuses lists nothing
+    // rather than failing the whole list
+    const lists: Promise<ImageModelInfo[]>[] = [];
+    const nano = this.nanoGptKey();
+    if (nano) {
+      const connectionName = this.connectionNames.get(nano.provider) ?? "NanoGPT";
+      lists.push(nanoGptImageModels().then(
+        (ms) => ms.map((m) => ({ provider: NANOGPT_IMAGES, id: m.id, label: m.label, api: NANOGPT_IMAGES_API, connectionName })),
+        (e) => (log.warn(`[images] NanoGPT catalog: ${(e as Error).message}`), []),
+      ));
+    }
+    for (const ep of listImageEndpoints(this.paths)) {
+      lists.push(this.endpointModels(ep.id).then(
+        (ms) => ms.map((m) => ({ provider: ep.id, id: m.id, label: m.label, api: ep.kind, connectionName: ep.name })),
+        (e) => (log.warn(`[images] ${ep.name}: ${(e as Error).message}`), []),
+      ));
+    }
+    for (const list of await Promise.all(lists)) out.push(...list);
     this.imageModelList = out;
     return out;
+  }
+
+  /** The NanoGPT key, from the pay-as-you-go connection or the subscription one. */
+  private nanoGptKey(): { provider: string; key: string } | null {
+    const auth = readAuth(this.paths);
+    for (const provider of ["nanogpt", "nanogpt-subscription"]) {
+      const cred = auth[provider];
+      if (cred?.type === "api_key" && typeof cred.key === "string" && cred.key) return { provider, key: cred.key };
+    }
+    return null;
+  }
+
+  /** A configured endpoint's models; a good answer is kept a minute so the
+   *  picker does not ask a local server on every open. */
+  private endpointModelCache = new Map<string, { at: number; baseUrl: string; models: ListedImageModel[] }>();
+  async endpointModels(id: string, fresh = false): Promise<ListedImageModel[]> {
+    const ep = imageEndpoint(this.paths, id);
+    if (!ep) throw new ImageError("no such image endpoint", 404);
+    const hit = this.endpointModelCache.get(id);
+    if (!fresh && hit && hit.baseUrl === ep.def.baseUrl && Date.now() - hit.at < 60_000) return hit.models;
+    const models = await listEndpointModels(ep.def, ep.key);
+    this.endpointModelCache.set(id, { at: Date.now(), baseUrl: ep.def.baseUrl, models });
+    return models;
+  }
+
+  /** Forget cached lists after Settings changes an endpoint. */
+  forgetImageModels(): void {
+    this.imageModelList = null;
+    this.endpointModelCache.clear();
   }
 
   /** Custom connections that front an image catalog: a keyed OpenAI-compatible
@@ -1643,16 +1696,28 @@ export class UserModelService {
 
   /** Generate one image from a prompt. Returns the encoded image bytes. */
   async generateImage(req: { prompt: string; model?: string | null }): Promise<{ data: Buffer; mimeType: string; model: string }> {
-    const models = this.imageModelList ?? (await this.imageModels());
+    const find = (list: ImageModelInfo[]) =>
+      req.model ? list.find((m) => `${m.provider}/${m.id}` === req.model || m.id === req.model) : list[0];
+    let models = this.imageModelList ?? (await this.imageModels());
+    let pick = find(models);
+    // the cached list may predate a change in Settings or a server coming up
+    if (!pick && this.imageModelList) pick = find((models = await this.imageModels()));
     if (!models.length) {
       throw new ModelNotConfiguredError(
-        "no image model available — add an OpenRouter key or connection (Settings → API connections)",
+        "no image model available — add an OpenRouter or NanoGPT connection, or an image endpoint such as ComfyUI (Settings → Images)",
       );
     }
-    const pick = req.model
-      ? models.find((m) => `${m.provider}/${m.id}` === req.model || m.id === req.model)
-      : models[0]!;
-    if (!pick) throw new Error(`image model not found: ${req.model}`);
+    if (!pick) throw new ImageError(`image model not found: ${req.model}`, 404);
+    const ref = `${pick.provider}/${pick.id}`;
+    if (pick.api === NANOGPT_IMAGES_API) {
+      const nano = this.nanoGptKey();
+      if (!nano) throw new ModelNotConfiguredError("the NanoGPT connection has no key (Settings → API connections)");
+      return { ...(await nanoGptGenerate(nano.key, pick.id, req.prompt)), model: ref };
+    }
+    const endpoint = imageEndpoint(this.paths, pick.provider);
+    if (endpoint) {
+      return { ...(await endpointGenerate(endpoint.def, endpoint.key, pick.id, req.prompt)), model: ref };
+    }
     const ctx = { input: [{ type: "text" as const, text: req.prompt }] };
     const viaConnection = (await this.imageConnections()).find((s) => s.id === pick.provider);
     const raw = this.images.getModel(viaConnection?.catalog ?? pick.provider, pick.id);
@@ -1674,7 +1739,7 @@ export class UserModelService {
           return { data: image.data, mimeType: image.mimeType, model: `${pick.provider}/${pick.id}` };
         }
       }
-      throw new Error(message);
+      throw mapCatalogError(message, pick.connectionName ?? "OpenRouter") ?? new Error(message);
     }
     const img = (out.output as { type: string; data?: string; mimeType?: string }[]).find((c) => c.type === "image" && c.data);
     if (!img?.data) {
@@ -1698,10 +1763,7 @@ async function postImagePrompt(baseUrl: string, apiKey: string, model: string, p
     signal: AbortSignal.timeout(10 * 60_000),
   });
   const body = (await res.json().catch(() => null)) as { data?: { b64_json?: string; media_type?: string }[]; error?: { message?: string } } | null;
-  if (!res.ok) {
-    const detail = body?.error?.message;
-    throw new Error(detail ? `${res.status}: ${detail}` : `image generation failed (${res.status})`);
-  }
+  if (!res.ok) throw providerError("OpenRouter", res.status, JSON.stringify(body ?? {}));
   const image = body?.data?.[0];
   if (!image?.b64_json) throw new Error("image endpoint returned no image data");
   return { data: Buffer.from(image.b64_json, "base64"), mimeType: image.media_type ?? "image/png" };

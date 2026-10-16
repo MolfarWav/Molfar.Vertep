@@ -5,6 +5,35 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Image providers beyond OpenRouter: branch `claude/image-providers-c9b607` (2026-10-17, pushed, not merged, not released)
+Asked by the user 2026-10-17 with Marinara Engine's provider list as the target (it has ~20: OpenAI, NanoGPT,
+OpenRouter, Pollinations, Stability, Together, NovelAI, AI Horde, xAI, Venice, Z.ai, fal, Atlas, ComfyUI, SwarmUI,
+RunPod ComfyUI, A1111/Forge/Draw Things, Gemini via chat). The user picked the first four: NanoGPT, local ComfyUI,
+local A1111/Forge, any OpenAI-compatible /images/generations; set up in a new Settings > Images tab; Roleplay unchanged.
+Engine: `src/images.ts` (store `credentials/<user>/images.json`, keys in auth.json as `images/<id>` bound to the
+base URL, a changed URL drops the key; backends; plain-word errors with status 401/402/404/429/502/504 instead of
+500; result bytes sniffed, only PNG/JPEG/WebP/GIF stored). NanoGPT uses the existing `nanogpt` (or
+`nanogpt-subscription`) key, host fixed in code, catalog from the public `/api/v1/image-models` (price in the label,
+cached 10 min). ComfyUI: built-in txt2img workflow or the user's API-format workflow with %prompt% etc.; models from
+`object_info/CheckpointLoaderSimple`. A1111: `/sdapi/v1/txt2img` with `override_settings.sd_model_checkpoint`.
+Apps' "(Avoid: …)" prompt tail becomes the real negative prompt on ComfyUI/A1111. Network rules: configured
+endpoints may be loopback/LAN, never link-local (checked on save and by DNS before each call); no redirects
+followed; picture links a provider returns are fetched only from the public internet (https) or the endpoint's
+own origin, each hop re-checked. Endpoint listing/management is shell-only (`/v1/images/endpoints*`, not in the
+app bridge). images.json travels with profile backup and sync (PLAIN_PRIVATE). Tests `test/images.test.ts`
+(mock servers for every backend, 20 tests). A timed-out ComfyUI job is taken off ComfyUI's queue. Second opinion
+by an external reviewer model: took the base64 size cap, immediate failure on a refused history poll, two
+metadata addresses outside link-local; left DNS rebinding (the user picks the host, the key is bound to it) and
+Node fetch semantics (the engine runs on Bun). Checked on the user's real ComfyUI (2026-10-17): the checkpoint list
+reads and the default workflow passes ComfyUI's validation (queued); the drawing itself was not waited for (the
+rig was busy with the user's own job; the test job was removed from the queue). Browser check: Settings > Images
+at 1280 dark, 390 light, 390 uk, with a mock ComfyUI (ready) and a stopped Forge (error shown).
+Full suite: 806 pass, 19 fail = the 15 known Windows-only + 4 load flakes (pass alone, except the app watcher one,
+which fails on Windows by fs.watch reporting the folder). Not done: the other Marinara providers; Roleplay still says
+"Add an OpenRouter key" on a 503 (its own text, `src/lib/image-gen.ts`); no edit form for a saved server (delete
+and add again); provider error messages are English (engine text); not tried against a real NanoGPT or Forge
+generation; delete buttons are 32 px on phones like the Speech tab's.
+
 ## 1.1.1: RELEASED 2026-10-16 on the user's word (branch `claude/v111-fixes` from main 1.1.0, main fast-forwarded, tag v1.1.1; notes `.fork/release-notes/1.1.1.md`), urgent part of #45
 The phone's first real push (2026-10-16) met a leftover development test push in the user's Drive (removed), then
 pushed into that folder after it was moved to the trash: Drive takes uploads into a trashed folder. Fixed: `DriveStore.readHead`

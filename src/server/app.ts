@@ -54,6 +54,7 @@ import {
   EDGE_FORMATS, EDGE_VOICES, createSpeechEndpoint, deleteSpeechEndpoint, edgeSpeakFmt,
   endpointSpeak, listSpeechEndpoints, speechEndpointKey, updateSpeechEndpoint, validateSpeechEndpointInput,
 } from "../speech.js";
+import { ImageError, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput } from "../images.js";
 import type { EdgeFormat } from "../speech.js";
 import * as assets from "../assets/store.js";
 import { createSandbox, type SandboxRunner } from "../sandbox/index.js";
@@ -1575,6 +1576,39 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return c.json({ error: (e as Error).message }, 500);
     }
   });
+  // the user's image servers (ComfyUI, AUTOMATIC1111/Forge, OpenAI-compatible):
+  // shell only, since a listing carries LAN addresses; keys are write-only
+  app.get("/v1/images/endpoints", (c) => c.json({ endpoints: listImageEndpoints(c.get("paths")) }));
+  app.post("/v1/images/endpoints", async (c) => {
+    const body = await c.req.json<Record<string, unknown>>().catch((): Record<string, unknown> => ({}));
+    const v = validateImageEndpointInput(body);
+    if (!v.ok) return c.json({ error: v.error }, 400);
+    const endpoint = createImageEndpoint(c.get("paths"), v.value);
+    c.get("models").forgetImageModels();
+    return c.json({ endpoint });
+  });
+  app.patch("/v1/images/endpoints/:id", async (c) => {
+    const body = await c.req.json<Record<string, unknown>>().catch((): Record<string, unknown> => ({}));
+    const v = validateImageEndpointInput(body, true);
+    if (!v.ok) return c.json({ error: v.error }, 400);
+    const endpoint = updateImageEndpoint(c.get("paths"), c.req.param("id"), { ...v.value, ...(body.clearKey === true ? { clearKey: true } : {}) });
+    if (!endpoint) return c.json({ error: "no such image endpoint" }, 404);
+    c.get("models").forgetImageModels();
+    return c.json({ endpoint });
+  });
+  app.delete("/v1/images/endpoints/:id", (c) => {
+    if (!deleteImageEndpoint(c.get("paths"), c.req.param("id"))) return c.json({ error: "no such image endpoint" }, 404);
+    c.get("models").forgetImageModels();
+    return c.json({ ok: true });
+  });
+  // ask the server now: Settings shows what it found or why it could not
+  app.get("/v1/images/endpoints/:id/models", async (c) => {
+    try {
+      return c.json({ models: await c.get("models").endpointModels(c.req.param("id"), true) });
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
+    }
+  });
   // the picture lands in the asset store and travels as a same-origin URL:
   // chats and cards that keep it stay small, and app pages (CSP img-src
   // 'self') can show it directly
@@ -1590,7 +1624,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       const rec = assets.putAsset(c.get("paths"), out.data, out.mimeType, `image.${ext}`, c.get("bridgeApp")?.id ?? null);
       return c.json({ url: `/v1/assets/${rec.id}`, mimeType: out.mimeType, model: out.model });
     } catch (e) {
-      const status = e instanceof ModelNotConfiguredError ? 503 : 500;
+      const status = e instanceof ModelNotConfiguredError ? 503 : e instanceof ImageError ? e.status : 500;
       return c.json({ error: (e as Error).message }, status);
     }
   });
