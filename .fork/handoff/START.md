@@ -4,6 +4,14 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+000. **Next releases (user, 2026-10-17)**: release P0 for large libraries (#46) with the threads fix (#47) first, on the
+   user's word (engine `claude/slim-start-engine` + Roleplay `claude/slim-start`, STATE). Then, easiest first, from the
+   ecosystem scan (`E:\Obsidian\Vault\Projects\RP\Molfar Vertep — Ecosystem Scan 2026-10-16.md`): #50 Litopys fact
+   decay in ranking (~half a day), #51 Consolidate facts as proposals (1-2 days), #52 worldbuilding as a small plugin
+   with recipes + `/worldbuild` (3-4 days, the user wants it extensible). Also open: #48 Dashboard re-read after an
+   earlier message changes (~1 day), #49 Z.ai Coding Plan report (waits for the reporter). Image generation for many
+   providers (Marinara's list) runs in its own session/branch (`image-providers`). The SillyTavern importer (P1) is
+   designed in `.fork/handoff/st-import/FINDINGS.md`, not started.
 00. **1.1.0 released 2026-10-16** (STATE). Open from it: #34 waits for the reporter; Drive sync on a real phone (the user checks the APK); the project site (session branch `claude/beautiful-mccarthy-a159c9`, its own handoff).
 0. **Canvas, after stage 1b** (1b shipped in Roleplay 4.44.0, 2026-10-14): the agreed order is in
    `.fork/handoff/canvas/PLAN.md` section 15: settle 4.44.0, Decider (+ Molfar's tool), character
