@@ -7,8 +7,9 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 
 ## Project website (2026-10-16): LIVE at https://molfarwav.github.io/ (repo MolfarWav/MolfarWav.github.io)
 `.fork/site/`: four pages, English at the root and Ukrainian under `uk/`, design C. `sh .fork/site/assemble.sh` builds
-the whole site repo into `.fork/site/dist/`, pushed to the site repo's `main`. Left: Search Console verification
-file (the user sends its name), then Google Auth Platform Branding + Publish. Details: `.fork/site/HANDOFF.md`.
+the whole site repo into `.fork/site/dist/`, pushed to the site repo's `main`. Search Console verification file
+`google7bf33d86b7cf3f3c.html` is live (2026-10-16, the user reports it works). Left: confirm the consent screen is
+In production before 1.1.0 ships. Details: `.fork/site/HANDOFF.md`.
 
 ## 1.0.10 = the guide in the shell and on Molfar's page, #33, #34: main fast-forwarded 2026-10-15, the tag `v1.0.10` is the user's (Roleplay 4.47.0 on the fork's main)
 Engine branch `claude/guide-plan` (worktree `.claude/worktrees/readme-canvas`): bug-solution merged (`0619b42`),
