@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.1.1 (not released): branch `claude/v111-fixes` from main 1.1.0, urgent part of #45
+## 1.1.1: RELEASED 2026-10-16 on the user's word (branch `claude/v111-fixes` from main 1.1.0, main fast-forwarded, tag v1.1.1; notes `.fork/release-notes/1.1.1.md`), urgent part of #45
 The phone's first real push (2026-10-16) met a leftover development test push in the user's Drive (removed), then
 pushed into that folder after it was moved to the trash: Drive takes uploads into a trashed folder. Fixed: `DriveStore.readHead`
 checks the folder (`fields=trashed`; a removed one already gave 404) before every check, push and pull. Sync settings:
@@ -13,7 +13,7 @@ a refused push's error no longer vanishes (the re-check after a push cleared it)
 "This sync already holds {device}'s files" instead of "pushed since this device last synced". Left in #45 for the
 Tuesday batch: a "replace the sync with this device" action. #44 (chat list preview shows reasoning the display regex
 hides; Roleplay `cleanPreview` keeps text between tags and runs no display scripts) also waits for Tuesday.
-Not browser-checked (text and error-keeping change only); not released: package.json, CHANGELOG, notes, tag on the user's word.
+Not browser-checked (text and error-keeping change only). #45 stays open for the rest.
 
 ## 1.1.0: RELEASED 2026-10-16 on the user's word (main fast-forwarded to the release commit, tag v1.1.0 pushed from this desktop session; Roleplay 4.48.0 on the fork's main `c9c09e5`). = `claude/v110-fixes` + Drive sync (`claude/nostalgic-mccarthy-136fe6`, see the sync section below and `.fork/handoff/sync/`). Notes `.fork/release-notes/1.1.0.md`. Not in it: the project site branch `claude/beautiful-mccarthy-a159c9` (work in progress). Checks: typecheck, build:client pass; tests 789 pass, the 15 known Windows-only failures plus 4 app-build tests that pass when run alone (load flakes).
 Engine branch `claude/v110-fixes` (pushed; from main 1.0.10 + the plan notes): #34 `-c safe.directory` for the

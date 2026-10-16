@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.1.1 (2026-10-16)
+
+- Sync: a Google Drive sync folder in the trash stops check, push and pull with a clear message; Drive takes uploads into a trashed folder, so a push used to land in the trash and report success (#45).
+- Sync: the error of a refused push stays on screen (the status check after a push cleared it), and a device that never synced reads "This sync already holds X's files" instead of "X pushed since this device last synced" (#45).
+
 ## 1.1.0 (2026-10-16)
 
 - Sync between devices (`src/sync/`, #38): Settings → Sync and "Sync devices" in the account menu. Push and pull like git, by hand: a three-way compare against each device's last sync, content-addressed blobs, only changed files travel, deletions too; files changed on both sides are listed with keep mine / take Drive's, and the version not kept goes to `data/backups/sync-conflicts/`. Stores: Google Drive (`drive.file` scope, a built-in Desktop OAuth client, your own client in Settings) and a folder on this computer. Keys travel only sealed with a passphrase (scrypt + AES-256-GCM, as the profile backup). Design: `.fork/handoff/sync/DESIGN.md`.
