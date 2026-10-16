@@ -13,8 +13,11 @@ import type { SyncStore } from "./store.js";
 
 /** The built-in "Molfar Vertep" Desktop client (GOOGLE-CLIENT.md in
  *  .fork/handoff/sync). A Desktop client's secret is not secret: Google
- *  requires it with PKCE all the same. Empty until it is registered. */
-export const BUILTIN_CLIENT = { id: "", secret: "" };
+ *  requires it with PKCE all the same. */
+export const BUILTIN_CLIENT = {
+  id: "353071814181-bjpbqsok71ft43v75ij757fhcnjvn1qk.apps.googleusercontent.com",
+  secret: "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",
+};
 
 export const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";

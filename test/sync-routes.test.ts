@@ -102,14 +102,17 @@ describe("sync routes", () => {
     const r = await e.app.request("/v1/sync/drive/callback?state=forged&code=x");
     expect(r.status).toBe(400);
     expect(await r.text()).toContain("expired");
-    // without a client the sign-in does not start
-    const start = await e.call("POST", "/v1/sync/drive/start");
-    expect(start.status).toBe(400);
+    // the built-in client signs in out of the box
+    const { BUILTIN_CLIENT } = await import("../src/sync/drive.js");
+    const built = (await (await e.call("POST", "/v1/sync/drive/start")).json()) as { url: string; redirect: string };
+    expect(new URL(built.url).searchParams.get("client_id")).toBe(BUILTIN_CLIENT.id);
+    expect(new URL(built.url).searchParams.get("redirect_uri")).toBe(built.redirect);
+    expect(built.redirect).toMatch(/^http:\/\/(127\.0\.0\.1|localhost):\d+\/v1\/sync\/drive\/callback$/);
+    // the environment's client wins over the built-in one
     process.env.CHRYSALIS_DRIVE_CLIENT_ID = "test.apps.googleusercontent.com";
     try {
-      const s = (await (await e.call("POST", "/v1/sync/drive/start")).json()) as { url: string; redirect: string };
-      expect(new URL(s.url).searchParams.get("redirect_uri")).toBe(s.redirect);
-      expect(s.redirect).toMatch(/^http:\/\/(127\.0\.0\.1|localhost):\d+\/v1\/sync\/drive\/callback$/);
+      const s = (await (await e.call("POST", "/v1/sync/drive/start")).json()) as { url: string };
+      expect(new URL(s.url).searchParams.get("client_id")).toBe("test.apps.googleusercontent.com");
     } finally {
       delete process.env.CHRYSALIS_DRIVE_CLIENT_ID;
     }

@@ -154,9 +154,10 @@ Code: `src/sync/` (manifest, state, local, store, drive, engine, service), route
 `test/sync.test.ts` (two devices on a folder store, conflicts, keys, scope, trust, a fake Drive),
 `test/sync-routes.test.ts` (two engines over HTTP). Browser check: `E:\Claude\guide-shots\sync\`.
 Not done:
-- The built-in Google client: `BUILTIN_CLIENT` in `src/sync/drive.ts` stays empty until the user
-  registers it (GOOGLE-CLIENT.md). Until then Drive works only with one's own client (Settings >
-  Sync > Advanced, or `CHRYSALIS_DRIVE_CLIENT_ID` / `_SECRET`).
+- The built-in Google client is registered (2026-10-16, project "Molfar Vertep") but still in
+  "Testing": only listed test users can sign in, and a sign-in lasts 7 days. "In production" needs a
+  home page and a privacy policy on a verified domain: planned on molfarwav.github.io (the user wants
+  a real project site there, not a bare page). Must be done before 1.1.0 ships.
 - Google Drive was exercised only through a fake Drive in the tests, never against Google.
 - Android: not run on a phone. The engine there serves the UI on 127.0.0.1 in the phone's
   browser, so Google's return to 127.0.0.1 should reach it; untested.
