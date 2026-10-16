@@ -731,6 +731,7 @@ const dict = {
   "Not synced yet on this device": "このデバイスではまだ同期されていません",
   "In the sync: push {rev} from {device}, {time}": "同期内: {device}からのPush {rev}、{time}",
   "{device} pushed since this device last synced. Pull first.": "{device}がこのデバイスの最終同期以降にPushしました。最初にPullしてください。",
+  "This sync already holds {device}'s files. Pull first.": "この同期にはすでに{device}のファイルがあります。最初にPullしてください。",
   "Push ({n})": "Push ({n})",
   "Push": "Push",
   "Pull ({n})": "Pull ({n})",

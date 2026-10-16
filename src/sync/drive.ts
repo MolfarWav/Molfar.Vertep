@@ -264,9 +264,19 @@ export class DriveStore implements SyncStore {
     }
   }
 
+  /** The folder must still be there and out of the trash: Drive accepts
+   *  uploads into a trashed folder, so a push would land in the trash. */
+  private async checkFolder(): Promise<void> {
+    const res = await this.call(`${API}/files/${encodeURIComponent(this.folderId)}?fields=id,trashed`);
+    const j = (await res.json().catch(() => ({}))) as { trashed?: boolean };
+    if (j.trashed) throw new SyncError("the sync folder is in the Google Drive trash: restore it, or disconnect and connect again for a new one", 409);
+  }
+
   async readHead(): Promise<unknown | null> {
-    // always fresh: another device may have pushed since this store was made
+    // always fresh: another device may have pushed since this store was made,
+    // and the folder may have been trashed or removed since
     this.names = null;
+    await this.checkFolder();
     return this.readJson("head.json");
   }
   async writeHead(head: unknown): Promise<void> {

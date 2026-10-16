@@ -304,6 +304,7 @@ describe("Google Drive store", () => {
     // a tiny in-memory Drive: files by id with name and parent
     const files = new Map<string, { name: string; body: Buffer }>();
     let n = 0;
+    let trashed = false;
     const fake = async (url: string, init: RequestInit = {}): Promise<Response> => {
       const u = new URL(url);
       const method = init.method ?? "GET";
@@ -312,6 +313,7 @@ describe("Google Drive store", () => {
         return Response.json({ files: [...files].map(([id, f]) => ({ id, name: f.name })) });
       }
       const media = /^\/(?:upload\/)?drive\/v3\/files\/([^/]+)$/.exec(u.pathname);
+      if (media?.[1] === "folder" && method === "GET") return Response.json({ id: "folder", trashed });
       if (media && method === "GET") return new Response(files.get(media[1]!)!.body);
       if (media && method === "PATCH") {
         files.get(media[1]!)!.body = Buffer.from(init.body as Uint8Array);
@@ -346,5 +348,13 @@ describe("Google Drive store", () => {
     await pull({ ...ctx(a), store: store() }, {});
     expect(read(a, "apps/roleplay/data/chats/c1.jsonl")).toBe("edited\n");
     expect([...files.values()].some((f) => f.name === "manifest-1.json")).toBe(true);
+
+    // a folder moved to the trash: Drive would still take uploads into it
+    trashed = true;
+    const before = files.size;
+    put(a, "apps/roleplay/data/chats/c2.jsonl", "new\n");
+    await expect(push({ ...ctx(a), store: store() })).rejects.toThrow(/trash/);
+    await expect(pull({ ...ctx(b), store: store() }, {})).rejects.toThrow(/trash/);
+    expect(files.size).toBe(before);
   });
 });

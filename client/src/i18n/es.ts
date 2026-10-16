@@ -731,6 +731,7 @@ const dict = {
   "Not synced yet on this device": "Aún no sincronizado en este dispositivo",
   "In the sync: push {rev} from {device}, {time}": "En la sincronización: envío {rev} de {device}, {time}",
   "{device} pushed since this device last synced. Pull first.": "{device} envió desde la última sincronización de este dispositivo. Recibe primero.",
+  "This sync already holds {device}'s files. Pull first.": "Esta sincronización ya contiene los archivos de {device}. Recibe primero.",
   "Push ({n})": "Enviar ({n})",
   "Push": "Enviar",
   "Pull ({n})": "Recibir ({n})",

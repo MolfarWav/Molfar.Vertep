@@ -256,9 +256,9 @@ export function SyncTab(props: { isAdmin: boolean }) {
     }
   }
 
-  const runJob = async (kind: Job["kind"], body?: unknown) => {
+  const runJob = async (kind: Job["kind"], body?: unknown, keepError = false) => {
     setBusy(kind)
-    setError("")
+    if (!keepError) setError("")
     if (kind !== "check") setSuccess("")
     try {
       const { job } = await api<{ job: Job }>("POST", `/v1/sync/${kind}`, body ?? {})
@@ -270,7 +270,8 @@ export function SyncTab(props: { isAdmin: boolean }) {
     }
     if (kind === "push" && alive.current) {
       await loadView()
-      await runJob("check")
+      // keep a refused push's error on screen while the status refreshes
+      await runJob("check", undefined, true)
     }
   }
   const runCheck = () => runJob("check")
@@ -567,7 +568,9 @@ export function SyncTab(props: { isAdmin: boolean }) {
               {status?.behind && (
                 <div className="rounded-md bg-warning-soft text-warning px-2 py-1.5 text-12 flex items-center gap-2">
                   <IconSmall name="info" />
-                  {tr("{device} pushed since this device last synced. Pull first.", { device: status.remote?.device || "" })}
+                  {view.base === null
+                    ? tr("This sync already holds {device}'s files. Pull first.", { device: status.remote?.device || "" })
+                    : tr("{device} pushed since this device last synced. Pull first.", { device: status.remote?.device || "" })}
                 </div>
               )}
             </div>

@@ -731,6 +731,7 @@ const dict = {
   "Not synced yet on this device": "此设备上尚未同步",
   "In the sync: push {rev} from {device}, {time}": "同步中：来自 {device} 的推送 {rev}，{time}",
   "{device} pushed since this device last synced. Pull first.": "{device} 在此设备上次同步后已推送。请先拉取。",
+  "This sync already holds {device}'s files. Pull first.": "此同步中已有 {device} 的文件。请先拉取。",
   "Push ({n})": "推送 ({n})",
   "Push": "推送",
   "Pull ({n})": "拉取 ({n})",

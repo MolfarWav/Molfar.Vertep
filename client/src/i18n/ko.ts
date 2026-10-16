@@ -731,6 +731,7 @@ const dict = {
   "Not synced yet on this device": "이 기기에서 아직 동기화되지 않음",
   "In the sync: push {rev} from {device}, {time}": "동기화 중: {device}에서 {rev} Push, {time}",
   "{device} pushed since this device last synced. Pull first.": "{device}이(가) 이 기기의 마지막 동기화 이후 Push했습니다. 먼저 Pull하세요.",
+  "This sync already holds {device}'s files. Pull first.": "이 동기화에는 이미 {device}의 파일이 있습니다. 먼저 Pull하세요.",
   "Push ({n})": "Push ({n})",
   "Push": "Push",
   "Pull ({n})": "Pull ({n})",

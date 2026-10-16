@@ -733,6 +733,7 @@ const en = {
   "Not synced yet on this device": "",
   "In the sync: push {rev} from {device}, {time}": "",
   "{device} pushed since this device last synced. Pull first.": "",
+  "This sync already holds {device}'s files. Pull first.": "",
   "Push ({n})": "",
   "Push": "",
   "Pull ({n})": "",

@@ -731,6 +731,7 @@ const dict = {
   "Not synced yet on this device": "Bu cihazda henüz eşitlenmedi",
   "In the sync: push {rev} from {device}, {time}": "Eşitlemede: {device} cihazından {rev} gönderimi, {time}",
   "{device} pushed since this device last synced. Pull first.": "{device}, bu cihazın son eşitlemesinden bu yana gönderim yaptı. Önce çek.",
+  "This sync already holds {device}'s files. Pull first.": "Bu eşitlemede zaten {device} cihazının dosyaları var. Önce çek.",
   "Push ({n})": "Gönder ({n})",
   "Push": "Gönder",
   "Pull ({n})": "Çek ({n})",
