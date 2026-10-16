@@ -69,6 +69,8 @@ export class SyncError extends Error {
 
 const MEDIA = /\.(png|jpe?g|webp|gif|avif|bmp|ico|svg|mp3|ogg|oga|opus|wav|flac|m4a|aac|mp4|webm|mov|mkv)$/i;
 const HASH = /^[a-f0-9]{64}$/;
+/** No single file in a sync is bigger: the size bounds what a pull unpacks. */
+const MAX_FILE = 512 * 1024 * 1024;
 const SEGMENT = /^[^/\\:*?"<>|\0]+$/;
 
 /** A workspace path that may travel: plain segments, nothing the profile
@@ -115,7 +117,7 @@ export function checkManifest(raw: unknown): SyncManifest {
   for (const [key, e] of Object.entries(m.files && typeof m.files === "object" ? m.files : {})) {
     if (!syncPathOk(key)) throw new SyncError(`the sync holds a path this engine refuses: ${key.slice(0, 120)}`, 422);
     const v = e as Partial<FileEntry> | null;
-    if (!v || typeof v.h !== "string" || !HASH.test(v.h) || !Number.isSafeInteger(v.s) || (v.s as number) < 0) throw new SyncError("the sync manifest is damaged", 422);
+    if (!v || typeof v.h !== "string" || !HASH.test(v.h) || !Number.isSafeInteger(v.s) || (v.s as number) < 0 || (v.s as number) > MAX_FILE) throw new SyncError("the sync manifest is damaged", 422);
     files[key] = { h: v.h, s: v.s as number };
   }
   const apps: Record<string, AppSource> = {};

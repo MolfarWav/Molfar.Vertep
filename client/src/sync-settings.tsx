@@ -489,7 +489,7 @@ export function SyncTab(props: { isAdmin: boolean }) {
                             onChange={(e) => setPasteUrl(e.target.value)}
                             placeholder="https://…"
                             aria-label={tr("Paste the address")}
-                            className={cn(inputClass, "w-full sm:w-auto min-w-0 flex-1")}
+                            className={cn(inputClass, "min-w-0 flex-1 basis-full sm:basis-48")}
                           />
                           <Button variant="primary" size="normal" disabled={anyBusy || !pasteUrl} onClick={submitPasteUrl}>{tr("Connect")}</Button>
                         </div>
@@ -511,7 +511,7 @@ export function SyncTab(props: { isAdmin: boolean }) {
                       onChange={(e) => setFolderPath(e.target.value)}
                       placeholder={tr("e.g. D:\\Sync\\Molfar")}
                       aria-label={tr("Folder path")}
-                      className={cn(inputClass, "w-full sm:w-auto min-w-0 flex-1")}
+                      className={cn(inputClass, "min-w-0 flex-1 basis-full sm:basis-48")}
                     />
                     <Button variant="neutral" size="normal" disabled={anyBusy || !folderPath} onClick={useFolder}>{tr("Use this folder")}</Button>
                   </div>
@@ -540,7 +540,7 @@ export function SyncTab(props: { isAdmin: boolean }) {
                       value={deviceName}
                       onChange={(e) => setDeviceName(e.target.value)}
                       aria-label={tr("Device name")}
-                      className={cn(inputClass, "w-full sm:w-auto min-w-0 flex-1")}
+                      className={cn(inputClass, "min-w-0 flex-1 basis-full sm:basis-48")}
                     />
                     <Button variant="primary" size="small" disabled={anyBusy} onClick={saveDeviceName}>{tr("Save")}</Button>
                     <Button variant="ghost" size="small" disabled={anyBusy} onClick={() => { setRenameOpen(false); setDeviceName(view.device.name) }}>{tr("Cancel")}</Button>
@@ -662,7 +662,7 @@ export function SyncTab(props: { isAdmin: boolean }) {
                             onChange={(e) => setPassphrase(e.target.value)}
                             placeholder={tr("Passphrase")}
                             aria-label={tr("Passphrase")}
-                            className={cn(inputClass, "w-full sm:w-auto min-w-0 flex-1")}
+                            className={cn(inputClass, "min-w-0 flex-1 basis-full sm:basis-48")}
                           />
                           <Button variant="primary" size="small" disabled={anyBusy || passphrase.length === 0} onClick={savePassphrase}>{tr("Save")}</Button>
                           <Button variant="ghost" size="small" disabled={anyBusy} onClick={() => { setShowPassphrase(false); setPassphrase("") }}>{tr("Cancel")}</Button>
@@ -677,7 +677,7 @@ export function SyncTab(props: { isAdmin: boolean }) {
                         onChange={(e) => setPassphrase(e.target.value)}
                         placeholder={tr("Passphrase, at least 8 characters")}
                         aria-label={tr("Passphrase")}
-                        className={cn(inputClass, "w-full sm:w-auto min-w-0 flex-1")}
+                        className={cn(inputClass, "min-w-0 flex-1 basis-full sm:basis-48")}
                       />
                       <Button variant="primary" size="small" disabled={anyBusy || passphrase.length === 0} onClick={savePassphrase}>{tr("Save")}</Button>
                     </div>

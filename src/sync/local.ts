@@ -141,6 +141,8 @@ export function applyFile(p: UserPaths, key: string, body: Uint8Array | null): v
   const tmp = `${abs}.sync-${crypto.randomBytes(4).toString("hex")}`;
   fs.writeFileSync(tmp, body, key.startsWith("p/") ? { mode: 0o600 } : {});
   try {
+    // checked again right before the swap: a link made meanwhile is refused
+    if (!insideWithoutLinks(root, abs)) throw new SyncError(`refusing to write ${key.slice(0, 120)}`, 422);
     fs.renameSync(tmp, abs);
   } catch (e) {
     fs.rmSync(tmp, { force: true });

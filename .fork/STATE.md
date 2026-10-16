@@ -11,8 +11,17 @@ engine's own repositories (app clones, workspace gc) on drives git does not trus
 GIT_TEST_ASSUME_DIFFERENT_OWNER; #36 app frame CSP `worker-src blob:` (Roleplay's display regex ran in a blob
 worker the CSP blocked, so no display regex ever worked; checked in headless Edge); #37 `host.zip.build` (native zip
 for plugins, no permission; app-authoring skill + digest updated). Checks: typecheck, build:client pass; tests 770
-pass, 15 known Windows-only failures. Drive sync (#38): brief `.fork/handoff/sync/PLAN.md`, its own session and
-branch cut from `claude/v110-fixes`.
+pass, 15 known Windows-only failures.
+Drive sync (#38): built on branch `claude/nostalgic-mccarthy-136fe6` (cut from `claude/v110-fixes`, pushed, not
+merged; merge it into the release with the fixes). Decided with the user 2026-10-16: conflicts listed per thing
+with keep mine / take the synced one (the losing copy in data/backups/sync-conflicts, 30 days); the whole
+workspace with switches (Molfar's chats and projects, media, keys off by default); passphrase typed once per
+device and remembered beside the keys; phone signs in itself with a pasted-address fallback; one shared
+"Molfar Vertep" Google client the user registers once (steps `.fork/handoff/sync/GOOGLE-CLIENT.md`, nothing
+registered yet: `BUILTIN_CLIENT` in `src/sync/drive.ts` is empty); stores behind one interface (Drive and a
+folder for admins). Design and what is left: `.fork/handoff/sync/DESIGN.md`. Settings > Sync + "Sync devices" in
+the account menu, guide tip `new.sync` (since 1.1.0), README. Tests 793 pass, 15 known Windows-only failures;
+browser-checked (shots `E:\Claude\guide-shots\sync\`). Not tested: real Google Drive, a real phone.
 Roleplay fork branch `claude/v110` (pushed; worktree `E:\Claude\rp-v110`, from main 4.47.0), CHANGELOG "Unreleased
 (4.48.0)": Molfar as a second built-in read-only preset (`data/presets/molfar.json` = `_molfar.json`, 8 regex
 scripts in `data/regex/molfar-*.json` + update template `data/_molfar-regex.json`, onAppUpdate 4.48.0 seeds them);

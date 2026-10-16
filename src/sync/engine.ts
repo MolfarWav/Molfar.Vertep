@@ -412,7 +412,12 @@ export async function pull(ctx: SyncContext, opts: { rev?: number; resolutions?:
     if (keys) {
       const auth = path.join(cd, "auth.json");
       if (fs.existsSync(auth)) fs.copyFileSync(auth, path.join(cd, "auth.json.before-sync"));
-      for (const [name, body] of Object.entries(keys)) fs.writeFileSync(path.join(cd, name), body, { mode: 0o600 });
+      for (const [name, body] of Object.entries(keys)) {
+        // a temp file and a rename: a link at the name is replaced, never followed
+        const tmp = path.join(cd, `${name}.sync-tmp`);
+        fs.writeFileSync(tmp, body, { mode: 0o600 });
+        fs.renameSync(tmp, path.join(cd, name));
+      }
       applied++;
     }
     for (const id of apps) markRestored(ctx.paths, id, manifest.apps[id]);

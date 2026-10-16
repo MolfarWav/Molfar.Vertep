@@ -38,7 +38,8 @@ the user pulls first, exactly like git. Deletions travel as absence from the man
 Molfar Vertep sync/              (Drive: a folder in My Drive; folder store: the chosen folder)
   head.json                      { format, kind, product, rev, manifest, device, pushedAt, engine }
   manifests/<rev>.json           the full file list of push number <rev>
-  blobs/<sha256>                 file bodies, content-addressed (gzip when it saves >10%)
+  blobs/<sha256>                 file bodies, content-addressed: one tag byte (0 raw, 1 gzip when
+                                 it saves >10%), then the body; checked against the hash on pull
 ```
 Push order: blobs, then the manifest, then head.json last. An interrupted push leaves the old head
 valid; unreferenced blobs are removed by the next push (blobs used by the current and previous
@@ -53,17 +54,17 @@ window seconds wide).
   "rev": 7, "parent": 6, "engine": "1.1.0", "pushedAt": "2026-10-16T12:00:00Z",
   "device": { "id": "a1b2c3d4", "name": "Desktop" },
   "files": {
-    "w/apps/roleplay/data/chats/x.jsonl": { "h": "<sha256 of the plain bytes>", "s": 1234, "z": 1 },
+    "w/apps/roleplay/data/chats/x.jsonl": { "h": "<sha256 of the plain bytes>", "s": 1234 },
     "p/connections.json": { "h": "…", "s": 210 }
   },
   "apps": { "roleplay": { "git": "https://github.com/MolfarWav/Molfar.Vertep-Roleplay.git", "ref": "main" } },
-  "secrets": { "h": "<sha256 of the sealed text>", "s": 900, "plain": "<sha256 of the plain bundle>" }
+  "secretsPlain": "<sha256 of the plain key bundle>"
 }
 ```
 - `w/<rel>`: a workspace file. `p/<name>`: a private file outside the workspace, only
   `connections.json`, `speech.json`, `sandbox.json` (the same plain list as the profile backup).
-- `secrets`: `auth.json` + `mcp.json` sealed with `sealSecrets` (scrypt + AES-256-GCM, from
-  `profile-backup.ts`); the blob is the sealed JSON. `plain` lets a device tell whether its keys
+- `secrets.enc` (a key in `files`): `auth.json` + `mcp.json` sealed with `sealSecrets` (scrypt +
+  AES-256-GCM, from `profile-backup.ts`); the blob is the sealed JSON. `secretsPlain` lets a device tell whether its keys
   differ without opening them (a hash of high-entropy keys reveals nothing usable).
 - `apps`: where each app was installed from (the install record), never its `restored` flag or its
   baseline.
@@ -113,9 +114,9 @@ so switching something off never deletes it on Drive.
 - Redirect: `http://127.0.0.1:<port>/v1/sync/drive/callback`. The callback is a public route that
   only accepts a one-time `state` (32 random bytes, 10 minutes, bound to the account and the PKCE
   verifier). Fallback: `POST /v1/sync/drive/code` with the pasted address.
-- Folder: found by name + `appProperties.molfarVertepSync = "1"` among files this client created,
-  created when missing. Blobs, manifests and head.json are files inside it, names as above (Drive
-  parents are flat: `blobs/<h>` is the name, one folder).
+- Folder: found by `appProperties.molfarVertepSync = "1"` among files this client created,
+  created when missing. Inside it the names are flat: `head.json`, `manifest-<rev>.json`,
+  `blob-<sha256>`.
 - Uploads: multipart up to 5 MB, resumable above; 4 in parallel; 429/5xx retried with backoff.
 - The refresh token is stored in `sync.json`; access tokens only in memory.
 
@@ -134,12 +135,30 @@ so switching something off never deletes it on Drive.
 - `GET  /v1/sync/job`: `{ kind, phase, done, total, bytes, error?, result? }`. Long work runs as
   one job per account (Bun's idle timeout and phone networks make one long request fragile).
 - Conflict groups: files grouped by path without the extensions (`chats/x.jsonl` +
-  `chats/x.meta.json` are one chat); each `{ id, app, label, files, mine: {at}, theirs: {device, at} }`.
+  `chats/x.meta.json` are one chat); each `{ id, app, label, title?, files }`; `title` is read from
+  the thing's own JSON on this device (a chat's meta title, a card's name).
 
 ## Settings UI (client, tab "Sync" after "Backup")
 Not connected: one line on what it does, two choices ("Google Drive": Sign in with Google; "A
 folder on this computer", admins), Advanced: your own Google client. Connected: where, this
 device's name, last sync; two main buttons "Push" / "Pull" with counts from the last check and a
 "Check" button; progress line while a job runs; "What travels" switches; passphrase field when keys
-are on; Disconnect. Conflicts open a dialog: the groups, a two-way choice per row, "for all" at the
-top, the note where the losing copy goes. Pull ends with a reload of the shell.
+are on; Disconnect. Conflicts open a panel in place of the buttons: the groups (named after the
+chat), a two-way choice per row, "for all" at the top, the note where the losing copy goes. Pull
+ends with a reload of the shell. Also "Sync devices" in the account menu opens this tab.
+
+## Built (2026-10-16, branch claude/nostalgic-mccarthy-136fe6, cut from claude/v110-fixes)
+Code: `src/sync/` (manifest, state, local, store, drive, engine, service), routes in
+`src/server/app.ts`, `client/src/sync-settings.tsx`, the account menu item, guide tip `new.sync`
+(What's new 1.1.0) and tour step `tour.settings.sync`, README paragraph, 14 locales. Tests:
+`test/sync.test.ts` (two devices on a folder store, conflicts, keys, scope, trust, a fake Drive),
+`test/sync-routes.test.ts` (two engines over HTTP). Browser check: `E:\Claude\guide-shots\sync\`.
+Not done:
+- The built-in Google client: `BUILTIN_CLIENT` in `src/sync/drive.ts` stays empty until the user
+  registers it (GOOGLE-CLIENT.md). Until then Drive works only with one's own client (Settings >
+  Sync > Advanced, or `CHRYSALIS_DRIVE_CLIENT_ID` / `_SECRET`).
+- Google Drive was exercised only through a fake Drive in the tests, never against Google.
+- Android: not run on a phone. The engine there serves the UI on 127.0.0.1 in the phone's
+  browser, so Google's return to 127.0.0.1 should reach it; untested.
+- Known: head.json has no compare-and-swap on Drive (re-read right before writing); Molfar's edits
+  to an official app's code leave it unofficial on the other device (as a profile import does).
