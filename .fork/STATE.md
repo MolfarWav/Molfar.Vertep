@@ -5,11 +5,10 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Project website (2026-10-16): built, waiting for the site repo
+## Project website (2026-10-16): LIVE at https://molfarwav.github.io/ (repo MolfarWav/MolfarWav.github.io)
 `.fork/site/`: four pages, English at the root and Ukrainian under `uk/`, design C. `sh .fork/site/assemble.sh` builds
-the whole site repo into `.fork/site/dist/` (checked in a headless browser, all clean). The cloud session could not
-create `MolfarWav/MolfarWav.github.io` (403); the user creates it and the dist goes there. Then Pages, Search Console
-verification file, Google Auth Platform Branding + Publish. Details and what is left: `.fork/site/HANDOFF.md`.
+the whole site repo into `.fork/site/dist/`, pushed to the site repo's `main`. Left: Search Console verification
+file (the user sends its name), then Google Auth Platform Branding + Publish. Details: `.fork/site/HANDOFF.md`.
 
 ## 1.0.10 = the guide in the shell and on Molfar's page, #33, #34: main fast-forwarded 2026-10-15, the tag `v1.0.10` is the user's (Roleplay 4.47.0 on the fork's main)
 Engine branch `claude/guide-plan` (worktree `.claude/worktrees/readme-canvas`): bug-solution merged (`0619b42`),

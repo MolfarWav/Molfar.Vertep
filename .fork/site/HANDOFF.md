@@ -55,13 +55,20 @@ sealed with a passphrase.
   repositories). The user creates it (empty, public), then either pushes `dist/` from their machine or adds
   the repo to a cloud session, which pushes.
 
+## Live (2026-10-16)
+The user created `MolfarWav/MolfarWav.github.io`; the cloud session attached it (add_repo, push) and pushed `dist/`
+to `main` (`c0b9d14`). Pages came on by itself: https://molfarwav.github.io/ and /privacy.html answer 200, as do all
+8 pages and the assets; the headless check against the live site is clean except the 885 KB footer GIF
+(`molfar-cast.gif`, shown at 64 px on every page) sometimes not finishing in time: heavy for phones, a smaller
+copy would help. To update the site: edit `src/`, run `sh .fork/site/assemble.sh`, copy `dist/` over a clone of
+the site repo, commit, push.
+
 ## Left
-1. Repo created and `dist/` pushed to `main`; Pages on (Settings > Pages, Deploy from a branch, main, / (root)).
-2. Check https://molfarwav.github.io/ and https://molfarwav.github.io/privacy.html answer 200.
-3. Search Console: URL-prefix property `https://molfarwav.github.io/`, method "HTML file": the user gives the
+1. Search Console: URL-prefix property `https://molfarwav.github.io/`, method "HTML file": the user gives the
    file name; put the file in this folder (content `google-site-verification: googleXXXXXXXX.html`), run
    `assemble.sh`, push to the site repo; the user presses Verify.
-4. Google Auth Platform: Branding: App home page `https://molfarwav.github.io/`, Privacy policy
+2. Google Auth Platform: Branding: App home page `https://molfarwav.github.io/`, Privacy policy
    `https://molfarwav.github.io/privacy.html`, Authorized domains `molfarwav.github.io`; Audience: Publish app.
    Scope stays `drive.file` only.
-5. Possible engine follow-up (not promised in the policy): revoke the token at Google on Disconnect.
+3. Possible engine follow-up (not promised in the policy): revoke the token at Google on Disconnect.
+4. Optional: a lighter footer GIF.
