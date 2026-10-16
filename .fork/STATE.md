@@ -21,7 +21,7 @@ device and remembered beside the keys; phone signs in itself with a pasted-addre
 registered yet: `BUILTIN_CLIENT` in `src/sync/drive.ts` is empty); stores behind one interface (Drive and a
 folder for admins). Design and what is left: `.fork/handoff/sync/DESIGN.md`. Settings > Sync + "Sync devices" in
 the account menu, guide tip `new.sync` (since 1.1.0), README. Tests 793 pass, 15 known Windows-only failures;
-browser-checked (shots `E:\Claude\guide-shots\sync\`). Not tested: real Google Drive, a real phone.
+browser-checked (shots `E:\Claude\guide-shots\sync\`). Real Google Drive checked (push, pull, back) with the built-in client (still "Testing"); not tested on a real phone.
 Roleplay fork branch `claude/v110` (pushed; worktree `E:\Claude\rp-v110`, from main 4.47.0), CHANGELOG "Unreleased
 (4.48.0)": Molfar as a second built-in read-only preset (`data/presets/molfar.json` = `_molfar.json`, 8 regex
 scripts in `data/regex/molfar-*.json` + update template `data/_molfar-regex.json`, onAppUpdate 4.48.0 seeds them);

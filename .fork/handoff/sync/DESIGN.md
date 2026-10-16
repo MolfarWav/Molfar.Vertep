@@ -158,7 +158,9 @@ Not done:
   "Testing": only listed test users can sign in, and a sign-in lasts 7 days. "In production" needs a
   home page and a privacy policy on a verified domain: planned on molfarwav.github.io (the user wants
   a real project site there, not a bare page). Must be done before 1.1.0 ships.
-- Google Drive was exercised only through a fake Drive in the tests, never against Google.
+- Real Google Drive checked 2026-10-16 (built-in client, Testing status): sign-in in the browser pane, push
+  of 12 files with a 6 MB one (resumable upload), pull on a second data dir byte for byte, an edit pushed
+  back and pulled through Settings > Sync.
 - Android: not run on a phone. The engine there serves the UI on 127.0.0.1 in the phone's
   browser, so Google's return to 127.0.0.1 should reach it; untested.
 - Known: head.json has no compare-and-swap on Drive (re-read right before writing); Molfar's edits
