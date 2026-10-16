@@ -5,8 +5,11 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
-## Unreleased (1.1.0)
+## Unreleased
 
+## 1.1.0 (2026-10-16)
+
+- Sync between devices (`src/sync/`, #38): Settings → Sync and "Sync devices" in the account menu. Push and pull like git, by hand: a three-way compare against each device's last sync, content-addressed blobs, only changed files travel, deletions too; files changed on both sides are listed with keep mine / take Drive's, and the version not kept goes to `data/backups/sync-conflicts/`. Stores: Google Drive (`drive.file` scope, a built-in Desktop OAuth client, your own client in Settings) and a folder on this computer. Keys travel only sealed with a passphrase (scrypt + AES-256-GCM, as the profile backup). Design: `.fork/handoff/sync/DESIGN.md`.
 - Apps install on drives git does not trust (exFAT USB drives, folders another account owns): git commands the engine runs in a repository it made itself carry `-c safe.directory` for that folder only (#34).
 - App frames may start workers from `blob:` URLs (`worker-src blob:`): Roleplay's display regex scripts run in one and were silently blocked, so blocks a preset hides stayed visible (#36).
 - Plugins: `host.zip.build([{ name, text }])` packs a zip natively and returns it as base64, without a permission; Roleplay's export uses it (#37).

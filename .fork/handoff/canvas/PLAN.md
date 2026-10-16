@@ -345,7 +345,7 @@ current; a single big skill at the end would cover three systems at once, and an
 Molfar exploring the code (CLAUDE.md). Why the deep canvas merges with the forge: subgraphs, extra
 model calls and a shelf of saved systems are the forge itself; two runners would mean two formats.
 
-## 16. Small fixes for the boards (user, 2026-10-15)
+## 16. Small fixes for the boards (user, 2026-10-15; the chat picker shipped in Roleplay 4.48.0)
 - **Prompt board, chat picker** ("PROMPT Chat" dropdown): a plain `<select>` with every chat, no search and
   no filter, so it is hard to use with many chats. Labels repeat the name ("Vivian Stein – Vivian Stein",
   "Group: A, B – Group: A, B") and two chats of the same character look identical. Wanted: a searchable

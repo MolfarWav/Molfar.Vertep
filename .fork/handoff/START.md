@@ -4,10 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
-00. **1.1.0** (user, 2026-10-16): the fixes are on `claude/v110-fixes` (engine) and `claude/v110` (Roleplay
-   4.48.0), see STATE. Next: Drive sync, its own session from `.fork/handoff/sync/PLAN.md` (GitHub #38),
-   on a branch cut from `claude/v110-fixes`; then one release 1.1.0 with Roleplay 4.48.0, on the user's word.
-   Items 0b (option hints, preset list tokens) and the Canvas chat picker (canvas PLAN section 16) are done there.
+00. **1.1.0 released 2026-10-16** (STATE). Open from it: #34 waits for the reporter; Drive sync on a real phone (the user checks the APK); the project site (session branch `claude/beautiful-mccarthy-a159c9`, its own handoff).
 0. **Canvas, after stage 1b** (1b shipped in Roleplay 4.44.0, 2026-10-14): the agreed order is in
    `.fork/handoff/canvas/PLAN.md` section 15: settle 4.44.0, Decider (+ Molfar's tool), character
    behaviour preset (+ Molfar's tool), agent forge (+ Molfar's create / validate / dry run), then
@@ -15,17 +12,6 @@ Finished work is not listed here: see STATE ("Released") and git history.
    items while a release settles.
 0a. **In-app guide** (user, 2026-10-14, next big item): What's new after an update, section tours, a help "?" with
    "Show me"; Roleplay, the shell and Molfar's page; en + uk. Plan and decisions: `.fork/handoff/guide/PLAN.md`.
-0b. **Preset picker and Choices panel (Roleplay)** (user, 2026-10-15, seen on the Molfar preset):
-   - Preset list: the second line shows "187/187 on · 1 · 33k ctx" (sections on, temperature, context). Show
-     instead about how many tokens the preset takes right now with this chat's picks (`presetCosts`, POST
-     /preset-costs). "N/N on" says little for presets that switch sections by conditions: count what the
-     picks actually send, or drop it.
-   - Choices panel: hovering an option shows only "adds about N tokens". Give an option a short optional
-     `hint` (what the block does, one line), shown on hover and on tap / long-press on a phone, with the
-     token cost after it. New field on `PromptVariableChoice`: docs/DATA-FORMATS.md, the Marinara import,
-     the preset editor (edit the hint) and the preset skill change with it. Then write hints for the
-     Molfar and FRANKENX options (a cheap-model job, checked against each block's text).
-   - The chat picker on the Prompt board: `.fork/handoff/canvas/PLAN.md` section 16.
 0. **UX audit backlog** (user, 2026-10-12, ongoing): take a few items into each release from the audit
    document (STATE, "UX audit backlog", gives where it lives). Not a release of its own.
 1. **Group chats = 1.0.0** (user, 2026-10-11): `.fork/handoff/group-chats/PLAN.md` (what exists, what is

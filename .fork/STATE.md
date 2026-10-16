@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.1.0 in progress (2026-10-16): fixes + Drive sync, released together at the end, on the user's word
+## 1.1.0: RELEASED 2026-10-16 on the user's word (main fast-forwarded to the release commit, tag v1.1.0 pushed from this desktop session; Roleplay 4.48.0 on the fork's main `c9c09e5`). = `claude/v110-fixes` + Drive sync (`claude/nostalgic-mccarthy-136fe6`, see the sync section below and `.fork/handoff/sync/`). Notes `.fork/release-notes/1.1.0.md`. Not in it: the project site branch `claude/beautiful-mccarthy-a159c9` (work in progress). Checks: typecheck, build:client pass; tests 789 pass, the 15 known Windows-only failures plus 4 app-build tests that pass when run alone (load flakes).
 Engine branch `claude/v110-fixes` (pushed; from main 1.0.10 + the plan notes): #34 `-c safe.directory` for the
 engine's own repositories (app clones, workspace gc) on drives git does not trust, test with
 GIT_TEST_ASSUME_DIFFERENT_OWNER; #36 app frame CSP `worker-src blob:` (Roleplay's display regex ran in a blob
@@ -34,8 +34,8 @@ not shot; the tooltip's cost line not exercised with the mock model). Manifest s
 Molfar converter (ST preset -> Vertep) lives in the session scratchpad only; the source preset is
 `E:\Obsidian\Vault\Projects\RP\assets\molfar\Molfar-2026-09-26.json`, the result also at `Molfar-vertep.json` there.
 The user's workspace `presets/molfar.json` was replaced by the built-in version (it was the session's own install).
-Left for the release: Roleplay 4.48.0 (manifest, merge), engine 1.1.0 (package.json, CHANGELOG, release notes),
-close #34 (if the reporter confirms), #35, #36, #37 with it.
+Done in the release: Roleplay 4.48.0 (manifest, CHANGELOG, What's new tip `new.molfar`), engine 1.1.0 (package.json, CHANGELOG, notes);
+#35, #36, #37 closed with it; #34 stays open until the reporter confirms.
 
 ## 1.0.10 = the guide in the shell and on Molfar's page, #33, #34: main fast-forwarded 2026-10-15, the tag `v1.0.10` is the user's (Roleplay 4.47.0 on the fork's main)
 Engine branch `claude/guide-plan` (worktree `.claude/worktrees/readme-canvas`): bug-solution merged (`0619b42`),
