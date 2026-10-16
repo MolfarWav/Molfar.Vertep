@@ -78,13 +78,13 @@ function page(lang, name, { title, description, body }) {
     <div class="container header-inner">
       <a href="${up}${L.dir}index.html" class="wordmark" aria-label="${L.nav.home}">
         <img src="${up}assets/vertep-logo.svg" alt="" aria-hidden="true" width="28" height="28">
-        Molfar&nbsp;Vertep
+        <span class="wordmark-text">Molfar&nbsp;Vertep</span>
       </a>
       <nav class="header-nav" aria-label="${L.nav.main}">
         <a href="features.html" class="nav-features"${current("features.html")}>${L.nav.features}</a>
         <a href="download.html" class="nav-download"${current("download.html")}>${L.nav.download}</a>
-        <a href="${REPO}">GitHub</a>
-        <a href="${DISCORD}">Discord</a>
+        <a href="${REPO}" class="nav-external">GitHub</a>
+        <a href="${DISCORD}" class="nav-external">Discord</a>
         <span class="lang-switch" role="group" aria-label="${L.nav.lang}">
           ${switchLink("en")}
           <span class="sep" aria-hidden="true">|</span>

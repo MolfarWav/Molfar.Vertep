@@ -1,5 +1,6 @@
 node_modules/
 dist/
+!.fork/site/dist/
 /data/
 *.log
 .env

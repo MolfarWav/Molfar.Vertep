@@ -190,14 +190,19 @@ img {
   .header-nav .lang-switch {
     flex-shrink: 0;
   }
-  .header-nav .nav-features, .header-nav .nav-download {
+  .header-nav .nav-external {
     display: none;
   }
 }
-@media (min-width: 821px) and (max-width: 1024px) {
-  .header-nav .nav-features, .header-nav .nav-download {
+@media (max-width: 480px) {
+  .wordmark-text {
     display: none;
   }
+}
+#latest-version {
+  white-space: nowrap;
+  color: var(--text-faint);
+  margin-left: 8px;
 }
 
 /* Hero */
@@ -380,7 +385,7 @@ img {
 /* Feature list */
 .ask-points {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 16px;
   margin-top: 8px;
 }
@@ -681,6 +686,22 @@ img {
   border-radius: 4px;
   padding: 1px 5px;
   overflow-wrap: anywhere;
+}
+.prose pre {
+  background: var(--panel-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.prose pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  overflow-wrap: normal;
+  white-space: pre;
 }
 .prose .summary {
   background: var(--panel);

@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Features · Molfar Vertep</title>
+  <meta name="description" content="What Molfar Vertep does: an agent that changes the app when you ask, the Roleplay app, phone access, and a local, free, open source setup.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="canonical" href="https://molfarwav.github.io/features.html">
+  <link rel="alternate" hreflang="en" href="https://molfarwav.github.io/features.html">
+  <link rel="alternate" hreflang="uk" href="https://molfarwav.github.io/uk/features.html">
+  <link rel="alternate" hreflang="x-default" href="https://molfarwav.github.io/features.html">
+  <meta property="og:title" content="Features · Molfar Vertep">
+  <meta property="og:description" content="What Molfar Vertep does: an agent that changes the app when you ask, the Roleplay app, phone access, and a local, free, open source setup.">
+  <meta property="og:image" content="https://molfarwav.github.io/assets/social-preview.png">
+  <meta property="og:url" content="https://molfarwav.github.io/features.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon-64.png" type="image/png">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="wordmark" aria-label="Molfar Vertep home">
+        <img src="assets/vertep-logo.svg" alt="" aria-hidden="true" width="28" height="28">
+        <span class="wordmark-text">Molfar&nbsp;Vertep</span>
+      </a>
+      <nav class="header-nav" aria-label="Main navigation">
+        <a href="features.html" class="nav-features" aria-current="page">Features</a>
+        <a href="download.html" class="nav-download">Download</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep" class="nav-external">GitHub</a>
+        <a href="https://discord.gg/NMqSehTCTs" class="nav-external">Discord</a>
+        <span class="lang-switch" role="group" aria-label="Language">
+          <a href="features.html" class="active" aria-current="true" lang="en">EN</a>
+          <span class="sep" aria-hidden="true">|</span>
+          <a href="uk/features.html" lang="uk" hreflang="uk">UA</a>
+        </span>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+<section class="page-head">
+    <div class="container">
+      <h1>Features</h1>
+      <p>An agent who changes the app when you ask, a Roleplay app with the usual things and a few unusual ones, and everything on your own machine.</p>
+    </div>
+  </section>
+
+  <!-- Molfar -->
+  <section class="section" aria-labelledby="molfar-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="molfar-title">Molfar, the agent inside</h2>
+        <p>He is the agent that lives inside, an old Carpathian sorcerer by temper, and he can change the app itself. Every app here is a folder of plain files. Tell Molfar what bothers you or what you'd like to have, and he edits those files; the screen rebuilds a few seconds later.</p>
+      </div>
+      <p class="center">Most frontends give you settings. Here you can also say "move this button", "add a dice roll", "make the chat read like a book", "show me who knows what about my character". Small fixes and whole new sections go the same way.</p>
+      <h3 class="center mt-32">Change it by asking</h3>
+      <div class="ask-points">
+        <div class="ask-point">
+          <h3>Each change can be undone</h3>
+          <p>Molfar works in git: every run leaves a checkpoint, and one click brings the code back.</p>
+        </div>
+        <div class="ask-point">
+          <h3>He asks before the big stuff</h3>
+          <p>For large or unclear requests Molfar asks first, with options to pick from. Paths you mark as protected need your yes every time.</p>
+        </div>
+        <div class="ask-point">
+          <h3>Your edits survive updates</h3>
+          <p>When a new version of an app comes out, it is merged with what you changed. If they clash, you choose: keep yours, take theirs, or let Molfar merge them.</p>
+        </div>
+        <div class="ask-point">
+          <h3>Apps can call him too</h3>
+          <p>The Roleplay app has an "Ask Molfar" button that opens him with your request already typed. Nothing is sent until you press Send.</p>
+        </div>
+        <div class="ask-point">
+          <h3>It works with small models</h3>
+          <p>Free models with a 32k window get a lighter prompt automatically, so Molfar still fits.</p>
+        </div>
+      </div>
+      <h3 class="center mt-32">Make Molfar your own</h3>
+      <div class="bento mt-16">
+        <div class="bento-card col-span-4">
+          <h3>Skills</h3>
+          <p>A skill is a short instruction for one kind of task: "how I like my character cards", "how lorebooks for this world are written". Write your own, or let Molfar propose one after a task went well; nothing is saved until you say yes.</p>
+        </div>
+        <div class="bento-card col-span-4">
+          <h3>Projects</h3>
+          <p>Keep your chats with Molfar in projects. A project has its own instructions, skills, memory, files you add (notes, references, images) and a default model, so a chat started there already knows the context. Every installed app is a project too.</p>
+        </div>
+        <div class="bento-card col-span-4">
+          <h3>Memory</h3>
+          <p>Molfar keeps notes about you and your work between chats, and asks you before writing each one.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roleplay -->
+  <section class="section" aria-labelledby="roleplay-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="roleplay-title">The Roleplay app</h2>
+        <p>Roleplay is the first app. The welcome screen offers it on the first start, and new versions come through the Updates button.</p>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="assets/screens/home.png" alt="Roleplay home screen with the last story and start options" loading="lazy">
+          <div class="caption"><strong>Home</strong>Continue the last story, start a new one, find a chat by persona or character.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/chat.png" alt="A chat with a character, styled like a book page" loading="lazy">
+          <div class="caption"><strong>Chats</strong>Reads like a book page. Swipes, branches, group scenes, edit and regenerate on any message.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/dashboard.png" alt="Relationship dashboard showing trust, mood and story threads" loading="lazy">
+          <div class="caption"><strong>Relationship dashboard</strong>After each reply it notes what changed: trust, mood, who learned what, where and when the scene is, which story threads are open. The characters get that back before they answer.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/soul.png" alt="The Soul tab of a character card" loading="lazy">
+          <div class="caption"><strong>Soul</strong>Each character has a temper: how fast they warm up, what hurts them, where their attitude starts. A draft is made from the card; you adjust it.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/library.png" alt="Library with the story memory chapters" loading="lazy">
+          <div class="caption"><strong>Story memory</strong>Litopys writes a short chapter after each scene and keeps the facts: who it is about, who knows it, how much it matters. Old messages leave the prompt and the chapters stay, so a long chat still fits a small model's window. In the Library you can read and fix all of it.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/molfar.png" alt="Molfar and Roleplay side by side" loading="lazy">
+          <div class="caption"><strong>Molfar next to the app</strong>Split the screen: Molfar on one side, the app on the other, changes appear as he makes them.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/profile.png" alt="The Profile tab of a character card, split into fields" loading="lazy">
+          <div class="caption"><strong>A card in fields</strong>The Profile tab splits a character into sections: identity, appearance, personality, behavior, goals, background, relationships and more. Switch off what you don't need, so a small model pays only for what is on. "Structure it" sorts an old card's text into the fields, "Fill empty" asks the model for the blanks, "Read from picture" fills appearance from the portrait. The card still saves as plain text, so every other app reads it.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/persona.png" alt="A persona with its profile fields" loading="lazy">
+          <div class="caption"><strong>Your persona, the same way</strong>Personas get the same fields, plus five short questions that write the description for you. "Structure it" sorts a pasted persona into the fields.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/prompt-board.png" alt="The Prompt board: every part of a chat's request with its tokens" loading="lazy">
+          <div class="caption"><strong>The Prompt board</strong>Canvas shows every part of a chat's request in order, with its tokens and the total. Switch any part off for this chat only, see why something was taken or left out, and trim the history: the last N messages, only yours or only the character's, without thinking blocks. A part you switch off costs nothing: Litopys, the dashboard or a lorebook then does no work for that chat.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/chat-links.png" alt="The Chat links board with chats as cards and a list on the left" loading="lazy">
+          <div class="caption"><strong>A map of your stories</strong>Chats that continue each other are cards joined by wires. Drag chats in from a searchable list, one at a time or with their whole chain; a chat that continues another gets the earlier story as backstory.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/quick-moves.png" alt="Quick moves under a long draft" loading="lazy">
+          <div class="caption"><strong>Quick moves</strong>Under a long draft: Continue, Write for me (Undo brings your draft back), Another reply, and a big editor for half the screen or all of it.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/store.png" alt="The launcher with the installed apps" loading="lazy">
+          <div class="caption"><strong>The launcher</strong>Your installed apps in one place.</div>
+        </div>
+      </div>
+      <p class="center mt-24">There is more in the small details: "Story, move" makes the next reply push the plot instead of just reacting to you; lorebooks match by keywords or by meaning; presets, regex scripts, personas, a data bank for long documents.</p>
+    </div>
+  </section>
+
+  <!-- Phone -->
+  <section class="section" aria-labelledby="phone-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="phone-title">On a phone</h2>
+        <p>The same thing on a phone: open it from your computer over Wi-Fi, or install the Android app and run everything on the phone.</p>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <img src="assets/screens/phone-chat.png" alt="A chat on a phone" loading="lazy">
+          <div class="caption"><strong>Chat</strong>A chat on a phone.</div>
+        </div>
+        <div class="gallery-item">
+          <img src="assets/screens/phone-molfar.png" alt="Molfar on a phone" loading="lazy">
+          <div class="caption"><strong>Molfar</strong>Molfar on a phone.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Yours, at home -->
+  <section class="section" aria-labelledby="home-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="home-title">Yours, at home</h2>
+      </div>
+      <div class="bento">
+        <div class="bento-card col-span-4">
+          <h3>Runs locally</h3>
+          <p>Windows, macOS, Linux, Android, or Docker on a home server. Chats, characters and keys stay in plain files on your disk.</p>
+        </div>
+        <div class="bento-card col-span-4">
+          <h3>Any model</h3>
+          <p>API keys from the big providers and OpenRouter, subscription sign-ins, or any OpenAI-compatible server, including one on your own machine.</p>
+        </div>
+        <div class="bento-card col-span-4">
+          <h3>Apps are sandboxed</h3>
+          <p>An app from someone else shows what it wants before install (engine access, network, packages), and an update that wants more stops and asks again.</p>
+        </div>
+        <div class="bento-card col-span-4">
+          <h3>14 interface languages</h3>
+          <p>Ukrainian among them.</p>
+        </div>
+        <div class="bento-card col-span-4">
+          <h3>Free software</h3>
+          <p>AGPL-3.0. Molfar Vertep began as a fork of Chrysalis Engine by ProjectChrysalis and has gone its own way since.</p>
+        </div>
+        <div class="bento-card col-span-4">
+          <h3>Sync through your own Google Drive</h3>
+          <p>New in 1.1.0. Your device talks to Google directly, and the app can see only the files it made. See the <a href="privacy.html">privacy policy</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section" aria-labelledby="cta-title">
+    <div class="container center">
+      <h2 id="cta-title" class="visually-hidden">Get started</h2>
+      <div class="hero-actions">
+        <a href="download.html" class="btn btn-primary">Download</a>
+        <a href="https://discord.gg/NMqSehTCTs" class="btn btn-secondary">Join Discord</a>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-links">
+        <a href="privacy.html">Privacy policy</a>
+        <a href="features.html">Features</a>
+        <a href="download.html">Download</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep">GitHub</a>
+        <a href="https://discord.gg/NMqSehTCTs">Discord</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep/issues">Issues</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep/blob/main/LICENSE">License (AGPL-3.0)</a>
+      </div>
+      <div class="footer-note">Molfar Vertep is free software under the AGPL-3.0-only license. A modified fork of <a href="https://github.com/ProjectChrysalis/Chrysalis-Engine">Chrysalis Engine by ProjectChrysalis</a>. Vibe-coded openly: written by AI agents while the authors described and corrected.</div>
+      <div class="footer-note footer-molfar">
+        <img src="assets/molfar-cast.gif" alt="" aria-hidden="true" width="64" height="64" loading="lazy">
+        Pixel Molfar casts. He approves.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

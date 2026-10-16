@@ -38,21 +38,30 @@ sealed with a passphrase.
   `.github/assets/divider.svg`, `.github/assets/molfar/molfar-cast.gif`, `.github/assets/social-preview.png`,
   and `.github/assets/screens/*.png` + `molfar-rebuild.gif` into `assets/screens/`.
 
-## Done
-- `src/en/index.html` (home, 6 screenshots), `src/en/privacy.html`.
+## Done (2026-10-16, cloud session)
+- All four pages in English and Ukrainian (`src/en/`, `src/uk/`). Features and Download drafted by a cheaper
+  executor from README facts and reviewed; the Ukrainian text uses the shell's real labels (`client/src/i18n/uk.ts`
+  on the sync branch: «Від’єднати», «Підключення API», «Магазин»). Roleplay button names stay in English in «».
+- CSS fixes: `pre` blocks (were unstyled, made 663 px wide pages on a phone); header keeps Features/Download and
+  hides GitHub/Discord below 1025 px (both are in the footer); below 481 px only the logo shows, so EN | UA
+  stays visible; five "ask" cards fit one row at 1280 px.
+- `assemble.sh` builds the full site repo into `dist/` (pages, sources, build script, README, LICENSE,
+  `.nojekyll`, images copied from this repo, any `google*.html` verification file put in this folder).
+  Never edit `dist/` by hand: edit `src/`, run `sh .fork/site/assemble.sh`.
+- Headless check (Playwright, 8 pages x dark/light x 1280/390): no horizontal scroll, every image and same-site
+  link answers 200, the language switch goes to the same page, no JS errors; the Download script filled
+  "Latest: v1.0.10" and direct file links from the GitHub API.
+- The cloud session could not create `MolfarWav/MolfarWav.github.io` (GitHub 403: the integration may not create
+  repositories). The user creates it (empty, public), then either pushes `dist/` from their machine or adds
+  the repo to a cloud session, which pushes.
 
 ## Left
-1. `src/en/features.html` and `src/en/download.html`: spec in `spec-features-download.md` (it was sent to an
-   external model with `assets/site.css`, `src/en/index.html` and README lines 1-250 attached; the answer was
-   lost when the desktop shut down). Review facts against README.
-2. Ukrainian versions of all four in `src/uk/` (translation = cheap-model job; review it; privacy translation
-   must say exactly the same as the English one).
-3. Browser check: dark, light, 390 px, no horizontal scroll (ux-review walk-through).
-4. Create `MolfarWav/MolfarWav.github.io`, copy assets, build, push, confirm Pages is on, check
-   https://molfarwav.github.io/ and /privacy.html answer 200.
-5. Search Console: the user adds a URL-prefix property `https://molfarwav.github.io/`, picks "HTML file",
-   gives the file name (`googleXXXXXXXX.html`, content `google-site-verification: googleXXXXXXXX.html`);
-   put it at the repo root, push, the user presses Verify.
-6. Steps for the user in Google Auth Platform: Branding: App home page `https://molfarwav.github.io/`,
-   Privacy policy `https://molfarwav.github.io/privacy.html`, Authorized domains `molfarwav.github.io`;
-   Audience: Publish app (In production). Scope stays `drive.file` only (non-sensitive, no review).
+1. Repo created and `dist/` pushed to `main`; Pages on (Settings > Pages, Deploy from a branch, main, / (root)).
+2. Check https://molfarwav.github.io/ and https://molfarwav.github.io/privacy.html answer 200.
+3. Search Console: URL-prefix property `https://molfarwav.github.io/`, method "HTML file": the user gives the
+   file name; put the file in this folder (content `google-site-verification: googleXXXXXXXX.html`), run
+   `assemble.sh`, push to the site repo; the user presses Verify.
+4. Google Auth Platform: Branding: App home page `https://molfarwav.github.io/`, Privacy policy
+   `https://molfarwav.github.io/privacy.html`, Authorized domains `molfarwav.github.io`; Audience: Publish app.
+   Scope stays `drive.file` only.
+5. Possible engine follow-up (not promised in the policy): revoke the token at Google on Disconnect.

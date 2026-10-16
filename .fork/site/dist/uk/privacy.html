@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Політика конфіденційності · Molfar Vertep</title>
+  <meta name="description" content="Molfar Vertep працює на вашому пристрої й нічого не збирає. Як синхронізація з Google Drive використовує дозвіл drive.file, де зберігається токен входу і як скасувати доступ.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="canonical" href="https://molfarwav.github.io/uk/privacy.html">
+  <link rel="alternate" hreflang="en" href="https://molfarwav.github.io/privacy.html">
+  <link rel="alternate" hreflang="uk" href="https://molfarwav.github.io/uk/privacy.html">
+  <link rel="alternate" hreflang="x-default" href="https://molfarwav.github.io/privacy.html">
+  <meta property="og:title" content="Політика конфіденційності · Molfar Vertep">
+  <meta property="og:description" content="Molfar Vertep працює на вашому пристрої й нічого не збирає. Як синхронізація з Google Drive використовує дозвіл drive.file, де зберігається токен входу і як скасувати доступ.">
+  <meta property="og:image" content="https://molfarwav.github.io/assets/social-preview.png">
+  <meta property="og:url" content="https://molfarwav.github.io/uk/privacy.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="uk_UA">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../assets/favicon-64.png" type="image/png">
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Перейти до змісту</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../uk/index.html" class="wordmark" aria-label="Molfar Vertep, головна">
+        <img src="../assets/vertep-logo.svg" alt="" aria-hidden="true" width="28" height="28">
+        <span class="wordmark-text">Molfar&nbsp;Vertep</span>
+      </a>
+      <nav class="header-nav" aria-label="Головне меню">
+        <a href="features.html" class="nav-features">Можливості</a>
+        <a href="download.html" class="nav-download">Завантажити</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep" class="nav-external">GitHub</a>
+        <a href="https://discord.gg/NMqSehTCTs" class="nav-external">Discord</a>
+        <span class="lang-switch" role="group" aria-label="Мова">
+          <a href="../privacy.html" lang="en" hreflang="en">EN</a>
+          <span class="sep" aria-hidden="true">|</span>
+          <a href="privacy.html" class="active" aria-current="true" lang="uk">UA</a>
+        </span>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+<section class="page-head">
+    <div class="container">
+      <h1>Політика конфіденційності</h1>
+      <p>Діє з 16 жовтня 2026. Стосується Molfar Vertep, застосунку з відкритим кодом, опублікованого на <a href="https://github.com/MolfarWav/Molfar.Vertep">github.com/MolfarWav/Molfar.Vertep</a>, та цього вебсайту.</p>
+    </div>
+  </section>
+
+  <div class="container prose">
+    <h2 id="short">Коротко</h2>
+    <p class="summary">Molfar Vertep працює на вашому комп'ютері або телефоні. Ми не тримаємо для нього серверів, не маємо для вас облікових записів і нічого не збираємо: ні аналітики, ні телеметрії, ні звітів про збої. Усе, що ви створюєте в застосунку, лишається у файлах на вашому пристрої й потрапляє лише туди, куди ви його надішлете.</p>
+
+    <h2 id="device">Що лишається на вашому пристрої</h2>
+    <p>Ваш обліковий запис у застосунку, чати, персонажі, персони, лорбуки, застосунки, налаштування й API-ключі зберігаються в простих файлах у папці даних застосунку на вашому пристрої. Обліковий запис локальний: він не покидає пристрою, і ми його не бачимо.</p>
+
+    <h2 id="connections">Куди підключається застосунок, і лише коли ви просите</h2>
+    <ul>
+      <li><strong>Модель, яку ви обрали.</strong> Коли ви спілкуєтеся в чаті або про щось просите Мольфара, застосунок надсилає ваші повідомлення ШІ-провайдеру, якого ви налаштували (наприклад, OpenRouter або серверу на вашому комп'ютері). До того, що отримує провайдер, застосовується його власна політика конфіденційності.</li>
+      <li><strong>GitHub.</strong> Щоб перевіряти оновлення й встановлювати застосунки з Магазину, застосунок завантажує файли з github.com. GitHub бачить звичайний запит на завантаження.</li>
+      <li><strong>Інструменти, які ви додаєте.</strong> Якщо ви підключаєте до Мольфара сервер інструментів (наприклад, сервіс вебпошуку), застосунок звертається до цього сервісу, коли інструмент використовується.</li>
+      <li><strong>Повідомлення про помилки.</strong> «Повідомити про помилку» відкриває у вашому браузері попередньо заповнену сторінку нового issue на GitHub; нічого не надсилається, доки ви самі не надішлете його там.</li>
+      <li><strong>Google Drive, лише якщо ви вмикаєте синхронізацію</strong> (нижче).</li>
+    </ul>
+
+    <h2 id="google-drive">Синхронізація з Google Drive</h2>
+    <p>Синхронізація вимкнена, доки ви не натиснете «Увійти через Google» в Налаштування &gt; Синхронізація. Вона копіює ваш робочий простір між вашими власними пристроями через ваш власний Google Drive.</p>
+    <ul>
+      <li><strong>Який дозвіл запитується:</strong> лише <code>drive.file</code> («Переглядати, редагувати, створювати й видаляти лише певні файли Google Диска, які ви використовуєте з цим додатком»). Застосунок не бачить жодного іншого файлу у вашому Drive.</li>
+      <li><strong>Що він робить із даними Google:</strong> створює у вашому Drive одну папку, «Molfar Vertep sync», і читає та записує лише файли всередині неї (ваш синхронізований робочий простір). Він також читає адресу електронної пошти вашого облікового запису Google, лише щоб показати вам у Налаштуваннях, який обліковий запис підключено. Ваші API-ключі потрапляють у Drive, лише якщо ви це ввімкнете, і тоді вони зашифровані парольною фразою, яку обираєте ви і яка ніколи не потрапляє в Drive.</li>
+      <li><strong>Де зберігається токен входу:</strong> Google повертає токен входу просто застосунку на вашому пристрої. Він зберігається там, у приватній папці даних застосунку, і ніколи не надсилається ні нам, ні комусь іншому. Сервера Molfar Vertep посередині немає: ваш пристрій зв’язується з Google напряму.</li>
+      <li><strong>Нічого не передається й не продається.</strong> Дані, отримані від Google, використовуються лише для синхронізації ваших файлів між вашими пристроями. Їх не надсилають нам чи третім сторонам, не використовують для реклами й не використовують для навчання моделей ШІ. Використання й передача Molfar Vertep інформації, отриманої від API Google, відповідає <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, зокрема вимогам Limited Use (обмеженого використання).</li>
+    </ul>
+
+    <h3 id="revoke">Як зупинити синхронізацію й прибрати доступ</h3>
+    <ul>
+      <li>Кнопка <strong>Від’єднати</strong> в Налаштування &gt; Синхронізація видаляє токен входу з цього пристрою. Файли в Drive лишаються на місці.</li>
+      <li><strong>Скасуйте доступ</strong> будь-коли на <a href="https://myaccount.google.com/permissions">myaccount.google.com/permissions</a>: оберіть Molfar Vertep і приберіть його доступ. Після цього застосунок більше не зможе дістатися до вашого Drive з жодного пристрою.</li>
+      <li><strong>Видаліть синхронізовані файли</strong>, видаливши папку «Molfar Vertep sync» у вашому Google Drive (і очистивши кошик Drive).</li>
+    </ul>
+
+    <h2 id="website">Цей вебсайт</h2>
+    <p>molfarwav.github.io: статичний сайт, розміщений на GitHub Pages. Він не встановлює файлів cookie і не має аналітики чи трекерів. Сторінка завантаження запитує в публічного API GitHub назву останнього релізу, щоб посилання вели прямо на файли. GitHub як хост може записувати технічні дані, як-от IP-адреси, з міркувань безпеки; див. <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub General Privacy Statement</a>. Посилання на Discord і GitHub ведуть до сервісів із власними політиками.</p>
+
+    <h2 id="children">Діти</h2>
+    <p>Molfar Vertep не призначений для дітей до 13 років, і ми не збираємо даних ні від кого.</p>
+
+    <h2 id="changes">Зміни</h2>
+    <p>Якщо ця політика зміниться, нова версія з'явиться на цій сторінці з новою датою. Історія всіх змін є публічною в <a href="https://github.com/MolfarWav/MolfarWav.github.io">репозиторії вебсайту на GitHub</a>.</p>
+
+    <h2 id="contact">Контакти</h2>
+    <p>Запитання про конфіденційність: відкрийте issue на <a href="https://github.com/MolfarWav/Molfar.Vertep/issues">github.com/MolfarWav/Molfar.Vertep/issues</a>. У разі проблеми з безпекою скористайтеся приватним повідомленням про вразливість на вкладці Security репозиторію замість публічного issue.</p>
+  </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-links">
+        <a href="privacy.html" aria-current="page">Політика конфіденційності</a>
+        <a href="features.html">Можливості</a>
+        <a href="download.html">Завантажити</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep">GitHub</a>
+        <a href="https://discord.gg/NMqSehTCTs">Discord</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep/issues">Issues</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep/blob/main/LICENSE">Ліцензія (AGPL-3.0)</a>
+      </div>
+      <div class="footer-note">Molfar Vertep — вільне програмне забезпечення за ліцензією AGPL-3.0-only. Змінений форк <a href="https://github.com/ProjectChrysalis/Chrysalis-Engine">Chrysalis Engine від ProjectChrysalis</a>. Написаний відкрито вайбкодингом: код писали ШІ-агенти, а автори описували й виправляли.</div>
+      <div class="footer-note footer-molfar">
+        <img src="../assets/molfar-cast.gif" alt="" aria-hidden="true" width="64" height="64" loading="lazy">
+        Піксельний Мольфар чаклує. Він схвалює.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

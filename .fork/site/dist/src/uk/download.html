@@ -1,0 +1,129 @@
+<!-- title: Завантаження · Molfar Vertep | description: Завантажте Molfar Vertep для Windows, macOS, Linux, Android або Docker і дізнайтеся, як його запустити. Безкоштовний, з відкритим кодом. -->
+  <section class="page-head">
+    <div class="container">
+      <h1>Завантаження</h1>
+      <p>Остання версія лежить на GitHub. Усе безкоштовне.</p>
+      <p class="mt-16">
+        <a href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest" class="btn btn-primary">Усі файли останнього релізу</a>
+        <span id="latest-version"></span>
+      </p>
+    </div>
+  </section>
+
+  <div class="container prose">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Система</th><th>Файл</th><th>Як запустити</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Windows</td>
+            <td><a data-asset="windows-x64.zip" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-windows-x64.zip</a></td>
+            <td>Розпакуйте, двічі клацніть <code>chrysalis.exe</code></td>
+          </tr>
+          <tr>
+            <td>macOS (Apple silicon)</td>
+            <td><a data-asset="macos-arm64.tar.gz" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-macos-arm64.tar.gz</a></td>
+            <td>Розпакуйте, двічі клацніть <code>start.command</code></td>
+          </tr>
+          <tr>
+            <td>macOS (Intel)</td>
+            <td><a data-asset="macos-x64.tar.gz" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-macos-x64.tar.gz</a></td>
+            <td>Розпакуйте, двічі клацніть <code>start.command</code></td>
+          </tr>
+          <tr>
+            <td>Linux x64</td>
+            <td><a data-asset="linux-x64.tar.gz" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-linux-x64.tar.gz</a></td>
+            <td>Розпакуйте, запустіть <code>./chrysalis</code></td>
+          </tr>
+          <tr>
+            <td>Linux arm64</td>
+            <td><a data-asset="linux-arm64.tar.gz" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-linux-arm64.tar.gz</a></td>
+            <td>Розпакуйте, запустіть <code>./chrysalis</code></td>
+          </tr>
+          <tr>
+            <td>Android 9+</td>
+            <td><a data-asset="android-arm64.apk" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-android-arm64.apk</a></td>
+            <td>Встановіть, відкрийте застосунок</td>
+          </tr>
+          <tr>
+            <td>Docker (від 0.3.0)</td>
+            <td><code>ghcr.io/molfarwav/molfar-vertep</code></td>
+            <td>Див. <a href="#docker">Docker</a> нижче</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Релізи до 0.9.0 називали свої архіви <code>Chrysalis-&lt;version&gt;-&lt;system&gt;</code>. Внутрішні назви лишаються (команда <code>chrysalis</code>, <code>CHRYSALIS_*</code>, теки з даними), щоб наявні встановлення не зламалися.</p>
+
+    <h2 id="first-start">Перший запуск</h2>
+    <ol>
+      <li>Завантажте файл для своєї системи з таблиці вище.</li>
+      <li>Запустіть його. У браузері відкриється сторінка одноразового налаштування; створіть там обліковий запис (він локальний, він не покидає вашого комп'ютера).</li>
+      <li>Додайте модель у <strong>Налаштування &gt; Підключення API</strong>.</li>
+      <li>Вітальний екран пропонує Roleplay: встановіть його одним кліком. Або відкрийте Мольфара й попросіть його про щось.</li>
+    </ol>
+
+    <h2 id="windows-source">Windows із вихідного коду одним файлом</h2>
+    <p>У Windows можна також запускати з вихідного коду одним файлом: покладіть <code>Molfar-Vertep.bat</code> (він у корені репозиторію) у будь-яку теку й двічі клацніть його. Він встановлює Git і Bun, якщо їх немає, завантажує Molfar Vertep поруч із собою, пропонує кожен новий реліз перед встановленням, збирає те, що змінилося, пропонує ярлик на робочому столі й відкриває Molfar Vertep у браузері. <code>Molfar-Vertep.bat dev</code> замість релізів іде за найновішою роботою в розробці. Назви тек із пробілами чи будь-якою мовою не проблема.</p>
+    <p>Якщо Git скаржиться на <em>dubious ownership</em> теки (її власник — інший користувач Windows: так буває на другому диску, USB-флешці або в теці, створеній від імені адміністратора), запускач зупиняється й пропонує довіряти саме цій теці. Щоб зробити це самостійно, виконайте <code>git config --global --add safe.directory "D:/path/to/Molfar-Vertep"</code> зі шляхом до вашої теки (з прямими скісними рисками), а потім запустіть запускач знову.</p>
+
+    <h2 id="macos">macOS</h2>
+    <p>Запускайте через <code>start.command</code>, а не <code>chrysalis</code>. Ці збірки не мають підпису, який приймає macOS, тому відкриття <code>chrysalis</code> напряму блокується або одразу закривається з повідомленням <code>killed</code>. <code>start.command</code> знімає позначку завантаження, підписує програму для цього Mac і запускає її; користуйтеся ним знову після кожного оновлення.</p>
+
+    <h2 id="android">Android</h2>
+    <p>APK для Android підписаний debug-ключем, тож не може оновити встановлену копію: спершу видаліть старий застосунок. Перед цим експортуйте резервні копії своїх застосунків, бо видалення стирає дані застосунку.</p>
+
+    <h2 id="docker">Docker</h2>
+    <p>Від версії 0.3.0 робочий процес релізу публікує <code>ghcr.io/molfarwav/molfar-vertep</code> (теги <code>latest</code> і номер версії). Налаштування й дані живуть у томі <code>/chrysalis</code>, а контейнер слухає порт 8788.</p>
+    <pre><code>docker run -d --name chrysalis -p 8788:8788 -v chrysalis-data:/chrysalis \
+  ghcr.io/molfarwav/molfar-vertep:latest
+docker logs chrysalis        # під час першого запуску тут буде посилання для налаштування</code></pre>
+    <p><code>docker-compose.yml</code> з репозиторію робить те саме; <code>docker compose up -d --build</code> збирає образ із вашої копії репозиторію замість того, щоб завантажувати готовий.</p>
+
+    <h2 id="source">Запуск із вихідного коду</h2>
+    <p>Вам потрібні <a href="https://git-scm.com">Git</a> і <a href="https://bun.sh">Bun</a> 1.4 або новіший.</p>
+    <pre><code>git clone https://github.com/MolfarWav/Molfar.Vertep
+cd Molfar.Vertep
+bun install
+(cd client-agent &amp;&amp; bun install)
+bun run build:client
+bun start</code></pre>
+    <p><code>bun run dev</code> перезапускається після кожної зміни. <code>bun run test</code> запускає тести, а <code>bun run typecheck</code> перевіряє типи в кожному проєкті.</p>
+
+    <h2 id="updating">Оновлення</h2>
+    <ul>
+      <li><strong>Завантажені збірки (Windows, macOS, Linux, портативні):</strong> кнопка оновлення рушія завантажує нову версію, перезапускається й перезавантажує сторінку. Вона є також у <strong>Налаштування &gt; Сервер</strong>.</li>
+      <li><strong>Застосунки:</strong> кнопка «Оновлення» у верхній панелі показує позначку, коли є щось новіше. Застосунки, які ви змінили, ніколи не перезаписуються: оновлення зливає нову версію з вашими правками.</li>
+      <li><strong>Android:</strong> видаліть старий застосунок і встановіть новий APK.</li>
+      <li><strong>Docker:</strong> <code>docker pull ghcr.io/molfarwav/molfar-vertep:latest</code>, потім видаліть і створіть контейнер заново з тим самим томом.</li>
+      <li><strong>З вихідного коду:</strong> <code>git pull &amp;&amp; bun install &amp;&amp; (cd client-agent &amp;&amp; bun install) &amp;&amp; bun run build:client</code>, потім перезапустіть.</li>
+    </ul>
+    <p>Molfar Vertep тримає ваші дані у власній теці, тож оновлення ніколи їх не чіпає.</p>
+  </div>
+
+  <script>
+    (function () {
+      var out = document.getElementById('latest-version');
+      var links = document.querySelectorAll('a[data-asset]');
+      if (!out && !links.length) return;
+      fetch('https://api.github.com/repos/MolfarWav/Molfar.Vertep/releases/latest')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (rel) {
+          var assets = rel.assets || [];
+          if (out && rel.tag_name) out.textContent = 'Остання: ' + rel.tag_name;
+          links.forEach(function (a) {
+            var suffix = '-' + a.getAttribute('data-asset');
+            for (var i = 0; i < assets.length; i++) {
+              if (assets[i].name.slice(-suffix.length) === suffix) {
+                a.href = assets[i].browser_download_url;
+                a.textContent = assets[i].name;
+                break;
+              }
+            }
+          });
+        })
+        .catch(function () {});
+    })();
+  </script>

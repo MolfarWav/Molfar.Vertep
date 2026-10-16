@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download · Molfar Vertep</title>
+  <meta name="description" content="Download Molfar Vertep for Windows, macOS, Linux, Android or Docker, and see how to start it. Free and open source.">
+  <meta name="color-scheme" content="dark light">
+  <link rel="canonical" href="https://molfarwav.github.io/download.html">
+  <link rel="alternate" hreflang="en" href="https://molfarwav.github.io/download.html">
+  <link rel="alternate" hreflang="uk" href="https://molfarwav.github.io/uk/download.html">
+  <link rel="alternate" hreflang="x-default" href="https://molfarwav.github.io/download.html">
+  <meta property="og:title" content="Download · Molfar Vertep">
+  <meta property="og:description" content="Download Molfar Vertep for Windows, macOS, Linux, Android or Docker, and see how to start it. Free and open source.">
+  <meta property="og:image" content="https://molfarwav.github.io/assets/social-preview.png">
+  <meta property="og:url" content="https://molfarwav.github.io/download.html">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="assets/favicon-64.png" type="image/png">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="wordmark" aria-label="Molfar Vertep home">
+        <img src="assets/vertep-logo.svg" alt="" aria-hidden="true" width="28" height="28">
+        <span class="wordmark-text">Molfar&nbsp;Vertep</span>
+      </a>
+      <nav class="header-nav" aria-label="Main navigation">
+        <a href="features.html" class="nav-features">Features</a>
+        <a href="download.html" class="nav-download" aria-current="page">Download</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep" class="nav-external">GitHub</a>
+        <a href="https://discord.gg/NMqSehTCTs" class="nav-external">Discord</a>
+        <span class="lang-switch" role="group" aria-label="Language">
+          <a href="download.html" class="active" aria-current="true" lang="en">EN</a>
+          <span class="sep" aria-hidden="true">|</span>
+          <a href="uk/download.html" lang="uk" hreflang="uk">UA</a>
+        </span>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+<section class="page-head">
+    <div class="container">
+      <h1>Download</h1>
+      <p>The latest release is on GitHub. Everything is free.</p>
+      <p class="mt-16">
+        <a href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest" class="btn btn-primary">All files of the latest release</a>
+        <span id="latest-version"></span>
+      </p>
+    </div>
+  </section>
+
+  <div class="container prose">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>System</th><th>File</th><th>How to start</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Windows</td>
+            <td><a data-asset="windows-x64.zip" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-windows-x64.zip</a></td>
+            <td>Unzip, double-click <code>chrysalis.exe</code></td>
+          </tr>
+          <tr>
+            <td>macOS (Apple silicon)</td>
+            <td><a data-asset="macos-arm64.tar.gz" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-macos-arm64.tar.gz</a></td>
+            <td>Unpack, double-click <code>start.command</code></td>
+          </tr>
+          <tr>
+            <td>macOS (Intel)</td>
+            <td><a data-asset="macos-x64.tar.gz" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-macos-x64.tar.gz</a></td>
+            <td>Unpack, double-click <code>start.command</code></td>
+          </tr>
+          <tr>
+            <td>Linux x64</td>
+            <td><a data-asset="linux-x64.tar.gz" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-linux-x64.tar.gz</a></td>
+            <td>Unpack, run <code>./chrysalis</code></td>
+          </tr>
+          <tr>
+            <td>Linux arm64</td>
+            <td><a data-asset="linux-arm64.tar.gz" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-linux-arm64.tar.gz</a></td>
+            <td>Unpack, run <code>./chrysalis</code></td>
+          </tr>
+          <tr>
+            <td>Android 9+</td>
+            <td><a data-asset="android-arm64.apk" href="https://github.com/MolfarWav/Molfar.Vertep/releases/latest">Molfar-Vertep-&lt;version&gt;-android-arm64.apk</a></td>
+            <td>Install, open the app</td>
+          </tr>
+          <tr>
+            <td>Docker (from 0.3.0)</td>
+            <td><code>ghcr.io/molfarwav/molfar-vertep</code></td>
+            <td>See <a href="#docker">Docker</a> below</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Releases up to 0.9.0 named their archives <code>Chrysalis-&lt;version&gt;-&lt;system&gt;</code>. Internal names stay (<code>chrysalis</code> command, <code>CHRYSALIS_*</code>, data folders) so installs keep working.</p>
+
+    <h2 id="first-start">First start</h2>
+    <ol>
+      <li>Download the file for your system from the table above.</li>
+      <li>Start it. Your browser opens a one-time setup page; create your account there (it is local, it never leaves your machine).</li>
+      <li>Add a model in <strong>Settings &gt; API connections</strong>.</li>
+      <li>The welcome screen offers Roleplay: install it in one click. Or open Molfar and ask him for something.</li>
+    </ol>
+
+    <h2 id="windows-source">Windows from source in one file</h2>
+    <p>On Windows you can also run from source with one file: put <code>Molfar-Vertep.bat</code> (in the repository root) in any folder and double-click it. It installs Git and Bun if they are missing, downloads Molfar Vertep next to itself, offers each new release before installing it, builds what changed, offers a desktop shortcut and opens Molfar Vertep in your browser. <code>Molfar-Vertep.bat dev</code> follows the newest work in progress instead of releases. Folder names with spaces or in any language are fine.</p>
+    <p>If Git says the folder has <em>dubious ownership</em> (another Windows user owns it: common on a second drive, a USB stick, or a folder made as administrator), the launcher stops and offers to trust that one folder. To do it yourself, run <code>git config --global --add safe.directory "D:/path/to/Molfar-Vertep"</code> with your folder's path (forward slashes), then start the launcher again.</p>
+
+    <h2 id="macos">macOS</h2>
+    <p>Start with <code>start.command</code>, not <code>chrysalis</code>. These builds do not carry a signature macOS accepts, so opening <code>chrysalis</code> directly is blocked or closes straight away with <code>killed</code>. <code>start.command</code> clears the download flag, signs the program for that Mac and starts it; use it again after each update.</p>
+
+    <h2 id="android">Android</h2>
+    <p>The Android APK is debug-signed, so it cannot update an installed copy: remove the old app first. Export your apps' backups before that, because uninstalling deletes the app's data.</p>
+
+    <h2 id="docker">Docker</h2>
+    <p>From version 0.3.0 the release workflow publishes <code>ghcr.io/molfarwav/molfar-vertep</code> (tags <code>latest</code> and the version). Settings and data live in the <code>/chrysalis</code> volume, and the container listens on port 8788.</p>
+    <pre><code>docker run -d --name chrysalis -p 8788:8788 -v chrysalis-data:/chrysalis \
+  ghcr.io/molfarwav/molfar-vertep:latest
+docker logs chrysalis        # the first start prints the setup link</code></pre>
+    <p>The repository's <code>docker-compose.yml</code> does the same; <code>docker compose up -d --build</code> builds an image from your checkout instead of pulling one.</p>
+
+    <h2 id="source">Run from source</h2>
+    <p>You need <a href="https://git-scm.com">Git</a> and <a href="https://bun.sh">Bun</a> 1.4 or newer.</p>
+    <pre><code>git clone https://github.com/MolfarWav/Molfar.Vertep
+cd Molfar.Vertep
+bun install
+(cd client-agent &amp;&amp; bun install)
+bun run build:client
+bun start</code></pre>
+    <p><code>bun run dev</code> restarts on every change. <code>bun run test</code> runs the tests and <code>bun run typecheck</code> checks every project.</p>
+
+    <h2 id="updating">Updating</h2>
+    <ul>
+      <li><strong>Downloads (Windows, macOS, Linux, portable):</strong> the engine's update button downloads the new version, restarts and reloads the page. It is also in <strong>Settings &gt; Server</strong>.</li>
+      <li><strong>Apps:</strong> the Updates button in the top bar shows a badge when anything is newer. Apps you have changed are never overwritten: updating merges the new version with your edits.</li>
+      <li><strong>Android:</strong> remove the old app and install the new APK.</li>
+      <li><strong>Docker:</strong> <code>docker pull ghcr.io/molfarwav/molfar-vertep:latest</code>, then remove and recreate the container with the same volume.</li>
+      <li><strong>From source:</strong> <code>git pull &amp;&amp; bun install &amp;&amp; (cd client-agent &amp;&amp; bun install) &amp;&amp; bun run build:client</code>, then restart.</li>
+    </ul>
+    <p>Molfar Vertep keeps your data in its own folder, so an update never touches it.</p>
+  </div>
+
+  <script>
+    (function () {
+      var out = document.getElementById('latest-version');
+      var links = document.querySelectorAll('a[data-asset]');
+      if (!out && !links.length) return;
+      fetch('https://api.github.com/repos/MolfarWav/Molfar.Vertep/releases/latest')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (rel) {
+          var assets = rel.assets || [];
+          if (out && rel.tag_name) out.textContent = 'Latest: ' + rel.tag_name;
+          links.forEach(function (a) {
+            var suffix = '-' + a.getAttribute('data-asset');
+            for (var i = 0; i < assets.length; i++) {
+              if (assets[i].name.slice(-suffix.length) === suffix) {
+                a.href = assets[i].browser_download_url;
+                a.textContent = assets[i].name;
+                break;
+              }
+            }
+          });
+        })
+        .catch(function () {});
+    })();
+  </script>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-links">
+        <a href="privacy.html">Privacy policy</a>
+        <a href="features.html">Features</a>
+        <a href="download.html">Download</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep">GitHub</a>
+        <a href="https://discord.gg/NMqSehTCTs">Discord</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep/issues">Issues</a>
+        <a href="https://github.com/MolfarWav/Molfar.Vertep/blob/main/LICENSE">License (AGPL-3.0)</a>
+      </div>
+      <div class="footer-note">Molfar Vertep is free software under the AGPL-3.0-only license. A modified fork of <a href="https://github.com/ProjectChrysalis/Chrysalis-Engine">Chrysalis Engine by ProjectChrysalis</a>. Vibe-coded openly: written by AI agents while the authors described and corrected.</div>
+      <div class="footer-note footer-molfar">
+        <img src="assets/molfar-cast.gif" alt="" aria-hidden="true" width="64" height="64" loading="lazy">
+        Pixel Molfar casts. He approves.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
