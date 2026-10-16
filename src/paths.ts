@@ -43,6 +43,10 @@ export function userDir(dataDir: string, username: string): string {
 /** A project's uploaded files: an app project's apps/<id>/.project/files/,
  *  a free project's projects/<name>/files/. */
 export const PROJECT_FILES = /^(apps\/[^/]+\/\.project|projects\/[^/]+)\/files(\/|$)/i;
+/** An app's local cache, apps/<id>/data/.cache/: derived files the app rebuilds from its own data
+ *  (an index of its cards, say). Kept out of git, backups and sync, so two devices never fight
+ *  over a file that only mirrors others. */
+export const APP_CACHE = /^apps\/[^/]+\/data\/\.cache(\/|$)/i;
 
 export const AGENT_WRITE_DENYLIST: readonly { pattern: RegExp; reason: string }[] = [
   { pattern: /^auth\.json$/i, reason: "credentials are never agent-editable" },
@@ -121,6 +125,7 @@ export function gitBoundaryIgnored(relPath: string): boolean {
     // project files: uploads (images, docs) kept by the engine's backup
     // instead, so neither history nor a push ever carries them
     PROJECT_FILES.test(norm) ||
+    APP_CACHE.test(norm) ||
     segs.includes("node_modules") ||
     segs.includes("dist") ||
     segs.some(isDiscardDir)
@@ -139,7 +144,7 @@ export function ensureGitignoreEntries(root: string): boolean {
     cur = "";
   }
   const lines = cur.split("\n").map((l) => l.trim());
-  const needs = ["auth.json", "mcp.json", "agent/", "assets-store/", "store/", "node_modules/", "dist/", "/connections.json", "/speech.json", "apps/.staging/", "/repos/", "apps/*/.project/files/", "/projects/*/files/", "/projects/.staging/"].filter((e) => !lines.includes(e));
+  const needs = ["auth.json", "mcp.json", "agent/", "assets-store/", "store/", "node_modules/", "dist/", "/connections.json", "/speech.json", "apps/.staging/", "/repos/", "apps/*/.project/files/", "/projects/*/files/", "/projects/.staging/", "apps/*/data/.cache/"].filter((e) => !lines.includes(e));
   if (needs.length === 0) return false;
   const head = cur ? cur.replace(/\n*$/, "\n") : "# runtime state + credentials never enter git\n";
   fs.writeFileSync(gi, head + needs.join("\n") + "\n", "utf8");
@@ -211,6 +216,8 @@ apps/.staging/
 apps/*/.project/files/
 /projects/*/files/
 /projects/.staging/
+# an app's local cache: derived files it rebuilds on its own
+apps/*/data/.cache/
 `;
 
 /**

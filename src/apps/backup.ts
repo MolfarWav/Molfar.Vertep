@@ -53,6 +53,8 @@ function appFiles(root: string, what = "app"): Record<string, Uint8Array> {
     for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
       if (SKIPPED_DIRS.has(entry.name) || isDiscardDir(entry.name) || entry.name.startsWith(".__") || entry.isSymbolicLink()) continue;
       const childRel = rel ? `${rel}/${entry.name}` : entry.name;
+      // the app's local cache (paths.ts APP_CACHE): rebuilt from the data it mirrors
+      if (childRel === "data/.cache") continue;
       if (entry.isDirectory()) walk(childRel);
       else if (entry.isFile()) {
         const file = path.join(abs, entry.name);

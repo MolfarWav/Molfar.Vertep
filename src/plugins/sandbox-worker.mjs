@@ -288,7 +288,7 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
     const fsSvc = (() => {
       if (!fsAllowed || !fsRoot) {
         const denied = () => { throw new Error("plugin manifest.json is missing the \"fs\" permission (add it to permissions array) or the grant was not approved for imported plugins"); };
-        return { read: denied, write: denied, list: denied, remove: denied, root: null };
+        return { read: denied, write: denied, list: denied, stat: denied, remove: denied, root: null };
       }
       // Lexical containment PLUS a realpath pass: a symlink planted inside
       // data/ (e.g. by a workspace shell) would otherwise let read/write/
@@ -362,6 +362,14 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
           } catch (e) { scrub(e, rel); }
         },
         list: (rel = ".") => { try { return fs.readdirSync(within(rel)).sort(); } catch (e) { scrub(e, rel); } },
+        // size and change time without reading the file: lets an app keep a derived index and
+        // re-read only what changed since (whoever changed it: the app, Molfar, a sync pull)
+        stat: (rel) => {
+          const full = within(rel);
+          let st;
+          try { st = fs.statSync(full); } catch (e) { if (e && e.code === "ENOENT") return null; scrub(e, rel); }
+          return { size: st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
+        },
         remove: (rel) => {
           const full = within(rel);
           if (full === fsRoot) throw new Error("refusing to remove the data dir itself");

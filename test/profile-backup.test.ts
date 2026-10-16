@@ -36,6 +36,7 @@ const read = (root: string, rel: string) => fs.readFileSync(path.join(root, rel)
 async function seed(): Promise<void> {
   put(p.root, "apps/roleplay/manifest.json", JSON.stringify({ name: "Roleplay", version: "1", kind: "web" }));
   put(p.root, "apps/roleplay/data/chats/c1.json", '{"msgs":[]}');
+  put(p.root, "apps/roleplay/data/.cache/characters-index.json", "{}");
   put(p.root, "apps/roleplay/node_modules/x/index.js", "derived");
   put(p.root, "apps/roleplay/dist/index.html", "derived");
   put(p.root, "apps/roleplay/.project/files/mock.png", new Uint8Array([0x89, 0x50, 0x4e, 0x47]));
@@ -66,7 +67,7 @@ describe("profile export", () => {
       "workspace/agent/sessions/s1.jsonl", "workspace/apps/roleplay/data/chats/c1.json", "workspace/.git/HEAD",
       "private/connections.json", "private/app-upstream/roleplay.source.json",
     ]) expect(names, n).toContain(n);
-    expect(names.some((n) => n.includes("node_modules") || n.includes("/dist/") || n.startsWith("workspace/repos/"))).toBe(false);
+    expect(names.some((n) => n.includes("node_modules") || n.includes("/dist/") || n.startsWith("workspace/repos/") || n.includes("/data/.cache/"))).toBe(false);
     expect(names.some((n) => n.startsWith("workspace/.git/objects/"))).toBe(true);
     expect(names).not.toContain("workspace/.git/config");
     expect(names).not.toContain("secrets.enc");

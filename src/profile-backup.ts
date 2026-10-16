@@ -30,7 +30,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { zip as zipFiles } from "fflate";
 import { BACKUP_MAX_BYTES, BackupError, extractZip } from "./apps/backup.js";
-import { type UserPaths, bootstrapUserDir, ensureGitignoreEntries, isDiscardDir, userPaths } from "./paths.js";
+import { APP_CACHE, type UserPaths, bootstrapUserDir, ensureGitignoreEntries, isDiscardDir, userPaths } from "./paths.js";
 import { isNewer } from "./updates.js";
 
 export const PROFILE_FORMAT = 1;
@@ -71,6 +71,8 @@ export function skippedInWorkspace(rel: string): boolean {
     head === "repos" ||
     (head === "apps" && (segs[1] === ".staging" || segs[2] === "dist")) ||
     (head === "projects" && segs[1] === ".staging") ||
+    // an app's local cache: rebuilt from the data it mirrors
+    APP_CACHE.test(rel) ||
     !gitEntryAllowed(rel)
   );
 }

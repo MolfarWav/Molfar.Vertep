@@ -538,6 +538,9 @@ afterEach(() => {
     expect(gitBoundaryIgnored("demo/dist/index.html")).toBe(true);
     expect(gitBoundaryIgnored("demo/src/main.tsx")).toBe(false);
     expect(gitBoundaryIgnored("apps/demo/dist/assets/x.js")).toBe(true);
+    // an app's local cache stays out of git; its real data does not
+    expect(gitBoundaryIgnored("apps/demo/data/.cache/index.json")).toBe(true);
+    expect(gitBoundaryIgnored("apps/demo/data/characters/a/card.json")).toBe(false);
   });
 
   it("route sweep commits out-of-band edits under their own label, not the route's", async () => {

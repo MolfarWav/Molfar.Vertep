@@ -95,6 +95,9 @@ describe("hostile plugin with every permission", () => {
       "fs-read-traversal",
       "fs-read-credentials",
       "fs-list-outside",
+      "fs-stat-outside",
+      "fs-stat-abs",
+      "fs-stat-symlink",
       "fs-read-symlink",
       "fs-write-symlink",
       "fs-write-outside",
@@ -107,6 +110,8 @@ describe("hostile plugin with every permission", () => {
 
     // ...while the legitimate scoped write still works
     expect(checks["fs-write-inside"]).toMatchObject({ ok: true, value: "hello" });
+    // stat sees the app's own files (size, folder flag, a change time) and says null for a missing one
+    expect(checks["fs-stat-inside"]).toMatchObject({ ok: true, value: "5,false,true,null" });
     expect(fs.readFileSync(path.join(appData, "inside.txt"), "utf8")).toBe("hello");
 
     // nothing reached the host filesystem

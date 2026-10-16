@@ -111,6 +111,10 @@ export function uiPanel(ctx, host) {
   attack("fs-write-symlink", function () { host.fs.write("dangling", "owned"); return "wrote"; });
   attack("fs-write-outside", function () { host.fs.write("../pwned.txt", "owned"); return "wrote"; });
   attack("fs-write-inside", function () { host.fs.write("inside.txt", "hello"); return host.fs.read("inside.txt"); });
+  attack("fs-stat-outside", function () { return JSON.stringify(host.fs.stat("../../../../credentials/admin/auth.json")); });
+  attack("fs-stat-abs", function () { return JSON.stringify(host.fs.stat("/etc/passwd")); });
+  attack("fs-stat-symlink", function () { return JSON.stringify(host.fs.stat("passwd-link")); });
+  attack("fs-stat-inside", function () { const s = host.fs.stat("inside.txt"); return s.size + "," + s.dir + "," + (s.mtimeMs > 0) + "," + host.fs.stat("missing.txt"); });
 
   attack("store-foreign-read", function () {
     return "keys=" + host.store.keys().join(",") + " victim-secret=" + String(host.store.get("victim-secret"));
