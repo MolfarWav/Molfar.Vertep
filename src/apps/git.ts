@@ -60,13 +60,24 @@ function needsSystemGit(url: string): Error {
   return new Error(`${url} is an SSH address, which needs git installed on this computer. Use the repository's https:// address instead.`);
 }
 
+/** `-c safe.directory=<dir>` for a repository the engine made itself (a fresh
+ *  clone, the workspace repo). On a drive that records no owner (exFAT and
+ *  FAT32 USB drives) or whose folders belong to another account, git refuses
+ *  every repository it was not told to trust, and the launcher only trusts the
+ *  engine checkout. The setting counts only from the command line or the
+ *  user's own config, never from the repository, so this trusts no one else. */
+export function trustArgs(cwd: string): string[] {
+  return ["-c", `safe.directory=${path.resolve(cwd).replace(/\\/g, "/")}`];
+}
+
 function runGit(args: string[], opts: { cwd?: string; timeoutMs?: number } = {}): Promise<string> {
   const program = systemGit();
   if (!program) return Promise.reject(new Error("git is not installed on this computer"));
   return new Promise((resolve, reject) => {
     execFile(
       program,
-      args,
+      // every cwd here is a repository the engine created under its data folder
+      opts.cwd ? [...trustArgs(opts.cwd), ...args] : args,
       { cwd: opts.cwd, env: GIT_ENV, timeout: opts.timeoutMs ?? 120_000, maxBuffer: 4 * 1024 * 1024 },
       (err, stdout, stderr) => {
         if (err) reject(new Error(String(stderr).trim().slice(-300) || err.message));

@@ -9,7 +9,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileHistory, gitClone, gitRemoteHead, mergeFile, readDirAt, showFile } from "../src/apps/git.js";
+import { fileHistory, gitClone, gitRemoteHead, mergeFile, readDirAt, showFile, trustArgs } from "../src/apps/git.js";
 import { commitAll, initRepo } from "../src/git.js";
 import { serveRepo } from "./fixtures/git-http.js";
 
@@ -108,5 +108,20 @@ describe("clone and update check over smart HTTP", () => {
 
   it("explains that SSH addresses need git", async () => {
     await expect(gitClone("git@github.com:x/y.git", path.join(tmp, "ssh"))).rejects.toThrow(/https:\/\//);
+  });
+});
+
+// A drive that records no owner (exFAT USB) or a folder another account owns: git refuses every
+// repository not listed in safe.directory. GIT_TEST_ASSUME_DIFFERENT_OWNER makes git act that way here.
+describe.skipIf(!Bun.which("git"))("repositories the engine made on an untrusted drive", () => {
+  it("are trusted through the command line, and only those", () => {
+    const repo = path.join(tmp, "Not Owned (x86)");
+    fs.mkdirSync(repo, { recursive: true });
+    execFileSync("git", ["init", "-q"], { cwd: repo });
+    const env = { ...process.env, GIT_TEST_ASSUME_DIFFERENT_OWNER: "1", GIT_CONFIG_NOSYSTEM: "1" };
+    const run = (args: string[]) => execFileSync("git", args, { cwd: repo, env, encoding: "utf8", stdio: "pipe" });
+    expect(() => run(["rev-parse", "--git-dir"])).toThrow(/dubious ownership|safe.directory/);
+    expect(run([...trustArgs(repo), "rev-parse", "--git-dir"]).trim()).toBe(".git");
+    expect(() => run([...trustArgs(path.join(tmp, "elsewhere")), "rev-parse", "--git-dir"])).toThrow(/dubious ownership|safe.directory/);
   });
 });
