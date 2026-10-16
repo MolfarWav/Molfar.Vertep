@@ -954,7 +954,8 @@ describe("A2 the bridge's second lock (server side)", () => {
       "/v1/embeddings/config", "/v1/embeddings/probe", "/v1/agent", "/v1/agent/bug-patch", "/v1/mcp", "/v1/shell", "/v1/themes", "/v1/apps", "/v1/apps/x/dev", "/v1/apps/x/build", "/v1/apps/x/build/fs", "/v1/apps/x/build/ack", "/v1/apps/x/export",
       "/v1/apps/x/export/backup", "/v1/apps/x/exports", "/v1/apps/x/tree/leaf", "/v1/projects", "/v1/projects/import", "/v1/projects/app:x",
       "/v1/projects/project:x/export", "/v1/projects/app:x/files", "/v1/projects/app:x/files/a.png",
-      "/v1/profile/export", "/v1/profile/import", "/v1/profile/import/t/confirm"];
+      "/v1/profile/export", "/v1/profile/import", "/v1/profile/import/t/confirm",
+      "/v1/sync", "/v1/sync/settings", "/v1/sync/drive/start", "/v1/sync/drive/code", "/v1/sync/folder", "/v1/sync/target", "/v1/sync/job", "/v1/sync/check", "/v1/sync/push", "/v1/sync/pull"];
     for (const trusted of [false, true]) {
       for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
         for (const p of paths) {

@@ -41,6 +41,11 @@ import { solutionPatch } from "../agent/bug-solution.js";
 import * as protect from "../agent/protect.js";
 import * as inspector from "../inspector.js";
 import * as profileBackup from "../profile-backup.js";
+import { DriveAuth, SignIns, driveClient, exchangeCode as exchangeDriveCode, findOrCreateFolder as findOrCreateDriveFolder, parseReturnUrl as parseDriveReturn } from "../sync/drive.js";
+import { type Choice as SyncChoice, check as syncCheck, pull as syncPull, push as syncPush } from "../sync/engine.js";
+import { SyncError } from "../sync/manifest.js";
+import { SyncJobs, credDirOf as syncCredDir, storeFor as syncStoreFor, viewOf as syncView } from "../sync/service.js";
+import { type SyncTarget, readState as readSyncState, writeState as writeSyncState } from "../sync/state.js";
 import { summarizeSession } from "../agent/compact.js";
 import * as agentMemory from "../agent/memory.js";
 import { listConnections, createConnection, updateConnection, deleteConnection, validateConnectionInput, validatePromptFormatInput, readConnections, connectionKeyUsable, type ConnectionInfo } from "../connections.js";
@@ -1081,7 +1086,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   });
 
   // ---------- auth middleware ----------
-  const PUBLIC_PATHS = new Set(["/v1/health", "/v1/ws", "/v1/auth/users", "/v1/auth/setup", "/v1/auth/login", "/v1/auth/forgot", "/v1/auth/reset"]);
+  const PUBLIC_PATHS = new Set(["/v1/health", "/v1/ws", "/v1/auth/users", "/v1/auth/setup", "/v1/auth/login", "/v1/auth/forgot", "/v1/auth/reset", "/v1/sync/drive/callback"]);
   /** Sandboxed app frames (opaque origin) send no cookies. Their static
    *  files live under /app/<user>/<id>/ and are public; every byte of data
    *  they show comes back through the shell bridge. */
@@ -2901,6 +2906,216 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return c.json({ ok: true, safetyBackup: r.safetyBackup, secrets: r.secrets });
     } catch (e) {
       return profileError(c, e);
+    }
+  });
+
+  // ---------- sync between devices (Settings > Sync, GitHub #38) ----------
+  // Push here, pull on the other device, like git. Shell-only (not on the app
+  // bridge's allowlist); the Google callback is public but takes only a
+  // one-time state an account started. Design: .fork/handoff/sync/DESIGN.md.
+  const syncJobs = new SyncJobs();
+  const syncEscape = (t: string): string => t.replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]!);
+  const signIns = new SignIns();
+  const syncError = (c: Context, e: unknown) =>
+    e instanceof SyncError ? c.json({ error: e.message }, e.status) : c.json({ error: (e as Error).message }, 500);
+  const syncCtx = (u: UserRecord, p: UserPaths) => ({ dataDir, username: u.username, paths: p, engine: ENGINE_VERSION, store: syncStoreFor(readSyncState(syncCredDir(p))) });
+  const agentBusy = (username: string) => [...activeRuns.keys()].some((k) => k.startsWith(`${username}:`));
+  /** A new store starts a new history: the base belongs to the old one. */
+  const setSyncTarget = (p: UserPaths, target: SyncTarget) => {
+    const cd = syncCredDir(p);
+    const s = readSyncState(cd);
+    const same = !!s.target && s.target.kind === target.kind &&
+      (target.kind === "folder" ? (s.target as { path: string }).path === target.path : (s.target as { folderId?: string }).folderId === target.folderId);
+    writeSyncState(cd, { ...s, target, ...(same ? {} : { base: null, last: undefined, baseSecretsPlain: undefined }) });
+  };
+
+  app.get("/v1/sync", (c) => c.json(syncView(c.get("paths"), syncJobs, c.get("user").username)));
+
+  app.put("/v1/sync/settings", async (c) => {
+    const p = c.get("paths");
+    const body = await c.req.json<{ deviceName?: unknown; scope?: unknown; passphrase?: unknown; client?: unknown }>().catch(() => ({}) as Record<string, unknown>);
+    const cd = syncCredDir(p);
+    const s = readSyncState(cd);
+    if (typeof body.deviceName === "string") {
+      const name = body.deviceName.trim().slice(0, 60);
+      if (!name) return c.json({ error: "give this device a name" }, 400);
+      s.deviceName = name;
+    }
+    if (body.scope && typeof body.scope === "object") {
+      for (const k of ["agent", "media", "secrets"] as const) {
+        const v = (body.scope as Record<string, unknown>)[k];
+        if (typeof v === "boolean") s.scope[k] = v;
+      }
+    }
+    if (typeof body.passphrase === "string") {
+      if (body.passphrase && body.passphrase.length < 8) return c.json({ error: "the passphrase needs at least 8 characters" }, 400);
+      if (body.passphrase) s.passphrase = body.passphrase;
+      else delete s.passphrase;
+    }
+    if (body.client === null) delete s.client;
+    else if (body.client && typeof body.client === "object") {
+      const { id, secret } = body.client as { id?: unknown; secret?: unknown };
+      if (typeof id !== "string" || !/^[\w.-]+\.apps\.googleusercontent\.com$/.test(id.trim())) return c.json({ error: "that is not a Google client id (it ends with .apps.googleusercontent.com)" }, 400);
+      s.client = { id: id.trim(), secret: typeof secret === "string" ? secret.trim() : "" };
+    }
+    writeSyncState(cd, s);
+    return c.json(syncView(p, syncJobs, c.get("user").username));
+  });
+
+  // Google sign-in: the browser goes to Google and comes back to the engine
+  // on 127.0.0.1; an engine opened over the network gets the address pasted
+  const driveRedirect = (c: Context): string => {
+    const u = new URL(c.req.url);
+    const loopback = u.hostname === "127.0.0.1" || u.hostname === "localhost" || u.hostname === "[::1]";
+    return `http://${loopback ? u.hostname : "127.0.0.1"}:${loopback ? u.port || "80" : String(config.port)}/v1/sync/drive/callback`;
+  };
+  const finishDriveSignIn = async (state: string, code: string): Promise<{ username: string; account: string }> => {
+    const pending = signIns.take(state);
+    if (!pending) throw new SyncError("this sign-in has expired: press Sign in with Google again", 400);
+    const tokens = await exchangeDriveCode(pending, code);
+    const auth = new DriveAuth(pending.client, tokens.refreshToken, fetch, tokens);
+    const { folderId, account } = await findOrCreateDriveFolder(auth);
+    setSyncTarget(userPaths(dataDir, pending.username), { kind: "drive", folderId, account, refreshToken: tokens.refreshToken });
+    log.info(`[sync] ${pending.username}: signed in to Google Drive${account ? ` as ${account}` : ""}`);
+    bus.emit(pending.username, "sync_changed", {});
+    return { username: pending.username, account };
+  };
+
+  app.post("/v1/sync/drive/start", (c) => {
+    const s = readSyncState(syncCredDir(c.get("paths")));
+    const client = driveClient(s.client);
+    if (!client) return c.json({ error: "this build has no Google client: add your own in Advanced" }, 400);
+    const redirect = driveRedirect(c);
+    const { url } = signIns.start(c.get("user").username, client, redirect);
+    return c.json({ url, redirect });
+  });
+
+  app.get("/v1/sync/drive/callback", async (c) => {
+    const page = (title: string, text: string, ok: boolean) =>
+      c.html(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${syncEscape(title)}</title><body style="font-family:system-ui;background:#111217;color:#ddd;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:16px;box-sizing:border-box"><div style="max-width:420px;text-align:center"><h1 style="font-size:20px;color:${ok ? "#9fd89f" : "#e8a0a0"}">${syncEscape(title)}</h1><p style="line-height:1.5">${syncEscape(text)}</p><p><a href="/" style="color:#9ab8ff">Back to Molfar Vertep</a></p></div></body>`, ok ? 200 : 400);
+    const parsed = parseDriveReturn(c.req.url);
+    if ("error" in parsed) return page("Not signed in", parsed.error, false);
+    try {
+      const r = await finishDriveSignIn(parsed.state, parsed.code);
+      return page("Signed in to Google Drive", `${r.account ? `${r.account}. ` : ""}You can close this tab and go back to Molfar Vertep: Settings, Sync.`, true);
+    } catch (e) {
+      return page("Not signed in", (e as Error).message, false);
+    }
+  });
+
+  app.post("/v1/sync/drive/code", async (c) => {
+    const body = await c.req.json<{ url?: unknown }>().catch(() => ({}) as { url?: unknown });
+    const parsed = parseDriveReturn(typeof body.url === "string" ? body.url : "");
+    if ("error" in parsed) return c.json({ error: parsed.error }, 400);
+    try {
+      const r = await finishDriveSignIn(parsed.state, parsed.code);
+      if (r.username !== c.get("user").username) return c.json({ error: "this sign-in was started by another account" }, 403);
+      return c.json(syncView(c.get("paths"), syncJobs, r.username));
+    } catch (e) {
+      return syncError(c, e);
+    }
+  });
+
+  // a folder on the engine's computer: it writes on the host, so admins only
+  app.post("/v1/sync/folder", async (c) => {
+    if (c.get("user").role !== "admin") return c.json({ error: "only an admin can sync to a folder on this computer" }, 403);
+    const body = await c.req.json<{ path?: unknown }>().catch(() => ({}) as { path?: unknown });
+    const raw = typeof body.path === "string" ? body.path.trim() : "";
+    if (!raw || !path.isAbsolute(raw)) return c.json({ error: "give the folder's full path" }, 400);
+    const dir = path.resolve(raw);
+    const rel = path.relative(path.resolve(dataDir), dir);
+    if (!rel.startsWith("..") && !path.isAbsolute(rel)) return c.json({ error: "choose a folder outside the engine's data folder" }, 400);
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+      if (!fs.statSync(dir).isDirectory()) throw new Error("not a folder");
+    } catch (e) {
+      return c.json({ error: `cannot use that folder: ${(e as Error).message}` }, 400);
+    }
+    setSyncTarget(c.get("paths"), { kind: "folder", path: dir });
+    return c.json(syncView(c.get("paths"), syncJobs, c.get("user").username));
+  });
+
+  // forget where and the Google token; nothing in the store is deleted
+  app.delete("/v1/sync/target", (c) => {
+    const p = c.get("paths");
+    if (syncJobs.busy(c.get("user").username)) return c.json({ error: "a sync is running" }, 409);
+    const cd = syncCredDir(p);
+    writeSyncState(cd, { ...readSyncState(cd), target: null, base: null, last: undefined, baseSecretsPlain: undefined });
+    return c.json(syncView(p, syncJobs, c.get("user").username));
+  });
+
+  app.get("/v1/sync/job", (c) => c.json({ job: syncJobs.get(c.get("user").username) }));
+
+  app.post("/v1/sync/check", (c) => {
+    const u = c.get("user");
+    try {
+      const ctx = syncCtx(u, c.get("paths"));
+      return c.json({ job: syncJobs.start(u.username, "check", (progress) => syncCheck({ ...ctx, progress })) });
+    } catch (e) {
+      return syncError(c, e);
+    }
+  });
+
+  app.post("/v1/sync/push", async (c) => {
+    const u = c.get("user");
+    const body = await c.req.json<{ replaceKeys?: unknown }>().catch(() => ({}) as { replaceKeys?: unknown });
+    if (agentBusy(u.username)) return c.json({ error: "the agent is working: let it finish before syncing" }, 409);
+    try {
+      const ctx = syncCtx(u, c.get("paths"));
+      const job = syncJobs.start(u.username, "push", (progress) => syncPush({ ...ctx, progress }, { replaceKeys: body.replaceKeys === true }), (r) => {
+        log.info(`[sync] ${u.username}: pushed rev ${r.rev} (${r.changed} changed, ${r.uploaded} uploaded)`);
+      });
+      return c.json({ job });
+    } catch (e) {
+      return syncError(c, e);
+    }
+  });
+
+  app.post("/v1/sync/pull", async (c) => {
+    const u = c.get("user");
+    const p = c.get("paths");
+    const body = await c.req.json<{ rev?: unknown; resolutions?: unknown; all?: unknown }>().catch(() => ({}) as Record<string, unknown>);
+    if (agentBusy(u.username)) return c.json({ error: "the agent is working: let it finish before syncing" }, 409);
+    const choice = (v: unknown): SyncChoice | undefined => (v === "mine" || v === "theirs" ? v : undefined);
+    const resolutions: Record<string, SyncChoice> = {};
+    if (body.resolutions && typeof body.resolutions === "object") {
+      for (const [k, v] of Object.entries(body.resolutions as Record<string, unknown>)) {
+        const ch = choice(v);
+        if (ch) resolutions[k] = ch;
+      }
+    }
+    const all = choice(body.all);
+    try {
+      const ctx = syncCtx(u, p);
+      const job = syncJobs.start(
+        u.username, "pull",
+        (progress) => syncPull({ ...ctx, progress }, { ...(Number.isInteger(body.rev) ? { rev: body.rev as number } : {}), resolutions, ...(all ? { all } : {}) }),
+        async (r) => {
+          // everything that read the old files lets go of them
+          evictAgents(u.username);
+          modelServices.delete(u.username);
+          pluginStores.delete(u.username);
+          invalidatePluginCache();
+          if (r.keys) {
+            const mcp = mcpRegistries.get(u.username);
+            mcpRegistries.delete(u.username);
+            void mcp?.dispose().catch(() => undefined);
+          }
+          await git.commitAll(p.root, u.username, `sync: pulled from ${r.device || "another device"}`).catch(() => null);
+          log.info(`[sync] ${u.username}: pulled rev ${r.rev} from ${r.device} (${r.applied} applied, ${r.kept} kept)`);
+          if (config.apps.packageDownloads && r.apps.length) {
+            void installMissingPackages(p.apps, (id, res) => {
+              if (res.ok) bus.emit(u.username, "build_needed", { app: id, paths: ["package.json"] });
+            });
+          }
+          for (const id of r.apps) bus.emit(u.username, "app_changed", { app: id });
+          bus.emit(u.username, "connections_changed", { id: "sync" });
+          bus.emit(u.username, "sync_changed", {});
+        },
+      );
+      return c.json({ job });
+    } catch (e) {
+      return syncError(c, e);
     }
   });
 
