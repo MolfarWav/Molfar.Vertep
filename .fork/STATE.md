@@ -1,11 +1,13 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-16.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-17.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Large libraries, P0 (#46): BUILT, not released (2026-10-16)
+## 1.2.0: RELEASED 2026-10-17 on the user's word (main fast-forwarded to the release commit, tag v1.2.0; Roleplay 4.49.0 on the fork's main, merged from `claude/slim-start` + `claude/attention`). Engine = main 1.1.1 + `claude/slim-start-engine` + `claude/image-providers-c9b607` (only conflict: this file). Notes `.fork/release-notes/1.2.0.md`. Not in it: the site branch `claude/hopeful-mccarthy-39ropd`. Checks: typecheck, build:client pass; tests 809 pass, the 15 known Windows-only failures plus 4 load flakes that pass alone; Roleplay 1060 pass, typecheck clean.
+
+## Large libraries, P0 (#46): RELEASED in 1.2.0 / Roleplay 4.49.0 (2026-10-17)
 Why: a long-time SillyTavern player has 2,000+ cards; Roleplay's `/bootstrap` read every card whole in a 64 MB
 sandbox and did not start past ~700 (measured). Findings and the importer plan (P1, not started): `.fork/handoff/st-import/FINDINGS.md`;
 P0 design: `.fork/handoff/st-import/P0-DESIGN.md`. Decided with the user: P0 first as its own release; big chats later
@@ -22,14 +24,14 @@ portraits on demand, import in batches of 25, chat counts per card counted once.
 (shots `E:\Claude\guide-shots\slim-start\`): data safety checks pass (favorite on an unopened card keeps its texts).
 Roleplay commits `57a4a87`, `7a2ea69` (pushed). A second browser pass checked the UX fixes (filling line, portrait
 placeholders, spinner, "~" tokens, search over the first 1,000 characters of a description): shots `fix-*`.
-Left: release (engine 1.1.2 + Roleplay 4.49.0, both on the user's word), close #46 with it.
+Released as engine 1.2.0 + Roleplay 4.49.0; #46, #47, #55 closed with it.
 Dashboard threads (checked 2026-10-16 on the user's request): the sensor closes a thread only when the model lists it in
 `resolved` (plus a "Thread check" every 5 turns); nothing expires; at the open limit new threads are dropped silently.
 In the user's 8 chats the sensor closed 2 threads in ~40 turns, the user closed others by hand. Bug #47: a hand-added
 thread comes back open the turn after the sensor resolves it (Tuesday batch). Proposed, not decided: keep a history of
 resolved threads (they vanish after one turn now); retire threads left open after several thread checks.
 
-## Image providers beyond OpenRouter: branch `claude/image-providers-c9b607` (2026-10-17, pushed, not merged, not released)
+## Image providers beyond OpenRouter: RELEASED in 1.2.0 (branch `claude/image-providers-c9b607`, 2026-10-17)
 Asked by the user 2026-10-17 with Marinara Engine's provider list as the target (it has ~20: OpenAI, NanoGPT,
 OpenRouter, Pollinations, Stability, Together, NovelAI, AI Horde, xAI, Venice, Z.ai, fal, Atlas, ComfyUI, SwarmUI,
 RunPod ComfyUI, A1111/Forge/Draw Things, Gemini via chat). The user picked the first four: NanoGPT, local ComfyUI,

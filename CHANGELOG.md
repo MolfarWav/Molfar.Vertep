@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.0 (2026-10-17)
+
+- Image generation beyond OpenRouter (`src/images.ts`): NanoGPT (the existing NanoGPT key, its public image catalog with prices) and your own image servers in a new Settings > Images tab: a local ComfyUI (a built-in text-to-image workflow or your own API-format workflow with placeholders), AUTOMATIC1111/Forge, or any OpenAI-compatible `/images/generations`. Their models join `GET /v1/images/models`, so apps such as Roleplay offer them unchanged. Keys live in `auth.json` bound to the server's address; servers may be on this computer or the LAN, never link-local; redirects are not followed; failures come back in plain words with a fitting status instead of a raw 500.
+- Plugins: `host.fs.stat(path)` and `host.fs.stat([paths])` give size, change time and a folder flag without reading files (a list in one call), inside the same jail as `fs.read`; apps get a local cache folder `apps/<app>/data/.cache/` kept out of git, backups and sync. Roleplay 4.49.0 builds its character index there and starts with 2,000 characters in about 2 s (#46).
+
 ## 1.1.1 (2026-10-16)
 
 - Sync: a Google Drive sync folder in the trash stops check, push and pull with a clear message; Drive takes uploads into a trashed folder, so a push used to land in the trash and report success (#45).
