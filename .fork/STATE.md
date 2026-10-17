@@ -7,6 +7,11 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 
 ## 1.2.0: RELEASED 2026-10-17 on the user's word (main fast-forwarded to the release commit, tag v1.2.0; Roleplay 4.49.0 on the fork's main, merged from `claude/slim-start` + `claude/attention`). Engine = main 1.1.1 + `claude/slim-start-engine` + `claude/image-providers-c9b607` (only conflict: this file). Notes `.fork/release-notes/1.2.0.md`. Not in it: the site branch `claude/hopeful-mccarthy-39ropd`. Checks: typecheck, build:client pass; tests 809 pass, the 15 known Windows-only failures plus 4 load flakes that pass alone; Roleplay 1060 pass, typecheck clean.
 
+## World + DM (#52): designed 2026-10-17, not started
+A Roleplay plugin that starts a world (interview or "Create from cards") and a DM that moves it during play
+(fronts and clocks, a chat-owned hidden world book, insert seen only in the Inspector, five levels up to "Total
+chaos", scene directions from the Dashboard sensor). Design and phases: `.fork/handoff/world-dm/DESIGN.md`.
+
 ## Large libraries, P0 (#46): RELEASED in 1.2.0 / Roleplay 4.49.0 (2026-10-17)
 Why: a long-time SillyTavern player has 2,000+ cards; Roleplay's `/bootstrap` read every card whole in a 64 MB
 sandbox and did not start past ~700 (measured). Findings and the importer plan (P1, not started): `.fork/handoff/st-import/FINDINGS.md`;
