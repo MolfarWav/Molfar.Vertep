@@ -43,7 +43,7 @@ export class ProfileError extends Error {
 }
 
 /** Parts of the credentials dir that travel in the clear. */
-export const PLAIN_PRIVATE = ["connections.json", "speech.json", "sandbox.json"] as const;
+export const PLAIN_PRIVATE = ["connections.json", "speech.json", "images.json", "sandbox.json"] as const;
 /** Parts that travel only encrypted. mcp.json can carry tokens in headers. */
 export const SECRET_FILES = ["auth.json", "mcp.json"] as const;
 

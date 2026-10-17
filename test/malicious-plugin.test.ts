@@ -245,6 +245,12 @@ describe("exfiltration ways out of an app page", () => {
     for (const method of ["POST", "PATCH", "DELETE"]) {
       expect(host.allowedRequest("roleplay", method, "/v1/audio/speech/endpoints/x"), method).toBe(false);
     }
+    // image endpoints carry LAN addresses: not even the listing
+    for (const method of ["GET", "POST", "PATCH", "DELETE"]) {
+      expect(host.allowedRequest("roleplay", method, "/v1/images/endpoints"), method).toBe(false);
+      expect(host.allowedRequest("roleplay", method, "/v1/images/endpoints/x"), method).toBe(false);
+      expect(host.allowedRequest("roleplay", method, "/v1/images/endpoints/x/models", true), method).toBe(false);
+    }
     // read-only catalogs: GET yes, writes no
     expect(host.allowedRequest("roleplay", "GET", "/v1/settings/connections")).toBe(true);
     expect(host.allowedRequest("roleplay", "GET", "/v1/plugins")).toBe(true);

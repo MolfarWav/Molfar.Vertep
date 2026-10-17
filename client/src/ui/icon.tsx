@@ -5,7 +5,7 @@ import {
   ArrowClockwise, ArrowsClockwise, ArrowLeft, ArrowSquareOut, ArrowUUpLeft, Brain, CaretDown, CaretLeft, CaretRight,
   Chat, ChatCircle, Check, CheckCircle, CloudArrowUp, Code, Columns, Copy, DownloadSimple, FolderPlus, GearSix, HardDrives, Info,
   Books, Bug, Lock, PencilSimpleLine, Plus, PlusSquare, Prohibit, SignOut, SlidersHorizontal,
-  SpeakerHigh, SquaresFour, Storefront, TerminalWindow, Trash, X,
+  ImageSquare, SpeakerHigh, SquaresFour, Storefront, TerminalWindow, Trash, X,
 } from "@phosphor-icons/react"
 
 const glyphs = {
@@ -22,6 +22,7 @@ const glyphs = {
   code: Code,
   copy: Copy,
   download: DownloadSimple,
+  image: ImageSquare,
   info: Info,
   lock: Lock,
   logout: SignOut,

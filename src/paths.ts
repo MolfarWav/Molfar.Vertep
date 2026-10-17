@@ -14,6 +14,8 @@ export interface UserPaths {
   connections: string;
   /** Speech/TTS endpoints (keys live in auth.json). */
   speech: string;
+  /** Image generation endpoints (keys live in auth.json). */
+  images: string;
   /** Baseline copies of installed apps, one per app: the version each was
    *  installed or last updated from. Updates merge against them. */
   appUpstream: string;
@@ -173,6 +175,7 @@ export function userPaths(dataDir: string, username: string): UserPaths {
     // page can read or rewrite them).
     connections: path.join(dataDir, "credentials", username, "connections.json"),
     speech: path.join(dataDir, "credentials", username, "speech.json"),
+    images: path.join(dataDir, "credentials", username, "images.json"),
     // Outside the workspace for the same reason: a baseline rewritten to match
     // the user's edits would make the next update replace them without asking.
     appUpstream: path.join(dataDir, "credentials", username, "app-upstream"),

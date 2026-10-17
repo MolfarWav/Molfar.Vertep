@@ -48,6 +48,7 @@ import { LOCALES, getLocale, setLocale, tr, useLocale, type Locale } from "./i18
 import { GuideSection } from "./guide/guide-settings"
 import { useGuidePlace } from "./guide/place"
 import { SyncTab } from "./sync-settings"
+import { ImagesTab } from "./image-settings"
 
 export const inputClass =
   "min-w-0 flex-1 rounded-lg border border-line bg-panel px-3 py-1.5 text-13 text-ink outline-none placeholder:text-ink-faint focus:border-line-focus"
@@ -88,7 +89,7 @@ const LOCAL_SERVERS: LocalPick[] = [
 type OAuthPick = { id: string; providerId: string; label: string; kind: "builtin"; baseUrl: null; apiKeyAuth: false; hasKey: false; authKind: "oauth" | "credentials"; needsGateway?: boolean }
 type ProviderPick = EngineProvider | CustomPick | OAuthPick | LocalPick
 
-export type TabValue = "general" | "backup" | "sync" | "api" | "models" | "speech" | "agent" | "memory" | "mcp" | "developer" | "server" | "users"
+export type TabValue = "general" | "backup" | "sync" | "api" | "models" | "speech" | "images" | "agent" | "memory" | "mcp" | "developer" | "server" | "users"
 
 export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; initialModel?: string | null; onLogout: () => void }) {
   // "models" was its own tab before 0.9.2: it lives in the connections tab now
@@ -101,6 +102,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
     { value: "sync", label: tr("Sync"), icon: <Icon name="sync" /> },
     { value: "api", label: tr("Connections and models"), icon: <Icon name="cloud-upload" /> },
     { value: "speech", label: tr("Speech"), icon: <Icon name="speaker" /> },
+    { value: "images", label: tr("Images"), icon: <Icon name="image" /> },
     { value: "agent", label: tr("Molfar"), icon: <Icon name="brain" /> },
     { value: "memory", label: tr("Memory"), icon: <Icon name="books" /> },
     { value: "mcp", label: tr("MCP servers"), icon: <Icon name="terminal-active" /> },
@@ -132,6 +134,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
       {v === "sync" && <SyncTab isAdmin={props.me.role === "admin"} />}
       {v === "api" && <ApiTab initialModel={props.initialModel} />}
       {v === "speech" && <SpeechTab />}
+      {v === "images" && <ImagesTab />}
       {v === "agent" && <AgentTab />}
       {v === "memory" && <MemoryTab />}
       {v === "mcp" && <McpTab />}
@@ -188,6 +191,9 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
           </Tabs.Content>
           <Tabs.Content value="speech" className="no-scrollbar">
             <SpeechTab />
+          </Tabs.Content>
+          <Tabs.Content value="images" className="no-scrollbar">
+            <ImagesTab />
           </Tabs.Content>
           <Tabs.Content value="agent" className="no-scrollbar">
             <AgentTab />
