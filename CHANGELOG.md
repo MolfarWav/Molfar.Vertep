@@ -5,6 +5,16 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## Unreleased (1.2.3)
+
+- Molfar's chat takes files besides pictures: text, Markdown, JSON, CSV and other text formats, plus Word and OpenDocument documents (their text). A file is saved under `uploads/<day>/` in the workspace (outside git, kept by backups, read-only for the agent), and the message names it as `@uploads/...`, so the existing mention reader puts it in (64 KB cap, a big JSON as its outline). Notepad's UTF-16 is converted; other encodings and PDFs are refused with the reason on the file's tile (`PUT /v1/agent/uploads/:name`, shell-only). Mentions now take names in any script.
+- Files Molfar names in a reply open with a click: a markdown link or an inline workspace path opens `GET /v1/agent/file` (shell-only: what the agent may read, never `.git` or `auth.json`, nothing that leaves the workspace through a link, up to 20 MB; html, svg and scripts are served as plain text under a sandbox policy), with a download icon beside it. Molfar is told to link the files it makes.
+- ComfyUI (Settings > Images): a workflow from Export (API) works as it is. Saving it puts `%prompt%`, `%negative_prompt%`, `%seed%`, `%width%`, `%height%` and `%model%` in their places; "Import workflow file…" and "Take the settings from this workflow" also move its steps, CFG, sampler, scheduler, denoise, clip skip and LoRAs into the form (`POST /v1/images/workflow/adapt`, shell-only). The editor's format is refused with how to export the API one.
+- OAuth sign-ins (Anthropic and others) no longer break after a refresh: refreshes of one file are queued, and a refresh that changes nothing keeps the stored sign-in instead of deleting it (inferred cause of "invalid_grant" on model checks). The error now says to sign in again under Settings > Connections.
+- `Molfar-Vertep.bat` opens a start menu (#65): Start, start without updating, Update, Dev branch, Previous release, Check the setup, Reinstall, Quit; it starts by itself after 5 seconds, and any argument skips it.
+- The program's new name, step 1 (#66): updates and rollbacks accept `molfar-vertep[.exe]` next to `chrysalis[.exe]`, the command `molfar-vertep` works next to `chrysalis`, and settings read `MOLFAR_VERTEP_*` before `CHRYSALIS_*`. Releases still ship `chrysalis[.exe]`.
+- Roleplay (fork, next release): the Dashboard no longer shows an earlier persona of the chat as an NPC, and the card Profile can describe several characters.
+
 ## 1.2.2 (2026-10-18)
 
 - pi-ai and pi-agent-core 0.85.1 -> 1.2.0, pinned to the exact version (no range: pi breaks its API in minor releases). The built-in catalogs grow from 1227 to 1554 chat models. The agent keeps sending one system prompt with only the visible tools (the library now carries both inside the transcript); image models moved into the main registry. Models the old catalog had and the new one drops (Moonshot's Kimi K2 ids, DeepSeek's `deepseek-v4-flash`, six Z.AI Coding CN models, some OpenCode ids) are no longer offered; a chat set to one asks for another model (#60).

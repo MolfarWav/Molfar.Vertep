@@ -643,7 +643,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
             {taken ? <div className="text-12 text-ink-muted" role="status">{taken}</div> : null}
             {field(
               tr("Your own workflow (optional)"),
-              <textarea className={cn(inputClass, "min-h-24 font-mono text-12")} spellCheck={false} placeholder='{"3": {"class_type": "KSampler", …}}' value={f.workflow} onChange={(e) => set("workflow", e.currentTarget.value)} />,
+              <textarea className={cn(inputClass, "min-h-24 font-mono text-12")} spellCheck={false} placeholder='{"3": {"class_type": "KSampler", …}}' value={f.workflow} onChange={(e) => { set("workflow", e.currentTarget.value); setTaken("") }} />,
               tr("Import a workflow exported with Workflow > Export (API): the fields above take its size, steps, CFG, sampler, scheduler, denoise, CLIP skip and LoRAs, and each picture gets its own prompt, seed and model. A pasted workflow gets %prompt%, %negative_prompt%, %seed%, %width%, %height% and %model% when saved; mark others yourself: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%, %LORA_1% to %LORA_5% and %LORA_1_strength% and so on (empty slots get None). Empty: a simple text-to-image workflow."),
             )}
           </> : null}
