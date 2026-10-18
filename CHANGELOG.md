@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Custom connections: a host that answers with text instead of a reply (Chub's "This service is not available in your country.", #59) now fails the reply with that text. Since 1.2.4 it showed as an empty reply.
+
 ## 1.2.4 (2026-10-18)
 
 - Custom connections (OpenAI-compatible) no longer fail every reply with "malformed server-sent event JSON" (#59). Since 1.2.2 the OpenAI library rejects any stream event that is not JSON; such connections now read the stream through a tolerant reader: `[DONE]` with trailing text ends the stream, several JSON lines in one event are split, and other non-JSON events are skipped and logged (`[custom-provider:<id>] skipped a stream event that is not JSON`). A plain-text error inside a successful stream now shows as an empty reply, with the log line saying why.
