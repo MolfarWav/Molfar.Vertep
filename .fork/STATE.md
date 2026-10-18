@@ -23,8 +23,8 @@ Roleplay only; the engine repo gets docs and the card skill copy. Version picked
 - Release order (user via coordinator): 1.2.4 / Roleplay 4.52.0 ships first; then merge main into this branch,
   bump to 4.53.0 (manifest, APP_VERSION, tip `since`, CHANGELOG, notes), close #52 with it. The user pushes the tag.
 - Left: browser check of the full sheet (dark, light, 390 px) with the UX check block.
-- Overlap with the 18.10 batch: `plugins/engine/plugin.js` (different functions), `src/lib/store.ts`, `src/lib/i18n.ts`
-  (new keys after `nav.showRail`). Merge after it ships.
+- main (1.2.4 / Roleplay 4.52.0) merged into both branches 2026-10-18; no conflicts in code.
+
 ## 1.2.4: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.4; Roleplay 4.52.0 on the fork's main)
 Checks: typecheck, build:client pass; tests 895 pass, 3 known failures (edge TTS x2 network, hostile plugin). Roleplay 1100 pass.
 Branch `claude/soji-sse-parse-48vyqm` (both repos). Details: `.fork/handoff/batch-1018/HANDOFF.md`, CHANGELOG, `.fork/release-notes/1.2.4.md`.
