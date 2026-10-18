@@ -790,6 +790,16 @@ const en = {
   "Your own workflow (optional)": "",
   "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. Empty: a simple text-to-image workflow.": "",
   "Save server": "",
+  "{ref} (not available)": "",
+  "Star = add to your image models": "",
+  "Remove from your image models": "",
+  "Add to your image models": "",
+  "No matches.": "",
+  "Your image models": "",
+  "Molfar picks from these by what each is for; the first is the default. Roleplay lists them first in its own picker.": "",
+  "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "",
+  "Used for": "",
+  "e.g. backgrounds, cheap": "",
 } as const
 
 export default en

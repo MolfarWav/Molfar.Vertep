@@ -77,9 +77,67 @@ function readEndpoints(p: UserPaths): Record<string, ImageEndpointDef> {
   }
 }
 
-function writeEndpoints(p: UserPaths, endpoints: Record<string, ImageEndpointDef>): void {
+function readImagesFile(p: UserPaths): Record<string, unknown> {
+  try {
+    const file = JSON.parse(fs.readFileSync(p.images, "utf8")) as unknown;
+    return file && typeof file === "object" && !Array.isArray(file) ? (file as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Rewrites one key of images.json, keeping the others (endpoints, favorites). */
+function writeImagesKey(p: UserPaths, key: string, value: unknown): void {
+  const file = readImagesFile(p);
+  if (value === undefined) delete file[key];
+  else file[key] = value;
   fs.mkdirSync(path.dirname(p.images), { recursive: true });
-  fs.writeFileSync(p.images, `${JSON.stringify({ endpoints }, null, 2)}\n`);
+  fs.writeFileSync(p.images, `${JSON.stringify(file, null, 2)}\n`);
+}
+
+function writeEndpoints(p: UserPaths, endpoints: Record<string, ImageEndpointDef>): void {
+  writeImagesKey(p, "endpoints", endpoints);
+}
+
+/** One model on the user's shortlist (Settings > Images): its "provider/id",
+ *  a name of their own and what it is for, which Molfar reads to pick. The
+ *  first is the default for callers that name no model. */
+export interface ImageFavorite {
+  ref: string;
+  name?: string;
+  use?: string;
+}
+
+const MAX_FAVORITES = 30;
+const REF = /^[^/\s]+\/\S+$/;
+
+export function readImageFavorites(p: UserPaths): ImageFavorite[] {
+  const v = validateImageFavorites(readImagesFile(p).favorites);
+  return v.ok ? v.value : [];
+}
+
+export function validateImageFavorites(raw: unknown): { ok: true; value: ImageFavorite[] } | { ok: false; error: string } {
+  if (raw === undefined || raw === null) return { ok: true, value: [] };
+  if (!Array.isArray(raw)) return { ok: false, error: "favorites must be a list" };
+  if (raw.length > MAX_FAVORITES) return { ok: false, error: `at most ${MAX_FAVORITES} favorites` };
+  const out: ImageFavorite[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    const f = item as { ref?: unknown; name?: unknown; use?: unknown } | null;
+    if (!f || typeof f !== "object" || typeof f.ref !== "string" || f.ref.length > 300 || !REF.test(f.ref)) return { ok: false, error: "each favorite needs a provider/id ref" };
+    if (f.name !== undefined && (typeof f.name !== "string" || f.name.length > 60)) return { ok: false, error: "a favorite's name is text up to 60 characters" };
+    if (f.use !== undefined && (typeof f.use !== "string" || f.use.length > 120)) return { ok: false, error: "a favorite's use is text up to 120 characters" };
+    if (seen.has(f.ref)) continue;
+    seen.add(f.ref);
+    const name = typeof f.name === "string" ? f.name.trim() : "";
+    const use = typeof f.use === "string" ? f.use.trim() : "";
+    out.push({ ref: f.ref, ...(name ? { name } : {}), ...(use ? { use } : {}) });
+  }
+  return { ok: true, value: out };
+}
+
+export function writeImageFavorites(p: UserPaths, favorites: ImageFavorite[]): void {
+  writeImagesKey(p, "favorites", favorites.length ? favorites : undefined);
 }
 
 const authTarget = (id: string) => `images/${id}`;

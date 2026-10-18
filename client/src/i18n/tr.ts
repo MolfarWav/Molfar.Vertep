@@ -788,6 +788,16 @@ const dict = {
   "Your own workflow (optional)": "Kendi workflow'unuz (isteğe bağlı)",
   "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. Empty: a simple text-to-image workflow.": "Save (API Format) ile kaydedilmiş bir workflow yapıştırın. Neyin nereye gideceğini işaretleyin: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. Boş: basit bir metinden görsele workflow.",
   "Save server": "Sunucuyu kaydet",
+  "{ref} (not available)": "{ref} (kullanılamıyor)",
+  "Star = add to your image models": "Yıldız = görsel modellerinize ekle",
+  "Remove from your image models": "Görsel modellerinizden çıkar",
+  "Add to your image models": "Görsel modellerinize ekle",
+  "No matches.": "Eşleşme yok.",
+  "Your image models": "Görsel modelleriniz",
+  "Molfar picks from these by what each is for; the first is the default. Roleplay lists them first in its own picker.": "Molfar bunlardan her modelin amacına göre seçer; ilki varsayılandır. Roleplay da bunları kendi seçicisinde en üstte gösterir.",
+  "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "Henüz yok. Aşağıdaki modelleri yıldızlayın; liste yoksa Molfar önce yerel sunucuyu, yoksa ilk modeli kullanır.",
+  "Used for": "Kullanım amacı",
+  "e.g. backgrounds, cheap": "örn. arka planlar, ucuz",
 }
 
 export default dict

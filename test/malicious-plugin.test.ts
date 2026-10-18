@@ -245,6 +245,10 @@ describe("exfiltration ways out of an app page", () => {
     for (const method of ["POST", "PATCH", "DELETE"]) {
       expect(host.allowedRequest("roleplay", method, "/v1/audio/speech/endpoints/x"), method).toBe(false);
     }
+    // the image shortlist is the user's call: no app, shipped or not, may change it
+    for (const trusted of [false, true]) {
+      expect(host.allowedRequest("roleplay", "PUT", "/v1/images/favorites", trusted), String(trusted)).toBe(false);
+    }
     // image endpoints carry LAN addresses: not even the listing
     for (const method of ["GET", "POST", "PATCH", "DELETE"]) {
       expect(host.allowedRequest("roleplay", method, "/v1/images/endpoints"), method).toBe(false);

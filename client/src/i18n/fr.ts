@@ -788,6 +788,16 @@ const dict = {
   "Your own workflow (optional)": "Votre propre workflow (facultatif)",
   "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. Empty: a simple text-to-image workflow.": "Collez un workflow enregistré avec Save (API Format). Indiquez où va chaque élément : %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. Vide : un workflow simple texte-vers-image.",
   "Save server": "Enregistrer le serveur",
+  "{ref} (not available)": "{ref} (indisponible)",
+  "Star = add to your image models": "Étoile = ajouter à vos modèles d'image",
+  "Remove from your image models": "Retirer de vos modèles d'image",
+  "Add to your image models": "Ajouter à vos modèles d'image",
+  "No matches.": "Aucun résultat.",
+  "Your image models": "Vos modèles d'image",
+  "Molfar picks from these by what each is for; the first is the default. Roleplay lists them first in its own picker.": "Molfar choisit parmi ceux-ci selon l'usage de chacun ; le premier est celui par défaut. Roleplay les place en tête de son propre sélecteur.",
+  "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "Aucun pour l'instant. Étoilez des modèles ci-dessous ; sans liste, Molfar prend d'abord un serveur local, sinon le premier modèle.",
+  "Used for": "Usage",
+  "e.g. backgrounds, cheap": "p. ex. arrière-plans, économique",
 }
 
 export default dict

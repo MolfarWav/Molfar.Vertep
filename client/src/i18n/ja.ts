@@ -788,6 +788,16 @@ const dict = {
   "Your own workflow (optional)": "独自のワークフロー（任意）",
   "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. Empty: a simple text-to-image workflow.": "Save (API Format) で保存したワークフローを貼り付けてください。各要素の位置を指定します：%prompt%、%negative_prompt%、%model%、%width%、%height%、%seed%、%steps%、%cfg%。空の場合：シンプルなテキストから画像へのワークフロー。",
   "Save server": "サーバーを保存",
+  "{ref} (not available)": "{ref}（利用不可）",
+  "Star = add to your image models": "★ = 画像モデルに追加",
+  "Remove from your image models": "画像モデルから外す",
+  "Add to your image models": "画像モデルに追加",
+  "No matches.": "該当なし。",
+  "Your image models": "画像モデル",
+  "Molfar picks from these by what each is for; the first is the default. Roleplay lists them first in its own picker.": "Molfar は用途に応じてこの中から選びます。先頭が既定です。Roleplay も自分の選択欄でこれらを先頭に表示します。",
+  "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "まだありません。下のモデルに★を付けてください。一覧が空のときは、ローカルサーバー、なければ先頭のモデルを使います。",
+  "Used for": "用途",
+  "e.g. backgrounds, cheap": "例: 背景、低コスト",
 }
 
 export default dict

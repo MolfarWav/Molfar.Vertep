@@ -20,7 +20,7 @@ import { inspectAssistantMessage, inspectRequest, inspectResult, type InspectorE
 import { type PromptSources, systemPartsFor } from "./prompt-sources.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
-import { ImageError, endpointGenerate, imageEndpoint, listEndpointModels, listImageEndpoints, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, type ListedImageModel } from "./images.js";
+import { ImageError, endpointGenerate, imageEndpoint, listEndpointModels, listImageEndpoints, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, readImageFavorites, type ImageFavorite, type ListedImageModel } from "./images.js";
 import { blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
 
 /** File-backed CredentialStore over the user's auth.json (outside git). */
@@ -83,6 +83,19 @@ export interface ImageModelInfo {
   label: string;
   api: string;
   connectionName: string | null;
+}
+
+/** Image servers on the user's own machine or LAN: drawing there costs nothing. */
+export const LOCAL_IMAGE_APIS: ReadonlySet<string> = new Set(["comfyui", "a1111"]);
+
+/** The model a call without one draws with: the first of the user's favorites
+ *  that is listed, else the first local server's (free), else the first listed. */
+export function defaultImageModel(list: readonly ImageModelInfo[], favorites: readonly ImageFavorite[]): ImageModelInfo | undefined {
+  for (const f of favorites) {
+    const hit = list.find((m) => `${m.provider}/${m.id}` === f.ref);
+    if (hit) return hit;
+  }
+  return list.find((m) => LOCAL_IMAGE_APIS.has(m.api)) ?? list[0];
 }
 
 /** Embeddings through OpenRouter: the endpoint is fixed in code, the key is the
@@ -1605,6 +1618,11 @@ export class UserModelService {
   // ---------- image generation (pi-ai images API; creds never leave) ----------
   private imageModelList: ImageModelInfo[] | null = null;
 
+  /** The user's shortlist from Settings > Images; the first is the default. */
+  imageFavorites(): ImageFavorite[] {
+    return readImageFavorites(this.paths);
+  }
+
   /** Image-capable models on providers the user has credentials for. */
   async imageModels(): Promise<ImageModelInfo[]> {
     const out: ImageModelInfo[] = [];
@@ -1697,7 +1715,7 @@ export class UserModelService {
   /** Generate one image from a prompt. Returns the encoded image bytes. */
   async generateImage(req: { prompt: string; model?: string | null }): Promise<{ data: Buffer; mimeType: string; model: string }> {
     const find = (list: ImageModelInfo[]) =>
-      req.model ? list.find((m) => `${m.provider}/${m.id}` === req.model || m.id === req.model) : list[0];
+      req.model ? list.find((m) => `${m.provider}/${m.id}` === req.model || m.id === req.model) : defaultImageModel(list, readImageFavorites(this.paths));
     let models = this.imageModelList ?? (await this.imageModels());
     let pick = find(models);
     // the cached list may predate a change in Settings or a server coming up

@@ -14,7 +14,12 @@ import {
   nanoGptGenerate, nanoGptImageModels, providerError, setComfyPollMs, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
   type ImageEndpointDef,
 } from "../src/images.js";
-import { UserModelService } from "../src/models.js";
+import { UserModelService, defaultImageModel, type ImageModelInfo } from "../src/models.js";
+import { deleteImageEndpoint, readImageFavorites, validateImageFavorites, writeImageFavorites } from "../src/images.js";
+import { buildApp } from "../src/server/app.js";
+import { EventBus } from "../src/server/ws.js";
+import { SessionService } from "../src/sessions.js";
+import { UserService } from "../src/users.js";
 import { defaultInstanceConfig } from "../src/config.js";
 import { bootstrapUserDir } from "../src/paths.js";
 
@@ -304,5 +309,84 @@ describe("review follow-ups", () => {
   it("a refused history poll fails at once with its status", async () => {
     reset({ "POST /prompt": () => json({ prompt_id: "r1" }), "GET /history/r1": () => json({ error: "no" }, 403) });
     expect((await rejects(endpointGenerate({ name: "Comfy", kind: "comfyui", baseUrl: base }, "k", "m", "x"))).status).toBe(401);
+  });
+});
+
+describe("image favorites", () => {
+  const row = (provider: string, id: string, api: string): ImageModelInfo => ({ provider, id, label: id, api, connectionName: provider }) as ImageModelInfo;
+  const paid = row("or", "flux", "openrouter-images");
+  const paid2 = row("nano", "klein", "nanogpt-images");
+  const comfy = row("c1", "sdxl", "comfyui");
+  const forge = row("f1", "wai", "a1111");
+
+  it("defaultImageModel: first listed favorite, else the first local server, else the first", () => {
+    expect(defaultImageModel([paid, paid2, comfy], [{ ref: "gone/x" }, { ref: "nano/klein" }, { ref: "or/flux" }])).toBe(paid2);
+    expect(defaultImageModel([paid, forge, comfy], [])).toBe(forge);
+    expect(defaultImageModel([paid, comfy], [{ ref: "gone/model" }])).toBe(comfy);
+    expect(defaultImageModel([paid, paid2], [])).toBe(paid);
+    expect(defaultImageModel([], [{ ref: "or/flux" }])).toBeUndefined();
+  });
+
+  it("validateImageFavorites cleans and refuses", () => {
+    expect(validateImageFavorites(null)).toEqual({ ok: true, value: [] });
+    expect(validateImageFavorites(undefined)).toEqual({ ok: true, value: [] });
+    expect(validateImageFavorites([{ ref: "a/b", name: "  Pretty ", use: "  " }, { ref: "a/b", name: "dup" }, { ref: "c/d/e" }])).toEqual({
+      ok: true,
+      value: [{ ref: "a/b", name: "Pretty" }, { ref: "c/d/e" }],
+    });
+    for (const bad of ["x", {}, [{}], [{ ref: "nope" }], [{ ref: 5 }], [{ ref: "a b/c" }], [{ ref: "a/" + "b".repeat(300) }], [{ ref: "a/b", name: "n".repeat(61) }], [{ ref: "a/b", use: "u".repeat(121) }], Array.from({ length: 31 }, (_, i) => ({ ref: `p/m${i}` }))]) {
+      expect(validateImageFavorites(bad).ok, JSON.stringify(bad).slice(0, 40)).toBe(false);
+    }
+    expect(validateImageFavorites(Array.from({ length: 30 }, (_, i) => ({ ref: `p/m${i}` }))).ok).toBe(true);
+  });
+
+  it("the favorites and the endpoints share images.json without erasing each other", () => {
+    const p = bootstrapUserDir(dataDir, "favs");
+    expect(readImageFavorites(p)).toEqual([]);
+    writeImageFavorites(p, [{ ref: "or/flux", use: "cheap" }]);
+    const v = validateImageEndpointInput({ name: "Comfy", kind: "comfyui", baseUrl: base });
+    if (!v.ok) throw new Error(v.error);
+    const ep = createImageEndpoint(p, v.value);
+    expect(readImageFavorites(p)).toEqual([{ ref: "or/flux", use: "cheap" }]);
+    updateImageEndpoint(p, ep.id, { name: "Comfy 2" });
+    deleteImageEndpoint(p, ep.id);
+    expect(readImageFavorites(p)).toEqual([{ ref: "or/flux", use: "cheap" }]);
+    expect(listImageEndpoints(p)).toEqual([]);
+    const ep2 = createImageEndpoint(p, v.value);
+    writeImageFavorites(p, []);
+    expect(readImageFavorites(p)).toEqual([]);
+    expect(listImageEndpoints(p).map((e) => e.id)).toEqual([ep2.id]);
+    expect(JSON.parse(fs.readFileSync(p.images, "utf8"))).not.toHaveProperty("favorites");
+  });
+
+  it("a broken images.json reads as no favorites", () => {
+    const p = bootstrapUserDir(dataDir, "favs-bad");
+    fs.mkdirSync(path.dirname(p.images), { recursive: true });
+    fs.writeFileSync(p.images, "{nope");
+    expect(readImageFavorites(p)).toEqual([]);
+  });
+
+  it("HTTP: PUT /v1/images/favorites stores a cleaned list, GET /v1/images/models returns it", async () => {
+    const dir = fs.mkdtempSync(path.join(dataDir, "http-"));
+    const users = new UserService(dir);
+    users.create("admin", "admin", { password: "admin-pass-1" });
+    const token = users.create("root", "admin", { password: "test-pass-1" }).token;
+    const app = buildApp({ users, sessions: new SessionService(dir), config: defaultInstanceConfig(), dataDir: dir, bus: new EventBus() });
+    const h = { authorization: `Bearer ${token}`, "content-type": "application/json" };
+    const put = (body: unknown) => app.request("/v1/images/favorites", { method: "PUT", headers: h, body: JSON.stringify(body) });
+    const get = async () => (await (await app.request("/v1/images/models", { headers: h })).json()) as { models: unknown[]; favorites: unknown[] };
+
+    expect((await get()).favorites).toEqual([]);
+    const ok = await put({ favorites: [{ ref: "comfy_1/sdxl.safetensors", name: " SDXL ", use: "portraits" }, { ref: "comfy_1/sdxl.safetensors" }] });
+    expect(ok.status).toBe(200);
+    const want = [{ ref: "comfy_1/sdxl.safetensors", name: "SDXL", use: "portraits" }];
+    expect(await ok.json()).toEqual({ favorites: want });
+    expect((await get()).favorites).toEqual(want);
+    expect((await put({ favorites: [] })).status).toBe(200);
+    expect((await get()).favorites).toEqual([]);
+    for (const bad of [{}, { favorites: "nope" }, { favorites: [{ ref: "nope" }] }, { favorites: [{ ref: "a/b", name: "n".repeat(61) }] }]) {
+      expect((await put(bad)).status, JSON.stringify(bad)).toBe(400);
+    }
+    expect((await app.request("/v1/images/favorites", { method: "PUT", headers: h, body: "{not json" })).status).toBe(400);
   });
 });

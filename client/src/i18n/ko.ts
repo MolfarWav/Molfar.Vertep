@@ -788,6 +788,16 @@ const dict = {
   "Your own workflow (optional)": "사용자 워크플로(선택 사항)",
   "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. Empty: a simple text-to-image workflow.": "Save (API Format)로 저장한 워크플로를 붙여넣으세요. 각 요소의 위치를 표시하세요: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. 비어 있으면 간단한 텍스트-이미지 워크플로가 사용됩니다.",
   "Save server": "서버 저장",
+  "{ref} (not available)": "{ref} (사용할 수 없음)",
+  "Star = add to your image models": "별 = 내 이미지 모델에 추가",
+  "Remove from your image models": "내 이미지 모델에서 제거",
+  "Add to your image models": "내 이미지 모델에 추가",
+  "No matches.": "일치하는 항목이 없습니다.",
+  "Your image models": "내 이미지 모델",
+  "Molfar picks from these by what each is for; the first is the default. Roleplay lists them first in its own picker.": "Molfar는 각 모델의 용도에 따라 이 중에서 고릅니다. 첫 번째가 기본값입니다. Roleplay도 자체 선택기에서 이 모델들을 먼저 보여 줍니다.",
+  "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "아직 없습니다. 아래 모델에 별표를 붙이세요. 목록이 없으면 Molfar는 로컬 서버를 먼저, 없으면 첫 번째 모델을 씁니다.",
+  "Used for": "용도",
+  "e.g. backgrounds, cheap": "예: 배경, 저렴함",
 }
 
 export default dict

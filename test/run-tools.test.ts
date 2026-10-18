@@ -220,12 +220,13 @@ describe("image_generate", () => {
   const local: Row = { provider: "comfy", id: "sdxl", label: "SDXL local", api: "comfyui", connectionName: "My ComfyUI" };
   const paid: Row = { provider: "openrouter", id: "flux", label: "Flux", api: "openrouter-images", connectionName: "OR key" };
   const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from("abcd")]);
-  const setup = (rows: Row[], answer?: string, throwMsg?: string) => {
+  const setup = (rows: Row[], answer?: string, throwMsg?: string, favs: { ref: string; name?: string; use?: string }[] = []) => {
     const gen: { prompt: string; model: string }[] = [];
     const stored: { name: string; mime: string }[] = [];
     const asked: AskRequest[] = [];
     const images = {
       list: async () => rows as never,
+      favorites: () => favs,
       generate: async (req: { prompt: string; model: string }) => {
         gen.push(req);
         if (throwMsg) throw new Error(throwMsg);
@@ -272,6 +273,39 @@ describe("image_generate", () => {
     await run(d.t, { prompt: "x" });
     expect(d.stored[0]!.name).toMatch(/\.png$/);
     expect(d.stored[0]!.name).toBe("image.png");
+  });
+
+  it("lists only the user's list, in their order, with names and uses, when they made one", async () => {
+    const other: Row = { provider: "nano", id: "kl", label: "Klein", api: "nanogpt-images", connectionName: "Nano" };
+    const favs = [{ ref: "openrouter/flux", name: "Pretty", use: "backgrounds" }, { ref: "comfy/sdxl" }, { ref: "gone/x" }];
+    const { t, gen, asked } = setup([local, paid, other], "Draw", undefined, favs);
+    const text = out(await run(t, { list: true }));
+    expect(text.indexOf("openrouter/flux: Pretty, for: backgrounds")).toBeGreaterThan(-1);
+    expect(text.indexOf("openrouter/flux")).toBeLessThan(text.indexOf("comfy/sdxl"));
+    expect(text).not.toContain("nano/kl");
+    expect(text).toContain("(1 on their list not available now)");
+    expect(text).toContain("1 other model(s)");
+    expect(out(await run(t, { list: true, all: true }))).toContain("nano/kl");
+    await run(t, { prompt: "a castle" }); // no model: the first favorite
+    expect(gen).toEqual([{ prompt: "a castle", model: "openrouter/flux" }]);
+    expect(asked.length).toBe(1); // paid: asked
+  });
+
+  it("without a list: everything, a local model first and no ask card, and a hint", async () => {
+    const { t, gen, asked } = setup([paid, local], "Skip");
+    const text = out(await run(t, { list: true }));
+    expect(text.indexOf("comfy/sdxl")).toBeLessThan(text.indexOf("openrouter/flux"));
+    expect(text).toContain("has not made a list");
+    const r = await run(t, { prompt: "a castle" });
+    expect(gen).toEqual([{ prompt: "a castle", model: "comfy/sdxl" }]);
+    expect(asked.length).toBe(0);
+    expect((r as { details?: { drawn?: boolean } }).details?.drawn).toBe(true);
+  });
+
+  it("falls back when no favorite is listed", async () => {
+    const { t, gen } = setup([paid, local], "Skip", undefined, [{ ref: "gone/model" }]);
+    await run(t, { prompt: "x" });
+    expect(gen[0]!.model).toBe("comfy/sdxl");
   });
 
   it("asks before a paid picture and draws once on Draw", async () => {
@@ -322,7 +356,7 @@ describe("image_generate", () => {
   });
 
   it("is absent in plan mode and without images", () => {
-    const images = { list: async () => [] as never, generate: async () => ({ data: png, mimeType: "image/png", model: "m" }), store: () => "/v1/assets/x" };
+    const images = { list: async () => [] as never, favorites: () => [], generate: async () => ({ data: png, mimeType: "image/png", model: "m" }), store: () => "/v1/assets/x" };
     expect(buildRunTools("mia", { images }).some((t) => t.name === "image_generate")).toBe(true);
     expect(buildRunTools("mia", { images, mode: "plan" }).some((t) => t.name === "image_generate")).toBe(false);
     expect(buildRunTools("mia", {}).some((t) => t.name === "image_generate")).toBe(false);
@@ -330,7 +364,7 @@ describe("image_generate", () => {
 
   it("belongs to the image group, hidden in small mode until unlocked", () => {
     expect(groupOf("image_generate")).toBe("image");
-    const images = { list: async () => [] as never, generate: async () => ({ data: png, mimeType: "image/png", model: "m" }), store: () => "/v1/assets/x" };
+    const images = { list: async () => [] as never, favorites: () => [], generate: async () => ({ data: png, mimeType: "image/png", model: "m" }), store: () => "/v1/assets/x" };
     const all = buildRunTools("mia", { images });
     const names = (u: ToolGroup[]) => visibleTools(all, true, new Set(u)).map((t) => t.name);
     expect(names([])).not.toContain("image_generate");

@@ -1,9 +1,27 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-17.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-18.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
+
+## 1.2.1: PREPARED 2026-10-18 (branch `claude/project-thread-5x5u55` in the engine and in the Roleplay fork; the tag and main are the user's word)
+#54 Molfar draws: agent tool `image_generate` (`src/agent/run-tools.ts`; lists the user's image models, draws through
+`Models.generateImage`, keeps the picture in the asset store, returns `/v1/assets/<id>`; paid models ask per picture,
+`comfyui`/`a1111` draw without asking; not in plan mode; group `image` in small-window mode; one prompt rule, ~85 tokens).
+Asked by the user the same day: Settings > Images "Your image models", a shortlist (`images.json` `favorites`:
+`{ref, name?, use?}`, max 30) starred from a searchable list per connection/server; the first is the default for a call
+without a model (else a local server, else the first listed); Molfar sees only the list and picks by `use`;
+`GET /v1/images/models` returns `favorites`, `PUT /v1/images/favorites` is shell-only. Card skill `edit-large-card`
+(both copies) says where a picture's URL goes (avatar + studio.avatar, studio.gallery, library.json backgrounds).
+Workspace override copies: `.fork/handoff/v121/workspace-agent-task.md`.
+#53 Roleplay 4.50.0: Prompt style (Auto / Description / Danbooru tags) in Tools > Image Generation; `ui.imageGen.promptStyle`
+and `modelApi` (the picked model's api, written by the app) in settings.json; tags rules in the `image-prompt` route and the
+generate_image tool wording at send time; the picker lists the engine's favorites first; What's new tip.
+Checks: engine typecheck, build:client pass; tests 835 pass + 3 that fail on main in the cloud container too (edge TTS
+403, hostile-plugin dir size); Roleplay 1066 pass. Browser-checked by subagents (shots `/mnt/project-files/images-121/`):
+local and paid draws, Draw/Skip card at 390 px, the picture renders in Molfar's chat, the Roleplay tab, Settings > Images.
+Notes `.fork/release-notes/1.2.1.md`. Asked, not decided: a Gemini API image backend (Google Flow itself has no API).
 
 ## 1.2.0: RELEASED 2026-10-17 on the user's word (main fast-forwarded to the release commit, tag v1.2.0; Roleplay 4.49.0 on the fork's main, merged from `claude/slim-start` + `claude/attention`). Engine = main 1.1.1 + `claude/slim-start-engine` + `claude/image-providers-c9b607` (only conflict: this file). Notes `.fork/release-notes/1.2.0.md`. Not in it: the site branch `claude/hopeful-mccarthy-39ropd`. Checks: typecheck, build:client pass; tests 809 pass, the 15 known Windows-only failures plus 4 load flakes that pass alone; Roleplay 1060 pass, typecheck clean.
 

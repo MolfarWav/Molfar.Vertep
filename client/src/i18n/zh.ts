@@ -788,6 +788,16 @@ const dict = {
   "Your own workflow (optional)": "你自己的 workflow（可选）",
   "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%. Empty: a simple text-to-image workflow.": "粘贴用 Save (API Format) 保存的 workflow。标出各内容的位置：%prompt%、%negative_prompt%、%model%、%width%、%height%、%seed%、%steps%、%cfg%。留空则使用简单的文生图 workflow。",
   "Save server": "保存服务器",
+  "{ref} (not available)": "{ref}（不可用）",
+  "Star = add to your image models": "星标 = 加入你的图像模型",
+  "Remove from your image models": "从你的图像模型中移除",
+  "Add to your image models": "加入你的图像模型",
+  "No matches.": "没有匹配项。",
+  "Your image models": "你的图像模型",
+  "Molfar picks from these by what each is for; the first is the default. Roleplay lists them first in its own picker.": "Molfar 会按各模型的用途从中挑选；第一个为默认。Roleplay 也会在自己的选择器中把它们排在前面。",
+  "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "暂无。请在下方给模型加星标；没有列表时，Molfar 先用本地服务器，否则用第一个模型。",
+  "Used for": "用途",
+  "e.g. backgrounds, cheap": "例如：背景、便宜",
 }
 
 export default dict

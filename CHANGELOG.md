@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.1 (2026-10-18)
+
+- Molfar draws pictures (#54): a new agent tool, `image_generate`, lists the user's image models (the same list as `GET /v1/images/models`), draws one picture through the same backends as `POST /v1/images`, keeps it in the asset store and returns `/v1/assets/<id>`, which Molfar writes into a card's avatar, a gallery or a background. A paid model asks the user before each picture; ComfyUI and AUTOMATIC1111/Forge draw without asking. Not offered in plan mode; its own `image` group in small-window mode. The Roleplay card skill (`edit-large-card`) says where the URL goes.
+- Settings > Images: your own list of image models (`images.json` `favorites`: ref, name, what it is for), starred from a searchable model list under each connection and server. The first is the default for a call that names no model (before: the first listed); without a list a local ComfyUI/Forge model comes first. Molfar picks from the list by each model's use; `GET /v1/images/models` returns it for apps; `PUT /v1/images/favorites` is shell-only.
+- Roleplay 4.50.0 (#53): a Prompt style setting for image generation, Danbooru tags for tag-trained checkpoints on ComfyUI and Forge; the image model picker lists the user's image models first.
+
 ## 1.2.0 (2026-10-17)
 
 - Image generation beyond OpenRouter (`src/images.ts`): NanoGPT (the existing NanoGPT key, its public image catalog with prices) and your own image servers in a new Settings > Images tab: a local ComfyUI (a built-in text-to-image workflow or your own API-format workflow with placeholders), AUTOMATIC1111/Forge, or any OpenAI-compatible `/images/generations`. Their models join `GET /v1/images/models`, so apps such as Roleplay offer them unchanged. Keys live in `auth.json` bound to the server's address; servers may be on this computer or the LAN, never link-local; redirects are not followed; failures come back in plain words with a fitting status instead of a raw 500.

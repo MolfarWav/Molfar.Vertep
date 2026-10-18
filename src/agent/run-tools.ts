@@ -7,7 +7,8 @@
  */
 import { Type } from "typebox";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
-import type { GenerateRequest, GenerateResult, ImageModelInfo } from "../models.js";
+import type { ImageFavorite } from "../images.js";
+import { LOCAL_IMAGE_APIS, defaultImageModel, type GenerateRequest, type GenerateResult, type ImageModelInfo } from "../models.js";
 import { assertInternetHost } from "../net-guard.js";
 import { readPluginLog } from "../plugins/plugin-log.js";
 import { estimateTextTokens } from "./context-budget.js";
@@ -34,6 +35,8 @@ export interface RunToolOptions {
   /** image_generate: the user's image models (GET /v1/images/models), one drawing, and the asset store. */
   images?: {
     list: () => Promise<ImageModelInfo[]>;
+    /** The user's shortlist from Settings > Images; the first is the default. */
+    favorites: () => ImageFavorite[];
     generate: (req: { prompt: string; model: string }) => Promise<{ data: Buffer; mimeType: string; model: string }>;
     /** Keep the bytes; returns the served URL, /v1/assets/<id>. */
     store: (data: Buffer, mimeType: string, name: string) => string;
@@ -233,8 +236,6 @@ function modelTryTool(m: NonNullable<RunToolOptions["tryModel"]>, ask: RunToolOp
 
 // ---------- image_generate ----------
 
-/** Image servers on the user's own machine or LAN: drawing there costs nothing. */
-const LOCAL_IMAGE_APIS = new Set(["comfyui", "a1111"]);
 const IMAGE_LIST_MAX = 60;
 
 const imageRef = (m: ImageModelInfo): string => `${m.provider}/${m.id}`;
@@ -244,27 +245,44 @@ function imageGenerateTool(im: NonNullable<RunToolOptions["images"]>, ask: RunTo
     name: "image_generate",
     label: "Draw a picture",
     description:
-      "Draw one picture (an avatar, a background, a gallery image) with the user's image models and keep it in the asset store. Returns its URL, /v1/assets/<id>: write that URL into a card's avatar, a background or a gallery item. list: true lists the models first (ref, name, where it runs). prompt: a full visual description in English (names mean nothing to the artist); for tag-trained models (ComfyUI, Forge) comma-separated Danbooru tags; things to leave out go at the end as (Avoid: ...). model: a ref from the list, default the first. Paid models: the user confirms each picture; local servers draw without asking.",
+      "Draw one picture (an avatar, a background, a gallery image) with the user's image models and keep it in the asset store. Returns its URL, /v1/assets/<id>: write that URL into a card's avatar, a background or a gallery item. list: true shows the user's image models with what each is for; pick the model whose use fits the picture (a background, a character) and pass its ref as model; without model the first is used. prompt: a full visual description in English (names mean nothing to the artist); for models marked tags (ComfyUI, Forge) comma-separated Danbooru tags; things to leave out go at the end as (Avoid: ...). Paid models: the user confirms each picture; local servers draw without asking.",
     parameters: Type.Object({
       prompt: Type.Optional(Type.String({ description: "What to draw" })),
       model: Type.Optional(Type.String({ description: "provider/id from list" })),
       list: Type.Optional(Type.Boolean({ description: "List the image models instead of drawing" })),
+      all: Type.Optional(Type.Boolean({ description: "With list: every available model, not only the user's list" })),
       name: Type.Optional(Type.String({ description: "File name to keep it under, e.g. jude-avatar" })),
     }),
     async execute(_id, params) {
-      const p = params as { prompt?: string; model?: string; list?: boolean; name?: string };
-      const models = await im.list();
-      if (!models.length) {
+      const p = params as { prompt?: string; model?: string; list?: boolean; all?: boolean; name?: string };
+      const listed = await im.list();
+      if (!listed.length) {
         return textResult("The user has no image model. They add one in Settings: an OpenRouter or NanoGPT connection, or an image server such as ComfyUI or Forge (Settings > Images).", { drawn: false });
       }
+      // the user's list, in their order, then the rest; the default goes first
+      const favs = im.favorites();
+      const byRef = new Map(listed.map((m) => [imageRef(m), m]));
+      const mine = favs.flatMap((f) => (byRef.has(f.ref) ? [{ m: byRef.get(f.ref) as ImageModelInfo, f }] : []));
+      const first = defaultImageModel(listed, favs) as ImageModelInfo;
+      const models = [first, ...listed.filter((m) => m !== first)];
+      const line = (m: ImageModelInfo, f?: ImageFavorite) =>
+        `- ${imageRef(m)}: ${f?.name || m.label}${f?.use ? `, for: ${f.use}` : ""} (${m.connectionName ?? m.provider}${LOCAL_IMAGE_APIS.has(m.api) ? ", local, free, write tags" : ""})`;
       const prompt = typeof p.prompt === "string" ? p.prompt.trim() : "";
       if (p.list === true || !prompt) {
-        const lines = models.slice(0, IMAGE_LIST_MAX).map((m) => `- ${imageRef(m)}: ${m.label} (${m.connectionName ?? m.provider}${LOCAL_IMAGE_APIS.has(m.api) ? ", local, free, write tags" : ""})`);
+        const tail = prompt ? "" : "\n\nCall again with prompt to draw.";
+        if (mine.length && p.all !== true) {
+          const missing = favs.length - mine.length;
+          return textResult(
+            `The user's image models, default first:\n${mine.map((x) => line(x.m, x.f)).join("\n")}${missing ? `\n(${missing} on their list not available now)` : ""}\n${listed.length - mine.length} other model(s): list with all: true only if the user asks for one of them.${tail}`,
+            { drawn: false, count: mine.length },
+          );
+        }
         const more = models.length > IMAGE_LIST_MAX ? `\n… ${models.length - IMAGE_LIST_MAX} more` : "";
-        return textResult(`${models.length} image model(s), default first:\n${lines.join("\n")}${more}${prompt ? "" : "\n\nCall again with prompt to draw."}`, { drawn: false, count: models.length });
+        const hint = mine.length ? "" : "\nThe user has not made a list (Settings > Images); if they want a different model each time, suggest it.";
+        return textResult(`${models.length} image model(s), default first:\n${models.slice(0, IMAGE_LIST_MAX).map((m) => line(m)).join("\n")}${more}${hint}${tail}`, { drawn: false, count: models.length });
       }
       const ref = typeof p.model === "string" ? p.model.trim() : "";
-      const pick = ref ? models.find((m) => imageRef(m) === ref || m.id === ref) : models[0]!;
+      const pick = ref ? models.find((m) => imageRef(m) === ref || m.id === ref) : first;
       if (!pick) return textResult(`No image model ${ref}. Call with list: true and pick a ref from it.`, { drawn: false });
       const where = `${pick.label} (${pick.connectionName ?? pick.provider})`;
       if (!LOCAL_IMAGE_APIS.has(pick.api)) {
