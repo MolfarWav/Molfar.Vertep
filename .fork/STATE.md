@@ -23,7 +23,21 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
 - ComfyUI (user, 2026-10-18): a workflow from Export (API) is adapted on save (`adaptComfyWorkflow` in images.ts):
   %prompt%, %negative_prompt%, %seed% on every sampler, %width%/%height% on the first pass's empty latent, %model% on
   checkpoint loaders; steps/CFG/sampler stay. The editor format is refused with how to export the API one.
-- Clickable workspace file links in Molfar's replies: in progress (subagent).
+- ComfyUI import (user, 2026-10-18): Settings > Images "Import workflow file…" and "Take the settings from this
+  workflow" (`POST /v1/images/workflow/adapt`, shell-only; `adaptComfyWorkflow(…, {all:true})`) also take steps,
+  CFG, sampler, scheduler, denoise, clip skip and up to five LoRAs into the form and put placeholders in their place.
+- OAuth "invalid_grant" on Claude 5.5 checks (user, 2026-10-18): inferred cause, not verified on a real token:
+  refreshes ran in parallel, and `modify` returning undefined deleted the sign-in. `FileCredentialStore` in models.ts
+  now queues per file, re-reads, keeps the entry on undefined, writes through tmp+rename; the error says to sign in
+  again (`explainModelError`). The user still has to sign in to Anthropic again once.
+- Clickable workspace files in Molfar's replies: `GET /v1/agent/file?path=&download=1` (shell-only; agentReadDenied,
+  .git, auth.json, realpath check, 20 MB; html/svg/js served as text/plain under a sandbox CSP); markdown links and
+  inline-code workspace paths open it, with a download icon; one Workflow rules line tells Molfar to link files.
+  Also a file the chat cannot use (PDF, zip) now gets a tile saying why.
+- Roleplay (fork branch `claude/release-1.2.3-63nytl`, CHANGELOG "Unreleased", manifest still 4.50.0):
+  the Dashboard counts every name the user wrote under in a chat as the player (a persona switch made the earlier
+  persona an NPC); the card Profile takes several characters (`molfar_profile.cast`, DATA-FORMATS, both card
+  skills, engine copy `.fork/app-skills/roleplay/edit-large-card`, workspace task `.fork/handoff/v123/`).
 
 ## 1.2.2: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.2). pi 1.2.0 + live model lists + #59 + desktop rollback
 Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1; main 1.2.1 merged into the branch 2026-10-18.
