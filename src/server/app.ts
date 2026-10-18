@@ -23,7 +23,7 @@ import { APP_API_VERSION, ENGINE_REPOSITORY, ENGINE_VERSION, resourcesDir } from
 import type { ServerSettings } from "./settings.js";
 import { latestRelease } from "../updates.js";
 import { SELF_UPDATE, startUpdate, updateState } from "../self-update.js";
-import { DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
+import { agentReadDenied, DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
 import * as git from "../git.js";
 import { UserModelService, ModelNotConfiguredError, type ModelPricing } from "../models.js";
 import { effectiveParams, ModelParamsError, readModelParams, writeModelParams } from "../model-params.js";
@@ -2363,6 +2363,55 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       if (e instanceof UploadError) return c.json({ error: e.message }, e.status);
       throw e;
     }
+  });
+  // A workspace file the chat names ("[x](projects/comfy/workflow.json)"),
+  // opened or downloaded from the agent page. Shell only (not in the app
+  // bridge). Refuses what the agent may not read, git internals, credentials,
+  // directories and big files. Anything a browser would run (html, svg, js)
+  // is served as plain text, so a file the agent wrote cannot script the page.
+  app.get("/v1/agent/file", (c) => {
+    const p = c.get("paths");
+    const rel = (c.req.query("path") ?? "").replace(/\\/g, "/").replace(/^\.?\//, "");
+    if (!rel || rel.includes("\0")) return c.json({ error: "path required" }, 400);
+    const segs = rel.split("/").map((s) => s.toLowerCase());
+    if (agentReadDenied(rel) || segs.includes(".git") || segs.includes("auth.json")) return c.json({ error: "that file is not available here" }, 403);
+    let abs: string;
+    try {
+      abs = safeResolve(p.root, rel);
+    } catch {
+      return c.json({ error: "path escapes the workspace" }, 400);
+    }
+    let st: fs.Stats;
+    try {
+      // the real path must stay inside the workspace too (a link out is refused)
+      const root = fs.realpathSync(p.root);
+      const real = fs.realpathSync(abs);
+      if (real !== root && !real.startsWith(root + path.sep)) return c.json({ error: "path escapes the workspace" }, 400);
+      st = fs.statSync(real);
+    } catch {
+      return c.json({ error: "file not found" }, 404);
+    }
+    if (!st.isFile()) return c.json({ error: "not a file" }, 400);
+    if (st.size > 20 * 1024 * 1024) return c.json({ error: "file is over 20 MB" }, 413);
+    const name = path.basename(abs);
+    const ext = path.extname(name).slice(1).toLowerCase();
+    const FILE_MIME: Record<string, string> = {
+      png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp",
+      json: "application/json; charset=utf-8", pdf: "application/pdf", csv: "text/csv; charset=utf-8",
+      mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg",
+    };
+    const binary = /^(zip|gz|tar|7z|exe|bin|docx|odt|xlsx|safetensors|ckpt)$/.test(ext);
+    const mime = FILE_MIME[ext] ?? (binary ? "application/octet-stream" : "text/plain; charset=utf-8");
+    const disposition = c.req.query("download") === "1" ? "attachment" : "inline";
+    return new Response(new Uint8Array(fs.readFileSync(abs)), {
+      headers: {
+        "content-type": mime,
+        "content-disposition": `${disposition}; filename*=UTF-8''${encodeURIComponent(name).replace(/['()]/g, escape)}`,
+        "x-content-type-options": "nosniff",
+        "content-security-policy": "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'",
+        "cache-control": "no-store",
+      },
+    });
   });
   // characters, lorebooks and presets by display name, for the same "@" picker
   app.get("/v1/agent/mentions", (c) => {

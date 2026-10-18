@@ -13,11 +13,14 @@ import {
 import { SyntaxHighlighter } from "@/components/assistant-ui/elements/syntax-highlighter";
 import { type FC, memo, useMemo, useRef } from "react";
 import type { TextMessagePartProps } from "@assistant-ui/react";
-import { Check, Copy } from "@phosphor-icons/react";
+import { Check, Copy, DownloadSimple } from "@phosphor-icons/react";
 
 import { TooltipIconButton } from "@/components/assistant-ui/elements/tooltip-icon-button";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
+import { linkedWorkspacePath, rehypeWorkspacePaths, workspaceFileUrl } from "@/lib/workspace-file";
+
+const WORKSPACE_REHYPE = [rehypeWorkspacePaths];
 
 type MarkdownTextProps = Partial<TextMessagePartProps> & {
   components?: Parameters<typeof memoizeMarkdownComponents>[0];
@@ -52,6 +55,8 @@ const MarkdownTextImpl: FC<MarkdownTextProps> = ({ components }) => {
   return (
     <StreamdownTextPrimitive
       containerClassName="aui-md"
+      rehypePlugins={WORKSPACE_REHYPE}
+      security={{ defaultOrigin: window.location.origin }}
       components={markdownComponents}
     />
   );
@@ -148,15 +153,51 @@ const defaultComponents: StreamdownTextComponents = memoizeMarkdownComponents({
       {...props}
     />
   ),
-  a: ({ className, ...props }) => (
-    <a
-      className={cn(
-        "aui-md-a text-primary hover:text-primary/80 underline underline-offset-2",
-        className,
-      )}
-      {...props}
-    />
-  ),
+  a: ({ className, href, children, ...props }) => {
+    const rel = linkedWorkspacePath(href);
+    if (rel) {
+      // a file in the workspace: opens in a tab, with a download beside it
+      const base = rel.split("/").pop();
+      return (
+        <span className="aui-md-file">
+          <a
+            {...props}
+            href={workspaceFileUrl(rel)}
+            target="_blank"
+            rel="noreferrer"
+            title={rel}
+            className={cn(
+              "aui-md-a text-primary hover:text-primary/80 [overflow-wrap:anywhere] underline underline-offset-2",
+              className,
+            )}
+          >
+            {children}
+          </a>
+          <a
+            href={workspaceFileUrl(rel, true)}
+            download
+            title={`Download ${base}`}
+            aria-label={`Download ${base}`}
+            className="text-muted-foreground hover:text-foreground relative ms-1 inline-block align-middle after:absolute after:-inset-2.5"
+          >
+            <DownloadSimple className="size-3.5" />
+          </a>
+        </span>
+      );
+    }
+    return (
+      <a
+        href={href}
+        className={cn(
+          "aui-md-a text-primary hover:text-primary/80 underline underline-offset-2",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </a>
+    );
+  },
   blockquote: ({ className, ...props }) => (
     <blockquote
       className={cn(

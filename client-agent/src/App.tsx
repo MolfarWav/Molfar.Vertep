@@ -71,7 +71,33 @@ class ChatFileAttachmentAdapter implements AttachmentAdapter {
   }
 }
 
-const attachments = new CompositeAttachmentAdapter([new SimpleImageAttachmentAdapter(), new ChatFileAttachmentAdapter()])
+const chatFiles = new ChatFileAttachmentAdapter()
+
+/** Takes every file, so one the chat cannot use (a PDF, a zip) gets a tile
+ *  that names it and says why, instead of being dropped without a word: the
+ *  composer refuses a file the adapter's `accept` does not list, silently. */
+class ChatAttachments extends CompositeAttachmentAdapter {
+  constructor() {
+    super([new SimpleImageAttachmentAdapter(), chatFiles])
+    this.accept = "*"
+  }
+  override add(state: { file: File }) {
+    try {
+      return super.add(state)
+    } catch {
+      return chatFiles.add(state)
+    }
+  }
+  override async remove(attachment: Attachment) {
+    try {
+      await super.remove(attachment)
+    } catch {
+      await chatFiles.remove(attachment)
+    }
+  }
+}
+
+const attachments = new ChatAttachments()
 
 function toThreadMessage(m: Msg): ThreadMessageLike {
   if (m.role === "user") {
