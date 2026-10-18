@@ -2,7 +2,9 @@
 rem Molfar Vertep launcher: checks the tools, offers updates, starts the
 rem engine and opens it in your browser. Works from wherever the app folder is.
 rem
-rem   Molfar-Vertep.bat            update to the latest release (asks first), then start
+rem   Molfar-Vertep.bat            a menu of the choices below; with no key pressed
+rem                                it starts after 10 seconds, as it always did:
+rem                                offers the latest release (asks first), then starts
 rem   Molfar-Vertep.bat dev        update to the newest work branch (claude/*) instead
 rem   Molfar-Vertep.bat dev NAME   update to the work branch claude/NAME (another
 rem                                session's newer branch does not take its place)
@@ -12,7 +14,7 @@ rem   Molfar-Vertep.bat yes        do not ask: take the update
 rem   Molfar-Vertep.bat rebuild    reinstall packages and rebuild, then start
 rem   Molfar-Vertep.bat tools      also check Git and Bun for updates
 rem   Molfar-Vertep.bat shortcut   (re)create the desktop shortcut
-rem Options combine: "Molfar-Vertep.bat dev yes".
+rem Options combine: "Molfar-Vertep.bat dev yes". Any option skips the menu.
 rem
 rem Where it runs: the folder this file sits in. A copy of this file kept
 rem somewhere else finds the app through the path the last run remembered
@@ -38,7 +40,7 @@ forfiles /p "%TEMP%" /m "molfar-vertep-*.bat" /d -1 /c "cmd /c del /q @path" >nu
 set "MV_COPY=%TEMP%\molfar-vertep-%RANDOM%%RANDOM%.bat"
 copy /y "%~f0" "%MV_COPY%" >nul 2>nul
 if errorlevel 1 (
-  echo Could not copy the launcher to %TEMP%. Starting from the original instead.
+  echo %MV_E%Could not copy the launcher to %TEMP%. Starting from the original instead.%MV_0%
   set "MV_COPY="
   goto copied_direct
 )
@@ -58,6 +60,24 @@ shift
 
 rem ---------- options ----------
 :args
+rem ---------- colours ----------
+rem Message colours (Windows 10 consoles read these codes); empty, so plain
+rem text, when the escape character cannot be made. H a step, S the start,
+rem G done, W a note, E a failure, D a path or hint, K a command to type.
+set "ESC="
+for /f %%e in ('echo prompt $E^| cmd') do set "ESC=%%e"
+set "MV_H=" & set "MV_S=" & set "MV_G=" & set "MV_W=" & set "MV_E=" & set "MV_D=" & set "MV_K=" & set "MV_0="
+if not defined ESC goto colours_done
+set "MV_H=%ESC%[38;2;214;160;76m"
+set "MV_S=%ESC%[1;38;2;236;228;212m"
+set "MV_G=%ESC%[38;2;120;190;110m"
+set "MV_W=%ESC%[38;2;230;200;90m"
+set "MV_E=%ESC%[38;2;225;85;85m"
+set "MV_D=%ESC%[38;2;150;150;150m"
+set "MV_K=%ESC%[38;2;236;228;212m"
+set "MV_0=%ESC%[0m"
+:colours_done
+
 set "MV_DEV="
 set "MV_NOPULL="
 set "MV_YES="
@@ -66,8 +86,12 @@ set "MV_TOOLS="
 set "MV_SHORTCUT="
 set "MV_PICK="
 set "MV_PREV="
+set "MV_ARGS="
+set "MV_TAKE="
+set "MV_CLONED="
 :args_loop
 if "%~1"=="" goto args_done
+set "MV_ARGS=1"
 rem a word that is no option names the work branch
 set "MV_KNOWN="
 for %%o in (dev nopull yes -y rebuild tools shortcut previous) do if /i "%~1"=="%%o" set "MV_KNOWN=1"
@@ -104,8 +128,8 @@ if exist "%MV_STATE%\app-path.txt" set /p APP=<"%MV_STATE%\app-path.txt"
 if not defined APP goto no_app_yet
 if not exist "%APP%\package.json" goto no_app_yet
 if not exist "%APP%\src\index.ts" goto no_app_yet
-echo This launcher is not in the Molfar Vertep folder; using the one found last time:
-echo   %APP%
+echo %MV_D%This launcher is not in the Molfar Vertep folder; using the one found last time:%MV_0%
+echo %MV_D%  %APP%%MV_0%
 goto app_found
 :no_app_yet
 set "APP="
@@ -114,22 +138,22 @@ rem ---------- tools ----------
 :tools
 where git >nul 2>nul
 if errorlevel 1 (
-  echo === Installing Git, which Molfar Vertep needs ^(winget^)...
+  echo %MV_H%=== Installing Git, which Molfar Vertep needs ^(winget^)...%MV_0%
   winget install --id Git.Git -e --silent --accept-source-agreements --accept-package-agreements
 )
 where git >nul 2>nul
 if errorlevel 1 (
-  echo Git is still not available. Install it from https://git-scm.com, then run this file again.
+  echo %MV_E%Git is still not available. Install it from https://git-scm.com, then run this file again.%MV_0%
   goto fail
 )
 where bun >nul 2>nul
 if errorlevel 1 (
-  echo === Installing Bun, which Molfar Vertep needs...
+  echo %MV_H%=== Installing Bun, which Molfar Vertep needs...%MV_0%
   powershell -NoProfile -ExecutionPolicy Bypass -Command "irm bun.sh/install.ps1 | iex"
 )
 where bun >nul 2>nul
 if errorlevel 1 (
-  echo Bun is still not available. Install it from https://bun.sh, then run this file again.
+  echo %MV_E%Bun is still not available. Install it from https://bun.sh, then run this file again.%MV_0%
   goto fail
 )
 set "MV_BUNV="
@@ -144,19 +168,19 @@ set "MV_BUN_OLD="
 if %MV_BMAJ% LSS 1 set "MV_BUN_OLD=1"
 if %MV_BMAJ% EQU 1 if %MV_BMIN% LSS 4 set "MV_BUN_OLD=1"
 if defined MV_BUN_OLD (
-  echo Bun %MV_BUNV% is older than 1.4.0, the version Molfar Vertep needs.
+  echo %MV_W%Bun %MV_BUNV% is older than 1.4.0, the version Molfar Vertep needs.%MV_0%
   call :ask "Update Bun now"
   if errorlevel 2 (
-    echo Molfar Vertep may not install or build with this Bun.
+    echo %MV_W%Molfar Vertep may not install or build with this Bun.%MV_0%
   ) else (
-    echo === Updating Bun...
+    echo %MV_H%=== Updating Bun...%MV_0%
     call bun upgrade
   )
 )
 if defined MV_TOOLS (
-  echo === Checking Git for updates ^(winget^)...
+  echo %MV_H%=== Checking Git for updates ^(winget^)...%MV_0%
   winget upgrade --id Git.Git -e --silent --accept-source-agreements --accept-package-agreements
-  echo === Checking Bun for updates...
+  echo %MV_H%=== Checking Bun for updates...%MV_0%
   call bun upgrade
 )
 if defined APP goto app_ready
@@ -165,13 +189,14 @@ rem ---------- no app anywhere: download it ----------
 set "APP=%MV_HERE%\Molfar-Vertep"
 echo Molfar Vertep is not installed next to this file.
 echo It can download it into:
-echo   %APP%
+echo %MV_D%  %APP%%MV_0%
 call :ask "Download Molfar Vertep there"
 if errorlevel 2 goto declined
-echo === Downloading Molfar Vertep...
+echo %MV_H%=== Downloading Molfar Vertep...%MV_0%
 git clone "%MV_REPO%" "%APP%"
 if errorlevel 1 goto fail
 set "MV_FULL=1"
+set "MV_CLONED=1"
 goto app_ready
 
 :app_found
@@ -191,21 +216,85 @@ if not exist "%MV_STATE%" mkdir "%MV_STATE%" >nul 2>nul
 rem a copy cloned before the repository was renamed follows it under its new name
 git remote set-url origin "%MV_REPO%" >nul 2>nul
 
+rem ---------- start menu ----------
+rem One key picks what to do; with none it starts after a few seconds, so the
+rem desktop shortcut still just starts Molfar Vertep. Options skip the menu.
+if defined MV_ARGS goto menu_done
+if defined MV_CLONED goto menu_done
+set "MV_MENU_WAIT=10"
+:menu
+call :version MV_NOW
+set "MV_ON="
+for /f "delims=" %%b in ('git symbolic-ref --quiet --short HEAD 2^>nul') do set "MV_ON=branch %%b"
+if not defined MV_ON for /f "delims=" %%t in ('git describe --tags --exact-match 2^>nul') do set "MV_ON=release %%t"
+if not defined MV_ON set "MV_ON=no release tag"
+rem the logo once per run: after "C" the check's output stays above a plain menu
+if defined MV_LOGO_DONE goto menu_plain
+set "MV_LOGO_DONE=1"
+call :logo
+if errorlevel 1 goto menu_plain
+rem the menu goes to the right of the star: 7 lines up, column 50
+set "MV_C=%ESC%[50G"
+set "MV_R=%ESC%[38;2;178;52;60m"
+echo %ESC%[7A%MV_C%%ESC%[38;2;236;228;212m%MV_NOW%, %MV_ON%%MV_0%
+echo %MV_C%%MV_R%1%MV_0%  Start (looks for a newer release first)
+echo %MV_C%%MV_R%2%MV_0%  Start without looking for updates
+echo %MV_C%%MV_R%3%MV_0%  Update to the latest release, then start
+echo %MV_C%%MV_R%4%MV_0%  Newest work branch (dev), then start
+echo %MV_C%%MV_R%5%MV_0%  Go back to the previous release
+echo %MV_C%%MV_R%6%MV_0%  Check the files
+echo %MV_C%%MV_R%7%MV_0%  Reinstall packages and rebuild, then start
+echo %MV_C%%MV_R%0%MV_0%  Quit
+echo.
+goto menu_ask
+:menu_plain
+echo.
+echo  Molfar Vertep %MV_NOW%, %MV_ON%
+echo.
+echo    1  Start (looks for a newer release first)
+echo    2  Start without looking for updates
+echo    3  Update to the latest release, then start
+echo    4  Newest work branch (dev), then start
+echo    5  Go back to the previous release
+echo    6  Check the files
+echo    7  Reinstall packages and rebuild, then start
+echo    0  Quit
+echo.
+:menu_ask
+if "%MV_MENU_WAIT%"=="0" goto menu_key
+choice /c 12345670 /n /t %MV_MENU_WAIT% /d 1 /m "Press a number. With none, 1 in %MV_MENU_WAIT% seconds: "
+goto menu_pick
+:menu_key
+choice /c 12345670 /n /m "Press a number: "
+:menu_pick
+set "MV_KEY=%errorlevel%"
+if "%MV_KEY%"=="2" set "MV_NOPULL=1"
+if "%MV_KEY%"=="3" set "MV_TAKE=1"
+if "%MV_KEY%"=="4" set "MV_DEV=1"
+if "%MV_KEY%"=="4" set "MV_TAKE=1"
+if "%MV_KEY%"=="5" set "MV_PREV=1"
+if "%MV_KEY%"=="6" goto check
+if "%MV_KEY%"=="7" set "MV_FULL=1"
+if "%MV_KEY%"=="7" set "MV_NOPULL=1"
+rem errorlevel is the place in /c: 8 is the key 0
+if "%MV_KEY%"=="8" goto done
+:menu_done
+
 if defined MV_PREV goto previous
 if defined MV_NOPULL goto deps
 
 rem ---------- updates ----------
-echo === Checking for updates...
+echo %MV_H%=== Checking for updates...%MV_0%
 git fetch --prune --tags --force origin
 if errorlevel 1 (
-  echo No connection to GitHub: starting the version you have.
+  echo %MV_W%No connection to GitHub: starting the version you have.%MV_0%
   goto deps
 )
 rem your own changes to the engine's files are never overwritten
 git diff --quiet HEAD -- . ":(exclude)bun.lock" ":(exclude)client-agent/bun.lock"
 if not errorlevel 1 goto clean
-echo Molfar Vertep's own files have local changes, so no update is applied.
-echo "git status" in the app folder shows them. Starting the version you have.
+echo %MV_W%Molfar Vertep's own files have local changes, so no update is applied.%MV_0%
+echo %MV_W%"git status" in the app folder shows them. Starting the version you have.%MV_0%
 goto deps
 :clean
 
@@ -219,7 +308,7 @@ for /f "delims=" %%t in ('git tag -l "v*" --sort^=-v:refname') do (
   )
 )
 if not defined MV_TARGET (
-  echo No release found on GitHub: starting the version you have.
+  echo %MV_W%No release found on GitHub: starting the version you have.%MV_0%
   goto deps
 )
 set "MV_LABEL=release %MV_TARGET%"
@@ -234,7 +323,7 @@ for /f "delims=" %%b in ('git for-each-ref "--sort=-committerdate" "--format=%%(
   )
 )
 if not defined MV_BRANCH (
-  echo No work branch found on GitHub: starting the version you have.
+  echo %MV_W%No work branch found on GitHub: starting the version you have.%MV_0%
   goto deps
 )
 goto branch_target
@@ -246,7 +335,7 @@ git rev-parse --verify --quiet "origin/%MV_BRANCH%" >nul
 if errorlevel 1 goto pick_missing
 goto branch_target
 :pick_missing
-echo No branch %MV_BRANCH% on GitHub: starting the version you have.
+echo %MV_W%No branch %MV_BRANCH% on GitHub: starting the version you have.%MV_0%
 goto deps
 
 :branch_target
@@ -259,21 +348,23 @@ set "MV_WANT="
 for /f "delims=" %%h in ('git rev-parse HEAD') do set "MV_HEAD=%%h"
 for /f "delims=" %%h in ('git rev-parse --verify --quiet "%MV_TARGET%^{commit}"') do set "MV_WANT=%%h"
 if "%MV_HEAD%"=="%MV_WANT%" (
-  echo Up to date: %MV_LABEL%.
+  echo %MV_G%Up to date: %MV_LABEL%.%MV_0%
   goto deps
 )
 call :version MV_NOW
 set "MV_ON="
 for /f "delims=" %%b in ('git symbolic-ref --quiet --short HEAD 2^>nul') do set "MV_ON=%%b"
 if defined MV_ON echo You are on branch %MV_ON% ^(Molfar Vertep %MV_NOW%^).
-if not defined MV_ON echo Installed: Molfar Vertep %MV_NOW%.
+if not defined MV_ON echo %MV_G%Installed: Molfar Vertep %MV_NOW%.%MV_0%
+rem picked in the menu: asking again would only slow it down
+if defined MV_TAKE goto checkout
 call :ask "Update to %MV_LABEL%"
 if errorlevel 2 (
-  echo Keeping the version you have.
+  echo %MV_W%Keeping the version you have.%MV_0%
   goto deps
 )
 :checkout
-echo === Switching to %MV_LABEL%...
+echo %MV_H%=== Switching to %MV_LABEL%...%MV_0%
 rem bun install rewrites the lock files; they are not ours to keep
 git checkout -- bun.lock client-agent/bun.lock 2>nul
 rem a launcher copied into the folder by hand would block a version that
@@ -301,8 +392,8 @@ rem stored them in a way the older one cannot read (chrysalis rollback).
 :previous
 git diff --quiet HEAD -- . ":(exclude)bun.lock" ":(exclude)client-agent/bun.lock"
 if errorlevel 1 (
-  echo Molfar Vertep's own files have local changes, so it cannot switch versions.
-  echo "git status" in the app folder shows them.
+  echo %MV_W%Molfar Vertep's own files have local changes, so it cannot switch versions.%MV_0%
+  echo %MV_W%"git status" in the app folder shows them.%MV_0%
   goto fail
 )
 set "MV_AT="
@@ -320,24 +411,66 @@ for /f "delims=" %%t in ('git tag -l "v*" --sort^=-v:refname') do (
   )
 )
 if not defined MV_TARGET (
-  echo No earlier release found: starting the version you have.
+  echo %MV_W%No earlier release found: starting the version you have.%MV_0%
   goto deps
 )
 call :version MV_NOW
-echo Installed: Molfar Vertep %MV_NOW%.
+echo %MV_G%Installed: Molfar Vertep %MV_NOW%.%MV_0%
 call :ask "Go back to release %MV_TARGET%"
 if errorlevel 2 (
-  echo Keeping the version you have.
+  echo %MV_W%Keeping the version you have.%MV_0%
   goto deps
 )
 set "MV_LABEL=release %MV_TARGET%"
 set "MV_STAY=1"
 rem versions before 1.2.2 have no rollback step: their data needs none
 if not exist "src\rollback.ts" goto checkout
-echo === Checking your data for %MV_TARGET%...
+echo %MV_H%=== Checking your data for %MV_TARGET%...%MV_0%
 call bun run src/index.ts rollback %MV_TARGET:~1%
 if errorlevel 1 goto fail
 goto checkout
+
+rem ---------- check the files (C in the menu) ----------
+rem What a start needs, without changing anything: the engine's own files as
+rem git has them, the packages, the built interface, the tools. Back to the
+rem menu afterwards, which then waits for a key.
+:check
+echo.
+echo %MV_H%=== Checking the files...%MV_0%
+set "MV_NEED_R="
+set "MV_NEED_GIT="
+for /f "delims=" %%v in ('git --version 2^>nul') do echo   %%v
+echo   bun version %MV_BUNV%
+set "MV_ST=%TEMP%\molfar-vertep-status-%RANDOM%.txt"
+git status --porcelain --untracked-files=normal -- . ":(exclude)bun.lock" ":(exclude)client-agent/bun.lock" >"%MV_ST%" 2>nul
+set "MV_STSIZE=0"
+for %%A in ("%MV_ST%") do set "MV_STSIZE=%%~zA"
+if "%MV_STSIZE%"=="0" echo %MV_G%  Engine files: as released, no local changes.%MV_0%
+if not "%MV_STSIZE%"=="0" set "MV_NEED_GIT=1"
+if defined MV_NEED_GIT echo   Engine files with local changes. Updates skip them until they are undone:
+if defined MV_NEED_GIT type "%MV_ST%"
+del /q "%MV_ST%" 2>nul
+if exist "node_modules\" echo %MV_G%  Packages: installed.%MV_0%
+if not exist "node_modules\" echo %MV_E%  Packages: MISSING.%MV_0%
+if not exist "node_modules\" set "MV_NEED_R=1"
+if exist "client-agent\node_modules\" echo %MV_G%  Agent page packages: installed.%MV_0%
+if not exist "client-agent\node_modules\" echo %MV_E%  Agent page packages: MISSING.%MV_0%
+if not exist "client-agent\node_modules\" set "MV_NEED_R=1"
+if exist "client\dist\index.html" echo %MV_G%  Interface: built.%MV_0%
+if not exist "client\dist\index.html" echo %MV_E%  Interface: NOT BUILT.%MV_0%
+if not exist "client\dist\index.html" set "MV_NEED_R=1"
+if exist "client-agent\dist\index.html" echo %MV_G%  Agent page: built.%MV_0%
+if not exist "client-agent\dist\index.html" echo %MV_E%  Agent page: NOT BUILT.%MV_0%
+if not exist "client-agent\dist\index.html" set "MV_NEED_R=1"
+if exist "data\" echo %MV_G%  Your data folder: found.%MV_0%
+if not exist "data\" echo   Your data folder: not created yet ^(the first start creates it^).
+if defined MV_BUN_OLD echo %MV_W%  Bun is older than 1.4.0: "Molfar-Vertep.bat tools" updates it.%MV_0%
+echo.
+if defined MV_NEED_R echo   7 in the menu installs the packages and builds the interface.
+if defined MV_NEED_GIT echo   "git status" in the app folder shows the changes; "git checkout -- ." undoes them.
+if not defined MV_NEED_R if not defined MV_NEED_GIT echo %MV_G%  Everything is in place.%MV_0%
+set "MV_MENU_WAIT=0"
+goto menu
 
 rem ---------- install and build only what is needed ----------
 :deps
@@ -347,7 +480,7 @@ if not exist "client-agent\node_modules" goto install
 goto build
 
 :install
-echo === Installing packages...
+echo %MV_H%=== Installing packages...%MV_0%
 call bun install
 if errorlevel 1 goto fail
 pushd client-agent
@@ -366,7 +499,7 @@ if not exist "client-agent\dist\index.html" goto dobuild
 goto shortcut
 
 :dobuild
-echo === Building the interface...
+echo %MV_H%=== Building the interface...%MV_0%
 call bun run build:client
 if errorlevel 1 goto fail
 
@@ -392,34 +525,34 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
 if errorlevel 1 (
   echo Could not create the desktop shortcut. You can still start Molfar Vertep with this file.
 ) else (
-  echo Desktop shortcut: Molfar Vertep.
+  echo %MV_G%Desktop shortcut: Molfar Vertep.%MV_0%
 )
 
 rem ---------- start ----------
 :run
 call :version MV_NOW
-echo === Starting Molfar Vertep %MV_NOW%. Your browser opens by itself.
-echo     Keep this window open while you use it; close it or press Ctrl+C to stop.
-echo     First start: the link with #setup= creates your account.
+echo %MV_S%=== Starting Molfar Vertep %MV_NOW%. Your browser opens by itself.%MV_0%
+echo %MV_D%    Keep this window open while you use it; close it or press Ctrl+C to stop.%MV_0%
+echo %MV_D%    First start: the link with #setup= creates your account.%MV_0%
 rem tells the engine its launcher started it, so it opens the browser
 set "CHRYSALIS_LAUNCHER=1"
-if defined MV_STAY echo     To stay on this version, start with "Molfar-Vertep.bat nopull": a plain start offers the newest release again.
+if defined MV_STAY echo %MV_D%    To stay on this version, start with "Molfar-Vertep.bat nopull": a plain start offers the newest release again.%MV_0%
 call bun start
 set "MV_EXIT=%errorlevel%"
 echo.
 echo Molfar Vertep stopped.
-if not "%MV_EXIT%"=="0" echo If it fails like this since an update, "Molfar-Vertep.bat previous" goes back to the release before.
+if not "%MV_EXIT%"=="0" echo %MV_W%If it fails like this since an update, "Molfar-Vertep.bat previous" goes back to the release before.%MV_0%
 pause
 goto done
 
 :declined
-echo Nothing was downloaded.
+echo %MV_W%Nothing was downloaded.%MV_0%
 pause
 goto done
 
 :fail
 echo.
-echo Something went wrong: see the messages above.
+echo %MV_E%Something went wrong: see the messages above.%MV_0%
 pause
 set "MV_RC=1"
 goto done
@@ -447,34 +580,62 @@ findstr /i /c:"safe.directory" "%MV_GITERR%" >nul
 if not errorlevel 1 goto git_untrusted
 type "%MV_GITERR%"
 del /q "%MV_GITERR%" 2>nul
-echo Git cannot read the Molfar Vertep folder:
-echo   %CD%
+echo %MV_E%Git cannot read the Molfar Vertep folder:%MV_0%
+echo %MV_D%  %CD%%MV_0%
 exit /b 1
 :git_untrusted
 del /q "%MV_GITERR%" 2>nul
 echo.
-echo Git does not trust this folder, because another Windows user owns it
-echo ^(common on a second drive, a USB stick or a folder made as administrator^):
-echo   %CD%
+echo %MV_W%Git does not trust this folder, because another Windows user owns it%MV_0%
+echo %MV_W%^(common on a second drive, a USB stick or a folder made as administrator^):%MV_0%
+echo %MV_D%  %CD%%MV_0%
 echo Molfar Vertep can tell Git to trust this one folder.
 call :ask "Trust this folder"
 if errorlevel 2 goto git_trust_declined
 git config --global --add safe.directory "%CD:\=/%"
 git rev-parse --git-dir >nul 2>nul
 if errorlevel 1 goto git_trust_failed
-echo Git trusts the folder now.
+echo %MV_G%Git trusts the folder now.%MV_0%
 exit /b 0
 :git_trust_declined
-echo Nothing was changed. To trust the folder yourself, run:
-echo   git config --global --add safe.directory "%CD:\=/%"
+echo %MV_W%Nothing was changed. To trust the folder yourself, run:%MV_0%
+echo %MV_K%  git config --global --add safe.directory "%CD:\=/%"%MV_0%
 echo then start this file again.
 exit /b 1
 :git_trust_failed
-echo Git still refuses the folder. Run this yourself, then start this file again:
-echo   git config --global --add safe.directory "%CD:\=/%"
+echo %MV_E%Git still refuses the folder. Run this yourself, then start this file again:%MV_0%
+echo %MV_K%  git config --global --add safe.directory "%CD:\=/%"%MV_0%
 exit /b 1
 
 rem :version VAR  ->  the version in package.json
+:logo
+rem The star and the name in colour (scripts\logo.ans, UTF-8 with colour codes).
+rem Only in a console at least 101 columns wide; the plain menu otherwise.
+rem Colour codes need Windows 10, which Bun needs anyway. This file stays
+rem ASCII: the logo is typed under code page 65001, and the console's own
+rem code page comes back right after.
+if not exist "%APP%\scripts\logo.ans" exit /b 1
+set "MV_COLS=0"
+set "MV_N=0"
+for /f "tokens=2 delims=:" %%a in ('mode con 2^>nul ^| findstr /r /c:"[0-9][0-9]*$"') do call :logo_cols %%a
+if %MV_COLS% LSS 101 exit /b 1
+if not defined ESC exit /b 1
+set "MV_CP="
+for /f "tokens=2 delims=:" %%c in ('chcp') do set "MV_CP=%%c"
+if defined MV_CP set "MV_CP=%MV_CP: =%"
+if defined MV_CP set "MV_CP=%MV_CP:.=%"
+chcp 65001 >nul
+echo.
+type "%APP%\scripts\logo.ans"
+if defined MV_CP chcp %MV_CP% >nul
+exit /b 0
+
+:logo_cols
+rem "mode con" lists Lines, then Columns (in any language): the second number
+set /a MV_N+=1
+if %MV_N%==2 set /a "MV_COLS=%~1" 2>nul
+exit /b 0
+
 :version
 set "%~1=?"
 for /f "tokens=2 delims=:, " %%v in ('findstr /c:"\"version\"" package.json 2^>nul') do set "%~1=%%~v"

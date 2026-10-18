@@ -23,8 +23,46 @@ import type { InstanceConfig } from "./config.js";
 import { ImageError, endpointGenerate, endpointPromptStyle, imageEndpoint, listEndpointOptions, type EndpointOptions, listEndpointModels, listImageEndpoints, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, readImageFavorites, type ImageFavorite, type ListedImageModel } from "./images.js";
 import { blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
 
+/** The modify running on each auth.json, so the next one waits for it. */
+const authFileQueue = new Map<string, Promise<void>>();
+
+/**
+ * Run `fn` when no other modify of the same file is running. pi refreshes an
+ * expired OAuth token inside modify and counts on the store for this: a
+ * provider replaces the refresh token on every refresh, so two calls that
+ * refresh at once (two models checked together, a reply and a sensor) send
+ * the same old token, and Anthropic answers the second with invalid_grant and
+ * may drop the whole sign-in. Under the queue the second one reads the token
+ * the first stored and finds it fresh.
+ */
+async function queued<T>(file: string, fn: () => Promise<T>): Promise<T> {
+  const key = path.resolve(file);
+  const before = authFileQueue.get(key) ?? Promise.resolve();
+  let done!: () => void;
+  const mine = before.then(() => new Promise<void>((resolve) => { done = resolve; }));
+  authFileQueue.set(key, mine);
+  await before;
+  try {
+    return await fn();
+  } finally {
+    done();
+    if (authFileQueue.get(key) === mine) authFileQueue.delete(key);
+  }
+}
+
+/** A model error a person can act on. A refused OAuth refresh arrives as a
+ *  page of request details and stack; what it means is "sign in again". */
+export function explainModelError(message: string | undefined): string {
+  if (!message) return "unknown";
+  const refresh = /OAuth refresh failed for ([\w.-]+)/.exec(message);
+  if (refresh && /invalid_grant|not found or invalid|revoked|expired/i.test(message)) {
+    return `the sign-in to ${refresh[1]} is no longer valid (its refresh token was refused). Sign in again: Settings > Connections > ${refresh[1]}.`;
+  }
+  return message;
+}
+
 /** File-backed CredentialStore over the user's auth.json (outside git). */
-class FileCredentialStore implements CredentialStore {
+export class FileCredentialStore implements CredentialStore {
   constructor(private file: string) {}
 
   private readAll(): Record<string, Credential> {
@@ -37,7 +75,10 @@ class FileCredentialStore implements CredentialStore {
 
   private writeAll(data: Record<string, Credential>): void {
     fs.mkdirSync(path.dirname(this.file), { recursive: true });
-    fs.writeFileSync(this.file, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
+    // whole or not at all: a half-written auth.json would lose every key
+    const tmp = `${this.file}.${process.pid}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(data, null, 2) + "\n", { mode: 0o600 });
+    fs.renameSync(tmp, this.file);
   }
 
   async read(providerId: string, _options?: AuthOperationOptions): Promise<Credential | undefined> {
@@ -59,19 +100,26 @@ class FileCredentialStore implements CredentialStore {
     _options?: AuthOperationOptions,
   ): Promise<Credential | undefined> {
     void _options;
-    const all = this.readAll();
-    const next = await fn(all[providerId]);
-    if (next === undefined) delete all[providerId];
-    else all[providerId] = next;
-    this.writeAll(all);
-    return next;
+    return queued(this.file, async () => {
+      const next = await fn(this.readAll()[providerId]);
+      // read again: the file may have changed while fn ran (a key saved in Settings)
+      const all = this.readAll();
+      // undefined leaves the entry as it is (pi's contract: "another request
+      // refreshed it already"), never deletes it: delete() is for that
+      if (next === undefined) return all[providerId];
+      all[providerId] = next;
+      this.writeAll(all);
+      return next;
+    });
   }
 
   async delete(providerId: string, _options?: AuthOperationOptions): Promise<void> {
     void _options;
-    const all = this.readAll();
-    delete all[providerId];
-    this.writeAll(all);
+    await queued(this.file, async () => {
+      const all = this.readAll();
+      delete all[providerId];
+      this.writeAll(all);
+    });
   }
 }
 
@@ -1407,7 +1455,7 @@ export class UserModelService {
       });
       const final = await consumeStream(stream);
       if (final.stopReason === "error") {
-        throw new Error(`model error: ${final.errorMessage ?? "unknown"}`);
+        throw new Error(`model error: ${explainModelError(final.errorMessage)}`);
       }
 
       const toolCalls = final.content.filter(
@@ -1472,7 +1520,7 @@ export class UserModelService {
     roundThinkEnd = 0;
     const final = await consumeStream(stream);
     if (final.stopReason === "error") {
-      throw new Error(`model error: ${final.errorMessage ?? "unknown"}`);
+      throw new Error(`model error: ${explainModelError(final.errorMessage)}`);
     }
     const exhausted = this.resultFrom(final, model, toolTrace, req, thinkMs, textBeforeTools);
     if (parts.some((p) => p.type === "tool") || final.stopReason === "aborted") {

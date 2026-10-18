@@ -9,3 +9,4 @@
 # keep lockfiles out of diffs and language stats
 bun.lock linguist-generated
 **/bun.lock linguist-generated
+scripts/logo.ans -text

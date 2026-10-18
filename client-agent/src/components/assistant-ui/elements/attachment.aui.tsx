@@ -99,6 +99,21 @@ const AttachmentThumb: FC = () => {
   );
 };
 
+/** A text file or document: its icon and name, or what went wrong with it. */
+const AttachmentFile: FC<{ error?: string | undefined }> = ({ error }) => {
+  return (
+    <div className="aui-attachment-tile-file flex h-full w-full items-center gap-2 px-2.5 pe-7 text-start">
+      <FileText className="text-muted-foreground/80 size-6 shrink-0 stroke-[1.5]" />
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="truncate text-xs font-medium">
+          <AttachmentPrimitive.Name />
+        </p>
+        {error && <p className="text-destructive line-clamp-2 text-[10px]">{error}</p>}
+      </div>
+    </div>
+  );
+};
+
 const AttachmentUI: FC = () => {
   const aui = useAui();
   const isComposer = aui.attachment.source !== "message";
@@ -154,7 +169,9 @@ const AttachmentUI: FC = () => {
               render={
                 <div
                   className={cn(
-                    "aui-attachment-tile bg-muted hover:after:bg-foreground/10 focus-visible:ring-ring/50 relative size-14 cursor-pointer overflow-hidden rounded-[calc(var(--composer-radius,1.5rem)-var(--composer-padding,8px))] transition-transform outline-none after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:ring-1 after:ring-black/10 after:transition-colors after:ring-inset focus-visible:ring-1 active:scale-[0.96] motion-reduce:transition-none dark:after:ring-white/10",
+                    "aui-attachment-tile bg-muted hover:after:bg-foreground/10 focus-visible:ring-ring/50 relative cursor-pointer overflow-hidden rounded-[calc(var(--composer-radius,1.5rem)-var(--composer-padding,8px))] transition-transform outline-none after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:ring-1 after:ring-black/10 after:transition-colors after:ring-inset focus-visible:ring-1 active:scale-[0.96] motion-reduce:transition-none dark:after:ring-white/10",
+                    // a file shows its name: on a phone there is no tooltip to tell two apart
+                    isImage ? "size-14" : "h-14 w-44 max-w-[60vw]",
                     isError &&
                       "after:ring-destructive/60 dark:after:ring-destructive/60",
                   )}
@@ -170,7 +187,7 @@ const AttachmentUI: FC = () => {
                 />
               }
             >
-              <AttachmentThumb />
+              {isImage ? <AttachmentThumb /> : <AttachmentFile error={errorMessage} />}
               {isUploading && (
                 <div
                   aria-hidden="true"
@@ -179,7 +196,7 @@ const AttachmentUI: FC = () => {
                   <CircleNotch className="text-muted-foreground size-4 animate-spin" />
                 </div>
               )}
-              {isError && (
+              {isError && isImage && (
                 <div
                   aria-hidden="true"
                   className="aui-attachment-tile-error bg-background/70 animate-in fade-in-0 absolute inset-0 flex items-center justify-center backdrop-blur-[2px] motion-reduce:animate-none"

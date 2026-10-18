@@ -23,7 +23,7 @@ import { APP_API_VERSION, ENGINE_REPOSITORY, ENGINE_VERSION, resourcesDir } from
 import type { ServerSettings } from "./settings.js";
 import { latestRelease } from "../updates.js";
 import { SELF_UPDATE, startUpdate, updateState } from "../self-update.js";
-import { DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
+import { agentReadDenied, DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
 import * as git from "../git.js";
 import { UserModelService, ModelNotConfiguredError, type ModelPricing } from "../models.js";
 import { effectiveParams, ModelParamsError, readModelParams, writeModelParams } from "../model-params.js";
@@ -35,6 +35,7 @@ import { isSmallModelMode } from "../agent/small-window.js";
 import { UserAgent, instructionDocsStamp, listSessions, renameSession, archiveSession, moveSession, sessionDir, sessionProject, isReasoningLevel, type ReasoningLevel } from "../agent/agent.js";
 import { normalizeAskOption } from "../agent/tools.js";
 import { findMentionables, mentionedFiles } from "../agent/mentions.js";
+import { saveUpload, UPLOAD_MAX, UploadError } from "../agent/uploads.js";
 import * as projects from "../agent/projects.js";
 import * as checkpoints from "../agent/checkpoints.js";
 import { solutionPatch } from "../agent/bug-solution.js";
@@ -54,7 +55,7 @@ import {
   EDGE_FORMATS, EDGE_VOICES, createSpeechEndpoint, deleteSpeechEndpoint, edgeSpeakFmt,
   endpointSpeak, listSpeechEndpoints, speechEndpointKey, updateSpeechEndpoint, validateSpeechEndpointInput,
 } from "../speech.js";
-import { ImageError, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
+import { ImageError, adaptComfyWorkflow, comfyWorkflowProblem, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
 import type { EdgeFormat } from "../speech.js";
 import * as assets from "../assets/store.js";
 import { createSandbox, type SandboxRunner } from "../sandbox/index.js";
@@ -1620,6 +1621,23 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
     }
   });
+  // the server form's "Import workflow": an Export (API) file with its values
+  // taken into the form and placeholders put in their place (shell-only)
+  app.post("/v1/images/workflow/adapt", async (c) => {
+    const body = await c.req.json<{ workflow?: unknown }>().catch(() => null);
+    const text = typeof body?.workflow === "string" ? body.workflow : null;
+    if (!text || text.length > 512 * 1024) return c.json({ error: "the workflow must be text of at most 512 KB" }, 400);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      return c.json({ error: "the workflow is not valid JSON (export it with Workflow > Export (API))" }, 400);
+    }
+    const problem = comfyWorkflowProblem(parsed);
+    if (problem) return c.json({ error: problem }, 400);
+    const adapted = adaptComfyWorkflow(parsed as Record<string, unknown>, { all: true });
+    return c.json({ workflow: JSON.stringify(adapted.graph, null, 2), filled: adapted.filled, values: adapted.values });
+  });
   app.get("/v1/images/endpoints/:id/options", async (c) => {
     try {
       return c.json(await c.get("models").endpointOptions(c.req.param("id")));
@@ -2334,6 +2352,66 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     };
     walk("", 0);
     return c.json({ files: results });
+  });
+  // a file attached in the chat composer: saved under uploads/, and the
+  // message names it as "@<path>" (src/agent/uploads.ts)
+  app.put("/v1/agent/uploads/:name", async (c) => {
+    if (Number(c.req.header("content-length") ?? "0") > UPLOAD_MAX) return c.json({ error: "an attached file can be at most 10 MB" }, 413);
+    try {
+      return c.json({ ok: true, ...saveUpload(c.get("paths").root, c.req.param("name"), new Uint8Array(await c.req.arrayBuffer())) });
+    } catch (e) {
+      if (e instanceof UploadError) return c.json({ error: e.message }, e.status);
+      throw e;
+    }
+  });
+  // A workspace file the chat names ("[x](projects/comfy/workflow.json)"),
+  // opened or downloaded from the agent page. Shell only (not in the app
+  // bridge). Refuses what the agent may not read, git internals, credentials,
+  // directories and big files. Anything a browser would run (html, svg, js)
+  // is served as plain text, so a file the agent wrote cannot script the page.
+  app.get("/v1/agent/file", (c) => {
+    const p = c.get("paths");
+    const rel = (c.req.query("path") ?? "").replace(/\\/g, "/").replace(/^\.?\//, "");
+    if (!rel || rel.includes("\0")) return c.json({ error: "path required" }, 400);
+    const segs = rel.split("/").map((s) => s.toLowerCase());
+    if (agentReadDenied(rel) || segs.includes(".git") || segs.includes("auth.json")) return c.json({ error: "that file is not available here" }, 403);
+    let abs: string;
+    try {
+      abs = safeResolve(p.root, rel);
+    } catch {
+      return c.json({ error: "path escapes the workspace" }, 400);
+    }
+    let st: fs.Stats;
+    try {
+      // the real path must stay inside the workspace too (a link out is refused)
+      const root = fs.realpathSync(p.root);
+      const real = fs.realpathSync(abs);
+      if (real !== root && !real.startsWith(root + path.sep)) return c.json({ error: "path escapes the workspace" }, 400);
+      st = fs.statSync(real);
+    } catch {
+      return c.json({ error: "file not found" }, 404);
+    }
+    if (!st.isFile()) return c.json({ error: "not a file" }, 400);
+    if (st.size > 20 * 1024 * 1024) return c.json({ error: "file is over 20 MB" }, 413);
+    const name = path.basename(abs);
+    const ext = path.extname(name).slice(1).toLowerCase();
+    const FILE_MIME: Record<string, string> = {
+      png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp",
+      json: "application/json; charset=utf-8", pdf: "application/pdf", csv: "text/csv; charset=utf-8",
+      mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg",
+    };
+    const binary = /^(zip|gz|tar|7z|exe|bin|docx|odt|xlsx|safetensors|ckpt)$/.test(ext);
+    const mime = FILE_MIME[ext] ?? (binary ? "application/octet-stream" : "text/plain; charset=utf-8");
+    const disposition = c.req.query("download") === "1" ? "attachment" : "inline";
+    return new Response(new Uint8Array(fs.readFileSync(abs)), {
+      headers: {
+        "content-type": mime,
+        "content-disposition": `${disposition}; filename*=UTF-8''${encodeURIComponent(name).replace(/['()]/g, escape)}`,
+        "x-content-type-options": "nosniff",
+        "content-security-policy": "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'",
+        "cache-control": "no-store",
+      },
+    });
   });
   // characters, lorebooks and presets by display name, for the same "@" picker
   app.get("/v1/agent/mentions", (c) => {

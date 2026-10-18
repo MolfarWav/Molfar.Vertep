@@ -305,6 +305,38 @@ describe("what a coding agent of your own can reach", () => {
     expect(files).toContain("notes/memory-rework.md");
   });
 
+  it("serves a workspace file the chat names, and refuses the rest", async () => {
+    const t = await createUser("file-user");
+    await createUser("file-other");
+    const p = userPaths(dataDir, "file-user");
+    fs.mkdirSync(path.join(p.root, "projects", "comfy"), { recursive: true });
+    fs.writeFileSync(path.join(p.root, "projects", "comfy", "workflow-api.json"), '{"a":1}', "utf8");
+    fs.writeFileSync(path.join(p.root, "projects", "comfy", "page.html"), "<script>alert(1)</script>", "utf8");
+    fs.writeFileSync(path.join(p.root, "settings.json"), "{}", "utf8");
+    fs.mkdirSync(path.join(p.root, ".git"), { recursive: true });
+    fs.writeFileSync(path.join(p.root, ".git", "config"), "x", "utf8");
+    fs.writeFileSync(path.join(p.root, "big.txt"), Buffer.alloc(20 * 1024 * 1024 + 1));
+    const get = (rel: string, extra = "") => app.request(`/v1/agent/file?path=${encodeURIComponent(rel)}${extra}`, { headers: userH(t) });
+
+    const ok = await get("projects/comfy/workflow-api.json");
+    expect(ok.status).toBe(200);
+    expect(await ok.text()).toBe('{"a":1}');
+    expect(ok.headers.get("content-disposition")).toBe("inline; filename*=UTF-8''workflow-api.json");
+    expect((await get("projects/comfy/workflow-api.json", "&download=1")).headers.get("content-disposition")).toStartWith("attachment");
+    // code a browser would run is shown as text
+    expect((await get("projects/comfy/page.html")).headers.get("content-type")).toStartWith("text/plain");
+
+    for (const rel of ["../file-other/settings.json", "../../etc/passwd", "/etc/passwd", "..\\file-other\\settings.json"]) {
+      expect([400, 403, 404], rel).toContain((await get(rel)).status);
+    }
+    expect((await get("settings.json")).status).toBe(403);
+    expect((await get(".git/config")).status).toBe(403);
+    expect((await get("projects/comfy")).status).toBe(400);
+    expect((await get("big.txt")).status).toBe(413);
+    expect((await get("nope.txt")).status).toBe(404);
+    expect((await app.request("/v1/agent/file?path=settings.json")).status).toBe(401);
+  });
+
   it("keeps one user's commands and files out of another's", async () => {
     const ta = await createUser("alice");
     const tb = await createUser("bob");

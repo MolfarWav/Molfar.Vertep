@@ -18,6 +18,43 @@ event that is not JSON: "<sample>"`. Reproduced and covered in `test/custom-sse-
 Soji sends is still unknown: the reporter's log line after this build tells. Trade-off: a plain-text error
 inside a 200 stream is dropped (logged), so it shows as an empty reply, not an error.
 
+## 1.2.3: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.3; Roleplay 4.51.0 on the fork's main)
+Checks: typecheck, build:client pass; tests 875 pass, 3 known failures (edge TTS x2 network, hostile plugin). pi stays 1.2.0 (1.3.0 is under 7 days old).
+- Molfar's chat takes text files, JSON, docx/odt (`src/agent/uploads.ts`, `PUT /v1/agent/uploads/:name`, shell-only):
+  saved under `uploads/<day>/`, the message names them `@uploads/...`, the existing mention reader puts them in
+  (64 KB cap, big JSON as its outline). uploads/ is gitignored, in AGENT_WRITE_DENYLIST, kept by backups. UTF-16
+  (Notepad) converted, other non-UTF-8 refused with a reason; PDF refused (no extractor). Mentions take any script.
+- #65 start menu in `Molfar-Vertep.bat` (keys 1-7 and 0 = Quit, `choice /t 10 /d 1`; any option skips it; 3 and 4 take the
+  update without asking again; 7 = reinstall + rebuild without pulling). Not run on Windows: needs the user's hand test.
+  Logo (user, 2026-10-18): `scripts/logo.ans` (UTF-8 + 24-bit colour codes, `-text` in .gitattributes), typed under
+  chcp 65001 when `mode con` says >= 101 columns; the menu is drawn beside it with cursor codes. Messages coloured
+  through MV_H/S/G/W/E/D/K. Also untested on Windows.
+- #66 step 1 of 2: update/rollback accept `molfar-vertep[.exe]` and `chrysalis[.exe]` (`programNames`,
+  `previousProgram` in self-update.ts; the restart runs the program the update installed); env vars
+  `MOLFAR_VERTEP_*` first, `CHRYSALIS_*` after (`src/env.ts`; vars the engine sets for a child keep the old name,
+  the child may be an older version); command alias `molfar-vertep` (install-cli, npm bin), links refreshed at start.
+  Still ships `chrysalis[.exe]`. Step 2 (ship the new name) needs the user's word and a choice: a copy on 1.2.2 or
+  older that skips 1.2.3 cannot update to a release with only the new name (ship both names for a while, or accept
+  a manual download). Not touched: data paths, `logs/chrysalis.log`, `libchrysalis.so`, app-facing identifiers.
+- ComfyUI (user, 2026-10-18): a workflow from Export (API) is adapted on save (`adaptComfyWorkflow` in images.ts):
+  %prompt%, %negative_prompt%, %seed% on every sampler, %width%/%height% on the first pass's empty latent, %model% on
+  checkpoint loaders; steps/CFG/sampler stay. The editor format is refused with how to export the API one.
+- ComfyUI import (user, 2026-10-18): Settings > Images "Import workflow file…" and "Take the settings from this
+  workflow" (`POST /v1/images/workflow/adapt`, shell-only; `adaptComfyWorkflow(…, {all:true})`) also take steps,
+  CFG, sampler, scheduler, denoise, clip skip and up to five LoRAs into the form and put placeholders in their place.
+- OAuth "invalid_grant" on Claude 5.5 checks (user, 2026-10-18): inferred cause, not verified on a real token:
+  refreshes ran in parallel, and `modify` returning undefined deleted the sign-in. `FileCredentialStore` in models.ts
+  now queues per file, re-reads, keeps the entry on undefined, writes through tmp+rename; the error says to sign in
+  again (`explainModelError`). The user still has to sign in to Anthropic again once.
+- Clickable workspace files in Molfar's replies: `GET /v1/agent/file?path=&download=1` (shell-only; agentReadDenied,
+  .git, auth.json, realpath check, 20 MB; html/svg/js served as text/plain under a sandbox CSP); markdown links and
+  inline-code workspace paths open it, with a download icon; one Workflow rules line tells Molfar to link files.
+  Also a file the chat cannot use (PDF, zip) now gets a tile saying why.
+- Roleplay (fork branch `claude/release-1.2.3-63nytl`, CHANGELOG "Unreleased", manifest still 4.50.0):
+  the Dashboard counts every name the user wrote under in a chat as the player (a persona switch made the earlier
+  persona an NPC); the card Profile takes several characters (`molfar_profile.cast`, DATA-FORMATS, both card
+  skills, engine copy `.fork/app-skills/roleplay/edit-large-card`, workspace task `.fork/handoff/v123/`).
+
 ## 1.2.2: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.2). pi 1.2.0 + live model lists + #59 + desktop rollback
 Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1; main 1.2.1 merged into the branch 2026-10-18.
 `package.json` version not bumped yet (still 1.2.1).

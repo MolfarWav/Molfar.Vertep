@@ -36,10 +36,11 @@ import { writeStdioApproval, type McpServerConfig } from "./mcp/registry.js";
 import { bindLegacyKeys } from "./connections.js";
 import { readLock, releaseLock, runningEngine, writeLock } from "./lock.js";
 import { rollBack, snapshotOnVersionChange } from "./rollback.js";
-import { cleanUpAfterUpdate, runReplacement, SELF_UPDATE, updateState } from "./self-update.js";
+import { cleanUpAfterUpdate, programNames, runReplacement, SELF_UPDATE, updateState } from "./self-update.js";
 import { dataFormatProblem, recordDataFormat } from "./data-format.js";
 import { pruneUnchangedSkillCopies } from "./agent/memory.js";
 import { registerBunOAuthFlows } from "@earendil-works/pi-ai/bun-oauth";
+import { readEnv, clearEnv } from "./env.js";
 
 // pi-ai loads its OAuth sign-in flows through a variable import() that a
 // compiled binary cannot follow ("Cannot find module './github-copilot.js'"
@@ -243,15 +244,19 @@ async function linkCli(dataDir: string): Promise<boolean> {
   const link = cliLinkPath(dataDir);
   const dir = path.dirname(link);
   fs.mkdirSync(dir, { recursive: true });
+  // the new name beside the old one (#66): same folder, same program
+  const alias = path.join(dir, process.platform === "win32" ? `${CLI_ALIAS}.cmd` : CLI_ALIAS);
   if (process.platform === "win32") {
-    fs.writeFileSync(link, `@echo off\r\n"${process.execPath}" %*\r\n`, "utf8");
+    for (const file of [link, alias]) fs.writeFileSync(file, `@echo off\r\n"${process.execPath}" %*\r\n`, "utf8");
     // read-modify-write the account's PATH through the registry
     const ps = `$d='${dir.replace(/'/g, "''")}'; $p=[Environment]::GetEnvironmentVariable('Path','User'); if (($p -split ';') -notcontains $d) { [Environment]::SetEnvironmentVariable('Path', (($p.TrimEnd(';') + ';' + $d).TrimStart(';')), 'User') }`;
     await runCmd("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps]);
     return true;
   }
-  fs.rmSync(link, { force: true });
-  fs.symlinkSync(process.execPath, link);
+  for (const file of [link, alias]) {
+    fs.rmSync(file, { force: true });
+    fs.symlinkSync(process.execPath, file);
+  }
   return true;
 }
 
@@ -261,7 +266,55 @@ async function unlinkCli(dataDir: string): Promise<boolean> {
   const link = existingCliLink(dataDir);
   if (!link) return false;
   fs.rmSync(link, { force: true });
+  const alias = path.join(path.dirname(link), process.platform === "win32" ? `${CLI_ALIAS}.cmd` : CLI_ALIAS);
+  try {
+    if (process.platform === "win32" || fs.readlinkSync(alias) === process.execPath) fs.rmSync(alias, { force: true });
+  } catch { /* not ours */ }
   return true;
+}
+
+/** The command's new name (#66), linked beside `chrysalis` until the program
+ *  itself is renamed. */
+const CLI_ALIAS = "molfar-vertep";
+
+/**
+ * Links made by an earlier version point at the program by its file name, and
+ * know only `chrysalis`. After an update that renamed the program, or one that
+ * added the new command name, point both names at this program again. Only
+ * links of ours: the .cmd files in this data folder, or symlinks into this
+ * program's own folder. Never adds a link nobody asked for.
+ */
+function refreshCliLinks(dataDir: string): void {
+  if (INSTALL_KIND !== "binary") return;
+  const here = path.dirname(process.execPath);
+  if (process.platform === "win32") {
+    const bin = path.join(dataDir, "bin");
+    if (!fs.existsSync(path.join(bin, "chrysalis.cmd"))) return;
+    const body = `@echo off\r\n"${process.execPath}" %*\r\n`;
+    for (const file of [path.join(bin, "chrysalis.cmd"), path.join(bin, `${CLI_ALIAS}.cmd`)]) {
+      if (!fs.existsSync(file) || fs.readFileSync(file, "utf8") !== body) fs.writeFileSync(file, body, "utf8");
+    }
+    return;
+  }
+  const ours = (target: string | null) => target !== null && path.dirname(target) === here && programNames(path.basename(process.execPath)).includes(path.basename(target));
+  const linkOf = (file: string): string | null => {
+    try {
+      return fs.readlinkSync(file);
+    } catch {
+      return null;
+    }
+  };
+  for (const dir of cliCandidates()) {
+    if (!ours(linkOf(path.join(dir, "chrysalis")))) continue;
+    for (const file of [path.join(dir, "chrysalis"), path.join(dir, CLI_ALIAS)]) {
+      const target = linkOf(file);
+      if (target === process.execPath) continue;
+      // something else answering to the name is not ours to replace
+      if (target === null ? fs.existsSync(file) : !ours(target)) continue;
+      fs.rmSync(file, { force: true });
+      fs.symlinkSync(process.execPath, file);
+    }
+  }
 }
 
 const onPath = (dir: string): boolean =>
@@ -643,14 +696,20 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
       fs.writeFileSync(cliMarker, `${new Date().toISOString()}\n`, "utf8");
       const done = await linkCli(dataDir);
       // ASCII only: the Windows console log mangles anything else
-      if (done) log.info('"chrysalis" is now a command in a new terminal. Try: chrysalis workspace  (undo: chrysalis uninstall-cli)');
+      if (done) log.info('"chrysalis" and "molfar-vertep" are now commands in a new terminal. Try: molfar-vertep workspace  (undo: molfar-vertep uninstall-cli)');
     } catch (e) {
       log.warn(`could not put chrysalis on your PATH: ${(e as Error).message}`);
+    }
+  } else if (INSTALL_KIND === "binary" && !IN_CONTAINER) {
+    try {
+      refreshCliLinks(dataDir);
+    } catch (e) {
+      log.warn(`could not update the chrysalis command on your PATH: ${(e as Error).message}`);
     }
   }
   // what undoing the last update needs (the old program, the saved account
   // files) stays until the next update; other leftovers go
-  const firstRunAfterUpdate = process.env.CHRYSALIS_UPDATED === "1";
+  const firstRunAfterUpdate = readEnv("UPDATED") === "1";
   const cameBackFromUpdate = updateState().phase === "failed";
   try {
     cleanUpAfterUpdate();
@@ -673,7 +732,7 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
   // first run: no account exists yet. The first visitor holding this token
   // creates the admin account in the browser. A launcher that opens the
   // browser itself passes its own token so it can build the link.
-  const setupToken = users.list().length === 0 ? (process.env.CHRYSALIS_SETUP_TOKEN || crypto.randomBytes(18).toString("base64url")) : null;
+  const setupToken = users.list().length === 0 ? (readEnv("SETUP_TOKEN") || crypto.randomBytes(18).toString("base64url")) : null;
 
   const instance = crypto.randomUUID();
   const bus = new EventBus();
@@ -733,13 +792,13 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
   log.info("----------------------------------------------------------");
   // after an update the browser is already open, waiting for this start
   const updated = firstRunAfterUpdate || cameBackFromUpdate;
-  delete process.env.CHRYSALIS_UPDATED;
+  clearEnv("UPDATED");
   if (firstRunAfterUpdate) log.info(`Updated to Molfar Vertep ${ENGINE_VERSION}`);
   // a source checkout opens the browser only when its launcher asks: under
   // `bun run dev` every save restarts the engine. Read once, so a restart in
   // this same process tree does not open a second window.
-  const launcherAsked = process.env.CHRYSALIS_LAUNCHER === "1";
-  delete process.env.CHRYSALIS_LAUNCHER;
+  const launcherAsked = readEnv("LAUNCHER") === "1";
+  clearEnv("LAUNCHER");
   if (config.openBrowser && !updated && (INSTALL_KIND === "binary" || INSTALL_KIND === "npm" || launcherAsked) && !process.env.container) {
     openBrowser(setupLink ?? urls.local);
   }
@@ -779,7 +838,7 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
   // a launcher closing our stdin pipe means it has gone away
-  if (process.env.CHRYSALIS_EXIT_ON_STDIN_CLOSE === "1") {
+  if (readEnv("EXIT_ON_STDIN_CLOSE") === "1") {
     process.stdin.on("end", shutdown);
     process.stdin.resume();
   }

@@ -119,9 +119,9 @@ describe("config.yaml", () => {
 
 describe("overrides", () => {
   it("names env vars and flags from the setting path", () => {
-    expect(envNameOf("port")).toBe("CHRYSALIS_PORT");
-    expect(envNameOf("ssl.certPath")).toBe("CHRYSALIS_SSL_CERT_PATH");
-    expect(envNameOf("apps.packageDownloads")).toBe("CHRYSALIS_APPS_PACKAGE_DOWNLOADS");
+    expect(envNameOf("port")).toBe("MOLFAR_VERTEP_PORT");
+    expect(envNameOf("ssl.certPath")).toBe("MOLFAR_VERTEP_SSL_CERT_PATH");
+    expect(envNameOf("apps.packageDownloads")).toBe("MOLFAR_VERTEP_APPS_PACKAGE_DOWNLOADS");
     expect(flagNameOf("openBrowser")).toBe("--open-browser");
     expect(flagNameOf("agent.shellTimeoutSeconds")).toBe("--agent.shell-timeout-seconds");
     expect(new Set(SETTINGS.map((s) => envNameOf(s.key))).size).toBe(SETTINGS.length);
@@ -135,6 +135,13 @@ describe("overrides", () => {
     expect(loaded.config.lan).toBe(true);
     expect(loaded.config.allowedHosts).toEqual(["a.lan", "b.lan"]);
     expect(loaded.locked).toEqual({ port: "CHRYSALIS_PORT", lan: "CHRYSALIS_LAN", allowedHosts: "CHRYSALIS_ALLOWED_HOSTS" });
+  });
+
+  it("reads the new MOLFAR_VERTEP_ names first and the CHRYSALIS_ ones of 1.2.x after them", () => {
+    const loaded = loadConfig(home, { env: { MOLFAR_VERTEP_PORT: "9501", CHRYSALIS_PORT: "9500", CHRYSALIS_LAN: "true" } });
+    expect(loaded.config.port).toBe(9501);
+    expect(loaded.config.lan).toBe(true);
+    expect(loaded.locked).toMatchObject({ port: "MOLFAR_VERTEP_PORT", lan: "CHRYSALIS_LAN" });
   });
 
   it("a bad environment value stops the engine instead of being ignored", () => {

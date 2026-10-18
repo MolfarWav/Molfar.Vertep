@@ -111,7 +111,8 @@ export function mentionedFiles(root: string, message: string): MentionedFile[] {
   const out: MentionedFile[] = [];
   const seen = new Set<string>();
   // a path ends at whitespace; trailing sentence punctuation is not part of it
-  for (const m of message.matchAll(/(?:^|\s)@([A-Za-z0-9._][A-Za-z0-9._/\-]{0,255})/g)) {
+  // letters of any script: an attached "картка.json" keeps its name
+  for (const m of message.matchAll(/(?:^|\s)@([\p{L}\p{N}._][\p{L}\p{N}._/\-]{0,255})/gu)) {
     const rel = (m[1] ?? "").replace(/[.,;:!?)\]]+$/, "");
     if (!rel || seen.has(rel) || out.length >= 10) continue;
     seen.add(rel);

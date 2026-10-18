@@ -9,6 +9,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { readEnv } from "./env.js";
 
 export interface EngineLock {
   pid: number;
@@ -53,7 +54,8 @@ export async function runningEngine(dataDir: string): Promise<EngineLock | null>
 export function writeLock(dataDir: string, lock: EngineLock): void {
   const body = `${JSON.stringify(lock, null, 2)}\n`;
   fs.writeFileSync(lockPath(dataDir), body, { mode: 0o600 });
-  if (process.env.CHRYSALIS_STATUS_FILE) fs.writeFileSync(process.env.CHRYSALIS_STATUS_FILE, body, { mode: 0o600 });
+  const statusFile = readEnv("STATUS_FILE");
+  if (statusFile) fs.writeFileSync(statusFile, body, { mode: 0o600 });
 }
 
 /** Remove the lock if it is still ours. */

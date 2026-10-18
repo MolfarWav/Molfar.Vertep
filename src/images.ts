@@ -283,10 +283,17 @@ export function validateImageEndpointInput(input: EndpointInput, partial = false
       } catch {
         return { ok: false, error: "the workflow is not valid JSON (export it with Save (API Format))" };
       }
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return { ok: false, error: "the workflow must be a JSON object in ComfyUI's API format" };
-      if (!workflow.includes("%prompt%")) return { ok: false, error: "the workflow needs a %prompt% placeholder where the prompt goes" };
-    }
-    out.workflow = workflow;
+      const problem = comfyWorkflowProblem(parsed);
+      if (problem) return { ok: false, error: problem };
+      // an export carries its last prompt, seed and size: put the placeholders in
+      if (!workflow.includes("%prompt%")) {
+        const adapted = adaptComfyWorkflow(parsed as Record<string, unknown>);
+        if (!adapted.filled.includes("%prompt%")) {
+          return { ok: false, error: "no prompt node found: put %prompt% into the text of the node that takes the prompt (a CLIP Text Encode feeding the sampler's positive input)" };
+        }
+        out.workflow = JSON.stringify(adapted.graph, null, 2);
+      } else out.workflow = workflow;
+    } else out.workflow = workflow;
   }
   for (const [field, lo, hi] of [["width", 64, 4096], ["height", 64, 4096], ["steps", 1, 150], ["cfg", 0, 30]] as const) {
     const v = input[field];
@@ -645,6 +652,132 @@ export async function nanoGptGenerate(key: string, model: string, prompt: string
     who,
   );
   return readImagesAnswer(res, who, null);
+}
+
+// ---------- a workflow exported from ComfyUI ----------
+
+type ComfyNode = { class_type?: unknown; inputs?: Record<string, unknown> };
+const isRef = (v: unknown): v is [string, number] => Array.isArray(v) && typeof v[0] === "string";
+const SAMPLERS = new Set(["KSampler", "KSamplerAdvanced"]);
+const LATENTS = new Set(["EmptyLatentImage", "EmptySD3LatentImage", "EmptyHunyuanLatentVideo", "EmptyMochiLatentVideo"]);
+const CHECKPOINTS = new Set(["CheckpointLoaderSimple", "CheckpointLoader", "ImageOnlyCheckpointLoader"]);
+
+/** The text node a conditioning input comes from, through nodes that pass
+ *  conditioning on (ControlNet, combine, area…). */
+function textNodeOf(g: Record<string, ComfyNode>, ref: unknown, seen = new Set<string>()): ComfyNode | null {
+  if (!isRef(ref) || seen.has(ref[0])) return null;
+  seen.add(ref[0]);
+  const node = g[ref[0]];
+  const inputs = node?.inputs;
+  if (!inputs) return null;
+  if (typeof inputs.text === "string" || typeof inputs.text_g === "string") return node;
+  for (const key of ["conditioning", "conditioning_1", "positive", "negative", "conditioning_to"]) {
+    const found = textNodeOf(g, inputs[key], seen);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** What an exported workflow was set to, read before its inputs become
+ *  placeholders: the server form starts from these. */
+export interface ComfyWorkflowValues {
+  width?: number;
+  height?: number;
+  steps?: number;
+  cfg?: number;
+  sampler?: string;
+  scheduler?: string;
+  denoise?: number;
+  clipSkip?: number;
+  loras?: Array<{ name: string; strength: number }>;
+}
+
+/**
+ * Put the engine's placeholders into a workflow exported from ComfyUI with
+ * Export (API), which carries the values it last ran with.
+ *
+ * Always: the prompts, the seed of every sampler, the first pass's size and
+ * the checkpoint, which change from picture to picture. With `all` (the server
+ * form's import, which takes the values into its own fields) also the first
+ * sampler's steps, CFG, sampler, scheduler and denoise, the CLIP skip and up
+ * to five LoRA loaders, so the form is where they are changed. A later pass
+ * (hires fix) keeps its own steps and denoise. Without `all` those stay as
+ * the workflow has them: nothing else would set them. Returns what was
+ * filled, by placeholder, and the values it found.
+ */
+export function adaptComfyWorkflow(graph: Record<string, unknown>, opts: { all?: boolean } = {}): { graph: Record<string, unknown>; filled: string[]; values: ComfyWorkflowValues } {
+  const g = structuredClone(graph) as Record<string, ComfyNode>;
+  const filled = new Set<string>();
+  const values: ComfyWorkflowValues = {};
+  const set = (node: ComfyNode | null | undefined, key: string, placeholder: string): unknown => {
+    if (!node?.inputs || !(key in node.inputs) || isRef(node.inputs[key])) return undefined;
+    const was = node.inputs[key];
+    node.inputs[key] = placeholder;
+    filled.add(placeholder);
+    return was;
+  };
+  const num = (v: unknown): number | undefined => (typeof v === "number" && Number.isFinite(v) ? v : undefined);
+  const str = (v: unknown): string | undefined => (typeof v === "string" && v && !v.includes("%") ? v : undefined);
+  const samplers = Object.values(g).filter((n) => SAMPLERS.has(String(n?.class_type)));
+  // the first pass of a two-pass (hires) workflow is the one with an empty latent
+  const first = samplers.find((n) => isRef(n.inputs?.latent_image) && LATENTS.has(String(g[n.inputs.latent_image[0]]?.class_type))) ?? samplers[0];
+  for (const sampler of samplers) {
+    set(sampler, sampler.class_type === "KSamplerAdvanced" ? "noise_seed" : "seed", "%seed%");
+    const pos = textNodeOf(g, sampler.inputs?.positive);
+    const neg = textNodeOf(g, sampler.inputs?.negative);
+    for (const [node, placeholder] of [[pos, "%prompt%"], [neg, "%negative_prompt%"]] as const) {
+      if (!node || node === pos && node === neg) continue;
+      set(node, "text", placeholder);
+      set(node, "text_g", placeholder);
+      set(node, "text_l", placeholder);
+    }
+  }
+  if (first && isRef(first.inputs?.latent_image)) {
+    const latent = g[first.inputs.latent_image[0]];
+    if (LATENTS.has(String(latent?.class_type))) {
+      values.width = num(set(latent, "width", "%width%"));
+      values.height = num(set(latent, "height", "%height%"));
+    }
+  }
+  for (const node of Object.values(g)) if (CHECKPOINTS.has(String(node?.class_type))) set(node, "ckpt_name", "%model%");
+  if (opts.all && first) {
+    values.steps = num(set(first, "steps", "%steps%"));
+    values.cfg = num(set(first, "cfg", "%cfg%"));
+    values.sampler = str(set(first, "sampler_name", "%sampler%"));
+    values.scheduler = str(set(first, "scheduler", "%scheduler%"));
+    if (first.class_type === "KSampler") values.denoise = num(set(first, "denoise", "%denoise%"));
+    for (const node of Object.values(g)) {
+      if (node?.class_type !== "CLIPSetLastLayer") continue;
+      const layer = num(set(node, "stop_at_clip_layer", "%clip_skip%"));
+      if (layer !== undefined && values.clipSkip === undefined) values.clipSkip = -layer;
+    }
+    const loras: Array<{ name: string; strength: number }> = [];
+    for (const node of Object.values(g)) {
+      const type = String(node?.class_type);
+      if ((type !== "LoraLoader" && type !== "LoraLoaderModelOnly") || loras.length >= MAX_LORAS || !node.inputs) continue;
+      const name = str(node.inputs.lora_name);
+      if (!name) continue;
+      const n = loras.length + 1;
+      const strength = num(node.inputs.strength_model) ?? 1;
+      set(node, "lora_name", `%LORA_${n}%`);
+      set(node, "strength_model", `%LORA_${n}_strength%`);
+      set(node, "strength_clip", `%LORA_${n}_strength%`);
+      loras.push({ name, strength });
+    }
+    if (loras.length) values.loras = loras;
+  }
+  for (const k of Object.keys(values) as (keyof ComfyWorkflowValues)[]) if (values[k] === undefined) delete values[k];
+  return { graph: g as Record<string, unknown>, filled: [...filled], values };
+}
+
+/** Why a workflow is not in ComfyUI's API format, or null when it is. */
+export function comfyWorkflowProblem(parsed: unknown): string | null {
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return "the workflow must be a JSON object in ComfyUI's API format";
+  const o = parsed as Record<string, unknown>;
+  if (Array.isArray(o.nodes) && Array.isArray(o.links)) {
+    return "this is the workflow as ComfyUI's editor saves it. Export it again with Workflow > Export (API) (in older ComfyUI: enable Dev mode in the settings, then Save (API Format))";
+  }
+  return null;
 }
 
 // ---------- configured endpoints ----------

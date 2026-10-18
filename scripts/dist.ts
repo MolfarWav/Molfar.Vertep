@@ -166,7 +166,8 @@ By hand, in Terminal in this folder:
 const RESTORE_CMD = `@echo off\r
 rem Goes back to the Molfar Vertep version from before the last update.\r
 rem Stop Molfar Vertep first. Your workspaces and chats are not touched.\r
-"%~dp0chrysalis.exe" rollback\r
+rem The program is chrysalis.exe up to 1.2.x and molfar-vertep.exe later.\r
+if exist "%~dp0molfar-vertep.exe" ("%~dp0molfar-vertep.exe" rollback) else ("%~dp0chrysalis.exe" rollback)\r
 `;
 
 const README = (exe: string) => `Molfar Vertep ${version}
@@ -303,7 +304,7 @@ if (wantNpm) {
         license: "AGPL-3.0-only",
         repository: pkg.repository,
         type: "module",
-        bin: { chrysalis: "chrysalis.js" },
+        bin: { chrysalis: "chrysalis.js", "molfar-vertep": "chrysalis.js" },
         engines: { bun: ">=1.4.0" },
         files: ["chrysalis.js", "plugins", "resources", "*.wasm", "LICENSE", "README.md"],
       },

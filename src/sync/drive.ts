@@ -10,6 +10,7 @@
 import crypto from "node:crypto";
 import { SyncError } from "./manifest.js";
 import type { SyncStore } from "./store.js";
+import { readEnv } from "../env.js";
 
 /** The built-in "Molfar Vertep" Desktop client (GOOGLE-CLIENT.md in
  *  .fork/handoff/sync). A Desktop client's secret is not secret: Google
@@ -39,8 +40,8 @@ export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
  *  built-in one; null when none is set. */
 export function driveClient(own?: DriveClient | null): DriveClient | null {
   if (own?.id) return own;
-  const envId = process.env.CHRYSALIS_DRIVE_CLIENT_ID;
-  if (envId) return { id: envId, secret: process.env.CHRYSALIS_DRIVE_CLIENT_SECRET ?? "" };
+  const envId = readEnv("DRIVE_CLIENT_ID");
+  if (envId) return { id: envId, secret: readEnv("DRIVE_CLIENT_SECRET") ?? "" };
   return BUILTIN_CLIENT.id ? BUILTIN_CLIENT : null;
 }
 

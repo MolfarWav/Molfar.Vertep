@@ -1508,6 +1508,7 @@ const FULL_LAYOUT = `# Workspace layout (your whole world)
   - node_modules/, dist/    — derived (installed / browser-built, outside git). dist/.chrysalis-build.json holds the last build's errors.
 - plugins/<id>/             — top-level always-on plugins (same format as bundled)
 - projects/<name>/          — the user's free projects (plugins, research, ideas): PROJECT.md instructions, project.json settings, files/ reference uploads. An app's own project settings and uploads sit in apps/<id>/.project/. Uploads (files/) are outside git and read-only for you.
+- uploads/<day>/            — files the user attached in chat (an @uploads/… path in their message); outside git and read-only for you.
 (User-managed config is NOT here: MCP servers, model connections, speech endpoints and settings all live outside this workspace with the credentials; the Settings UI owns them and you do not read or edit them. Asking the user to change one there is the right move when something is missing.)
 - providers.json            — custom model providers { providers: { id: { api: openai-completions|anthropic-messages, baseUrl, models: [...] | "auto" } } }
 - agent/sessions/           — your own session transcripts (readable)`;
@@ -1553,6 +1554,7 @@ ${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its
     ["rules", "Workflow rules", `# Workflow rules
 - write_file/edit_file commit each change immediately under your name; after changes made through bash, commit them with the git tool (commit -m "..."). The git tool takes command-line arguments: status and diff to review work, log and show to read history, restore --source <commit> -- <path> or revert <commit> to undo.
 - App data files (apps/<id>/data/) are plain JSON/JSONL you can read and edit directly — open clients sync within ~1s, no reload. Underscore-prefixed files there (_example.json) are AI-only templates: never shown in the UI, copy one to a real name to create the entity. Copy the template's field shape exactly.
+- Name a file you made as a markdown link to its workspace path, e.g. [workflow-api.json](projects/comfy/workflow-api.json): the user opens it with a click.
 - Never delete the user's content (chats, characters, notes, uploads, memory) unless they asked for exactly that.
 - Protected paths (by default an app's src/ and index.html, plus persona.md; the user can add more) change only after the user allows it in a card, once per request and app. A no means: put the change in data/ or a plugin of your own, or explain why those files must change. Never work around it through bash or git.
 - JSON files (a character card can pass 100 KB, a lorebook several MB): json_get to see the shape or a field, json_set to change fields, several in one call. Never load a whole large JSON, and never rewrite one through bash or python, to change a value.

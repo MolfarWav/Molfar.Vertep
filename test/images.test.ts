@@ -15,7 +15,7 @@ import {
   type ImageEndpointDef,
 } from "../src/images.js";
 import { UserModelService, defaultImageModel, type ImageModelInfo } from "../src/models.js";
-import { deleteImageEndpoint, readImageFavorites, validateImageFavorites, writeImageFavorites } from "../src/images.js";
+import { adaptComfyWorkflow, deleteImageEndpoint, readImageFavorites, validateImageFavorites, writeImageFavorites } from "../src/images.js";
 import { buildApp } from "../src/server/app.js";
 import { EventBus } from "../src/server/ws.js";
 import { SessionService } from "../src/sessions.js";
@@ -492,5 +492,59 @@ describe("image favorites", () => {
       expect((await put(bad)).status, JSON.stringify(bad)).toBe(400);
     }
     expect((await app.request("/v1/images/favorites", { method: "PUT", headers: h, body: "{not json" })).status).toBe(400);
+  });
+});
+
+describe("a workflow exported from ComfyUI", () => {
+  // what Workflow > Export (API) writes for a two-pass SDXL graph
+  const exported = {
+    "4": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: "juggernautXL.safetensors" } },
+    "5": { class_type: "EmptyLatentImage", inputs: { width: 832, height: 1216, batch_size: 1 } },
+    "6": { class_type: "CLIPTextEncode", inputs: { text: "a red fox in snow", clip: ["4", 1] } },
+    "7": { class_type: "CLIPTextEncode", inputs: { text: "blurry", clip: ["4", 1] } },
+    "10": { class_type: "ControlNetApply", inputs: { conditioning: ["6", 0], control_net: ["11", 0], image: ["12", 0], strength: 0.6 } },
+    "3": { class_type: "KSampler", inputs: { seed: 123, steps: 28, cfg: 5.5, sampler_name: "dpmpp_2m", scheduler: "karras", denoise: 1, model: ["4", 0], positive: ["10", 0], negative: ["7", 0], latent_image: ["5", 0] } },
+    "13": { class_type: "LatentUpscaleBy", inputs: { samples: ["3", 0], scale_by: 1.5 } },
+    "14": { class_type: "KSampler", inputs: { seed: 456, steps: 12, cfg: 5.5, sampler_name: "dpmpp_2m", scheduler: "karras", denoise: 0.4, model: ["4", 0], positive: ["10", 0], negative: ["7", 0], latent_image: ["13", 0] } },
+    "9": { class_type: "SaveImage", inputs: { filename_prefix: "x", images: ["8", 0] } },
+  };
+
+  it("gets the prompts, seeds, size and checkpoint as placeholders and keeps the sampler settings", () => {
+    const { graph, filled } = adaptComfyWorkflow(exported);
+    const g = graph as Record<string, { inputs: Record<string, unknown> }>;
+    expect(g["6"]?.inputs.text).toBe("%prompt%");
+    expect(g["7"]?.inputs.text).toBe("%negative_prompt%");
+    expect(g["3"]?.inputs.seed).toBe("%seed%");
+    expect(g["14"]?.inputs.seed).toBe("%seed%");
+    expect(g["5"]?.inputs).toMatchObject({ width: "%width%", height: "%height%" });
+    expect(g["4"]?.inputs.ckpt_name).toBe("%model%");
+    expect(g["3"]?.inputs).toMatchObject({ steps: 28, cfg: 5.5, sampler_name: "dpmpp_2m", scheduler: "karras" });
+    expect(filled.sort()).toEqual(["%height%", "%model%", "%negative_prompt%", "%prompt%", "%seed%", "%width%"]);
+    expect(exported["6"].inputs.text).toBe("a red fox in snow");
+  });
+
+  it("on import, hands the first pass's settings, CLIP skip and LoRAs to the form", () => {
+    const withLora = {
+      ...exported,
+      "20": { class_type: "LoraLoader", inputs: { lora_name: "detail.safetensors", strength_model: 0.7, strength_clip: 0.7, model: ["4", 0], clip: ["4", 1] } },
+      "30": { class_type: "CLIPSetLastLayer", inputs: { stop_at_clip_layer: -2, clip: ["20", 1] } },
+    };
+    const { graph, values } = adaptComfyWorkflow(withLora, { all: true });
+    const g = graph as Record<string, { inputs: Record<string, unknown> }>;
+    expect(values).toEqual({ width: 832, height: 1216, steps: 28, cfg: 5.5, sampler: "dpmpp_2m", scheduler: "karras", denoise: 1, clipSkip: 2, loras: [{ name: "detail.safetensors", strength: 0.7 }] });
+    expect(g["3"]?.inputs).toMatchObject({ steps: "%steps%", cfg: "%cfg%", sampler_name: "%sampler%", scheduler: "%scheduler%", denoise: "%denoise%" });
+    // the hires pass keeps its own
+    expect(g["14"]?.inputs).toMatchObject({ steps: 12, denoise: 0.4, sampler_name: "dpmpp_2m" });
+    expect(g["20"]?.inputs).toMatchObject({ lora_name: "%LORA_1%", strength_model: "%LORA_1_strength%", strength_clip: "%LORA_1_strength%" });
+    expect(g["30"]?.inputs.stop_at_clip_layer).toBe("%clip_skip%");
+  });
+
+  it("is adapted when saved, and the editor's own format is refused with how to export", () => {
+    const saved = validateImageEndpointInput({ name: "Local", kind: "comfyui", baseUrl: "http://127.0.0.1:8188", workflow: JSON.stringify(exported) });
+    expect(saved.ok && saved.value.workflow?.includes('"%prompt%"')).toBe(true);
+    const editor = validateImageEndpointInput({ name: "Local", kind: "comfyui", baseUrl: "http://127.0.0.1:8188", workflow: JSON.stringify({ nodes: [], links: [] }) });
+    expect(!editor.ok && editor.error).toMatch(/Export \(API\)/);
+    const noPrompt = validateImageEndpointInput({ name: "Local", kind: "comfyui", baseUrl: "http://127.0.0.1:8188", workflow: JSON.stringify({ "1": { class_type: "SaveImage", inputs: {} } }) });
+    expect(!noPrompt.ok && noPrompt.error).toMatch(/no prompt node/);
   });
 });
