@@ -15,7 +15,7 @@ import {
   type ImageEndpointDef,
 } from "../src/images.js";
 import { UserModelService, defaultImageModel, type ImageModelInfo } from "../src/models.js";
-import { adaptComfyWorkflow, deleteImageEndpoint, validateImageEndpointInput, readImageFavorites, validateImageFavorites, writeImageFavorites } from "../src/images.js";
+import { adaptComfyWorkflow, deleteImageEndpoint, readImageFavorites, validateImageFavorites, writeImageFavorites } from "../src/images.js";
 import { buildApp } from "../src/server/app.js";
 import { EventBus } from "../src/server/ws.js";
 import { SessionService } from "../src/sessions.js";
@@ -511,14 +511,14 @@ describe("a workflow exported from ComfyUI", () => {
 
   it("gets the prompts, seeds, size and checkpoint as placeholders and keeps the sampler settings", () => {
     const { graph, filled } = adaptComfyWorkflow(exported);
-    const g = graph as typeof exported;
-    expect(g["6"].inputs.text).toBe("%prompt%");
-    expect(g["7"].inputs.text).toBe("%negative_prompt%");
-    expect(g["3"].inputs.seed).toBe("%seed%");
-    expect(g["14"].inputs.seed).toBe("%seed%");
-    expect(g["5"].inputs).toMatchObject({ width: "%width%", height: "%height%" });
-    expect(g["4"].inputs.ckpt_name).toBe("%model%");
-    expect(g["3"].inputs).toMatchObject({ steps: 28, cfg: 5.5, sampler_name: "dpmpp_2m", scheduler: "karras" });
+    const g = graph as Record<string, { inputs: Record<string, unknown> }>;
+    expect(g["6"]?.inputs.text).toBe("%prompt%");
+    expect(g["7"]?.inputs.text).toBe("%negative_prompt%");
+    expect(g["3"]?.inputs.seed).toBe("%seed%");
+    expect(g["14"]?.inputs.seed).toBe("%seed%");
+    expect(g["5"]?.inputs).toMatchObject({ width: "%width%", height: "%height%" });
+    expect(g["4"]?.inputs.ckpt_name).toBe("%model%");
+    expect(g["3"]?.inputs).toMatchObject({ steps: 28, cfg: 5.5, sampler_name: "dpmpp_2m", scheduler: "karras" });
     expect(filled.sort()).toEqual(["%height%", "%model%", "%negative_prompt%", "%prompt%", "%seed%", "%width%"]);
     expect(exported["6"].inputs.text).toBe("a red fox in snow");
   });
