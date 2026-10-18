@@ -13,7 +13,7 @@ Finished work is not listed here: see STATE ("Released") and git history.
    earlier message changes (~1 day), #49 Z.ai Coding Plan report (waits for the reporter). Image generation for many
    providers (Marinara's list) runs in its own session/branch (`image-providers`). The SillyTavern importer (P1) is
    designed in `.fork/handoff/st-import/FINDINGS.md`, not started.
-000a. **World DM P3** (user, 2026-10-18: prepare, not started): `.fork/handoff/world-dm/P3-PLAN.md`; the user answers its 5 decisions first.
+000a. **World DM P3** (user, 2026-10-18: prepare, not started): `.fork/handoff/world-dm/P3-PLAN.md`; decisions answered; start on the user's word.
 00. **1.1.0 released 2026-10-16** (STATE). Open from it: #34 waits for the reporter; Drive sync on a real phone (the user checks the APK); the project site (session branch `claude/beautiful-mccarthy-a159c9`, its own handoff).
 0. **Canvas, after stage 1b** (1b shipped in Roleplay 4.44.0, 2026-10-14): the agreed order is in
    `.fork/handoff/canvas/PLAN.md` section 15: settle 4.44.0, Decider (+ Molfar's tool), character

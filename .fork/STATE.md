@@ -146,7 +146,8 @@ Notes `.fork/release-notes/1.2.1.md`. Asked, not decided: a Gemini API image bac
 ## World + DM (#52): P0-P2 released in 1.2.5 / Roleplay 4.53.0; P3 prepared, not started
 Design and phases: `.fork/handoff/world-dm/DESIGN.md`. P3 (catch up on a whole chat, recipes, create from cards,
 carry to a new chat, interview) plus monitoring gaps found 2026-10-18 (Prompt peek never shows hook inserts, the
-Inspector keeps only 20 requests, run history hidden): `.fork/handoff/world-dm/P3-PLAN.md`, 5 decisions open.
+Inspector keeps only 20 requests, run history hidden): `.fork/handoff/world-dm/P3-PLAN.md`; decisions answered 2026-10-18 (DM gets its own rail section, token
+control first); not started, the user is still collecting what the DM does in play.
 Plan on engine branch `claude/world-dm-p3-i5a7bo`; the Roleplay fork has no P3 commits yet.
 
 ## Large libraries, P0 (#46): RELEASED in 1.2.0 / Roleplay 4.49.0 (2026-10-17)

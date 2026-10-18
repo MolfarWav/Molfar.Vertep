@@ -1,6 +1,7 @@
 # World DM, P3: start a world, carry it to a new chat (GitHub #52, follow-up)
 
-Status: prepared 2026-10-18, NOT started (user: "not launching yet, but prepare"). P0-P2 shipped in Roleplay
+Status: prepared 2026-10-18, NOT started (user: "not launching yet, but prepare"). Decisions answered by the
+user 2026-10-18 (section "Decisions"); the user is still collecting what the DM does in play before the start. P0-P2 shipped in Roleplay
 4.53.0 / engine 1.2.5. Design: `DESIGN.md` next to this file (read its "P0 as built" and "P1/P2 as built").
 Code lives in the Roleplay fork (MolfarWav/Molfar.Vertep-Roleplay); this repo gets docs only.
 Run `ux-review` before building each UI piece. Decisions marked "default" wait for the user's word.
@@ -74,18 +75,35 @@ to this reply: open the Inspector to see it" (no text, keeps the event hidden). 
 Files touched (Roleplay fork): `plugins/world/plugin.js`, `src/lib/world.ts`, `src/components/chat/world-sheet.tsx`,
 `src/components/chat/new-chat-step.tsx` (step 4), `src/lib/i18n.ts` (en + uk), `src/lib/store.ts` (carry after
 `newChat`), `data/world/recipes/_*.json`, `test/rp-world.test.ts`, `docs/DATA-FORMATS.md`, `CHANGELOG.md`.
-Engine repo: this file, `DESIGN.md` "P3 as built", `.fork/STATE.md`; `src/inspector.ts` KEEP only if decision 4 says so.
+Engine repo: this file, `DESIGN.md` "P3 as built", `.fork/STATE.md`, `src/inspector.ts` KEEP 50 (decision 4).
+Decision 2 adds the app's rail section and a new view (`src/components/views/`), with the sheet slimmed down.
 
-## Decisions for the user
-1. Card lore in the world book: copy it, or only learn from it? Default: learn only. The card's own books already
-   fire in the chat; copying doubles the tokens and the two copies drift. The world book gets what the cards imply
-   but do not record (factions, places named in passing, the conflict) plus fronts.
-2. "Start a world": only in the World DM sheet, or also in the new chat step? Default: sheet first (steps 1-3),
-   the new chat step comes with carry (step 4).
-3. Carry: records + fronts as they stand, clocks included? Default: yes, the new chat continues the same world;
-   a "fresh clocks" checkbox only if asked for.
-4. Monitoring: run history fold + Prompt peek line + Inspector 50 (above). Default: all three, before P3 proper.
-5. Interview: a form (default) or a short conversation with the DM model?
+## Decisions (answered by the user 2026-10-18)
+1. Card lore: the DM **learns** from it, never copies it into the world book.
+2. The World DM becomes **its own section in the app's left rail**, next to Litopys and the Library (user: "it was
+   meant as a separate app; the chat holds only its piece"). "Start a world", recipes, carry, run history and token
+   use live there; the chat keeps a small piece (the current sheet: on/off, level, triggers, World turn). Design the
+   split with `ux-review` before building (how Litopys's rail section and its chat piece divide the work is the model).
+3. Carry: records and fronts as they stand, clocks included.
+4. Monitoring: all three (run history, Prompt peek line, Inspector KEEP 50).
+5. Interview: a form.
+
+## Token control for the DM (user, 2026-10-18)
+Seen on the user's machine: model `nanogpt/z-ai/glm-5.3:thinking`, error "the DM model spent its whole reply limit
+thinking and wrote no answer", the DM never ran. Cause (inference from `callParams`): the reply limit is
+`config.maxTokens` (default 1500, 500-8000) + the chat preset's thinking budget only when that preset has reasoning
+on; a `:thinking` model thinks anyway and burns the 1500. The error tells the player to "raise the DM's reply
+limit", but no UI sets `maxTokens` (`world-sheet.tsx` reads only `model`). Also a double period: `emptyReplyError`
+ends with "." and `world.error` adds another.
+Plan, first in P3 (with monitoring):
+- The reply limit as a field in the DM settings (all chats), with a hint for thinking models.
+- Per run, keep `usage` (input, output, cost when priced) and `ms` in `log` (the llm result has them; Litopys does
+  the same in `plugins/litopys/plugin.js` ~1386). Show the last run's tokens and the chat's total in the status
+  block, and per run in the run history.
+- Show the input size before a run (records + unread text, `estimateTokens`) and cap it: the existing caps are
+  8000 chars of new text, 2500 per message; make the new-text cap a setting too if the user wants (open).
+- Fix the double period.
+Workaround today: pick the model without `:thinking`, or "Use the chat's model".
 
 ## Unknown / not decided
 - `/worldbuild` (START.md queue, #52 line): a slash command in the chat, a Molfar tool, or both is not written
