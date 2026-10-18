@@ -16,8 +16,8 @@ Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1; main 1.2.1 merged in
   (`migrateRenamedProviders`, connections.ts). `model-additions.ts` removed (the catalog has the newer
   Anthropic models). Dropped ids: moonshotai kimi-k2*, deepseek-v4-flash, six zai-coding-cn models.
 - Claude 5.5 via OAuth gave HTTP 400 (user, 2026-10-18). Inferred cause: our copies of older siblings sent
-  `temperature` (Sonnet/Haiku copies) and allowed thinking levels 5.5 refuses. Not verified (no OAuth token
-  in the cloud); the user re-tests with `dev`.
+  `temperature` (Sonnet/Haiku copies) and allowed thinking levels 5.5 refuses. Confirmed fixed by the user on
+  1.2.2 (2026-10-18); `Molfar-Vertep.bat previous` also checked by hand (offers v1.2.1).
 - Live lists (`src/providers/live-catalog.ts`): OpenRouter (public, quotes windows and prices), DeepSeek,
   Moonshot add ids the catalog lacks; nothing removed. Other built-ins left static on purpose: own APIs
   (Anthropic, Google, Bedrock, Vertex, Copilot, Codex), fixed plans (coding/token plans), or lists that mix
