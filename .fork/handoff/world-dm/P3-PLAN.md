@@ -96,7 +96,11 @@ on; a `:thinking` model thinks anyway and burns the 1500. The error tells the pl
 limit", but no UI sets `maxTokens` (`world-sheet.tsx` reads only `model`). Also a double period: `emptyReplyError`
 ends with "." and `world.error` adds another.
 Plan, first in P3 (with monitoring):
-- The reply limit as a field in the DM settings (all chats), with a hint for thinking models.
+- The reply limit: the engine already has per-model parameter blocks per plugin (Settings > Connections and models >
+  a model > Parameters > "World DM"; `withModelParams` in `src/models.ts`, the block wins over the plugin's
+  `presetParams`). The user set one up 2026-10-18 (max output 2048, reasoning off). It is keyed by the model id, so a
+  `:thinking` variant needs its own block. So: no second limit field in the DM; the DM settings show the limit in
+  force and link to that block, and the empty-reply error names it instead of "raise the DM's reply limit".
 - Per run, keep `usage` (input, output, cost when priced) and `ms` in `log` (the llm result has them; Litopys does
   the same in `plugins/litopys/plugin.js` ~1386). Show the last run's tokens and the chat's total in the status
   block, and per run in the run history.
