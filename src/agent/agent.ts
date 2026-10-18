@@ -39,6 +39,7 @@ import { buildBugSolutionTool } from "./bug-solution.js";
 import { LANGUAGE_RULE, PRECEDENCE_RULE } from "./prompt-rules.js";
 import { resetAllowed } from "./protect.js";
 import { readSandboxSettings } from "../sandbox/network.js";
+import { putAsset } from "../assets/store.js";
 import { projectLayout, projectPromptSection, readSettings } from "./projects.js";
 import { rememberSystemParts, type SourceKind, type SourcePart } from "../prompt-sources.js";
 
@@ -531,6 +532,11 @@ export class UserAgent {
           return m ? { ref: `${m.provider}/${m.id}`, price: (u) => svc.costOf(m, u) } : null;
         },
         generate: (req) => svc.generate(req),
+      },
+      images: {
+        list: () => svc.imageModels(),
+        generate: (req) => svc.generateImage(req),
+        store: (data, mimeType, name) => `/v1/assets/${putAsset(paths, data, mimeType, name, null).id}`,
       },
       // offered only while internet is on; the tool re-reads the switch per call
       ...(readSandboxSettings(paths.sandbox).internet ? { internet: () => readSandboxSettings(paths.sandbox).internet } : {}),

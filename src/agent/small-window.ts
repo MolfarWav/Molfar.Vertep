@@ -41,7 +41,7 @@ export function isSmallWindow(mode: SmallModelMode, contextWindow: number | null
 
 // ---------- tool groups ----------
 
-export type ToolGroup = "app" | "skills" | "shell" | "web" | "admin" | "mcp";
+export type ToolGroup = "app" | "skills" | "shell" | "web" | "image" | "admin" | "mcp";
 
 /** Always sent in small mode. */
 export const CORE_TOOLS: ReadonlySet<string> = new Set(["read_file", "write_file", "edit_file", "json_get", "json_set", "grep", "git", "ask_user", "skill_load", "memory_propose", "memory_search", "tools_enable"]);
@@ -58,6 +58,7 @@ const GROUP_OF: Record<string, ToolGroup> = {
   app_request: "app",
   model_try: "app",
   web_fetch: "web",
+  image_generate: "image",
   // small mode: big runs are app work, and the core set has no room for it
   run_budget: "app",
   skill_propose: "skills",
@@ -79,6 +80,7 @@ const GROUP_LINES: Record<ToolGroup, string> = {
   skills: "skills: propose a new skill or edit one",
   shell: "shell: bash in the sandbox (scripts, batch edits, data crunching)",
   web: "web: read a public web page as text",
+  image: "image: draw a picture (avatar, background) with the user's image models",
   admin: "admin: accounts and server settings",
   mcp: "mcp: the tools of the user's MCP servers",
 };
@@ -100,6 +102,7 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
   app_request: "Call an app's own plugin route as the user: id, method, path, body. Writes are real and committed.",
   model_try: "One paid test generation on a model (the user confirms): messages, system, model, maxTokens.",
   web_fetch: "Read a public web page as plain text (internet must be on in Settings).",
+  image_generate: "Draw a picture, get its /v1/assets/<id> URL for a card avatar or background. list: true lists models; prompt in English; paid models ask the user.",
   run_budget: "Before a big task (app code or 4+ files): steps, one-line plan, files; writes wait for the user's go.",
   checkpoint: "Save or restore an app's code: create before risky work, list, restore (asks the user). data/ is never touched.",
   bug_solution: "Close a reported bug (skill fix-bug): solved, problem, cause, fix, app + the checkpoint taken before the fix; the user gets a card to send it.",

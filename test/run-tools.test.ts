@@ -9,6 +9,7 @@ import { buildRunTools, estimateRun, htmlToText, newPlanState, planGate, PLAN_FI
 import { clearPluginLog, readPluginLog, recordPluginLog } from "../src/plugins/plugin-log.js";
 import { assertInternetHost } from "../src/net-guard.js";
 import type { AskRequest } from "../src/agent/tools.js";
+import { groupOf, visibleTools, type ToolGroup } from "../src/agent/small-window.js";
 
 const tool = (tools: AgentTool[], name: string): AgentTool => {
   const t = tools.find((x) => x.name === name);
@@ -211,5 +212,128 @@ describe("plan first", () => {
     reply = "Stop";
     await run(t, { steps: 6, plan: "Split the editor" });
     expect(plan.answer).toBe("stop");
+  });
+});
+
+describe("image_generate", () => {
+  type Row = { provider: string; id: string; label: string; api: string; connectionName?: string };
+  const local: Row = { provider: "comfy", id: "sdxl", label: "SDXL local", api: "comfyui", connectionName: "My ComfyUI" };
+  const paid: Row = { provider: "openrouter", id: "flux", label: "Flux", api: "openrouter-images", connectionName: "OR key" };
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from("abcd")]);
+  const setup = (rows: Row[], answer?: string, throwMsg?: string) => {
+    const gen: { prompt: string; model: string }[] = [];
+    const stored: { name: string; mime: string }[] = [];
+    const asked: AskRequest[] = [];
+    const images = {
+      list: async () => rows as never,
+      generate: async (req: { prompt: string; model: string }) => {
+        gen.push(req);
+        if (throwMsg) throw new Error(throwMsg);
+        return { data: png, mimeType: "image/png", model: req.model };
+      },
+      store: (_d: Buffer, mime: string, name: string) => {
+        stored.push({ name, mime });
+        return "/v1/assets/abc123";
+      },
+    };
+    const ask = answer === undefined ? undefined : async (q: AskRequest) => (asked.push(q), answer);
+    const t = tool(buildRunTools("mia", { images, ask }), "image_generate");
+    return { t, gen, stored, asked };
+  };
+
+  it("says so when the user has no image model", async () => {
+    const { t, gen } = setup([]);
+    const r = await run(t, { prompt: "a cat" });
+    expect(out(r)).toContain("no image model");
+    expect(gen.length).toBe(0);
+  });
+
+  it("lists refs with the default first, local ones marked free, when list is true or no prompt", async () => {
+    const { t, gen } = setup([local, paid]);
+    for (const params of [{ list: true, prompt: "x" }, {}]) {
+      const text = out(await run(t, params));
+      expect(text).toContain("2 image model(s)");
+      expect(text.indexOf("comfy/sdxl")).toBeLessThan(text.indexOf("openrouter/flux"));
+      const localLine = text.split("\n").find((l) => l.includes("comfy/sdxl"))!;
+      expect(localLine).toContain("local, free");
+      expect(text.split("\n").find((l) => l.includes("openrouter/flux"))!).not.toContain("free");
+    }
+    expect(gen.length).toBe(0);
+  });
+
+  it("draws on a local model without asking, keeps it, and cleans the file name", async () => {
+    const { t, gen, stored } = setup([paid, local], "Skip");
+    const r = await run(t, { prompt: "  1girl, solo ", model: "comfy/sdxl", name: "Jude Avatar!.png" });
+    expect(out(r)).toContain("/v1/assets/abc123");
+    expect((r as { details?: { drawn?: boolean } }).details?.drawn).toBe(true);
+    expect(gen).toEqual([{ prompt: "1girl, solo", model: "comfy/sdxl" }]);
+    expect(stored[0]!.name).toBe("Jude-Avatar.png");
+    const d = setup([local]);
+    await run(d.t, { prompt: "x" });
+    expect(d.stored[0]!.name).toMatch(/\.png$/);
+    expect(d.stored[0]!.name).toBe("image.png");
+  });
+
+  it("asks before a paid picture and draws once on Draw", async () => {
+    for (const api of ["openrouter-images", "nanogpt-images"]) {
+      const row = { ...paid, api };
+      const { t, gen, asked } = setup([row], "Draw");
+      const r = await run(t, { prompt: "a castle" });
+      expect(asked[0]!.question).toContain("Flux");
+      expect(asked[0]!.question).toContain("OR key");
+      expect(gen).toEqual([{ prompt: "a castle", model: "openrouter/flux" }]);
+      expect((r as { details?: { drawn?: boolean } }).details?.drawn).toBe(true);
+    }
+  });
+
+  it("does not draw on Skip, shows free text, and does not draw without an ask", async () => {
+    const skip = setup([paid], "Skip");
+    expect(out(await run(skip.t, { prompt: "x" }))).toContain("Not drawn");
+    expect(skip.gen.length).toBe(0);
+    const talk = setup([paid], "make it blue instead");
+    const text = out(await run(talk.t, { prompt: "x" }));
+    expect(text).toContain("Not drawn");
+    expect(text).toContain("make it blue instead");
+    expect(talk.gen.length).toBe(0);
+    const nobody = setup([paid]);
+    const r = await run(nobody.t, { prompt: "x" });
+    expect(out(r)).toContain("Not drawn");
+    expect((r as { details?: { drawn?: boolean } }).details?.drawn).toBe(false);
+    expect(nobody.gen.length).toBe(0);
+  });
+
+  it("refuses an unknown model ref and points to the list", async () => {
+    const { t, gen } = setup([local]);
+    const r = await run(t, { prompt: "x", model: "nope/none" });
+    expect(out(r)).toContain("list: true");
+    expect((r as { details?: { drawn?: boolean } }).details?.drawn).toBe(false);
+    expect(gen.length).toBe(0);
+  });
+
+  it("reports a generate failure as text instead of throwing", async () => {
+    const { t } = setup([local], undefined, "ComfyUI is not reachable");
+    expect(out(await run(t, { prompt: "x" }))).toContain("Not drawn: ComfyUI is not reachable");
+  });
+
+  it("cuts the prompt to 4000 characters", async () => {
+    const { t, gen } = setup([local]);
+    await run(t, { prompt: "a".repeat(5000) });
+    expect(gen[0]!.prompt.length).toBe(4000);
+  });
+
+  it("is absent in plan mode and without images", () => {
+    const images = { list: async () => [] as never, generate: async () => ({ data: png, mimeType: "image/png", model: "m" }), store: () => "/v1/assets/x" };
+    expect(buildRunTools("mia", { images }).some((t) => t.name === "image_generate")).toBe(true);
+    expect(buildRunTools("mia", { images, mode: "plan" }).some((t) => t.name === "image_generate")).toBe(false);
+    expect(buildRunTools("mia", {}).some((t) => t.name === "image_generate")).toBe(false);
+  });
+
+  it("belongs to the image group, hidden in small mode until unlocked", () => {
+    expect(groupOf("image_generate")).toBe("image");
+    const images = { list: async () => [] as never, generate: async () => ({ data: png, mimeType: "image/png", model: "m" }), store: () => "/v1/assets/x" };
+    const all = buildRunTools("mia", { images });
+    const names = (u: ToolGroup[]) => visibleTools(all, true, new Set(u)).map((t) => t.name);
+    expect(names([])).not.toContain("image_generate");
+    expect(names(["image"])).toContain("image_generate");
   });
 });
