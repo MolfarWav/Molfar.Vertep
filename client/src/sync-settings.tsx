@@ -576,7 +576,7 @@ export function SyncTab(props: { isAdmin: boolean }) {
               )}
               {status?.behind && !replaceOpen && (
                 <div>
-                  <Button variant="ghost" size="small" disabled={anyBusy} onClick={() => setReplaceOpen(true)}>
+                  <Button variant="ghost" size="small" className="!h-auto min-h-7 !whitespace-normal !leading-snug text-left !py-1" disabled={anyBusy} onClick={() => setReplaceOpen(true)}>
                     {tr("Don't want what the sync holds? Replace it with this device…")}
                   </Button>
                 </div>
@@ -591,6 +591,7 @@ export function SyncTab(props: { isAdmin: boolean }) {
                     <Button variant="warning" size="small" disabled={anyBusy} onClick={() => { setReplaceOpen(false); void startJob("push", { replace: true }) }}>
                       {tr("Replace the sync")}
                     </Button>
+                    <Button variant="neutral" size="small" disabled={anyBusy} onClick={() => { setReplaceOpen(false); void startJob("pull") }}>{tr("Pull")}</Button>
                     <Button variant="ghost" size="small" disabled={anyBusy} onClick={() => setReplaceOpen(false)}>{tr("Cancel")}</Button>
                   </div>
                 </div>
