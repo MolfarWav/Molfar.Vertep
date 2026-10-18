@@ -52,6 +52,11 @@ holds the rules that do not change between tasks; the handoff holds the task.
   closed with the release that ships it.
 - Outside the batch only urgent bugs: lost data, the app does not start, the update is broken.
 
+## Open work lives in issues (user, 2026-10-18)
+- Anything a thread leaves undecided or undone (ideas, follow-ups, questions waiting on the user) becomes a GitHub issue
+  in MolfarWav/Molfar.Vertep before the thread ends, label `enhancement` or `bug`, so the user picks work from GitHub
+  instead of searching `.fork/` notes. A decision made later goes into the issue as a comment.
+
 ## Done means
 1. `bun run typecheck`, `bun run test`, `bun run build:client` pass.
 2. `bunx biome lint <touched files>` adds no warnings beyond the surrounding style.
