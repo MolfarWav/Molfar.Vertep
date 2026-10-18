@@ -2,7 +2,7 @@
 // image servers (a local ComfyUI or AUTOMATIC1111/Forge, or any
 // OpenAI-compatible images endpoint). Keys are write-only: the engine never
 // sends one back.
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { api } from "./api"
 import { Button, IconButton } from "./ui/button"
 import { IconSmall } from "./ui/icon"
@@ -60,6 +60,7 @@ const imagesApi = {
   update: (id: string, body: Record<string, unknown>) => api<{ endpoint: ImageEndpoint }>("PATCH", `/v1/images/endpoints/${encodeURIComponent(id)}`, body),
   options: (id: string) => api<{ samplers?: string[]; schedulers?: string[]; loras?: string[] }>("GET", `/v1/images/endpoints/${encodeURIComponent(id)}/options`).then((r) => ({ samplers: r.samplers ?? [], schedulers: r.schedulers ?? [], loras: r.loras ?? [] })),
   remove: (id: string) => api("DELETE", `/v1/images/endpoints/${encodeURIComponent(id)}`),
+  adaptWorkflow: (workflow: string) => api<{ workflow: string; filled: string[]; values: WorkflowValues }>("POST", "/v1/images/workflow/adapt", { workflow }),
   check: (id: string) => api<{ models: { id: string }[] }>("GET", `/v1/images/endpoints/${encodeURIComponent(id)}/models`).then((r) => r.models ?? []),
 }
 
@@ -406,6 +407,12 @@ const isEmpty = (v: unknown) => v === null || v === "" || (Array.isArray(v) && v
 
 interface ServerOptions { samplers: string[]; schedulers: string[]; loras: string[] }
 
+/** What an imported workflow was set to (src/images.ts ComfyWorkflowValues). */
+interface WorkflowValues {
+  width?: number; height?: number; steps?: number; cfg?: number; sampler?: string; scheduler?: string
+  denoise?: number; clipSkip?: number; loras?: Array<{ name: string; strength: number }>
+}
+
 /** The add form and, with `ep`, the edit form of one server. An edit sends only
  *  what changed; the key is never shown, only replaced or removed. */
 function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; onSaved: () => void }) {
@@ -419,6 +426,39 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
   const kind = f.kind
   const local = kind !== "openai"
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((x) => ({ ...x, [k]: v }))
+  const [taken, setTaken] = useState("")
+  const fileInput = useRef<HTMLInputElement>(null)
+
+  /** An exported workflow into the form: its settings fill the fields above,
+   *  and the workflow gets placeholders where they go. */
+  const importWorkflow = async (text: string) => {
+    setErr("")
+    setTaken("")
+    try {
+      const r = await imagesApi.adaptWorkflow(text)
+      const v = r.values
+      const str = (n: number | string | undefined) => (n === undefined ? undefined : String(n))
+      const from: Partial<FormState> = {
+        width: str(v.width), height: str(v.height), steps: str(v.steps), cfg: str(v.cfg), sampler: v.sampler, scheduler: v.scheduler,
+        denoise: str(v.denoise), clipSkip: str(v.clipSkip),
+        loras: v.loras?.map((l) => ({ id: ++loraId, name: l.name, strength: String(l.strength) })),
+      }
+      for (const k of Object.keys(from) as (keyof FormState)[]) if (from[k] === undefined) delete from[k]
+      setF((x) => ({ ...x, ...from, workflow: r.workflow }))
+      const labels: Record<string, string> = {
+        width: tr("Width"), height: tr("Height"), steps: tr("Steps"), cfg: tr("CFG"), sampler: tr("Sampler"), scheduler: tr("Scheduler"),
+        denoise: tr("Denoise"), clipSkip: tr("Clip skip"), loras: tr("LoRAs"),
+      }
+      const names = Object.keys(from).map((k) => labels[k] ?? k)
+      setTaken(names.length ? tr("Taken from the workflow: {list}. Change them in the fields above.", { list: names.join(", ") }) : tr("The workflow is ready; it had no settings for the fields above."))
+    } catch (e: any) {
+      setErr(e.message ?? String(e))
+    }
+  }
+  const pickFile = async (file: File | undefined) => {
+    if (fileInput.current) fileInput.current.value = ""
+    if (file) await importWorkflow(await file.text())
+  }
 
   // the server's own lists, asked for once when a saved local server is edited
   // biome-ignore lint/correctness/useExhaustiveDependencies: once per server
@@ -593,10 +633,18 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
 
           {kind === "comfyui" ? <>
             {group(tr("Workflow"))}
+            <div className="flex flex-wrap items-center gap-2">
+              <input ref={fileInput} type="file" accept=".json,application/json" className="hidden" onChange={(e) => void pickFile(e.currentTarget.files?.[0])} />
+              <Button variant="neutral" size="small" onClick={() => fileInput.current?.click()}>{tr("Import workflow file…")}</Button>
+              {f.workflow.trim() && !f.workflow.includes("%steps%") ? (
+                <Button variant="neutral" size="small" onClick={() => void importWorkflow(f.workflow)}>{tr("Take the settings from this workflow")}</Button>
+              ) : null}
+            </div>
+            {taken ? <div className="text-12 text-ink-muted" role="status">{taken}</div> : null}
             {field(
               tr("Your own workflow (optional)"),
               <textarea className={cn(inputClass, "min-h-24 font-mono text-12")} spellCheck={false} placeholder='{"3": {"class_type": "KSampler", …}}' value={f.workflow} onChange={(e) => set("workflow", e.currentTarget.value)} />,
-              tr("Paste a workflow exported with Workflow > Export (API). Saving puts in %prompt%, %negative_prompt%, %seed%, %width%, %height% and %model% by itself; steps, CFG and sampler stay as the workflow has them. To change more per server, mark them yourself: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%, LoRA slots %LORA_1% to %LORA_5% and %LORA_1_strength% and so on (empty slots get None). Empty: a simple text-to-image workflow."),
+              tr("Import a workflow exported with Workflow > Export (API): the fields above take its size, steps, CFG, sampler, scheduler, denoise, CLIP skip and LoRAs, and each picture gets its own prompt, seed and model. A pasted workflow gets %prompt%, %negative_prompt%, %seed%, %width%, %height% and %model% when saved; mark others yourself: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%, %LORA_1% to %LORA_5% and %LORA_1_strength% and so on (empty slots get None). Empty: a simple text-to-image workflow."),
             )}
           </> : null}
         </div>

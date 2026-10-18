@@ -55,7 +55,7 @@ import {
   EDGE_FORMATS, EDGE_VOICES, createSpeechEndpoint, deleteSpeechEndpoint, edgeSpeakFmt,
   endpointSpeak, listSpeechEndpoints, speechEndpointKey, updateSpeechEndpoint, validateSpeechEndpointInput,
 } from "../speech.js";
-import { ImageError, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
+import { ImageError, adaptComfyWorkflow, comfyWorkflowProblem, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
 import type { EdgeFormat } from "../speech.js";
 import * as assets from "../assets/store.js";
 import { createSandbox, type SandboxRunner } from "../sandbox/index.js";
@@ -1620,6 +1620,23 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     } catch (e) {
       return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
     }
+  });
+  // the server form's "Import workflow": an Export (API) file with its values
+  // taken into the form and placeholders put in their place (shell-only)
+  app.post("/v1/images/workflow/adapt", async (c) => {
+    const body = await c.req.json<{ workflow?: unknown }>().catch(() => null);
+    const text = typeof body?.workflow === "string" ? body.workflow : null;
+    if (!text || text.length > 512 * 1024) return c.json({ error: "the workflow must be text of at most 512 KB" }, 400);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      return c.json({ error: "the workflow is not valid JSON (export it with Workflow > Export (API))" }, 400);
+    }
+    const problem = comfyWorkflowProblem(parsed);
+    if (problem) return c.json({ error: problem }, 400);
+    const adapted = adaptComfyWorkflow(parsed as Record<string, unknown>, { all: true });
+    return c.json({ workflow: JSON.stringify(adapted.graph, null, 2), filled: adapted.filled, values: adapted.values });
   });
   app.get("/v1/images/endpoints/:id/options", async (c) => {
     try {

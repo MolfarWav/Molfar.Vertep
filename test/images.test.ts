@@ -523,6 +523,22 @@ describe("a workflow exported from ComfyUI", () => {
     expect(exported["6"].inputs.text).toBe("a red fox in snow");
   });
 
+  it("on import, hands the first pass's settings, CLIP skip and LoRAs to the form", () => {
+    const withLora = {
+      ...exported,
+      "20": { class_type: "LoraLoader", inputs: { lora_name: "detail.safetensors", strength_model: 0.7, strength_clip: 0.7, model: ["4", 0], clip: ["4", 1] } },
+      "30": { class_type: "CLIPSetLastLayer", inputs: { stop_at_clip_layer: -2, clip: ["20", 1] } },
+    };
+    const { graph, values } = adaptComfyWorkflow(withLora, { all: true });
+    const g = graph as Record<string, { inputs: Record<string, unknown> }>;
+    expect(values).toEqual({ width: 832, height: 1216, steps: 28, cfg: 5.5, sampler: "dpmpp_2m", scheduler: "karras", denoise: 1, clipSkip: 2, loras: [{ name: "detail.safetensors", strength: 0.7 }] });
+    expect(g["3"]?.inputs).toMatchObject({ steps: "%steps%", cfg: "%cfg%", sampler_name: "%sampler%", scheduler: "%scheduler%", denoise: "%denoise%" });
+    // the hires pass keeps its own
+    expect(g["14"]?.inputs).toMatchObject({ steps: 12, denoise: 0.4, sampler_name: "dpmpp_2m" });
+    expect(g["20"]?.inputs).toMatchObject({ lora_name: "%LORA_1%", strength_model: "%LORA_1_strength%", strength_clip: "%LORA_1_strength%" });
+    expect(g["30"]?.inputs.stop_at_clip_layer).toBe("%clip_skip%");
+  });
+
   it("is adapted when saved, and the editor's own format is refused with how to export", () => {
     const saved = validateImageEndpointInput({ name: "Local", kind: "comfyui", baseUrl: "http://127.0.0.1:8188", workflow: JSON.stringify(exported) });
     expect(saved.ok && saved.value.workflow?.includes('"%prompt%"')).toBe(true);
