@@ -143,10 +143,11 @@ Notes `.fork/release-notes/1.2.1.md`. Asked, not decided: a Gemini API image bac
 
 ## 1.2.0: RELEASED 2026-10-17 on the user's word (main fast-forwarded to the release commit, tag v1.2.0; Roleplay 4.49.0 on the fork's main, merged from `claude/slim-start` + `claude/attention`). Engine = main 1.1.1 + `claude/slim-start-engine` + `claude/image-providers-c9b607` (only conflict: this file). Notes `.fork/release-notes/1.2.0.md`. Not in it: the site branch `claude/hopeful-mccarthy-39ropd`. Checks: typecheck, build:client pass; tests 809 pass, the 15 known Windows-only failures plus 4 load flakes that pass alone; Roleplay 1060 pass, typecheck clean.
 
-## World + DM (#52): designed 2026-10-17, not started
-A Roleplay plugin that starts a world (interview or "Create from cards") and a DM that moves it during play
-(fronts and clocks, a chat-owned hidden world book, insert seen only in the Inspector, five levels up to "Total
-chaos", scene directions from the Dashboard sensor). Design and phases: `.fork/handoff/world-dm/DESIGN.md`.
+## World + DM (#52): P0-P2 released in 1.2.5 / Roleplay 4.53.0; P3 prepared, not started
+Design and phases: `.fork/handoff/world-dm/DESIGN.md`. P3 (catch up on a whole chat, recipes, create from cards,
+carry to a new chat, interview) plus monitoring gaps found 2026-10-18 (Prompt peek never shows hook inserts, the
+Inspector keeps only 20 requests, run history hidden): `.fork/handoff/world-dm/P3-PLAN.md`, 5 decisions open.
+Branch `claude/world-dm-p3-i5a7bo` in both repos.
 
 ## Large libraries, P0 (#46): RELEASED in 1.2.0 / Roleplay 4.49.0 (2026-10-17)
 Why: a long-time SillyTavern player has 2,000+ cards; Roleplay's `/bootstrap` read every card whole in a 64 MB
