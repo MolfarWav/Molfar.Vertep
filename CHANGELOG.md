@@ -5,7 +5,9 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
-## Unreleased (1.2.3)
+## Unreleased
+
+## 1.2.3 (2026-10-18)
 
 - Molfar's chat takes files besides pictures: text, Markdown, JSON, CSV and other text formats, plus Word and OpenDocument documents (their text). A file is saved under `uploads/<day>/` in the workspace (outside git, kept by backups, read-only for the agent), and the message names it as `@uploads/...`, so the existing mention reader puts it in (64 KB cap, a big JSON as its outline). Notepad's UTF-16 is converted; other encodings and PDFs are refused with the reason on the file's tile (`PUT /v1/agent/uploads/:name`, shell-only). Mentions now take names in any script.
 - Files Molfar names in a reply open with a click: a markdown link or an inline workspace path opens `GET /v1/agent/file` (shell-only: what the agent may read, never `.git` or `auth.json`, nothing that leaves the workspace through a link, up to 20 MB; html, svg and scripts are served as plain text under a sandbox policy), with a download icon beside it. Molfar is told to link the files it makes.
@@ -13,7 +15,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 - OAuth sign-ins (Anthropic and others) no longer break after a refresh: refreshes of one file are queued, and a refresh that changes nothing keeps the stored sign-in instead of deleting it (inferred cause of "invalid_grant" on model checks). The error now says to sign in again under Settings > Connections.
 - `Molfar-Vertep.bat` opens a start menu (#65): numbered keys: 1 Start, 2 start without updating, 3 Update, 4 Dev branch, 5 Previous release, 6 Check the setup, 7 Reinstall, 0 Quit; it starts by itself after 10 seconds, and any argument skips it. In a console at least 101 columns wide it shows the star and the name in colour (`scripts/logo.ans`), with the menu beside them; the launcher's messages are coloured by kind (a step, done, a note, a failure).
 - The program's new name, step 1 (#66): updates and rollbacks accept `molfar-vertep[.exe]` next to `chrysalis[.exe]`, the command `molfar-vertep` works next to `chrysalis`, and settings read `MOLFAR_VERTEP_*` before `CHRYSALIS_*`. Releases still ship `chrysalis[.exe]`.
-- Roleplay (fork, next release): the Dashboard no longer shows an earlier persona of the chat as an NPC, and the card Profile can describe several characters.
+- Roleplay 4.51.0 through app updates: the Dashboard no longer shows an earlier persona of the chat as an NPC, and the card Profile can describe several characters.
 
 ## 1.2.2 (2026-10-18)
 

@@ -5,8 +5,8 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.2.3: IN PROGRESS on `claude/release-1.2.3-63nytl` (asked by the user 2026-10-18; more items may follow while he tests)
-`package.json` not bumped yet (1.2.2). The user tests with `Molfar-Vertep.bat dev`.
+## 1.2.3: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.3; Roleplay 4.51.0 on the fork's main)
+Checks: typecheck, build:client pass; tests 875 pass, 3 known failures (edge TTS x2 network, hostile plugin). pi stays 1.2.0 (1.3.0 is under 7 days old).
 - Molfar's chat takes text files, JSON, docx/odt (`src/agent/uploads.ts`, `PUT /v1/agent/uploads/:name`, shell-only):
   saved under `uploads/<day>/`, the message names them `@uploads/...`, the existing mention reader puts them in
   (64 KB cap, big JSON as its outline). uploads/ is gitignored, in AGENT_WRITE_DENYLIST, kept by backups. UTF-16
