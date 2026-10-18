@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.2.1: PREPARED 2026-10-18 (branch `claude/project-thread-5x5u55` in the engine and in the Roleplay fork; the tag and main are the user's word)
+## 1.2.1: RELEASED 2026-10-18 on the user's word (main fast-forwarded in the engine and the Roleplay fork, Roleplay 4.50.0; the tag v1.2.1 is pushed by the user)
 #54 Molfar draws: agent tool `image_generate` (`src/agent/run-tools.ts`; lists the user's image models, draws through
 `Models.generateImage`, keeps the picture in the asset store, returns `/v1/assets/<id>`; paid models ask per picture,
 `comfyui`/`a1111` draw without asking; not in plan mode; group `image` in small-window mode; one prompt rule, ~85 tokens).
