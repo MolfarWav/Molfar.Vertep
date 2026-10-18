@@ -2,7 +2,9 @@
 rem Molfar Vertep launcher: checks the tools, offers updates, starts the
 rem engine and opens it in your browser. Works from wherever the app folder is.
 rem
-rem   Molfar-Vertep.bat            update to the latest release (asks first), then start
+rem   Molfar-Vertep.bat            a menu of the choices below; with no key pressed
+rem                                it starts after 5 seconds, as it always did:
+rem                                offers the latest release (asks first), then starts
 rem   Molfar-Vertep.bat dev        update to the newest work branch (claude/*) instead
 rem   Molfar-Vertep.bat dev NAME   update to the work branch claude/NAME (another
 rem                                session's newer branch does not take its place)
@@ -12,7 +14,7 @@ rem   Molfar-Vertep.bat yes        do not ask: take the update
 rem   Molfar-Vertep.bat rebuild    reinstall packages and rebuild, then start
 rem   Molfar-Vertep.bat tools      also check Git and Bun for updates
 rem   Molfar-Vertep.bat shortcut   (re)create the desktop shortcut
-rem Options combine: "Molfar-Vertep.bat dev yes".
+rem Options combine: "Molfar-Vertep.bat dev yes". Any option skips the menu.
 rem
 rem Where it runs: the folder this file sits in. A copy of this file kept
 rem somewhere else finds the app through the path the last run remembered
@@ -66,8 +68,12 @@ set "MV_TOOLS="
 set "MV_SHORTCUT="
 set "MV_PICK="
 set "MV_PREV="
+set "MV_ARGS="
+set "MV_TAKE="
+set "MV_CLONED="
 :args_loop
 if "%~1"=="" goto args_done
+set "MV_ARGS=1"
 rem a word that is no option names the work branch
 set "MV_KNOWN="
 for %%o in (dev nopull yes -y rebuild tools shortcut previous) do if /i "%~1"=="%%o" set "MV_KNOWN=1"
@@ -172,6 +178,7 @@ echo === Downloading Molfar Vertep...
 git clone "%MV_REPO%" "%APP%"
 if errorlevel 1 goto fail
 set "MV_FULL=1"
+set "MV_CLONED=1"
 goto app_ready
 
 :app_found
@@ -190,6 +197,48 @@ if not exist "%MV_STATE%" mkdir "%MV_STATE%" >nul 2>nul
 >"%MV_STATE%\app-path.txt" echo(%APP%
 rem a copy cloned before the repository was renamed follows it under its new name
 git remote set-url origin "%MV_REPO%" >nul 2>nul
+
+rem ---------- start menu ----------
+rem One key picks what to do; with none it starts after a few seconds, so the
+rem desktop shortcut still just starts Molfar Vertep. Options skip the menu.
+if defined MV_ARGS goto menu_done
+if defined MV_CLONED goto menu_done
+set "MV_MENU_WAIT=5"
+:menu
+call :version MV_NOW
+set "MV_ON="
+for /f "delims=" %%b in ('git symbolic-ref --quiet --short HEAD 2^>nul') do set "MV_ON=branch %%b"
+if not defined MV_ON for /f "delims=" %%t in ('git describe --tags --exact-match 2^>nul') do set "MV_ON=release %%t"
+if not defined MV_ON set "MV_ON=no release tag"
+echo.
+echo  Molfar Vertep %MV_NOW%, %MV_ON%
+echo.
+echo    S  Start (looks for a newer release first)
+echo    N  Start without looking for updates
+echo    U  Update to the latest release, then start
+echo    D  Newest work branch (dev), then start
+echo    P  Go back to the previous release
+echo    C  Check the files
+echo    R  Reinstall packages and rebuild, then start
+echo    Q  Quit
+echo.
+if "%MV_MENU_WAIT%"=="0" goto menu_key
+choice /c SNUDPCRQ /n /t %MV_MENU_WAIT% /d S /m "Press a key. With none, S in %MV_MENU_WAIT% seconds: "
+goto menu_pick
+:menu_key
+choice /c SNUDPCRQ /n /m "Press a key: "
+:menu_pick
+set "MV_KEY=%errorlevel%"
+if "%MV_KEY%"=="2" set "MV_NOPULL=1"
+if "%MV_KEY%"=="3" set "MV_TAKE=1"
+if "%MV_KEY%"=="4" set "MV_DEV=1"
+if "%MV_KEY%"=="4" set "MV_TAKE=1"
+if "%MV_KEY%"=="5" set "MV_PREV=1"
+if "%MV_KEY%"=="6" goto check
+if "%MV_KEY%"=="7" set "MV_FULL=1"
+if "%MV_KEY%"=="7" set "MV_NOPULL=1"
+if "%MV_KEY%"=="8" goto done
+:menu_done
 
 if defined MV_PREV goto previous
 if defined MV_NOPULL goto deps
@@ -267,6 +316,8 @@ set "MV_ON="
 for /f "delims=" %%b in ('git symbolic-ref --quiet --short HEAD 2^>nul') do set "MV_ON=%%b"
 if defined MV_ON echo You are on branch %MV_ON% ^(Molfar Vertep %MV_NOW%^).
 if not defined MV_ON echo Installed: Molfar Vertep %MV_NOW%.
+rem picked in the menu: asking again would only slow it down
+if defined MV_TAKE goto checkout
 call :ask "Update to %MV_LABEL%"
 if errorlevel 2 (
   echo Keeping the version you have.
@@ -338,6 +389,48 @@ echo === Checking your data for %MV_TARGET%...
 call bun run src/index.ts rollback %MV_TARGET:~1%
 if errorlevel 1 goto fail
 goto checkout
+
+rem ---------- check the files (C in the menu) ----------
+rem What a start needs, without changing anything: the engine's own files as
+rem git has them, the packages, the built interface, the tools. Back to the
+rem menu afterwards, which then waits for a key.
+:check
+echo.
+echo === Checking the files...
+set "MV_NEED_R="
+set "MV_NEED_GIT="
+for /f "delims=" %%v in ('git --version 2^>nul') do echo   %%v
+echo   bun version %MV_BUNV%
+set "MV_ST=%TEMP%\molfar-vertep-status-%RANDOM%.txt"
+git status --porcelain --untracked-files=normal -- . ":(exclude)bun.lock" ":(exclude)client-agent/bun.lock" >"%MV_ST%" 2>nul
+set "MV_STSIZE=0"
+for %%A in ("%MV_ST%") do set "MV_STSIZE=%%~zA"
+if "%MV_STSIZE%"=="0" echo   Engine files: as released, no local changes.
+if not "%MV_STSIZE%"=="0" set "MV_NEED_GIT=1"
+if defined MV_NEED_GIT echo   Engine files with local changes. Updates skip them until they are undone:
+if defined MV_NEED_GIT type "%MV_ST%"
+del /q "%MV_ST%" 2>nul
+if exist "node_modules\" echo   Packages: installed.
+if not exist "node_modules\" echo   Packages: MISSING.
+if not exist "node_modules\" set "MV_NEED_R=1"
+if exist "client-agent\node_modules\" echo   Agent page packages: installed.
+if not exist "client-agent\node_modules\" echo   Agent page packages: MISSING.
+if not exist "client-agent\node_modules\" set "MV_NEED_R=1"
+if exist "client\dist\index.html" echo   Interface: built.
+if not exist "client\dist\index.html" echo   Interface: NOT BUILT.
+if not exist "client\dist\index.html" set "MV_NEED_R=1"
+if exist "client-agent\dist\index.html" echo   Agent page: built.
+if not exist "client-agent\dist\index.html" echo   Agent page: NOT BUILT.
+if not exist "client-agent\dist\index.html" set "MV_NEED_R=1"
+if exist "data\" echo   Your data folder: found.
+if not exist "data\" echo   Your data folder: not created yet ^(the first start creates it^).
+if defined MV_BUN_OLD echo   Bun is older than 1.4.0: "Molfar-Vertep.bat tools" updates it.
+echo.
+if defined MV_NEED_R echo   R in the menu installs the packages and builds the interface.
+if defined MV_NEED_GIT echo   "git status" in the app folder shows the changes; "git checkout -- ." undoes them.
+if not defined MV_NEED_R if not defined MV_NEED_GIT echo   Everything is in place.
+set "MV_MENU_WAIT=0"
+goto menu
 
 rem ---------- install and build only what is needed ----------
 :deps
