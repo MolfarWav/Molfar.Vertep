@@ -7,9 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
-## 1.2.5 (2026-10-19)
+## 1.2.5 (2026-10-18)
 
 - Ships Roleplay 4.53.0 (an app update): the World DM (#52), a game master per chat that keeps the world's records in the chat's own lorebook and, from Living world up, moves the world and brings events into the next reply. The engine changes only in its notes and the card skill copy (`.fork/app-skills/roleplay/edit-large-card/SKILL.md`: a book with `ownerChatId` is one chat's world book).
+- Custom connections: a host that answers with text instead of a reply (Chub's "This service is not available in your country.", #59) now fails the reply with that text. Since 1.2.4 it showed as an empty reply.
 
 ## 1.2.4 (2026-10-18)
 

@@ -13,6 +13,10 @@
  * - any other non-JSON event is dropped and logged with a sample, so the next
  *   report shows what the host sent (the SDK no longer logs it).
  * JSON events, comments and named events pass through unchanged.
+ *
+ * A body with no reply in it at all, only text (Chub's geo block answers 200
+ * with "This service is not available in your country."), fails the reply
+ * with that text: dropping it would leave an empty reply and no reason.
  */
 import { log } from "../logger.js";
 
@@ -21,6 +25,7 @@ type FetchFunction = typeof globalThis.fetch;
 const DONE = "[DONE]";
 const SAMPLE_CHARS = 200;
 const MAX_LOGGED = 3;
+const FIELD = /^(event|id|retry|data)(:|$)/;
 
 function isJson(text: string): boolean {
   try {
@@ -57,8 +62,11 @@ export function cleanSseBody(body: ReadableStream<Uint8Array>, label: string): R
   const encoder = new TextEncoder();
   let buffer = "";
   let dropped = 0;
+  let replied = false;
+  let textSample = "";
   const onDrop = (d: string) => {
     dropped++;
+    if (!textSample && d.trim()) textSample = d.trim();
     if (dropped <= MAX_LOGGED) {
       log.warn(`[custom-provider:${label}] skipped a stream event that is not JSON: ${JSON.stringify(d.slice(0, SAMPLE_CHARS))}`);
     }
@@ -75,7 +83,17 @@ export function cleanSseBody(body: ReadableStream<Uint8Array>, label: string): R
     const tail = final ? "" : (events.pop() ?? "");
     buffer = tail + rest;
     let out = "";
-    for (const ev of events) if (ev !== "") out += cleanSseEvent(ev, onDrop);
+    for (const ev of events) {
+      if (ev === "") continue;
+      const cleaned = cleanSseEvent(ev, onDrop);
+      if (/^data/m.test(cleaned)) replied = true;
+      else if (!textSample) {
+        // a line that is not an SSE field or comment: the host sent plain text
+        const plain = ev.split("\n").filter((l) => l.trim() && !l.startsWith(":") && !FIELD.test(l));
+        if (plain.length) textSample = plain.join(" ").trim();
+      }
+      out += cleaned;
+    }
     return out;
   };
   return body.pipeThrough(
@@ -90,6 +108,10 @@ export function cleanSseBody(body: ReadableStream<Uint8Array>, label: string): R
         const out = drain(true);
         if (out) controller.enqueue(encoder.encode(out));
         if (dropped > MAX_LOGGED) log.warn(`[custom-provider:${label}] skipped ${dropped} stream events that are not JSON`);
+        if (!replied && textSample) {
+          log.warn(`[custom-provider:${label}] the stream held no reply, only text: ${JSON.stringify(textSample.slice(0, SAMPLE_CHARS))}`);
+          controller.error(new Error(`The connection sent no reply, only this text: ${textSample.slice(0, SAMPLE_CHARS)}`));
+        }
       },
     }),
   );

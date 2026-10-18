@@ -97,3 +97,19 @@ describe("cleanSseEvent", () => {
     expect(r.dropped).toEqual(["upstream timeout"]);
   });
 });
+
+describe("a custom connection's stream with no reply, only text (#59, Chub's geo block)", () => {
+  const BLOCKED = "This service is not available in your country.";
+  for (const [name, raw] of [
+    ["plain text", `${BLOCKED}\n`],
+    ["text as a data event", `data: ${BLOCKED}\n\n`],
+  ] as const) {
+    it(`fails with the host's text: ${name}`, async () => {
+      body = raw;
+      byteByByte = false;
+      const m = await viaConnection();
+      expect(m.stopReason).toBe("error");
+      expect(m.errorMessage ?? "").toContain(BLOCKED);
+    });
+  }
+});
