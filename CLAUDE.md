@@ -30,8 +30,8 @@ holds the rules that do not change between tasks; the handoff holds the task.
 - `.fork/`: notes, handoffs, release notes. `Molfar-Vertep.bat` (repo root): the launcher for running from source.
 
 ## Rules
-- Never commit `bun.lock` or `client-agent/bun.lock`: `bun install` rewrites them; `git checkout` them back.
-- pi (`@earendil-works/pi-ai`, `@earendil-works/pi-agent-core`) is pinned to an exact version, no `^`: the lock is not committed, so a range lets each machine pull an untested release, and pi breaks its API even in minor versions. Pick a version at least 7 days old with no hotfix released after it; check for a newer one before each release (user, 2026-10-18).
+- Never commit a `bun.lock` or `client-agent/bun.lock` that `bun install` merely rewrote: `git checkout` them back. The one exception: a change to dependencies in `package.json` commits the lock it produced, in the same change, because CI and the release build install with `--frozen-lockfile` and fail without it (1.2.2's first tag did).
+- pi (`@earendil-works/pi-ai`, `@earendil-works/pi-agent-core`) is pinned to an exact version, no `^`: the launcher's `bun install` re-resolves ranges on each machine, so a range pulls an untested release, and pi breaks its API even in minor versions. Pick a version at least 7 days old with no hotfix released after it; check for a newer one before each release (user, 2026-10-18).
 - A new string in `client/` goes into all 14 `client/src/i18n/*.ts` files (`en.ts` with an empty value) or `test/i18n.test.ts` fails.
 - A new shell-only route: add its path to the lists in `test/security.test.ts` and `test/malicious-plugin.test.ts`.
 - A change to the Roleplay card or lorebook format (fields of `data/characters/<id>/card.json` or `data/lorebooks/<id>.json`, how a book is linked) updates, in the same change, the Roleplay fork's `docs/DATA-FORMATS.md` and Molfar's card skill `.skills/edit-large-card/SKILL.md` (copy: `.fork/app-skills/roleplay/edit-large-card/SKILL.md`), and a task for the built-in agent for the user's workspace copies. An outdated skill sends Molfar exploring the app's code: dozens of calls.
