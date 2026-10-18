@@ -18,8 +18,13 @@ Workspace override copies: `.fork/handoff/v121/workspace-agent-task.md`.
 #53 Roleplay 4.50.0: Prompt style (Auto / Description / Danbooru tags) in Tools > Image Generation; `ui.imageGen.promptStyle`
 and `modelApi` (the picked model's api, written by the app) in settings.json; tags rules in the `image-prompt` route and the
 generate_image tool wording at send time; the picker lists the engine's favorites first; What's new tip.
-Checks: engine typecheck, build:client pass; tests 835 pass + 3 that fail on main in the cloud container too (edge TTS
-403, hostile-plugin dir size); Roleplay 1066 pass. Browser-checked by subagents (shots `/mnt/project-files/images-121/`):
+Also asked the same day: Marinara-style server settings (`src/images.ts` ImageEndpointDef: prefix, sampler, scheduler, seed,
+denoise, clipSkip, loras ≤5, style, instructions; default workflow chains LoraLoader + CLIPSetLastLayer; custom workflows get
+%sampler% %scheduler% %denoise% %clip_skip% %LORA_n% %LORA_n_strength%, empty slot "None"; Forge gets `<lora:…>` tags;
+`GET /v1/images/endpoints/:id/options` shell-only; servers editable in Settings). Server style and guidance travel in
+`/v1/images/models` to Molfar's list and to Roleplay (`ui.imageGen.modelStyle` / `modelInstructions`).
+Checks: engine typecheck, build:client pass; tests 850 pass + 3 that fail on main in the cloud container too (edge TTS
+403, hostile-plugin dir size); Roleplay 1069 pass. Browser-checked by subagents (shots `/mnt/project-files/images-121/`):
 local and paid draws, Draw/Skip card at 390 px, the picture renders in Molfar's chat, the Roleplay tab, Settings > Images.
 Notes `.fork/release-notes/1.2.1.md`. Asked, not decided: a Gemini API image backend (Google Flow itself has no API).
 

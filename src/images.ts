@@ -290,7 +290,11 @@ export function validateImageEndpointInput(input: EndpointInput, partial = false
   }
   for (const [field, lo, hi] of [["width", 64, 4096], ["height", 64, 4096], ["steps", 1, 150], ["cfg", 0, 30]] as const) {
     const v = input[field];
-    if (v === undefined || v === null) continue;
+    if (v === undefined) continue;
+    if (v === null || v === "") {
+      out[field] = undefined; // cleared in an edit: back to the default
+      continue;
+    }
     const n = field === "cfg" ? (typeof v === "number" && v >= lo && v <= hi ? Math.round(v * 10) / 10 : undefined) : intIn(v, lo, hi);
     if (n === undefined) return { ok: false, error: `${field} must be a number from ${lo} to ${hi}` };
     out[field] = n;
