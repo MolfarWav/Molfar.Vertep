@@ -4,6 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+00000. **Batch on `claude/soji-sse-parse-48vyqm`** (user, 2026-10-18; engine + Roleplay): #59, #50, #51, #42, #44 done; #55 inbox, #45 replace action, browser check and release prep left. `.fork/handoff/batch-1018/HANDOFF.md`.
 0000. **1.2.2 released** 2026-10-18 (main fast-forwarded; the user pushes the tag v1.2.2): pi 1.2.0, live model lists, #59, desktop rollback (STATE). Next asked: a key-driven start menu in `Molfar-Vertep.bat`; renaming `chrysalis` (exe, command) needs a data migration and the user's word.
 000. **Next releases (user, 2026-10-17)**: release P0 for large libraries (#46) with the threads fix (#47) first, on the
    user's word (engine `claude/slim-start-engine` + Roleplay `claude/slim-start`, STATE). Then, easiest first, from the

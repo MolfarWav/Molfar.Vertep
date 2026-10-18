@@ -6,6 +6,7 @@ History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
 ## #59 Soji "malformed server-sent event JSON": branch `claude/soji-sse-parse-48vyqm`, not released (user, 2026-10-18: more fixes on this branch first)
+The same branch (engine + Roleplay) also carries #50, #51, #42, #44; #55 inbox and #45 are next. What is done and left: `.fork/handoff/batch-1018/HANDOFF.md`.
 After 1.2.2 the reporter adds Soji by hand, and every reply fails with "Error reading response: malformed
 server-sent event JSON". Cause (inferred, Chub is geo-blocked from our servers): pi 1.2.0 moved the OpenAI SDK
 6.40 -> 7.19. 7.x fails the reply on any non-JSON `data:` event, matches the end marker exactly (`[DONE]`; 6.x took
