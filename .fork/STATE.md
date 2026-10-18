@@ -24,6 +24,8 @@ Branch `claude/soji-sse-parse-48vyqm` (both repos). Details: `.fork/handoff/batc
   phone list.
 - Waiting for the next Roleplay release (user, 2026-10-18): manifest name "Vertep" (shell tab), commit 9c85001 on the Roleplay
   branch `claude/soji-sse-parse-48vyqm`, not on main. Id, folder and data stay `roleplay`.
+- On the branch for the next release: a custom connection's stream with only text (Chub's geo block, the reporter's
+  answer in #59) now fails with that text instead of an empty reply (f1594e1, CHANGELOG Unreleased).
 - Not started (user, 2026-10-18): #69 parallel Molfar chats; the user plans the rest through Molfar with free models.
 
 ## 1.2.3: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.3; Roleplay 4.51.0 on the fork's main)
