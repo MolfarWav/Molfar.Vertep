@@ -308,7 +308,8 @@ function imageGenerateTool(im: NonNullable<RunToolOptions["images"]>, ask: RunTo
         const url = im.store(out.data, out.mimeType, `${base}.${ext}`);
         return textResult(`Drawn with ${out.model}: ${url} (${out.mimeType}, ${Math.round(out.data.length / 1024)} KB). Write this URL where the picture belongs; do not read or print the image.`, { drawn: true, url, model: out.model });
       } catch (e) {
-        return textResult(`Not drawn: ${(e as Error).message}`, { drawn: false, ok: false });
+        // thrown, so the step shows as failed; the model reads the reason and may offer another model
+        throw new Error(`Not drawn: ${(e as Error).message}`);
       }
     },
   };

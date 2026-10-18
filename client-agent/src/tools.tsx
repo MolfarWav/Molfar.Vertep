@@ -43,11 +43,31 @@ const EditTool: ToolCallMessagePartComponent<Record<string, unknown>, ToolResult
   )
 }
 
+/** A picture image_generate drew: shown under the step, whatever the model writes
+ *  afterwards; click opens it full size in a new tab. */
+const ASSET_URL = /\/v1\/assets\/[0-9a-f]{64}/
+const ImageTool: ToolCallMessagePartComponent<Record<string, unknown>, ToolResult> = (p): ReactNode => {
+  const r = p.result as Partial<ToolResult> | undefined
+  const url = r?.ok ? ASSET_URL.exec(`${r.summary ?? ""} ${r.output ?? ""}`)?.[0] : undefined
+  if (!url) return <ToolFallback {...p} result={r?.output ?? r?.summary ?? p.result} />
+  const prompt = typeof p.args?.prompt === "string" ? p.args.prompt : ""
+  return (
+    <figure className="my-2 flex flex-col gap-1">
+      <a href={url} target="_blank" rel="noreferrer" className="block w-fit" title="Open full size">
+        <img src={url} alt={prompt || "Generated picture"} loading="lazy" className="max-h-80 max-w-full rounded-lg border object-contain sm:max-w-sm" />
+      </a>
+      {prompt ? <figcaption className="line-clamp-2 max-w-sm text-[11px] text-muted-foreground" title={prompt}>{prompt}</figcaption> : null}
+    </figure>
+  )
+}
+
 const toolkit = defineToolkit({
   edit_file: { render: EditTool },
   write_file: { render: EditTool },
   // the card asks the user to act: outside the folded step list
   bug_solution: { render: BugSolutionTool, display: "standalone" },
+  // the picture is the result: outside the folded step list
+  image_generate: { render: ImageTool, display: "standalone" },
 })
 
 export const toolConfig = AuiConfig({ tools: Tools({ toolkit }) })

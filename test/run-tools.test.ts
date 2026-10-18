@@ -344,9 +344,9 @@ describe("image_generate", () => {
     expect(gen.length).toBe(0);
   });
 
-  it("reports a generate failure as text instead of throwing", async () => {
+  it("fails the step with the reason when drawing fails", async () => {
     const { t } = setup([local], undefined, "ComfyUI is not reachable");
-    expect(out(await run(t, { prompt: "x" }))).toContain("Not drawn: ComfyUI is not reachable");
+    await expect(run(t, { prompt: "x" })).rejects.toThrow("Not drawn: ComfyUI is not reachable");
   });
 
   it("cuts the prompt to 4000 characters", async () => {

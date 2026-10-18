@@ -10,6 +10,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 ## 1.2.1 (2026-10-18)
 
 - Molfar draws pictures (#54): a new agent tool, `image_generate`, lists the user's image models (the same list as `GET /v1/images/models`), draws one picture through the same backends as `POST /v1/images`, keeps it in the asset store and returns `/v1/assets/<id>`, which Molfar writes into a card's avatar, a gallery or a background. A paid model asks the user before each picture; ComfyUI and AUTOMATIC1111/Forge draw without asking. Not offered in plan mode; its own `image` group in small-window mode. The Roleplay card skill (`edit-large-card`) says where the URL goes.
+- Molfar's chat shows each picture it draws under the drawing step (click opens it full size); a failed draw shows as a failed step.
 - Settings > Images: your own list of image models (`images.json` `favorites`: ref, name, what it is for), starred from a searchable model list under each connection and server. The first is the default for a call that names no model (before: the first listed); without a list a local ComfyUI/Forge model comes first. Molfar picks from the list by each model's use; `GET /v1/images/models` returns it for apps; `PUT /v1/images/favorites` is shell-only.
 - Roleplay 4.50.0 (#53): a Prompt style setting for image generation, Danbooru tags for tag-trained checkpoints on ComfyUI and Forge; the image model picker lists the user's image models first.
 
