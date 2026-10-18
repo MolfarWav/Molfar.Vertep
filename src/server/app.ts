@@ -35,6 +35,7 @@ import { isSmallModelMode } from "../agent/small-window.js";
 import { UserAgent, instructionDocsStamp, listSessions, renameSession, archiveSession, moveSession, sessionDir, sessionProject, isReasoningLevel, type ReasoningLevel } from "../agent/agent.js";
 import { normalizeAskOption } from "../agent/tools.js";
 import { findMentionables, mentionedFiles } from "../agent/mentions.js";
+import { saveUpload, UPLOAD_MAX, UploadError } from "../agent/uploads.js";
 import * as projects from "../agent/projects.js";
 import * as checkpoints from "../agent/checkpoints.js";
 import { solutionPatch } from "../agent/bug-solution.js";
@@ -2334,6 +2335,17 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     };
     walk("", 0);
     return c.json({ files: results });
+  });
+  // a file attached in the chat composer: saved under uploads/, and the
+  // message names it as "@<path>" (src/agent/uploads.ts)
+  app.put("/v1/agent/uploads/:name", async (c) => {
+    if (Number(c.req.header("content-length") ?? "0") > UPLOAD_MAX) return c.json({ error: "an attached file can be at most 10 MB" }, 413);
+    try {
+      return c.json({ ok: true, ...saveUpload(c.get("paths").root, c.req.param("name"), new Uint8Array(await c.req.arrayBuffer())) });
+    } catch (e) {
+      if (e instanceof UploadError) return c.json({ error: e.message }, e.status);
+      throw e;
+    }
   });
   // characters, lorebooks and presets by display name, for the same "@" picker
   app.get("/v1/agent/mentions", (c) => {

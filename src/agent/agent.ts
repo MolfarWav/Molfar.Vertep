@@ -1508,6 +1508,7 @@ const FULL_LAYOUT = `# Workspace layout (your whole world)
   - node_modules/, dist/    — derived (installed / browser-built, outside git). dist/.chrysalis-build.json holds the last build's errors.
 - plugins/<id>/             — top-level always-on plugins (same format as bundled)
 - projects/<name>/          — the user's free projects (plugins, research, ideas): PROJECT.md instructions, project.json settings, files/ reference uploads. An app's own project settings and uploads sit in apps/<id>/.project/. Uploads (files/) are outside git and read-only for you.
+- uploads/<day>/            — files the user attached in chat (an @uploads/… path in their message); outside git and read-only for you.
 (User-managed config is NOT here: MCP servers, model connections, speech endpoints and settings all live outside this workspace with the credentials; the Settings UI owns them and you do not read or edit them. Asking the user to change one there is the right move when something is missing.)
 - providers.json            — custom model providers { providers: { id: { api: openai-completions|anthropic-messages, baseUrl, models: [...] | "auto" } } }
 - agent/sessions/           — your own session transcripts (readable)`;

@@ -514,6 +514,32 @@ export const projectsApi = {
   restoreCheckpoint: (pid: string, id: string) => api<RestoreResult>("POST", `${pidPath(pid)}/checkpoints/${encodeURIComponent(id)}/restore`),
 }
 
+/** Files the chat composer takes besides pictures: text the agent reads, and
+ *  Word documents the engine turns into text. Kept in step with TEXT_EXT and
+ *  DOC_EXT in src/agent/uploads.ts. */
+const CHAT_FILE_EXT = [
+  "md", "markdown", "txt", "text", "log", "json", "jsonl", "json5", "csv", "tsv", "yaml", "yml", "toml", "xml", "ini", "cfg", "conf", "env",
+  "html", "htm", "css", "scss", "js", "mjs", "cjs", "ts", "tsx", "jsx", "vue", "svelte", "py", "rb", "go", "rs", "java", "kt", "c", "h", "cpp", "hpp", "cs",
+  "php", "lua", "sh", "bash", "ps1", "bat", "cmd", "sql", "srt", "vtt", "ass", "rtf", "tex", "diff", "patch", "gm", "docx", "odt",
+]
+export const CHAT_FILE_ACCEPT = CHAT_FILE_EXT.map((e) => `.${e}`).join(",")
+export const CHAT_FILE_MAX = 10 * 1024 * 1024
+
+/** Why a file cannot be attached in the chat, or null when it can. */
+export function chatFileProblem(file: File): string | null {
+  const ext = file.name.includes(".") ? (file.name.split(".").pop() ?? "").toLowerCase() : ""
+  if (!CHAT_FILE_EXT.includes(ext))
+    return ext === "pdf"
+      ? "Molfar cannot read a PDF yet: copy its text into the message"
+      : "Molfar reads pictures, text files (txt, md, json, csv, yaml, code) and Word documents (docx, odt)"
+  if (file.size > CHAT_FILE_MAX) return "over the 10 MB limit"
+  return null
+}
+
+/** Save a file attached in the chat; the message then names it by its path. */
+export const uploadChatFile = (file: File) =>
+  apiRaw<{ ok: boolean; path: string; size: number }>("PUT", `/v1/agent/uploads/${encodeURIComponent(file.name)}`, file)
+
 export const PROJECT_FILE_MAX = 10 * 1024 * 1024
 const PROJECT_IMAGE_EXT = ["png", "jpg", "jpeg", "gif", "webp"]
 const PROJECT_TEXT_EXT = [

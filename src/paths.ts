@@ -49,6 +49,8 @@ export const PROJECT_FILES = /^(apps\/[^/]+\/\.project|projects\/[^/]+)\/files(\
  *  (an index of its cards, say). Kept out of git, backups and sync, so two devices never fight
  *  over a file that only mirrors others. */
 export const APP_CACHE = /^apps\/[^/]+\/data\/\.cache(\/|$)/i;
+/** Files the user attached in the agent chat (src/agent/uploads.ts). */
+export const CHAT_UPLOADS = /^uploads(\/|$)/i;
 
 export const AGENT_WRITE_DENYLIST: readonly { pattern: RegExp; reason: string }[] = [
   { pattern: /^auth\.json$/i, reason: "credentials are never agent-editable" },
@@ -67,6 +69,7 @@ export const AGENT_WRITE_DENYLIST: readonly { pattern: RegExp; reason: string }[
   // project files are the user's uploads and live outside git, so a write
   // here could not be undone: the agent reads them, the project page changes them
   { pattern: PROJECT_FILES, reason: "project files are the user's uploads (outside git, so a change could not be undone); read them, and ask the user to change them on the project page" },
+  { pattern: CHAT_UPLOADS, reason: "uploads/ holds files the user attached in chat (outside git, so a change could not be undone); read them, and write what you make from them where it belongs" },
 ];
 
 export function agentWriteDenied(relPath: string): string | null {
@@ -127,6 +130,7 @@ export function gitBoundaryIgnored(relPath: string): boolean {
     // project files: uploads (images, docs) kept by the engine's backup
     // instead, so neither history nor a push ever carries them
     PROJECT_FILES.test(norm) ||
+    CHAT_UPLOADS.test(norm) ||
     APP_CACHE.test(norm) ||
     segs.includes("node_modules") ||
     segs.includes("dist") ||
@@ -146,7 +150,7 @@ export function ensureGitignoreEntries(root: string): boolean {
     cur = "";
   }
   const lines = cur.split("\n").map((l) => l.trim());
-  const needs = ["auth.json", "mcp.json", "agent/", "assets-store/", "store/", "node_modules/", "dist/", "/connections.json", "/speech.json", "apps/.staging/", "/repos/", "apps/*/.project/files/", "/projects/*/files/", "/projects/.staging/", "apps/*/data/.cache/"].filter((e) => !lines.includes(e));
+  const needs = ["auth.json", "mcp.json", "agent/", "assets-store/", "store/", "node_modules/", "dist/", "/connections.json", "/speech.json", "apps/.staging/", "/repos/", "apps/*/.project/files/", "/projects/*/files/", "/projects/.staging/", "apps/*/data/.cache/", "/uploads/"].filter((e) => !lines.includes(e));
   if (needs.length === 0) return false;
   const head = cur ? cur.replace(/\n*$/, "\n") : "# runtime state + credentials never enter git\n";
   fs.writeFileSync(gi, head + needs.join("\n") + "\n", "utf8");
@@ -219,6 +223,8 @@ apps/.staging/
 apps/*/.project/files/
 /projects/*/files/
 /projects/.staging/
+# files attached in the agent chat, kept by backups like project files
+/uploads/
 # an app's local cache: derived files it rebuilds on its own
 apps/*/data/.cache/
 `;

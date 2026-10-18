@@ -1,8 +1,13 @@
 import {
   AssistantRuntimeProvider,
+  CompositeAttachmentAdapter,
   SimpleImageAttachmentAdapter,
   useExternalStoreRuntime,
   type AppendMessage,
+  type Attachment,
+  type AttachmentAdapter,
+  type CompleteAttachment,
+  type PendingAttachment,
   type ThreadMessageLike,
 } from "@assistant-ui/react"
 import { Thread } from "@/components/assistant-ui/elements/thread.aui"
@@ -21,11 +26,52 @@ import { MolfarAvatar } from "./MolfarAvatar"
 import { currentProjectId, PANE_DEFAULT, PANE_MAX, PANE_MIN, useAgent } from "./store"
 import { AgentToolFallback, toolConfig } from "./tools"
 import { visibleParts, type Msg } from "./runs"
+import { CHAT_FILE_ACCEPT, chatFileProblem, uploadChatFile } from "./api"
 
 /** The chat never gets narrower than this when the pane is open. */
 const MIN_CHAT = 480
 
-const imageAttachments = new SimpleImageAttachmentAdapter()
+/**
+ * A text file or document attached in the composer is saved in the workspace
+ * as soon as it is picked (the tile shows a spinner, or what went wrong), and
+ * the message carries it as "@uploads/<day>/<name>": the engine reads it in
+ * like any mentioned file, a big JSON as its outline, so a 300 KB card does
+ * not fill the model's window.
+ */
+class ChatFileAttachmentAdapter implements AttachmentAdapter {
+  accept = CHAT_FILE_ACCEPT
+  private paths = new Map<string, string>()
+
+  async *add({ file }: { file: File }): AsyncGenerator<PendingAttachment, void> {
+    const base = { id: crypto.randomUUID(), type: "document" as const, name: file.name, contentType: file.type || "text/plain", file }
+    const problem = chatFileProblem(file)
+    if (problem) {
+      yield { ...base, status: { type: "incomplete", reason: "error", message: problem } }
+      return
+    }
+    yield { ...base, status: { type: "running", reason: "uploading", progress: 0 } }
+    try {
+      const saved = await uploadChatFile(file)
+      this.paths.set(base.id, saved.path)
+      yield { ...base, status: { type: "requires-action", reason: "composer-send" } }
+    } catch (e) {
+      yield { ...base, status: { type: "incomplete", reason: "error", message: (e as Error).message } }
+    }
+  }
+
+  async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
+    const path = this.paths.get(attachment.id)
+    if (!path) throw new Error(`${attachment.name} was not attached: remove it and try again`)
+    this.paths.delete(attachment.id)
+    return { ...attachment, status: { type: "complete" }, content: [{ type: "text", text: `@${path}` }] }
+  }
+
+  async remove(attachment: Attachment): Promise<void> {
+    this.paths.delete(attachment.id)
+  }
+}
+
+const attachments = new CompositeAttachmentAdapter([new SimpleImageAttachmentAdapter(), new ChatFileAttachmentAdapter()])
 
 function toThreadMessage(m: Msg): ThreadMessageLike {
   if (m.role === "user") {
@@ -67,12 +113,15 @@ function extractSend(message: AppendMessage): { text: string; images?: SendImage
   let text = ""
   for (const c of message.content) if (c.type === "text") text += c.text
   const images: SendImage[] = []
+  const files: string[] = []
   for (const a of message.attachments ?? [])
     for (const c of a.content)
       if (c.type === "image" && typeof c.image === "string" && c.image.startsWith("data:")) {
         const m = /^data:([^;]+);base64,(.*)$/s.exec(c.image)
         if (m?.[1] && m[2]) images.push({ mimeType: m[1], data: m[2], url: c.image })
-      }
+      } else if (c.type === "text" && c.text.startsWith("@")) files.push(c.text)
+  // each "@path" on a line of its own: a mention starts after whitespace
+  if (files.length) text = text.trim() ? `${text.trimEnd()}\n\n${files.join("\n")}` : files.join("\n")
   return { text, images: images.length ? images : undefined }
 }
 
@@ -118,7 +167,7 @@ export default function App(): ReactNode {
     messages,
     convertMessage: (m) => m,
     adapters: {
-      attachments: imageAttachments,
+      attachments,
       threadList: {
         threadId: sessionId ?? undefined,
         threads,
