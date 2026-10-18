@@ -3188,12 +3188,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
 
   app.post("/v1/sync/push", async (c) => {
     const u = c.get("user");
-    const body = await c.req.json<{ replaceKeys?: unknown }>().catch(() => ({}) as { replaceKeys?: unknown });
+    const body = await c.req.json<{ replaceKeys?: unknown; replace?: unknown }>().catch(() => ({}) as { replaceKeys?: unknown; replace?: unknown });
     if (agentBusy(u.username)) return c.json({ error: "the agent is working: let it finish before syncing" }, 409);
     try {
       const ctx = syncCtx(u, c.get("paths"));
-      const job = syncJobs.start(u.username, "push", (progress) => syncPush({ ...ctx, progress }, { replaceKeys: body.replaceKeys === true }), (r) => {
-        log.info(`[sync] ${u.username}: pushed rev ${r.rev} (${r.changed} changed, ${r.uploaded} uploaded)`);
+      const job = syncJobs.start(u.username, "push", (progress) => syncPush({ ...ctx, progress }, { replaceKeys: body.replaceKeys === true, replace: body.replace === true }), (r) => {
+        log.info(`[sync] ${u.username}: ${body.replace === true ? "replaced the sync with this device, " : ""}pushed rev ${r.rev} (${r.changed} changed, ${r.uploaded} uploaded)`);
       });
       return c.json({ job });
     } catch (e) {

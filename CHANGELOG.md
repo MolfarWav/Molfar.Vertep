@@ -7,6 +7,13 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.4 (2026-10-18)
+
+- Custom connections (OpenAI-compatible) no longer fail every reply with "malformed server-sent event JSON" (#59). Since 1.2.2 the OpenAI library rejects any stream event that is not JSON; such connections now read the stream through a tolerant reader: `[DONE]` with trailing text ends the stream, several JSON lines in one event are split, and other non-JSON events are skipped and logged (`[custom-provider:<id>] skipped a stream event that is not JSON`). A plain-text error inside a successful stream now shows as an empty reply, with the log line saying why.
+- Molfar takes a correction while he works (#70): during a run the message box keeps Stop and also sends (Enter, or the arrow beside Stop); Molfar reads the message at his next step and goes on with it. The message stays in the chat where it landed and in the history later runs see (`steers` on the run record). Text only: attaching waits until the run ends.
+- Sync: "Replace the sync with this device" (#45), for a device that does not want what the sync holds. It sits under the "Pull first" notice, behind a confirmation; the sync then holds exactly this device's files (the keys too), and the other devices drop what only the sync had on their next pull (`POST /v1/sync/push {replace: true}`).
+- Roleplay 4.52.0 through app updates: the inbox (#55), Consolidate facts (#51) and recency in the story record (#50) in Litopys, previews that hide what the chat hides (#44), plain section names in the Molfar preset (#42), a Prompt board that folds long presets by group and keeps its total in view (#39, #40, #43).
+
 ## 1.2.3 (2026-10-18)
 
 - Molfar's chat takes files besides pictures: text, Markdown, JSON, CSV and other text formats, plus Word and OpenDocument documents (their text). A file is saved under `uploads/<day>/` in the workspace (outside git, kept by backups, read-only for the agent), and the message names it as `@uploads/...`, so the existing mention reader puts it in (64 KB cap, a big JSON as its outline). Notepad's UTF-16 is converted; other encodings and PDFs are refused with the reason on the file's tile (`PUT /v1/agent/uploads/:name`, shell-only). Mentions now take names in any script.

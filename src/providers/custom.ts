@@ -17,6 +17,7 @@ import { stream as streamOaiResponses, streamSimple as streamSimpleOaiResponses 
 import { stream as streamGoogle, streamSimple as streamSimpleGoogle } from "@earendil-works/pi-ai/api/google-generative-ai";
 import { log } from "../logger.js";
 import { isPrivateAddress } from "../net-guard.js";
+import { tolerantSseFetch } from "./sse-tolerant.js";
 
 export interface CustomModelDef {
   id: string;
@@ -523,7 +524,7 @@ export function buildProvider(
           },
         }
       : {}),
-    api: def.extraBody ? withExtraBody(wiring, def.extraBody) : { stream: wiring.stream, streamSimple: wiring.streamSimple },
+    api: withExtraBody(api === "openai-completions" ? withTolerantStream(wiring, id) : wiring, def.extraBody),
   });
 }
 
@@ -557,12 +558,23 @@ export function abortLocalGeneration(baseUrl: string): void {
 
 type StreamFn = (model: Model<Api>, context: unknown, options?: { onPayload?: (payload: unknown, model: Model<Api>) => unknown }) => unknown;
 
+type StreamFetchOptions = { fetch?: typeof globalThis.fetch };
+
+/** Read the chat stream through tolerantSseFetch (see sse-tolerant.ts): hosts
+ *  like Chub's Soji send events the OpenAI SDK now rejects. */
+function withTolerantStream(wiring: { stream: never; streamSimple: never }, id: string): { stream: never; streamSimple: never } {
+  const wrap = (base: StreamFn): StreamFn => (model, context, options) =>
+    base(model, context, { ...options, fetch: tolerantSseFetch(id, (options as StreamFetchOptions | undefined)?.fetch) } as never);
+  return { stream: wrap(wiring.stream) as never, streamSimple: wrap(wiring.streamSimple) as never };
+}
+
 /** Merge per-model body fields into the finished request, after any payload
  *  hook the caller passed. */
 function withExtraBody(
   wiring: { stream: never; streamSimple: never },
-  extraBody: NonNullable<CustomProviderDef["extraBody"]>,
+  extraBody: CustomProviderDef["extraBody"],
 ): { stream: never; streamSimple: never } {
+  if (!extraBody) return { stream: wiring.stream, streamSimple: wiring.streamSimple };
   const wrap = (base: StreamFn): StreamFn => (model, context, options) =>
     base(model, context, {
       ...options,

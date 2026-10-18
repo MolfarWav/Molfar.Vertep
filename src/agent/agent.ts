@@ -153,6 +153,14 @@ interface SessionRunRecord {
   skills?: RunSkill[];
   /** Memory entries the run looked up. */
   memory?: RunMemory[];
+  /** Messages the user sent while the run worked, each after `turn` turns. */
+  steers?: RunSteer[];
+}
+
+/** A message the user sent during a run (steer), and how many turns came before it. */
+export interface RunSteer {
+  text: string;
+  turn: number;
 }
 
 /** Tokens a whole run used across its model calls, and what they cost in
@@ -691,8 +699,12 @@ export class UserAgent {
     this.agent.abort();
   }
 
+  /** Texts sent with steer() during the current run: found again in the transcript to record where they landed. */
+  private steered: string[] = [];
+
   /** Queue a user message to be injected mid-run (after the current tool batch). */
   steer(text: string): void {
+    this.steered.push(text);
     this.agent.steer({ role: "user", content: [{ type: "text", text }], timestamp: Date.now() } as unknown as Parameters<typeof this.agent.steer>[0]);
   }
 
@@ -727,6 +739,7 @@ export class UserAgent {
           .join("\n\n")}`
       : userMessage;
     const before = this.agent.state.messages.length;
+    this.steered = [];
     let thinkingText = "";
     let thinkingStart = 0;
     let thinkingEnd = 0;
@@ -848,7 +861,20 @@ export class UserAgent {
     }
     // one AgentRunTurn per internal assistant message
     const turns: AgentRunTurn[] = [];
+    // messages the user sent while the run worked (#70), placed after the turn they followed
+    const steers: RunSteer[] = [];
+    const pending = [...this.steered];
     for (const m of fresh) {
+      if (m.role === "user") {
+        const c = (m as { content?: unknown }).content;
+        const said = typeof c === "string" ? c : Array.isArray(c) ? c.filter((b) => (b as { type?: string }).type === "text").map((b) => (b as { text: string }).text).join("") : "";
+        const i = pending.indexOf(said);
+        if (i >= 0) {
+          pending.splice(i, 1);
+          steers.push({ text: said, turn: turns.length });
+        }
+        continue;
+      }
       if (m.role !== "assistant") continue;
       const blocks = (m as { content?: unknown[] }).content ?? [];
       const thinking = blocks
@@ -905,7 +931,7 @@ export class UserAgent {
     // (stop/length/aborted) diagnosable from the engine log
     if (!text) log.warn(`[agent:${this.sessionId}] run settled with no reply: stop=${stop ?? "none"} out=${(finalAssistant as { usage?: { output?: number } } | undefined)?.usage?.output ?? "?"}`);
     const checkpoints = await this.runCheckpoints();
-    this.persistRun(userMessage, text, toolTrace, usage, thinkingText, thinkingMs, turns, opts.imageUrls, spend, checkpoints, skills, memory);
+    this.persistRun(userMessage, text, toolTrace, usage, thinkingText, thinkingMs, turns, opts.imageUrls, spend, checkpoints, skills, memory, steers);
     const resolvedModel = (this.agent.state as { model?: { contextWindow?: number } }).model;
     return {
       finalText: text || emptyNote || "",
@@ -1042,6 +1068,7 @@ export class UserAgent {
     checkpoints: RunCheckpoint[] = [],
     skills: RunSkill[] = [],
     memory: RunMemory[] = [],
+    steers: RunSteer[] = [],
   ): void {
     try {
       fs.mkdirSync(path.dirname(this.sFile), { recursive: true });
@@ -1082,6 +1109,7 @@ export class UserAgent {
         ...(checkpoints.length ? { checkpoints } : {}),
         ...(skills.length ? { skills } : {}),
         ...(memory.length ? { memory } : {}),
+        ...(steers.length ? { steers } : {}),
       };
       fs.appendFileSync(this.sFile, JSON.stringify(rec) + "\n", "utf8");
     } catch (e) {
@@ -1138,6 +1166,10 @@ function loadSessionDialogue(sFile: string, model: { api: string; provider: stri
       // per-turn reconstruction (newer records): preserves interleaved
       // text/thinking phases exactly as the run happened
       if (r.turns && r.turns.length > 0) {
+        const steersAt = (n: number) => {
+          for (const st of r.steers ?? []) if (st.turn === n && st.text) out.push({ role: "user", content: st.text, timestamp: r.at } as AgentMessage);
+        };
+        steersAt(0);
         for (const [ti, turn] of r.turns.entries()) {
           const withArgs = (turn.tools ?? []).filter((t) => t && t.name && t.args && Object.keys(t.args).length > 0);
           if (withArgs.length > 0) {
@@ -1174,6 +1206,7 @@ function loadSessionDialogue(sFile: string, model: { api: string; provider: stri
               timestamp: r.at,
             } as unknown as AgentMessage);
           }
+          steersAt(ti + 1);
         }
         continue;
       }

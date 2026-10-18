@@ -486,9 +486,13 @@ export const useAgent = create<AgentState>()((set, get) => {
       const s = get()
       if (s.running && s.sessionId) {
         const live = uid("live")
+        streamDeltaBatcher.flush()
+        const prev = liveId
         liveId = live
         set({
-          msgs: [...s.msgs, { id: uid("m"), role: "user", parts: [{ kind: "text", text }] }, { id: live, role: "assistant", parts: [], streaming: true }],
+          // the bubble the correction interrupts stops streaming; the run goes on in a new one
+          msgs: [...s.msgs.map((m) => (m.id === prev ? { ...m, streaming: false } : m)), { id: uid("m"), role: "user", parts: [{ kind: "text", text }] }, { id: live, role: "assistant", parts: [], streaming: true }],
+          ...(images?.length ? { banner: { kind: "info", text: "Pictures can't be added while Molfar is working; only the text was sent." } } : {}),
         })
         try {
           await steerAgent(s.sessionId, text)

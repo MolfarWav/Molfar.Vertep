@@ -57,6 +57,8 @@ import {
   useState,
   type ComponentType,
   type FC,
+  type FormEvent,
+  type KeyboardEvent,
   type RefObject,
 } from "react";
 
@@ -445,6 +447,20 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
   // old composer and the new empty one then erased it. Load only once the
   // runtime is on this chat's thread (an unsaved chat is its default thread).
   const onThread = useAuiState((s) => s.threads.mainThreadId) === (sessionId ?? DEFAULT_THREAD_ID);
+  const running = useAuiState((s) => s.thread.isRunning);
+  // While Molfar works the runtime ignores Enter (no queue adapter); the store's
+  // send() turns a send during a run into a steer, so submit the form ourselves.
+  const steerOnEnter = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!running || !enterSends || e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    e.currentTarget.closest("form")?.requestSubmit();
+  };
+  const steerOnSubmit = (e: FormEvent<HTMLFormElement>) => {
+    if (!running) return;
+    // the runtime's own submit is off during a run; send() reaches onNew, which steers
+    e.preventDefault();
+    if (aui.composer.getState().canSend) void aui.composer.send();
+  };
   // biome-ignore lint/correctness/useExhaustiveDependencies: draftSeed only re-runs the load for an unchanged thread
   useEffect(() => {
     if (!onThread) return;
@@ -471,7 +487,7 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
   }, [aui, sessionId, draftSeed, onThread]);
   return (
     <ComposerPrimitive.Unstable_TriggerPopoverRoot>
-      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col">
+      <ComposerPrimitive.Root className="aui-composer-root relative flex w-full flex-col" onSubmit={steerOnSubmit}>
         <ComposerPrimitive.AttachmentDropzone asChild>
           <div
             data-slot="aui_composer-shell"
@@ -480,11 +496,12 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
           >
             <ComposerProjectRow />
             <ComposerPrimitive.Input
-              placeholder="Ask Molfar…"
+              placeholder={running ? "Add to what Molfar is doing…" : "Ask Molfar…"}
               className="aui-composer-input caret-primary placeholder:text-muted-foreground/60 max-h-48 min-h-10 w-full resize-none bg-transparent px-2.5 py-1 text-base leading-6 outline-none"
               rows={1}
               autoFocus={autoFocus}
               submitOnEnter={enterSends}
+              onKeyDown={steerOnEnter}
               enterKeyHint={enterSends ? "send" : "enter"}
               aria-label="Message input"
             />
@@ -557,6 +574,19 @@ const ComposerAction: FC = () => {
               <ArrowUp className="aui-composer-send-icon size-4" />
             </TooltipIconButton>
           </ComposerPrimitive.Send>
+        </AuiIf>
+        <AuiIf condition={(s) => s.thread.isRunning && !s.composer.isEmpty}>
+          <TooltipIconButton
+            tooltip="Send to Molfar now"
+            side="bottom"
+            type="submit"
+            variant="default"
+            size="icon"
+            className="aui-composer-steer bg-brand text-brand-foreground hover:bg-brand/90 size-8 rounded-full"
+            aria-label="Send to Molfar now"
+          >
+            <ArrowUp className="aui-composer-send-icon size-4" />
+          </TooltipIconButton>
         </AuiIf>
         <AuiIf condition={(s) => s.thread.isRunning}>
           <ComposerPrimitive.Cancel asChild>

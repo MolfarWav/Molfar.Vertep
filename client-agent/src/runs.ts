@@ -142,8 +142,18 @@ export function msgsFromRuns(runs: EngineRun[]): Msg[] {
         ...(run.images?.length ? { images: run.images } : {}),
       })
     const turns = run.turns ?? []
+    // messages sent during the run (#70) split its reply where they landed
+    const steers = turns.length ? (run.steers ?? []).filter((s) => s.text).sort((a, b) => a.turn - b.turn) : []
+    let from = 0
+    for (const [i, st] of steers.entries()) {
+      const upto = Math.min(Math.max(st.turn, from), turns.length)
+      const before = partsFromTurns(turns.slice(from, upto))
+      if (before.length) msgs.push({ id: `a${run.at}s${i}`, runAt: run.at, role: "assistant", parts: before })
+      msgs.push({ id: `u${run.at}s${i}`, runAt: run.at, role: "user", parts: [{ kind: "text", text: st.text }] })
+      from = upto
+    }
     const parts = turns.length
-      ? partsFromTurns(turns)
+      ? partsFromTurns(turns.slice(from))
       : partsLegacy({ thinking: run.thinking, thinkingMs: run.thinkingMs, tools: run.tools, text: run.assistant })
     if (parts.length)
       msgs.push({ id: `a${run.at}`, runAt: run.at, role: "assistant", parts, ...(run.checkpoints?.length ? { checkpoints: run.checkpoints } : {}), ...runInfo(run) })

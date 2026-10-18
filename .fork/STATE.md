@@ -25,6 +25,24 @@ Roleplay only; the engine repo gets docs and the card skill copy. Version picked
 - Left: browser check of the full sheet (dark, light, 390 px) with the UX check block.
 - Overlap with the 18.10 batch: `plugins/engine/plugin.js` (different functions), `src/lib/store.ts`, `src/lib/i18n.ts`
   (new keys after `nav.showRail`). Merge after it ships.
+## 1.2.4: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.4; Roleplay 4.52.0 on the fork's main)
+Checks: typecheck, build:client pass; tests 895 pass, 3 known failures (edge TTS x2 network, hostile plugin). Roleplay 1100 pass.
+Branch `claude/soji-sse-parse-48vyqm` (both repos). Details: `.fork/handoff/batch-1018/HANDOFF.md`, CHANGELOG, `.fork/release-notes/1.2.4.md`.
+- #59 Soji "malformed server-sent event JSON": custom openai-completions connections read the stream through
+  `src/providers/sse-tolerant.ts` (`[DONE]` with trailing text accepted, several JSON `data:` lines split, other non-JSON
+  events dropped and logged `[custom-provider:<id>] skipped a stream event that is not JSON`). Cause inferred: pi 1.2.0
+  moved the OpenAI SDK 6.40 -> 7.19, which fails on any non-JSON event. Issue stays OPEN until the reporter confirms;
+  their log line tells which shape Soji sends. Trade-off: a plain-text error inside a 200 stream shows as an empty reply.
+- #70 steer: while Molfar runs, Enter or the arrow next to Stop sends `agent.steer()`; the run record keeps `steers`
+  ({text, turn}) so history and the page show the message where it arrived. Attachments wait until the run ends.
+- #45 Settings > Sync: "Replace the sync with this device" (`POST /v1/sync/push {replace:true}`: plans against
+  base=remote, implies replaceKeys).
+- Roleplay 4.52.0: inbox (#55), Litopys Consolidate (#51) and recency (#50), previews run display regex (#44), Molfar
+  preset names (#42), Prompt board folds by group / sent-only / search / sticky total (#39 #40 #43, written by Molfar
+  in the user's workspace and carried over; group switch fixed on review). Open UX notes from the browser check: the
+  phone shows the total twice; once unfolded, the fold state stays unfolded per preset; ~330 px of chrome above the
+  phone list.
+- Not started (user, 2026-10-18): #69 parallel Molfar chats; the user plans the rest through Molfar with free models.
 
 ## 1.2.3: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.3; Roleplay 4.51.0 on the fork's main)
 Checks: typecheck, build:client pass; tests 875 pass, 3 known failures (edge TTS x2 network, hostile plugin). pi stays 1.2.0 (1.3.0 is under 7 days old).

@@ -256,11 +256,14 @@ export const ComposerAttachments: FC = () => {
 };
 
 export const ComposerAddAttachment: FC = () => {
+  // a steer is text only: attaching waits until the run ends
+  const running = useAuiState((s) => s.thread.isRunning);
   return (
     <ComposerPrimitive.AddAttachment
       render={
         <TooltipIconButton
-          tooltip="Add Attachment"
+          tooltip={running ? "Attachments can be added when Molfar finishes" : "Add Attachment"}
+          disabled={running}
           side="bottom"
           variant="ghost"
           size="icon"
