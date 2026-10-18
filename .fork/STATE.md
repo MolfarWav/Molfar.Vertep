@@ -5,6 +5,26 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## 1.2.3: IN PROGRESS on `claude/release-1.2.3-63nytl` (asked by the user 2026-10-18; more items may follow while he tests)
+`package.json` not bumped yet (1.2.2). The user tests with `Molfar-Vertep.bat dev`.
+- Molfar's chat takes text files, JSON, docx/odt (`src/agent/uploads.ts`, `PUT /v1/agent/uploads/:name`, shell-only):
+  saved under `uploads/<day>/`, the message names them `@uploads/...`, the existing mention reader puts them in
+  (64 KB cap, big JSON as its outline). uploads/ is gitignored, in AGENT_WRITE_DENYLIST, kept by backups. UTF-16
+  (Notepad) converted, other non-UTF-8 refused with a reason; PDF refused (no extractor). Mentions take any script.
+- #65 start menu in `Molfar-Vertep.bat` (S N U D P C R Q, `choice /t 5 /d S`; any option skips it; U and D take the
+  update without asking again; R = reinstall + rebuild without pulling). Not run on Windows: needs the user's hand test.
+- #66 step 1 of 2: update/rollback accept `molfar-vertep[.exe]` and `chrysalis[.exe]` (`programNames`,
+  `previousProgram` in self-update.ts; the restart runs the program the update installed); env vars
+  `MOLFAR_VERTEP_*` first, `CHRYSALIS_*` after (`src/env.ts`; vars the engine sets for a child keep the old name,
+  the child may be an older version); command alias `molfar-vertep` (install-cli, npm bin), links refreshed at start.
+  Still ships `chrysalis[.exe]`. Step 2 (ship the new name) needs the user's word and a choice: a copy on 1.2.2 or
+  older that skips 1.2.3 cannot update to a release with only the new name (ship both names for a while, or accept
+  a manual download). Not touched: data paths, `logs/chrysalis.log`, `libchrysalis.so`, app-facing identifiers.
+- ComfyUI (user, 2026-10-18): a workflow from Export (API) is adapted on save (`adaptComfyWorkflow` in images.ts):
+  %prompt%, %negative_prompt%, %seed% on every sampler, %width%/%height% on the first pass's empty latent, %model% on
+  checkpoint loaders; steps/CFG/sampler stay. The editor format is refused with how to export the API one.
+- Clickable workspace file links in Molfar's replies: in progress (subagent).
+
 ## 1.2.2: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.2). pi 1.2.0 + live model lists + #59 + desktop rollback
 Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1; main 1.2.1 merged into the branch 2026-10-18.
 `package.json` version not bumped yet (still 1.2.1).
