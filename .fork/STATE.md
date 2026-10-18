@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## 1.2.5 = #52 World DM: RELEASED 2026-10-18 on the user's word (main fast-forwarded in both repos; the user pushes the tag v1.2.5; Roleplay 4.53.0 on the fork's main). Notes `.fork/release-notes/1.2.5.md`. Checks: engine typecheck, build:client pass, tests 895 pass + the 3 known failures; Roleplay 1130 pass
+## 1.2.5 = #52 World DM: RELEASED 2026-10-18 on the user's word (main fast-forwarded in both repos; the user pushes the tag v1.2.5; Roleplay 4.53.0 on the fork's main). Notes `.fork/release-notes/1.2.5.md`. Checks: engine typecheck, build:client pass, tests 897 pass + the 3 known failures; Roleplay 1130 pass. Also carries the #59 text-only stream fix from the batch branch
 Roleplay only; the engine repo gets docs and the card skill copy. Version picked when the release order is clear
 (the 18.10 batch on `claude/soji-sse-parse-48vyqm` targets Roleplay 4.52.0; this would be 4.53.0 after it).
 - P0 built 2026-10-18: `plugins/world/` (Chronicler level, every N replies + World turn, own model), the chat's own
@@ -44,10 +44,7 @@ Branch `claude/soji-sse-parse-48vyqm` (both repos). Details: `.fork/handoff/batc
   in the user's workspace and carried over; group switch fixed on review). Open UX notes from the browser check: the
   phone shows the total twice; once unfolded, the fold state stays unfolded per preset; ~330 px of chrome above the
   phone list.
-- Waiting for the next Roleplay release (user, 2026-10-18): manifest name "Vertep" (shell tab), commit 9c85001 on the Roleplay
-  branch `claude/soji-sse-parse-48vyqm`, not on main. Id, folder and data stay `roleplay`.
-- On the branch for the next release: a custom connection's stream with only text (Chub's geo block, the reporter's
-  answer in #59) now fails with that text instead of an empty reply (f1594e1, CHANGELOG Unreleased).
+- Shipped in 1.2.5 / Roleplay 4.53.0: the "Vertep" display name, and the #59 text-only stream fix (f1594e1).
 - Not started (user, 2026-10-18): #69 parallel Molfar chats; the user plans the rest through Molfar with free models.
 
 ## 1.2.3: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.3; Roleplay 4.51.0 on the fork's main)
