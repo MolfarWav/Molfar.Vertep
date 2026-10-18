@@ -11,8 +11,8 @@ used to live here and the finished handoffs were removed on 2026-10-10; `git log
   saved under `uploads/<day>/`, the message names them `@uploads/...`, the existing mention reader puts them in
   (64 KB cap, big JSON as its outline). uploads/ is gitignored, in AGENT_WRITE_DENYLIST, kept by backups. UTF-16
   (Notepad) converted, other non-UTF-8 refused with a reason; PDF refused (no extractor). Mentions take any script.
-- #65 start menu in `Molfar-Vertep.bat` (S N U D P C R Q, `choice /t 5 /d S`; any option skips it; U and D take the
-  update without asking again; R = reinstall + rebuild without pulling). Not run on Windows: needs the user's hand test.
+- #65 start menu in `Molfar-Vertep.bat` (keys 1-7 and 0 = Quit, `choice /t 10 /d 1`; any option skips it; 3 and 4 take the
+  update without asking again; 7 = reinstall + rebuild without pulling). Not run on Windows: needs the user's hand test.
   Logo (user, 2026-10-18): `scripts/logo.ans` (UTF-8 + 24-bit colour codes, `-text` in .gitattributes), typed under
   chcp 65001 when `mode con` says >= 101 columns; the menu is drawn beside it with cursor codes. Messages coloured
   through MV_H/S/G/W/E/D/K. Also untested on Windows.

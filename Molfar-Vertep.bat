@@ -3,7 +3,7 @@ rem Molfar Vertep launcher: checks the tools, offers updates, starts the
 rem engine and opens it in your browser. Works from wherever the app folder is.
 rem
 rem   Molfar-Vertep.bat            a menu of the choices below; with no key pressed
-rem                                it starts after 5 seconds, as it always did:
+rem                                it starts after 10 seconds, as it always did:
 rem                                offers the latest release (asks first), then starts
 rem   Molfar-Vertep.bat dev        update to the newest work branch (claude/*) instead
 rem   Molfar-Vertep.bat dev NAME   update to the work branch claude/NAME (another
@@ -221,7 +221,7 @@ rem One key picks what to do; with none it starts after a few seconds, so the
 rem desktop shortcut still just starts Molfar Vertep. Options skip the menu.
 if defined MV_ARGS goto menu_done
 if defined MV_CLONED goto menu_done
-set "MV_MENU_WAIT=5"
+set "MV_MENU_WAIT=10"
 :menu
 call :version MV_NOW
 set "MV_ON="
@@ -237,35 +237,35 @@ rem the menu goes to the right of the star: 7 lines up, column 50
 set "MV_C=%ESC%[50G"
 set "MV_R=%ESC%[38;2;178;52;60m"
 echo %ESC%[7A%MV_C%%ESC%[38;2;236;228;212m%MV_NOW%, %MV_ON%%MV_0%
-echo %MV_C%%MV_R%S%MV_0%  Start (looks for a newer release first)
-echo %MV_C%%MV_R%N%MV_0%  Start without looking for updates
-echo %MV_C%%MV_R%U%MV_0%  Update to the latest release, then start
-echo %MV_C%%MV_R%D%MV_0%  Newest work branch (dev), then start
-echo %MV_C%%MV_R%P%MV_0%  Go back to the previous release
-echo %MV_C%%MV_R%C%MV_0%  Check the files
-echo %MV_C%%MV_R%R%MV_0%  Reinstall packages and rebuild, then start
-echo %MV_C%%MV_R%Q%MV_0%  Quit
+echo %MV_C%%MV_R%1%MV_0%  Start (looks for a newer release first)
+echo %MV_C%%MV_R%2%MV_0%  Start without looking for updates
+echo %MV_C%%MV_R%3%MV_0%  Update to the latest release, then start
+echo %MV_C%%MV_R%4%MV_0%  Newest work branch (dev), then start
+echo %MV_C%%MV_R%5%MV_0%  Go back to the previous release
+echo %MV_C%%MV_R%6%MV_0%  Check the files
+echo %MV_C%%MV_R%7%MV_0%  Reinstall packages and rebuild, then start
+echo %MV_C%%MV_R%0%MV_0%  Quit
 echo.
 goto menu_ask
 :menu_plain
 echo.
 echo  Molfar Vertep %MV_NOW%, %MV_ON%
 echo.
-echo    S  Start (looks for a newer release first)
-echo    N  Start without looking for updates
-echo    U  Update to the latest release, then start
-echo    D  Newest work branch (dev), then start
-echo    P  Go back to the previous release
-echo    C  Check the files
-echo    R  Reinstall packages and rebuild, then start
-echo    Q  Quit
+echo    1  Start (looks for a newer release first)
+echo    2  Start without looking for updates
+echo    3  Update to the latest release, then start
+echo    4  Newest work branch (dev), then start
+echo    5  Go back to the previous release
+echo    6  Check the files
+echo    7  Reinstall packages and rebuild, then start
+echo    0  Quit
 echo.
 :menu_ask
 if "%MV_MENU_WAIT%"=="0" goto menu_key
-choice /c SNUDPCRQ /n /t %MV_MENU_WAIT% /d S /m "Press a key. With none, S in %MV_MENU_WAIT% seconds: "
+choice /c 12345670 /n /t %MV_MENU_WAIT% /d 1 /m "Press a number. With none, 1 in %MV_MENU_WAIT% seconds: "
 goto menu_pick
 :menu_key
-choice /c SNUDPCRQ /n /m "Press a key: "
+choice /c 12345670 /n /m "Press a number: "
 :menu_pick
 set "MV_KEY=%errorlevel%"
 if "%MV_KEY%"=="2" set "MV_NOPULL=1"
@@ -276,6 +276,7 @@ if "%MV_KEY%"=="5" set "MV_PREV=1"
 if "%MV_KEY%"=="6" goto check
 if "%MV_KEY%"=="7" set "MV_FULL=1"
 if "%MV_KEY%"=="7" set "MV_NOPULL=1"
+rem errorlevel is the place in /c: 8 is the key 0
 if "%MV_KEY%"=="8" goto done
 :menu_done
 
@@ -465,7 +466,7 @@ if exist "data\" echo %MV_G%  Your data folder: found.%MV_0%
 if not exist "data\" echo   Your data folder: not created yet ^(the first start creates it^).
 if defined MV_BUN_OLD echo %MV_W%  Bun is older than 1.4.0: "Molfar-Vertep.bat tools" updates it.%MV_0%
 echo.
-if defined MV_NEED_R echo   R in the menu installs the packages and builds the interface.
+if defined MV_NEED_R echo   7 in the menu installs the packages and builds the interface.
 if defined MV_NEED_GIT echo   "git status" in the app folder shows the changes; "git checkout -- ." undoes them.
 if not defined MV_NEED_R if not defined MV_NEED_GIT echo %MV_G%  Everything is in place.%MV_0%
 set "MV_MENU_WAIT=0"
