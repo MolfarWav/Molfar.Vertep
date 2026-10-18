@@ -4,7 +4,6 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
-00000. **#52 World DM, its own release, Roleplay 4.53.0** (user, 2026-10-18): P0-P2 built on `claude/issue-52-t5omkq`, main (1.2.4) merged in (STATE). Left: browser check, version bump and notes.
 0000. **1.2.2 released** 2026-10-18 (main fast-forwarded; the user pushes the tag v1.2.2): pi 1.2.0, live model lists, #59, desktop rollback (STATE). Next asked: a key-driven start menu in `Molfar-Vertep.bat`; renaming `chrysalis` (exe, command) needs a data migration and the user's word.
 000. **Next releases (user, 2026-10-17)**: release P0 for large libraries (#46) with the threads fix (#47) first, on the
    user's word (engine `claude/slim-start-engine` + Roleplay `claude/slim-start`, STATE). Then, easiest first, from the

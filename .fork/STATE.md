@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## #52 World DM: IN PROGRESS on `claude/issue-52-t5omkq` (engine docs + Roleplay fork), a separate release (user, 2026-10-18)
+## 1.2.5 = #52 World DM: RELEASED 2026-10-18 on the user's word (main fast-forwarded in both repos; the user pushes the tag v1.2.5; Roleplay 4.53.0 on the fork's main). Notes `.fork/release-notes/1.2.5.md`. Checks: engine typecheck, build:client pass, tests 895 pass + the 3 known failures; Roleplay 1130 pass
 Roleplay only; the engine repo gets docs and the card skill copy. Version picked when the release order is clear
 (the 18.10 batch on `claude/soji-sse-parse-48vyqm` targets Roleplay 4.52.0; this would be 4.53.0 after it).
 - P0 built 2026-10-18: `plugins/world/` (Chronicler level, every N replies + World turn, own model), the chat's own
@@ -24,7 +24,7 @@ Roleplay only; the engine repo gets docs and the card skill copy. Version picked
   bump to 4.53.0 (manifest, APP_VERSION, tip `since`, CHANGELOG, notes), close #52 with it. The user pushes the tag.
 - Roleplay 4.53.0 ready on the branch (version, CHANGELOG, tip `new.world-dm`, Vertep display name cherry-picked from
   the batch branch). Browser check done (dark/light 1280 and 390, uk, peek dialog); fixed: red peek confirm, English
-  "last run" time in uk. Left: the user's word on shipping (fork main fast-forward; engine 1.2.5 or app update only).
+  "last run" time in uk. Shipped as engine 1.2.5 (user's choice). Next: P3 (start a world, carry to a new chat), not scheduled.
 - main (1.2.4 / Roleplay 4.52.0) merged into both branches 2026-10-18; no conflicts in code.
 
 ## 1.2.4: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.4; Roleplay 4.52.0 on the fork's main)
