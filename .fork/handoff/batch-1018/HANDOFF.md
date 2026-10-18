@@ -20,7 +20,24 @@ Roleplay 4.52.0.
   shared with message-row) and drop reasoning blocks (`src/lib/preview.ts`).
 - #34 closed on GitHub (user's word).
 
-## Left, in order
+## Done in the second thread (2026-10-18, pushed)
+- Engine: main (1.2.3) merged in. #45 replace the sync (`push(..., {replace:true})`, Sync settings button under
+  "Pull first", browser-checked). #70 steer during a run: composer sends while running, `steers` on the run record
+  (chat shows them between turns, history keeps them; `test/agent-steer.test.ts`). #69 and #70 filed.
+- Roleplay: #55 inbox (`src/components/shell/inbox.tsx`, `GET /dashboard/soul-drafts`), browser-checked; display
+  regex cold-start fix (`safe-regex.ts`, 5 s grace for a new worker); hero quote and Chats panel run the display
+  regex; Consolidate failure says what to do. Molfar preset header texts stay (user, 2026-10-18).
+- Screenshots: /mnt/project-files/batch-1018/. CHANGELOGs (Unreleased) carry all of it.
+
+## Left
+1. The user's Molfar (built-in agent) changes from the parallel thread "Іссю для агента Мольфара": the user sends
+   a Roleplay export; diff it against this branch and carry the changes over.
+2. Release per `.fork/RELEASE.md`: engine 1.2.4 (package.json, CHANGELOG, `.fork/release-notes/1.2.4.md`),
+   Roleplay 4.52.0 (manifest, CHANGELOG, `APP_VERSION` in `src/lib/guide-tips.ts`, a What's new tip if the guide
+   wants one), fork main fast-forward, STATE. Close #42 #44 #45 #50 #51 #55 #70 with the release; keep #59 open
+   until the reporter confirms; post the #59 reply. The user pushes the tag.
+
+## Left before the second thread (kept for history)
 1. #55 rest (user agreed 2026-10-18): a "needs you" inbox over what exists today: Litopys proposals
    (incl. Consolidate's), soul proposals. Dashboard "thread to close" waits until the sensor has
    such a state. Source: `src/lib/attention.ts` (Roleplay 4.49.0). Run `ux-review` first.
