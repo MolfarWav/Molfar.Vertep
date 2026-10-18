@@ -5,6 +5,19 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## #52 World DM: IN PROGRESS on `claude/issue-52-t5omkq` (engine docs + Roleplay fork), a separate release (user, 2026-10-18)
+Roleplay only; the engine repo gets docs and the card skill copy. Version picked when the release order is clear
+(the 18.10 batch on `claude/soji-sse-parse-48vyqm` targets Roleplay 4.52.0; this would be 4.53.0 after it).
+- P0 built 2026-10-18: `plugins/world/` (Chronicler level, every N replies + World turn, own model), the chat's own
+  world book (`ownerChatId` on the book, `worldBookId` on the chat meta; engine plugin scans/forks/deletes it, the app
+  never lists it), sheet "World DM" in the chat menu (en + uk), DATA-FORMATS "World DM", both card skill copies,
+  workspace task `.fork/handoff/world-dm/workspace-agent-task.md`. 1094 Roleplay tests pass, typecheck clean.
+  Details and the answers to the design's open questions: `.fork/handoff/world-dm/DESIGN.md`, "P0 as built".
+- Waiting on the user: the release's scope (P0 only, P0-P2, or P0-P3; recommended P0-P2), and whether the player may
+  peek at the world book (proposed: a "Look at the world" button with a spoiler warning).
+- Overlap with the 18.10 batch: `plugins/engine/plugin.js` (different functions), `src/lib/store.ts`, `src/lib/i18n.ts`
+  (new keys after `nav.showRail`). Merge after it ships.
+
 ## 1.2.3: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.3; Roleplay 4.51.0 on the fork's main)
 Checks: typecheck, build:client pass; tests 875 pass, 3 known failures (edge TTS x2 network, hostile plugin). pi stays 1.2.0 (1.3.0 is under 7 days old).
 - Molfar's chat takes text files, JSON, docx/odt (`src/agent/uploads.ts`, `PUT /v1/agent/uploads/:name`, shell-only):

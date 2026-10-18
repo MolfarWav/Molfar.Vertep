@@ -1,6 +1,7 @@
 # World + DM: a Roleplay plugin that builds the world and moves it during play (GitHub #52)
 
-Status: design agreed with the user 2026-10-17, nothing built. Replaces the first #52 shape (a one-off
+Status: design agreed with the user 2026-10-17. P0 built 2026-10-18 on branch `claude/issue-52-t5omkq`
+(Roleplay fork + this repo's docs): see "P0 as built" at the end. Replaces the first #52 shape (a one-off
 lorebook builder). `ux-review` before building any UI. Code lives in the Roleplay fork
 (MolfarWav/Molfar.Vertep-Roleplay), assembled in a scratch copy as usual.
 
@@ -138,3 +139,41 @@ insert respects the toggles; Explicit freezes the counter; Chaos still pauses in
 - How the Dashboard sensor call is scheduled today (after the reply? awaited?), to put the DM run next to it.
 - The world state schema in detail.
 - The DM's settings sheet and where it opens (Dashboard-like sheet on phones); `ux-review`.
+
+## P0 as built (2026-10-18)
+Answers to "Open before P0":
+- **Sensor scheduling** (read in code): the app, not the plugin, starts it. After a committed reply with no
+  group members left to speak, `store.ts` calls `triggerDashUpdate` (`src/lib/dash-live.ts`): 1.5 s wait,
+  then `POST /dashboard/update {auto: true}`, two-phase (the model runs inside the route). The DM chains
+  after it (`triggerDashUpdate(...).then(() => triggerWorldUpdate(...))`, `src/lib/world.ts`), so the two
+  calls never run at once on rate-limited free models, and P1 can read the sensor's scene direction of the
+  same turn. A dashboard update already running folds the call and the DM may then run beside it: accepted.
+- **World state schema**: `data/world/state/<chatId>.json`, documented in the fork's `docs/DATA-FORMATS.md`
+  ("World DM"). P0 keeps `settings {level, everyN}`, `lastKey` (newest message read), `entities`
+  (`id` n1.., `kind` person|place|group|thing|fact, `name`, `aliases`, `text`, `status` active|past, `uid`
+  of its book entry), `log`, `lastError`. Fronts/clocks and the pending event come with P1/P2.
+- **Settings sheet**: an item "World DM" in the chat's tools menu (desktop kebab, phone chat menu) opens a
+  right-side sheet (`src/components/chat/world-sheet.tsx`): level as radio cards with a hint each, every N
+  replies, the World turn button, a status block (records, retired, last run and its summary, last error),
+  the DM model (all chats; empty = the chat's model).
+
+Decisions taken as defaults (told to the user 2026-10-18, not confirmed yet):
+- The DM is per chat and off by default: each run is one more model call.
+- Records are written in the story's language: keys must match the prose.
+- Switching on in a long chat reads only the newest `max(2, everyN*2)` messages, not the whole chat
+  (`fromStart: true` reads all; a P3 "start a world" job).
+
+The format change:
+- The world book is `lorebooks/world-<chatId>.json` with `ownerChatId`; the chat meta's `worldBookId`
+  names it. The engine plugin adds it to the scan scope (`worldBookOf` in `activateWorldInfo` and
+  `semanticEmbedWork`), copies book + state on a fork (`forkWorld`: the copy's `lastKey` moves back to the
+  fork point when the DM had read past it) and deletes both with the chat. The app drops books with
+  `ownerChatId` from every list (`libraryBooks`, `src/lib/world.ts`): the library, pickers and the chat
+  panel never see it. Backups and exports still carry it. The Canvas prompt board lists it as a book, so
+  it can already be switched off per chat there (`book:world-<chatId>`).
+- The DM writes only entries whose `memo` starts with `world:`; other entries in the book stay.
+- A run: unread messages (cut to 8000 chars, 2500 per message) + the active records (+ retired names) + the
+  card names and the user's name (never recorded). Reply JSON `{add, update, retire, summary}`; at most 8
+  changes; a known name in `add` becomes an update; retired records never change again and are cut to two
+  sentences, `order` 50 instead of 100. A failed or non-JSON reply records `lastError` and leaves `lastKey`,
+  so the next run reads the same messages. One retry on a rate limit.
