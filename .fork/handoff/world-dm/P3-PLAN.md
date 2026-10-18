@@ -107,6 +107,14 @@ Plan, first in P3 (with monitoring):
 - Show the input size before a run (records + unread text, `estimateTokens`) and cap it: the existing caps are
   8000 chars of new text, 2500 per message; make the new-text cap a setting too if the user wants (open).
 - Fix the double period.
+- Make it work without knowing the engine (user, 2026-10-18: "I figured it out because I build the app; users
+  won't"). Seen next: GLM 5.3 with the block's reasoning "off" returns 400 "always thinks and does not support
+  disabling reasoning". So: (a) an empty reply caused by thinking retries once by itself with the limit raised
+  (thinking budget + answer room, capped), before any error shows; (b) errors read as one plain sentence with
+  the next step ("this model always thinks: pick another, or give it a bigger limit here [link]"), raw provider
+  JSON only behind "details"; (c) a "Test the DM model" button in the DM settings: one tiny call, says "works" or
+  the plain reason. Engine side, for the batch: the model block's Reasoning picker should not offer "off" for a
+  model that cannot turn it off (catalog flag or the remembered 400).
 Workaround today: pick the model without `:thinking`, or "Use the chat's model".
 
 ## Unknown / not decided
