@@ -6,7 +6,7 @@ import http from "node:http";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { strToU8, zipSync } from "fflate";
-import { checkProgram, cleanUpAfterUpdate, installUpdate, pickAsset, platformTarget, restoreEngineFiles, restoreProgram, runReplacement, saveEngineFiles, swapProgram } from "../src/self-update.js";
+import { checkProgram, cleanUpAfterUpdate, installUpdate, pickAsset, platformTarget, previousProgram, programNames, restoreEngineFiles, restoreProgram, runReplacement, saveEngineFiles, swapProgram } from "../src/self-update.js";
 import { dataFormatProblem, recordDataFormat } from "../src/data-format.js";
 import { forgetRelease, latestRelease } from "../src/updates.js";
 
@@ -114,6 +114,26 @@ describe("self-update", () => {
     expect(fs.readFileSync(path.join(dir, "chrysalis"), "utf8")).toBe("old");
     expect(fs.readFileSync(path.join(dir, "chrysalis.failed"), "utf8")).toBe("new");
     expect(fs.existsSync(path.join(dir, "chrysalis.old"))).toBe(false);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("takes a program under its new name, keeps the old one under its own, and goes back to it", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "chrysalis-rename-"));
+    const fresh = path.join(dir, "fresh");
+    fs.mkdirSync(path.join(dir, "resources"), { recursive: true });
+    fs.mkdirSync(path.join(fresh, "resources"), { recursive: true });
+    fs.writeFileSync(path.join(dir, "chrysalis.exe"), "old");
+    fs.writeFileSync(path.join(fresh, "molfar-vertep.exe"), "new");
+    expect(programNames("chrysalis.exe")).toEqual(["chrysalis.exe", "molfar-vertep.exe"]);
+    swapProgram(dir, fresh, "chrysalis.exe", "molfar-vertep.exe");
+    expect(fs.readFileSync(path.join(dir, "molfar-vertep.exe"), "utf8")).toBe("new");
+    expect(fs.existsSync(path.join(dir, "chrysalis.exe"))).toBe(false);
+    // the new program finds the one it replaced, by its old name
+    expect(previousProgram(dir, "molfar-vertep.exe")).toBe("chrysalis.exe");
+    expect(restoreProgram(dir, "molfar-vertep.exe")).toBe("chrysalis.exe");
+    expect(fs.readFileSync(path.join(dir, "chrysalis.exe"), "utf8")).toBe("old");
+    expect(fs.readFileSync(path.join(dir, "molfar-vertep.exe.failed"), "utf8")).toBe("new");
+    expect(previousProgram(dir, "chrysalis.exe")).toBeNull();
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -228,11 +248,11 @@ describe("installing a release", () => {
   /** A stand-in for the program: it answers --version like the real one. */
   const program = (version: string): string => `#!/bin/sh\nif [ "$1" = "--version" ]; then echo "${version}"; else echo running; fi\n`;
 
-  const archiveOf = (version: string, name = "Chrysalis-9.9.9-linux-x64.tar.gz"): { name: string; url: string; size: number; sha256: string } => {
+  const archiveOf = (version: string, name = "Chrysalis-9.9.9-linux-x64.tar.gz", exe = "chrysalis"): { name: string; url: string; size: number; sha256: string } => {
     const staging = fs.mkdtempSync(path.join(os.tmpdir(), "rel-"));
     const inner = path.join(staging, "Chrysalis-9.9.9-linux-x64");
     fs.mkdirSync(path.join(inner, "resources"), { recursive: true });
-    fs.writeFileSync(path.join(inner, "chrysalis"), program(version), { mode: 0o755 });
+    fs.writeFileSync(path.join(inner, exe), program(version), { mode: 0o755 });
     fs.writeFileSync(path.join(inner, "resources", "marker.txt"), version);
     execFileSync("tar", ["-czf", path.join(served, name), "-C", staging, "Chrysalis-9.9.9-linux-x64"]);
     const body = fs.readFileSync(path.join(served, name));
@@ -265,6 +285,14 @@ describe("installing a release", () => {
     return installUpdate(dir, version, asset, async () => { restarted = true; }, "chrysalis")
       .then((s) => ({ state: s, restarted: () => restarted }));
   };
+
+  it("takes a release that ships the program under its new name", async () => {
+    const { state } = await run(archiveOf("9.9.9", "Molfar-Vertep-9.9.9-linux-x64.tar.gz", "molfar-vertep"));
+    expect(state.phase).toBe("restarting");
+    expect(fs.readFileSync(path.join(dir, "molfar-vertep"), "utf8")).toContain("9.9.9");
+    expect(fs.existsSync(path.join(dir, "chrysalis"))).toBe(false);
+    expect(fs.existsSync(path.join(dir, "chrysalis.old"))).toBe(true);
+  }, 30_000);
 
   it("swaps the program and its resources in, then restarts", async () => {
     const { state, restarted } = await run(archiveOf("9.9.9"));

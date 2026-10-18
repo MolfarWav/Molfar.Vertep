@@ -4,7 +4,7 @@
  * The file is the user's: a commented YAML document they can open in any
  * editor. Settings > Server rewrites it from the same template, so the
  * comments survive a save from the UI. Every setting can also be given for one
- * run as an environment variable (CHRYSALIS_PORT=9000) or a flag
+ * run as an environment variable (MOLFAR_VERTEP_PORT=9000, or CHRYSALIS_PORT as up to 1.2.x) or a flag
  * (--port 9000); those win over the file and are reported as locked, so the
  * UI never shows a value the engine is not actually using.
  *
@@ -14,6 +14,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { defaultSandboxConfig, type SandboxConfig } from "./sandbox/index.js";
+import { ENV_PREFIX, LEGACY_ENV_PREFIX } from "./env.js";
 
 export interface InstanceConfig {
   /** Accounts, apps and chats. Relative paths start at the home folder. */
@@ -108,9 +109,10 @@ export const SETTINGS: readonly Setting[] = [
 const SETTING_KEYS = new Set(SETTINGS.map((s) => s.key));
 const SECTIONS = new Set(SETTINGS.filter((s) => s.key.includes(".")).map((s) => s.key.split(".")[0]!));
 
-/** CHRYSALIS_ plus the dotted path in capitals: ssl.certPath → CHRYSALIS_SSL_CERT_PATH. */
-export function envNameOf(key: string): string {
-  return "CHRYSALIS_" + key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\./g, "_").toUpperCase();
+/** MOLFAR_VERTEP_ plus the dotted path in capitals: ssl.certPath → MOLFAR_VERTEP_SSL_CERT_PATH.
+ *  The CHRYSALIS_ name of 1.2.x is read too (src/env.ts). */
+export function envNameOf(key: string, prefix: string = ENV_PREFIX): string {
+  return prefix + key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\./g, "_").toUpperCase();
 }
 
 /** --port, --ssl.cert-path, --apps.package-downloads */
@@ -241,7 +243,7 @@ export function renderConfigFile(c: InstanceConfig): string {
 # these in Settings > Server too, which saves back to this file.
 #
 # Any setting can be set for a single run without editing this file:
-#   environment variable   CHRYSALIS_PORT=9000   CHRYSALIS_SSL_ENABLED=true
+#   environment variable   MOLFAR_VERTEP_PORT=9000   MOLFAR_VERTEP_SSL_ENABLED=true
 #   command-line flag      --port 9000   --lan   --no-open-browser
 
 # Folder for accounts, apps, chats and keys. Relative paths start next to
@@ -452,7 +454,8 @@ export function loadConfig(homeDir: string, opts: { env?: NodeJS.ProcessEnv; fla
   const effective = structuredClone(fileCfg) as unknown as Record<string, unknown>;
   const locked: Record<string, string> = {};
   for (const s of SETTINGS) {
-    const name = envNameOf(s.key);
+    const legacy = envNameOf(s.key, LEGACY_ENV_PREFIX);
+    const name = env[envNameOf(s.key)] ? envNameOf(s.key) : legacy;
     const raw = env[name];
     if (raw === undefined || raw === "") continue;
     const r = coerce(s.kind, raw, true);

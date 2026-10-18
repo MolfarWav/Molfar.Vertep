@@ -17,6 +17,7 @@ import path from "node:path";
 import git from "isomorphic-git";
 import http from "isomorphic-git/http/node";
 import diff3Merge from "diff3";
+import { readEnv } from "../env.js";
 
 const GIT_ENV = {
   ...process.env,
@@ -34,7 +35,7 @@ const GIT_ENV = {
  *  CHRYSALIS_NO_SYSTEM_GIT=1 runs as if there were none. */
 let gitProgram: string | null | undefined;
 function systemGit(): string | null {
-  if (process.env.CHRYSALIS_NO_SYSTEM_GIT === "1") return null;
+  if (readEnv("NO_SYSTEM_GIT") === "1") return null;
   gitProgram ??= Bun.which("git");
   return gitProgram;
 }

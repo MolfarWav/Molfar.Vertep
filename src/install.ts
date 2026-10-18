@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { readEnv } from "./env.js";
 
 export type InstallKind = "source" | "binary" | "npm" | "android";
 
@@ -31,7 +32,8 @@ const SOURCE_ROOT = path.resolve(import.meta.dir, "..");
  *  apps/, and for packaged builds the prebuilt browser bundles and runtime
  *  assets under prebuilt/. */
 export function resourcesDir(): string {
-  if (process.env.CHRYSALIS_RESOURCES) return path.resolve(process.env.CHRYSALIS_RESOURCES);
+  const resources = readEnv("RESOURCES");
+  if (resources) return path.resolve(resources);
   if (INSTALL_KIND === "source") return SOURCE_ROOT;
   if (INSTALL_KIND === "npm") return path.join(import.meta.dir, "resources");
   return path.join(path.dirname(process.execPath), "resources");
@@ -70,7 +72,7 @@ export function osAppDataDir(): string {
 /** The folder holding config.yaml (and, by default, data/). An explicit
  *  choice wins; a packaged copy with a config.yaml beside it runs portable. */
 export function resolveHomeDir(explicit?: string): string {
-  const chosen = explicit ?? process.env.CHRYSALIS_HOME;
+  const chosen = explicit ?? readEnv("HOME");
   if (chosen) return path.resolve(chosen);
   if (INSTALL_KIND === "source") return SOURCE_ROOT;
   const besideProgram = INSTALL_KIND === "npm" ? import.meta.dir : path.dirname(process.execPath);
@@ -80,7 +82,7 @@ export function resolveHomeDir(explicit?: string): string {
 
 /** Running in the published container image, which says so in its
  *  environment. A container is updated by pulling a new image. */
-export const IN_CONTAINER = process.env.CHRYSALIS_CONTAINER === "1";
+export const IN_CONTAINER = readEnv("CONTAINER") === "1";
 
 /** A portable copy keeps config.yaml and data/ in the program's own folder,
  *  so replacing that folder would take them with it. */

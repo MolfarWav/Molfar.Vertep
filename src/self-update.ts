@@ -116,13 +116,32 @@ export function cleanUpAfterUpdate(dir: string = programDir()): void {
   }
 }
 
-/** The folder inside an unpacked archive that holds the program. */
-function findProgram(unpacked: string, exe: string): string {
+/**
+ * The names the program has had, newest first, beside the one running. Up to
+ * 1.2.x it shipped as chrysalis[.exe]; it is to ship as molfar-vertep[.exe]
+ * (#66). Copies that only know the old name look for it in the archive, so
+ * every name this list knows has to be accepted before any release ships the
+ * new one: an update may bring a program under another name, and a rollback
+ * may go back to one.
+ */
+export function programNames(exe: string): string[] {
+  const known = ["molfar-vertep", "chrysalis"].map((n) => (/\.exe$/i.test(exe) ? `${n}.exe` : n));
+  const own = known.find((n) => n.toLowerCase() === exe.toLowerCase());
+  return own ? [own, ...known.filter((n) => n !== own)] : [exe, ...known];
+}
+
+/** The folder inside an unpacked archive that holds the program, and the
+ *  program's name there: the newest known name first. */
+function findProgram(unpacked: string, exe: string): { dir: string; exe: string } {
   const candidates = [unpacked, ...fs.readdirSync(unpacked).map((n) => path.join(unpacked, n))];
-  for (const dir of candidates) {
-    if (fs.existsSync(path.join(dir, exe)) && fs.existsSync(path.join(dir, "resources"))) return dir;
+  const names = programNames(exe);
+  const newestFirst = [...names].sort((a, b) => (a.startsWith("molfar-vertep") ? -1 : 0) - (b.startsWith("molfar-vertep") ? -1 : 0));
+  for (const name of newestFirst) {
+    for (const dir of candidates) {
+      if (fs.existsSync(path.join(dir, name)) && fs.existsSync(path.join(dir, "resources"))) return { dir, exe: name };
+    }
   }
-  throw new Error(`the download has no ${exe} with a resources folder`);
+  throw new Error(`the download has no ${names.join(" or ")} with a resources folder`);
 }
 
 async function extract(archive: string, into: string): Promise<void> {
@@ -214,19 +233,24 @@ function setAside(target: string): void {
   }
 }
 
-/** Put the new program and resources/ in place of the old ones. Anything
- *  already moved is moved back if a later step fails. */
-export function swapProgram(dir: string, fresh: string, exe: string): void {
+/** Put the new program and resources/ in place of the old ones. The new
+ *  program may carry another name (freshExe); the old one is then kept as
+ *  <its own name>.old. Anything already moved is moved back if a later step
+ *  fails. */
+export function swapProgram(dir: string, fresh: string, exe: string, freshExe: string = exe): void {
   const done: [from: string, to: string][] = [];
   const move = (from: string, to: string) => {
     fs.renameSync(from, to);
     done.push([from, to]);
   };
-  for (const name of [exe, "resources"]) setAside(path.join(dir, name + OLD));
+  // one earlier version is kept, under whichever name it had
+  for (const name of [...programNames(exe), "resources"]) setAside(path.join(dir, name + OLD));
+  // a program under the new name left by an earlier, failed attempt
+  if (freshExe !== exe) setAside(path.join(dir, freshExe));
   try {
     move(path.join(dir, exe), path.join(dir, exe + OLD));
     move(path.join(dir, "resources"), path.join(dir, "resources" + OLD));
-    move(path.join(fresh, exe), path.join(dir, exe));
+    move(path.join(fresh, freshExe), path.join(dir, freshExe));
     move(path.join(fresh, "resources"), path.join(dir, "resources"));
   } catch (e) {
     for (const [from, to] of done.reverse()) {
@@ -236,7 +260,7 @@ export function swapProgram(dir: string, fresh: string, exe: string): void {
     }
     throw e;
   }
-  if (process.platform !== "win32") fs.chmodSync(path.join(dir, exe), 0o755);
+  if (process.platform !== "win32") fs.chmodSync(path.join(dir, freshExe), 0o755);
   for (const extra of ["README.txt", "Restore-previous-version.cmd"]) {
     try {
       fs.copyFileSync(path.join(fresh, extra), path.join(dir, extra));
@@ -244,23 +268,36 @@ export function swapProgram(dir: string, fresh: string, exe: string): void {
   }
 }
 
-/** The program from before the last update is still next to this one. */
-export function hasPreviousProgram(dir: string, exe: string): boolean {
-  return fs.existsSync(path.join(dir, exe + OLD)) && fs.existsSync(path.join(dir, "resources" + OLD));
+/** The name the program from before the last update was kept under, or
+ *  null when there is none. */
+export function previousProgram(dir: string, exe: string): string | null {
+  if (!fs.existsSync(path.join(dir, "resources" + OLD))) return null;
+  return programNames(exe).find((n) => fs.existsSync(path.join(dir, n + OLD))) ?? null;
 }
 
-/** Put the program and resources/ from before the update back. The files that
- *  failed are kept as *.failed until the next start. */
-export function restoreProgram(dir: string, exe: string): void {
-  for (const name of [exe, "resources"]) {
-    const current = path.join(dir, name);
-    const old = path.join(dir, name + OLD);
-    if (!fs.existsSync(old)) throw new Error(`${name + OLD} is missing`);
-    setAside(current + FAILED);
-    if (fs.existsSync(current)) fs.renameSync(current, current + FAILED);
-    fs.renameSync(old, current);
-  }
+/** The program from before the last update is still next to this one. */
+export function hasPreviousProgram(dir: string, exe: string): boolean {
+  return previousProgram(dir, exe) !== null;
 }
+
+/** Put the program and resources/ from before the update back, under the
+ *  name it had; returns that name. `exe` is the program there now. The files
+ *  that failed are kept as *.failed until the next start. */
+export function restoreProgram(dir: string, exe: string): string {
+  const previous = previousProgram(dir, exe);
+  if (!previous) throw new Error(fs.existsSync(path.join(dir, "resources" + OLD)) ? `${exe + OLD} is missing` : `resources${OLD} is missing`);
+  for (const [current, old] of [[exe, previous], ["resources", "resources"]] as const) {
+    const at = path.join(dir, current);
+    setAside(at + FAILED);
+    if (fs.existsSync(at)) fs.renameSync(at, at + FAILED);
+    fs.renameSync(path.join(dir, old + OLD), path.join(dir, old));
+  }
+  return previous;
+}
+
+/** The program the last update put in place, when it carries another name
+ *  than this process: the restart has to run that one. */
+let installedExe: string | null = null;
 
 // ---------- account files saved across a restart ----------
 
@@ -395,8 +432,9 @@ export async function installUpdate(
       state = { phase: "installing", version };
       await extract(archive, path.join(work, "unpacked"));
       const fresh = findProgram(path.join(work, "unpacked"), exe);
-      await checkProgram(path.join(fresh, exe), version);
-      swapProgram(dir, fresh, exe);
+      await checkProgram(path.join(fresh.dir, fresh.exe), version);
+      swapProgram(dir, fresh.dir, exe, fresh.exe);
+      installedExe = fresh.exe;
       fs.rmSync(work, { recursive: true, force: true });
       log.info(`[update] installed Molfar Vertep ${version}, restarting`);
       state = { phase: "restarting", version };
@@ -470,10 +508,13 @@ function mirror(
  */
 export function runReplacement(options: ReplacementOptions): void {
   const { dataDir } = options;
+  const dir = options.dir ?? programDir();
+  // the update may have brought the program under its new name
+  const exe = options.exe ?? installedExe ?? path.basename(process.execPath);
   const opts = {
-    dir: options.dir ?? programDir(),
-    exe: options.exe ?? path.basename(process.execPath),
-    command: options.command ?? process.execPath,
+    dir,
+    exe,
+    command: options.command ?? (installedExe ? path.join(dir, installedExe) : process.execPath),
     args: options.args ?? process.argv.slice(2),
     forwardSignals: options.forwardSignals ?? true,
     exit: options.exit ?? ((code: number) => process.exit(code)),
@@ -497,7 +538,9 @@ export function runReplacement(options: ReplacementOptions): void {
     const error = `Molfar Vertep ${target} stopped before it finished starting (${reason}), so Molfar Vertep went back to ${ENGINE_VERSION}. The log has the details.`;
     log.error(`[update] ${error}`);
     try {
-      restoreProgram(opts.dir, opts.exe);
+      // the program that comes back may have the other name
+      const restored = restoreProgram(opts.dir, opts.exe);
+      if (!options.command) opts.command = path.join(opts.dir, restored);
     } catch (e) {
       log.error(`[update] could not put Molfar Vertep ${ENGINE_VERSION} back: ${(e as Error).message}`);
       return exitWith(1, null);
