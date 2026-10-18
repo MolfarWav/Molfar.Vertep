@@ -5,13 +5,12 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { createModels, getSupportedThinkingLevels, uuidv7, type Api, type AssistantMessage, type AssistantMessageEvent, type Context, type Credential, type CredentialInfo, type Message, type Model, type MutableModels, type Tool as PiTool, type ToolResultMessage, type Usage } from "@earendil-works/pi-ai";
+import { createModels, getCurrentSystemPrompt, getCurrentTools, getSupportedThinkingLevels, uuidv7, type Api, type AssistantMessage, type AssistantMessageEvent, type Context, type Credential, type CredentialInfo, type Message, type Model, type MutableModels, type Tool as PiTool, type ToolResultMessage, type Usage } from "@earendil-works/pi-ai";
 import type { AuthOperationOptions, CredentialStore } from "@earendil-works/pi-ai";
-import { builtinProviders, builtinImagesModels } from "@earendil-works/pi-ai/providers/all";
-import { withCatalogAdditions } from "./model-additions.js";
+import { builtinProviders, builtinModels } from "@earendil-works/pi-ai/providers/all";
 import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
 import { loadCustomProviders, curatedProviders, buildProvider, reservedProviderIds, isLocalEndpoint, abortLocalGeneration, type CredentialWithBinding } from "./providers/custom.js";
-import { readConnections, authTarget, connectionKeyUsable, readAuth, type ConnectionDef } from "./connections.js";
+import { readConnections, authTarget, connectionKeyUsable, migrateRenamedProviders, readAuth, type ConnectionDef } from "./connections.js";
 import { formatFromModelName, formatFromTemplate, parsePromptFormat, promptFormatById, renderPrompt, stopStrings, type PromptFormat } from "./providers/prompt-formats.js";
 import { log } from "./logger.js";
 import { llmLogRequest, llmLogResult, llmLogError, llmLogTool } from "./llm-logger.js";
@@ -368,17 +367,18 @@ const inspecting = new AsyncLocalStorage<{ entry?: InspectorEntry; sources?: Pro
 export class UserModelService {
   readonly models: MutableModels;
   /** image-generation side (pi-ai images API) — same credential store */
-  private images: ReturnType<typeof builtinImagesModels>;
+  /** Built-in image models; the chat catalog above stays chat-only. */
+  private images: ReturnType<typeof builtinModels>;
 
   constructor(
     readonly username: string,
     private paths: UserPaths,
     private instanceConfig: InstanceConfig,
   ) {
+    migrateRenamedProviders(paths);
     const credentials = new FileCredentialStore(paths.auth);
     const models = createModels({ credentials });
-    // new models the bundled catalog does not list yet (src/model-additions.ts)
-    for (const provider of builtinProviders()) models.setProvider(withCatalogAdditions(provider));
+    for (const provider of builtinProviders()) models.setProvider(provider);
     // curated (NanoGPT etc. — inert until key exists) + user-defined providers;
     // user providers.json upserts over curated by id (setProvider semantics)
     const readCredential = (id: string): CredentialWithBinding => readAuth(paths)[id] as CredentialWithBinding;
@@ -427,7 +427,7 @@ export class UserModelService {
       Object.entries(conns.connections).map(([id, def]) => [def.oauthProvider === "radius" ? "radius" : def.providerId ?? id, def.name]),
     );
     this.models = models;
-    this.images = builtinImagesModels({ credentials });
+    this.images = builtinModels({ credentials });
   }
 
   private connectionNames: Map<string, string> = new Map();
@@ -591,7 +591,12 @@ export class UserModelService {
     if (!this.refreshOnce) {
       this.refreshOnce = (this.models as unknown as { refresh: () => Promise<unknown> })
         .refresh()
-        .then(() => undefined)
+        .then((r) => {
+          // a dynamic catalog that fails (a connection's /models refused,
+          // timed out or moved) lists nothing; say which and why
+          const errors = (r as { errors?: ReadonlyMap<string, Error> } | undefined)?.errors;
+          for (const [id, e] of errors ?? []) log.warn(`[models] ${id}: model list failed: ${e.message}`);
+        })
         .catch((e) => {
           log.warn(`[models] catalog refresh failed: ${(e as Error).message}`);
         });
@@ -1572,6 +1577,13 @@ export class UserModelService {
     // the inspector watches the final message beside the agent's own reading
     // of the stream (result() is a separate promise; nothing is consumed)
     try {
+      // the agent's context is a transcript: the prompt and tools ride in
+      // system messages, so read them back for the inspector
+      const shown = {
+        systemPrompt: context.systemPrompt ?? getCurrentSystemPrompt(context.messages),
+        tools: context.tools ?? getCurrentTools(context.messages),
+        messages: context.messages.filter((m) => m.role !== "system"),
+      };
       const entry = inspectRequest(this.username, {
         source: "agent",
         ...(sessionId ? { sessionId } : {}),
@@ -1583,11 +1595,11 @@ export class UserModelService {
           ...(opts?.temperature != null ? { temperature: opts.temperature } : {}),
           ...marks,
         },
-        ...(context.systemPrompt ? { systemPrompt: context.systemPrompt } : {}),
-        messages: context.messages,
-        ...(context.tools?.length ? { tools: context.tools } : {}),
+        ...(shown.systemPrompt ? { systemPrompt: shown.systemPrompt } : {}),
+        messages: shown.messages,
+        ...(shown.tools.length ? { tools: shown.tools } : {}),
         sources: (() => {
-          const parts = systemPartsFor(context.systemPrompt);
+          const parts = systemPartsFor(shown.systemPrompt);
           return parts ? { parts, omitted: [], vars: [] } : null;
         })(),
         labelRoles: true,
@@ -1609,14 +1621,16 @@ export class UserModelService {
   async imageModels(): Promise<ImageModelInfo[]> {
     const out: ImageModelInfo[] = [];
     for (const provider of this.images.getProviders()) {
+      const listed = this.images.getModelsOfType("image", provider.id);
+      if (!listed.length) continue;
       const auth = await this.images.getAuth(provider.id).catch(() => undefined);
       if (!auth) continue; // no credentials for this provider
-      for (const m of this.images.getModels(provider.id)) {
+      for (const m of listed) {
         out.push({ provider: String(m.provider), id: String(m.id), label: (m as { name?: string }).name ?? String(m.id), api: String(m.api), connectionName: this.connectionNames.get(String(m.provider)) ?? null });
       }
     }
     for (const src of await this.imageConnections()) {
-      for (const m of this.images.getModels(src.catalog)) {
+      for (const m of this.images.getModelsOfType("image", src.catalog)) {
         out.push({ provider: src.id, id: String(m.id), label: (m as { name?: string }).name ?? String(m.id), api: String(m.api), connectionName: src.name });
       }
     }
@@ -1720,7 +1734,7 @@ export class UserModelService {
     }
     const ctx = { input: [{ type: "text" as const, text: req.prompt }] };
     const viaConnection = (await this.imageConnections()).find((s) => s.id === pick.provider);
-    const raw = this.images.getModel(viaConnection?.catalog ?? pick.provider, pick.id);
+    const raw = this.images.getModelOfType("image", viaConnection?.catalog ?? pick.provider, pick.id);
     if (!raw) throw new Error(`image model not found in registry: ${pick.id}`);
     const out = viaConnection
       ? await this.images.generateImages({ ...raw, baseUrl: viaConnection.baseUrl }, ctx, { apiKey: viaConnection.key })

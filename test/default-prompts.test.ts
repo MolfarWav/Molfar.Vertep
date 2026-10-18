@@ -4,6 +4,7 @@
  * the AGENTS.md status and restore routes, and the pruning of unchanged
  * built-in skill copies.
  */
+import { getCurrentSystemPrompt } from "@earendil-works/pi-ai";
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
@@ -59,7 +60,7 @@ async function promptOf(o: { window?: number; mode?: "plan" | "normal" } = {}): 
   let seen = "";
   handle.setResponses([
     (ctx) => {
-      seen = ctx.systemPrompt ?? "";
+      seen = getCurrentSystemPrompt(ctx.messages) ?? "";
       return fauxAssistantMessage("ok");
     },
   ]);

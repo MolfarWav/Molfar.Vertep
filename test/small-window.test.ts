@@ -3,6 +3,7 @@
  * compact prompt and the core tools only; the rest show once the work needs
  * them. Sizes are measured the way the prompt inspector measures them.
  */
+import { getCurrentSystemPrompt, getCurrentTools } from "@earendil-works/pi-ai";
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
@@ -53,7 +54,7 @@ async function run(o: { window?: number; role?: "user" | "admin"; mode?: string;
   const steps = o.steps ?? [() => fauxAssistantMessage("ok")];
   handle.setResponses(
     steps.map((step) => (ctx) => {
-      const s = { systemPrompt: ctx.systemPrompt ?? "", tools: (ctx.tools ?? []) as Sent["tools"] };
+      const s = { systemPrompt: getCurrentSystemPrompt(ctx.messages) ?? "", tools: (getCurrentTools(ctx.messages) ?? []) as Sent["tools"] };
       seen.push(s);
       return step(s);
     }),
@@ -67,7 +68,7 @@ const size = (s: Sent): number =>
   estimateTextTokens(s.systemPrompt) + s.tools.reduce((n, t) => n + estimateTextTokens(JSON.stringify({ name: t.name, description: t.description, parameters: t.parameters })), 0);
 const names = (s: Sent): string[] => s.tools.map((t) => t.name);
 const call = (name: string, args: Record<string, unknown>) => () =>
-  fauxAssistantMessage([{ type: "toolCall", id: `c-${name}-${Math.random()}`, name, arguments: args }], { stopReason: "toolUse" });
+  fauxAssistantMessage([{ type: "toolCall", id: `c-${name}-${Math.random()}`, name, arguments: args as never }], { stopReason: "toolUse" });
 
 function makeApp(id: string): void {
   const dir = path.join(userPaths(dataDir, "mia").root, "apps", id);

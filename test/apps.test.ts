@@ -1,3 +1,4 @@
+import { normalizeContext } from "@earendil-works/pi-ai";
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
@@ -145,7 +146,7 @@ describe("curated providers", () => {
       bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return new Response("nope", { status: 400 });
     };
-    const context = { messages: [{ role: "user" as const, content: "hi", timestamp: 0 }] };
+    const context = normalizeContext({ messages: [{ role: "user" as const, content: "hi", timestamp: 0 }] });
     for (const model of prov.getModels()) {
       const events = prov.streamSimple(model, context, { apiKey: "k", fetch: fakeFetch as never, reasoning: "low" });
       for await (const ev of events) if (ev.type === "error" || ev.type === "done") break;
@@ -163,7 +164,7 @@ describe("curated providers", () => {
       bodies.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return new Response("nope", { status: 400 });
     };
-    const context = { messages: [{ role: "user" as const, content: "hi", timestamp: 0 }] };
+    const context = normalizeContext({ messages: [{ role: "user" as const, content: "hi", timestamp: 0 }] });
     for (const baseUrl of ["https://inference.chub.ai/v1", "https://api.openai.com/v1"]) {
       const prov = buildProvider("c_x", { name: "x", api: "openai-completions", baseUrl, models: [{ id: "soji" }] });
       const model = prov.getModels()[0]!;

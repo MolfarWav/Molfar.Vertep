@@ -3,6 +3,7 @@
  * trims old bulk instead of overflowing, retries once after a provider
  * overflow, and compaction fits the model it runs on.
  */
+import { getCurrentSystemPrompt, getCurrentTools } from "@earendil-works/pi-ai";
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
@@ -246,7 +247,7 @@ describe("agent loop under a tight window (faux provider)", () => {
     const seen: number[] = [];
     handle.setResponses([
       (ctx, opts) => {
-        seen.push(estimateContextTokens({ systemPrompt: ctx.systemPrompt, messages: ctx.messages as AgentMessage[], tools: ctx.tools }) + (opts?.maxTokens ?? 0));
+        seen.push(estimateContextTokens({ systemPrompt: getCurrentSystemPrompt(ctx.messages), messages: ctx.messages.filter((m) => m.role !== "system") as AgentMessage[], tools: getCurrentTools(ctx.messages) }) + (opts?.maxTokens ?? 0));
         return fauxAssistantMessage("ok");
       },
     ]);
@@ -318,15 +319,15 @@ describe("agent loop under a tight window (faux provider)", () => {
     handle.setResponses([
       () => fauxAssistantMessage([], { stopReason: "error", errorMessage: MALFORMED }),
       (ctx) => {
-        toolCounts.push(ctx.tools?.length ?? 0);
+        toolCounts.push(getCurrentTools(ctx.messages)?.length ?? 0);
         return fauxAssistantMessage([], { stopReason: "error", errorMessage: MALFORMED });
       },
       (ctx) => {
-        toolCounts.push(ctx.tools?.length ?? 0);
+        toolCounts.push(getCurrentTools(ctx.messages)?.length ?? 0);
         return fauxAssistantMessage("1. Who is she? 2. Where?");
       },
       (ctx) => {
-        toolCounts.push(ctx.tools?.length ?? 0);
+        toolCounts.push(getCurrentTools(ctx.messages)?.length ?? 0);
         return fauxAssistantMessage("next run");
       },
     ]);

@@ -53,6 +53,7 @@ const logos: Record<string, string> = {
   "google": google,
   "google-vertex": googlecloud,
   "openai": openai,
+  azure,
   "azure-openai-responses": azure,
   "openai-codex": openai,
   "nvidia": nvidia,

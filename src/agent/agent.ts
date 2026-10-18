@@ -18,7 +18,7 @@ import type { UserService } from "../users.js";
 import type { McpRegistry, McpToolInfo } from "../mcp/registry.js";
 import { Type } from "typebox";
 import { log } from "../logger.js";
-import { clampThinkingLevel, isContextOverflow, type AssistantMessage } from "@earendil-works/pi-ai";
+import { clampThinkingLevel, getCurrentSystemPrompt, getCurrentTools, isContextOverflow, toToolDeclaration, type AssistantMessage, type SystemMessage } from "@earendil-works/pi-ai";
 import { clampMaxTokens, estimateMessageTokens, estimateTextTokens, fitContext, newTrimState, toolsTokens } from "./context-budget.js";
 import { buildRunTools, newPlanState, planGate, type PlanState, type RunToolOptions } from "./run-tools.js";
 import { foldToolResults } from "./context-fold.js";
@@ -538,7 +538,7 @@ export class UserAgent {
       budgetBasis: () => {
         const st = agentRef?.state;
         const contextTokens = st
-          ? estimateTextTokens(st.systemPrompt) + st.messages.reduce((n, m) => n + estimateMessageTokens(m), 0) + toolsTokens(visibleTools(st.tools, small, unlocked))
+          ? estimateTextTokens(st.systemPrompt) + st.messages.reduce((n, m) => n + (m.role === "system" ? 0 : estimateMessageTokens(m)), 0) + toolsTokens(visibleTools(st.tools, small, unlocked))
           : 0;
         return { contextTokens, model: `${model.provider}/${model.id}`, price: (u) => svc.costOf(model, u) };
       },
@@ -589,11 +589,17 @@ export class UserAgent {
         // pi-agent-core's contract: this hook must never throw
         try {
           const st = agent.state;
+          // the transcript carries the prompt and tool declarations as system
+          // messages; trim only the dialogue, then send one leading system
+          // message with the current prompt and just the visible tools
+          const dialogue = msgs.filter((m) => m.role !== "system");
+          const shown = visibleTools(st.tools, small, unlocked);
           // earlier tasks' and stale results cut on a copy (context-fold.ts)
-          const { messages: lean } = foldToolResults(msgs, runState.startedAt);
-          const fit = fitContext(st.model, { systemPrompt: st.systemPrompt, messages: lean, tools: visibleTools(st.tools, small, unlocked) }, { force: budget.force, state: trim });
+          const { messages: lean } = foldToolResults(dialogue, runState.startedAt);
+          const fit = fitContext(st.model, { systemPrompt: st.systemPrompt, messages: lean, tools: shown }, { force: budget.force, state: trim });
           if (fit.advanced) log.info(`[agent:${sessionId}] context trimmed ~${fit.before} → ~${fit.after} tokens (window ${st.model.contextWindow})`);
-          return fit.messages;
+          const lead: SystemMessage = { role: "system", content: st.systemPrompt, ...(shown.length ? { toolsAdded: shown.map(toToolDeclaration) } : {}), timestamp: 0 };
+          return [lead, ...fit.messages];
         } catch (e) {
           log.warn(`[agent:${sessionId}] context trim failed, sending as is: ${(e as Error).message}`);
           return msgs;
@@ -651,10 +657,10 @@ export class UserAgent {
           return undefined;
         }
       },
-      // every tool stays executable; the model is sent only the visible ones
+      // every tool stays executable; transformContext above sends only the visible ones
       streamFn: (m, c, o) => {
-        const sent = c.tools ? { ...c, tools: visibleTools(c.tools as AgentTool[], small, unlocked) } : c;
-        const maxTokens = clampMaxTokens(m, sent, o?.maxTokens);
+        const sent = c;
+        const maxTokens = clampMaxTokens(m, { systemPrompt: getCurrentSystemPrompt(c.messages), tools: getCurrentTools(c.messages), messages: c.messages.filter((x) => x.role !== "system") }, o?.maxTokens);
         // a busy or briefly down provider (429, 5xx) is asked again with
         // backoff instead of ending the task (seen live: one 503 from
         // NanoGPT dropped a run 37 calls in); Stop cuts the wait short

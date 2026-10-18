@@ -1,3 +1,4 @@
+import { getCurrentSystemPrompt } from "@earendil-works/pi-ai";
 import { afterEach, describe, it, expect, beforeEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
@@ -49,9 +50,9 @@ describe("UserModelService message construction (regression: assistant history)"
     let seen: { systemPrompt?: string; roles: string[]; contents: string[] } | null = null;
     handle.setResponses([(context) => {
       seen = {
-        ...(context.systemPrompt !== undefined ? { systemPrompt: context.systemPrompt } : {}),
-        roles: context.messages.map((m) => m.role),
-        contents: context.messages.map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content))),
+        ...(getCurrentSystemPrompt(context.messages) !== undefined ? { systemPrompt: getCurrentSystemPrompt(context.messages) } : {}),
+        roles: context.messages.filter((m) => m.role !== "system").map((m) => m.role),
+        contents: context.messages.filter((m) => m.role !== "system").map((m) => (typeof m.content === "string" ? m.content : JSON.stringify(m.content))),
       };
       return fauxAssistantMessage("OK");
     }]);

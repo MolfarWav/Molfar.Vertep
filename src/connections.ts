@@ -92,6 +92,37 @@ function writeConnections(p: UserPaths, file: ConnectionsFile): void {
   fs.writeFileSync(full, JSON.stringify(file, null, 2) + "\n", "utf8");
 }
 
+/** Built-in provider ids the model library renamed: old id -> new id. */
+const RENAMED_PROVIDERS: Record<string, string> = { "azure-openai-responses": "azure" };
+
+/** Move connections and stored keys from a renamed provider id to its new
+ *  one, once, on disk; an entry already under the new id is kept. */
+export function migrateRenamedProviders(p: UserPaths): void {
+  try {
+    const file = readConnections(p);
+    let changed = false;
+    for (const def of Object.values(file.connections)) {
+      const to = def.providerId ? RENAMED_PROVIDERS[def.providerId] : undefined;
+      if (to) {
+        def.providerId = to;
+        changed = true;
+      }
+    }
+    if (changed) writeConnections(p, file);
+    const auth = readAuth(p);
+    let moved = false;
+    for (const [from, to] of Object.entries(RENAMED_PROVIDERS)) {
+      if (!auth[from]) continue;
+      if (!auth[to]) auth[to] = auth[from];
+      delete auth[from];
+      moved = true;
+    }
+    if (moved) writeAuth(p, auth);
+  } catch {
+    /* best effort: the user can enter the key again */
+  }
+}
+
 /** auth.json credential map (api_key or oauth entries; outside git, 0600). */
 export function readAuth(p: UserPaths): Record<string, { type: string; key?: string; [k: string]: unknown }> {
   try {

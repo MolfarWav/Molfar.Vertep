@@ -6,6 +6,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
+import { normalizeContext } from "@earendil-works/pi-ai";
 import { streamSimple } from "@earendil-works/pi-ai/api/openai-completions";
 import { buildProvider } from "../src/providers/custom.js";
 
@@ -33,7 +34,7 @@ afterAll(() => server.close());
 const run = async () => {
   const provider = buildProvider("c_soji", { name: "Soji", api: "openai-completions", baseUrl: base, models: [{ id: "soji" }] }, { keyless: true, readCredential: () => undefined });
   const model = provider.getModels()[0]!;
-  const s = streamSimple(model as never, { messages: [{ role: "user", content: "hi", timestamp: Date.now() }] }, { apiKey: "x" });
+  const s = streamSimple(model as never, normalizeContext({ messages: [{ role: "user", content: "hi", timestamp: Date.now() }] }), { apiKey: "x" });
   return (await s.result()) as { stopReason: string; errorMessage?: string; content: { type: string; text?: string }[] };
 };
 

@@ -3,6 +3,7 @@
  * of git (in code, whatever .gitignore says) and kept by backups instead, and
  * a project chat that starts with the project's context and default model.
  */
+import { getCurrentSystemPrompt } from "@earendil-works/pi-ai";
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
@@ -219,7 +220,7 @@ describe("a chat in a project", () => {
     let prompt = "";
     handle.setResponses([
       (ctx) => {
-        prompt = ctx.systemPrompt ?? "";
+        prompt = getCurrentSystemPrompt(ctx.messages) ?? "";
         return fauxAssistantMessage("ok");
       },
     ]);
@@ -251,7 +252,7 @@ describe("a chat in a project", () => {
     const { users, svc, handle } = setup();
     projects.createProject(p.root, { title: "Ideas" });
     let prompt = "";
-    handle.setResponses([(ctx) => { prompt = ctx.systemPrompt ?? ""; return fauxAssistantMessage("ok"); }]);
+    handle.setResponses([(ctx) => { prompt = getCurrentSystemPrompt(ctx.messages) ?? ""; return fauxAssistantMessage("ok"); }]);
     const agent = await UserAgent.create("mia", svc, userPaths(dataDir, "mia"), users, defaultInstanceConfig());
     await agent.run("hi");
     expect(prompt).not.toContain("# Project:");

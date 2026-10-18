@@ -7,6 +7,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import http from "node:http";
 import type { AddressInfo } from "node:net";
+import { normalizeContext } from "@earendil-works/pi-ai";
 import { streamSimple } from "@earendil-works/pi-ai/api/openai-completions";
 import fs from "node:fs";
 import os from "node:os";
@@ -41,7 +42,7 @@ const send = async (templateThinking: boolean, reasoning?: "low") => {
     { keyless: true, readCredential: () => undefined },
   );
   const model = provider.getModels()[0]!;
-  await streamSimple(model as never, { messages: [{ role: "user", content: "hi", timestamp: Date.now() }] }, { apiKey: "x", ...(reasoning ? { reasoning } : {}) }).result();
+  await streamSimple(model as never, normalizeContext({ messages: [{ role: "user", content: "hi", timestamp: Date.now() }] }), { apiKey: "x", ...(reasoning ? { reasoning } : {}) }).result();
   return { model, body: lastBody };
 };
 

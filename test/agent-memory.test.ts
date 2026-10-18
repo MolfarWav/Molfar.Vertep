@@ -3,6 +3,7 @@
  * the user confirms, never through file tools, and a project's memory reaches
  * the model the first time the agent touches that app.
  */
+import { getCurrentSystemPrompt } from "@earendil-works/pi-ai";
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
@@ -261,7 +262,7 @@ describe("project context", () => {
     };
     handle.setResponses([
       (ctx) => {
-        expect(ctx.systemPrompt).toContain("# Memory and skills");
+        expect(getCurrentSystemPrompt(ctx.messages)).toContain("# Memory and skills");
         return fauxAssistantMessage([{ type: "toolCall", id: "a", name: "read_file", arguments: { path: "apps/rp/manifest.json" } }], { stopReason: "toolUse" });
       },
       (ctx) => {
