@@ -55,6 +55,8 @@ export interface EngineRun {
   skills?: RunSkill[]
   /** memory entries the run looked up (memory_search hits), for the "from memory" marks */
   memory?: RunMemory[]
+  /** messages the user sent while the run worked, each after `turn` turns */
+  steers?: { text: string; turn: number }[]
   title?: string
   summary?: string
   checkpoints?: RunCheckpoint[]
