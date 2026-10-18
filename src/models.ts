@@ -9,6 +9,7 @@ import { createModels, getCurrentSystemPrompt, getCurrentTools, getSupportedThin
 import type { AuthOperationOptions, CredentialStore } from "@earendil-works/pi-ai";
 import { builtinProviders, builtinModels } from "@earendil-works/pi-ai/providers/all";
 import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
+import { withLiveCatalog } from "./providers/live-catalog.js";
 import { loadCustomProviders, curatedProviders, buildProvider, reservedProviderIds, isLocalEndpoint, abortLocalGeneration, type CredentialWithBinding } from "./providers/custom.js";
 import { readConnections, authTarget, connectionKeyUsable, migrateRenamedProviders, readAuth, type ConnectionDef } from "./connections.js";
 import { formatFromModelName, formatFromTemplate, parsePromptFormat, promptFormatById, renderPrompt, stopStrings, type PromptFormat } from "./providers/prompt-formats.js";
@@ -378,7 +379,9 @@ export class UserModelService {
     migrateRenamedProviders(paths);
     const credentials = new FileCredentialStore(paths.auth);
     const models = createModels({ credentials });
-    for (const provider of builtinProviders()) models.setProvider(provider);
+    // ids a provider serves that the bundled catalog does not know yet come
+    // from its live /models (src/providers/live-catalog.ts)
+    for (const provider of builtinProviders()) models.setProvider(withLiveCatalog(provider));
     // curated (NanoGPT etc. — inert until key exists) + user-defined providers;
     // user providers.json upserts over curated by id (setProvider semantics)
     const readCredential = (id: string): CredentialWithBinding => readAuth(paths)[id] as CredentialWithBinding;
