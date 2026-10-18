@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.5 (2026-10-19)
+
+- Ships Roleplay 4.53.0 (an app update): the World DM (#52), a game master per chat that keeps the world's records in the chat's own lorebook and, from Living world up, moves the world and brings events into the next reply. The engine changes only in its notes and the card skill copy (`.fork/app-skills/roleplay/edit-large-card/SKILL.md`: a book with `ownerChatId` is one chat's world book).
+
 ## 1.2.4 (2026-10-18)
 
 - Custom connections (OpenAI-compatible) no longer fail every reply with "malformed server-sent event JSON" (#59). Since 1.2.2 the OpenAI library rejects any stream event that is not JSON; such connections now read the stream through a tolerant reader: `[DONE]` with trailing text ends the stream, several JSON lines in one event are split, and other non-JSON events are skipped and logged (`[custom-provider:<id>] skipped a stream event that is not JSON`). A plain-text error inside a successful stream now shows as an empty reply, with the log line saying why.
