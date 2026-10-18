@@ -5,6 +5,18 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## #59 Soji "malformed server-sent event JSON": branch `claude/soji-sse-parse-48vyqm`, not released (user, 2026-10-18: more fixes on this branch first)
+After 1.2.2 the reporter adds Soji by hand, and every reply fails with "Error reading response: malformed
+server-sent event JSON". Cause (inferred, Chub is geo-blocked from our servers): pi 1.2.0 moved the OpenAI SDK
+6.40 -> 7.19. 7.x fails the reply on any non-JSON `data:` event, matches the end marker exactly (`[DONE]`; 6.x took
+anything starting with it), flushes an unterminated last event that 6.x dropped, and no longer logs the raw event.
+Fix: custom openai-completions connections (user-saved and code-defined) read the stream through
+`src/providers/sse-tolerant.ts`: `[DONE]` with trailing text becomes plain `[DONE]`, several JSON `data:` lines
+in one event are split, other non-JSON events are dropped and logged as `[custom-provider:<id>] skipped a stream
+event that is not JSON: "<sample>"`. Reproduced and covered in `test/custom-sse-tolerant.test.ts`. Which shape
+Soji sends is still unknown: the reporter's log line after this build tells. Trade-off: a plain-text error
+inside a 200 stream is dropped (logged), so it shows as an empty reply, not an error.
+
 ## 1.2.2: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.2). pi 1.2.0 + live model lists + #59 + desktop rollback
 Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1; main 1.2.1 merged into the branch 2026-10-18.
 `package.json` version not bumped yet (still 1.2.1).
