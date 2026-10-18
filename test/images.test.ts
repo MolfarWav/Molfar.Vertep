@@ -10,7 +10,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
-  ImageError, createImageEndpoint, endpointGenerate, imageEndpoint, imageHosts, listEndpointModels, listImageEndpoints,
+  ImageError, comfyVars, createImageEndpoint, endpointGenerate, endpointPromptStyle, listEndpointOptions, imageEndpoint, imageHosts, listEndpointModels, listImageEndpoints,
   nanoGptGenerate, nanoGptImageModels, providerError, setComfyPollMs, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
   type ImageEndpointDef,
 } from "../src/images.js";
@@ -200,6 +200,110 @@ describe("AUTOMATIC1111 / Forge", () => {
     const body = seen.find((s) => s.path === "/sdapi/v1/txt2img")!.body as Record<string, unknown>;
     expect(body).toMatchObject({ prompt: "a fox", negative_prompt: "blur", width: 768, height: 1152, override_settings: { sd_model_checkpoint: "wai.safetensors [abc123]" } });
     expect(seen.every((s) => s.auth === null)).toBe(true);
+  });
+});
+
+describe("Marinara-style sampling settings", () => {
+  const done = (id: string) => ({
+    "POST /prompt": () => json({ prompt_id: id }),
+    [`GET /history/${id}`]: () => json({ [id]: { status: { completed: true }, outputs: { "9": { images: [{ filename: "a.png", type: "output" }] } } } }),
+    "GET /view": () => new Response(PNG, { headers: { "content-type": "image/png" } }),
+  });
+  const graphOf = () => (seen.find((s) => s.path === "/prompt")!.body as { prompt: Record<string, { class_type: string; inputs: Record<string, unknown> }> }).prompt;
+
+  it("validates and keeps the new fields, and clears them again", () => {
+    const v = validateImageEndpointInput({
+      name: "C", kind: "comfyui", baseUrl: "http://127.0.0.1:8188", prefix: " masterpiece, best quality, ", sampler: "dpmpp_2m", scheduler: "karras",
+      seed: 42, denoise: 0.555, clipSkip: 2, loras: [{ name: "Anime_Detailed", strength: 0.8 }, { name: "  " }, { name: "b.safetensors" }],
+      style: "description", instructions: "Mention the lighting.",
+    });
+    expect(v.ok && v.value).toMatchObject({
+      prefix: "masterpiece, best quality,", sampler: "dpmpp_2m", scheduler: "karras", seed: 42, denoise: 0.56, clipSkip: 2,
+      loras: [{ name: "Anime_Detailed", strength: 0.8 }, { name: "b.safetensors", strength: 1 }], style: "description", instructions: "Mention the lighting.",
+    });
+    for (const bad of [{ sampler: "x;rm" }, { seed: -2 }, { denoise: 2 }, { clipSkip: 13 }, { loras: [{ name: "<x>" }] }, { loras: Array.from({ length: 6 }, (_, i) => ({ name: `l${i}` })) }, { style: "prose" }, { instructions: "x".repeat(1001) }]) {
+      expect(validateImageEndpointInput(bad, true).ok, JSON.stringify(bad).slice(0, 60)).toBe(false);
+    }
+    const u = path.join(dataDir, "marinara");
+    fs.mkdirSync(u, { recursive: true });
+    const p = bootstrapUserDir(u, "m");
+    const ep = createImageEndpoint(p, (v as unknown as { value: never }).value);
+    const cleared = validateImageEndpointInput({ seed: -1, clipSkip: 0, denoise: null, loras: [], sampler: "", prefix: null, style: null }, true);
+    const after = updateImageEndpoint(p, ep.id, (cleared as unknown as { value: never }).value)!;
+    for (const k of ["seed", "clipSkip", "denoise", "loras", "sampler", "prefix", "style"]) expect(after, k).not.toHaveProperty(k);
+    expect(after).toMatchObject({ scheduler: "karras", instructions: "Mention the lighting." });
+  });
+
+  it("the default workflow chains the LoRAs and the clip skip and takes the sampler settings", async () => {
+    reset(done("m1"));
+    const def: ImageEndpointDef = {
+      name: "Comfy", kind: "comfyui", baseUrl: base, prefix: "masterpiece, ", sampler: "dpmpp_2m", scheduler: "karras", seed: 7, denoise: 0.9, clipSkip: 2,
+      loras: [{ name: "a.safetensors", strength: 0.7 }, { name: "b.safetensors", strength: 1.2 }],
+    };
+    await endpointGenerate(def, undefined, "wai.safetensors", "1girl, fox ears");
+    const g = graphOf();
+    expect(g["20"]).toMatchObject({ class_type: "LoraLoader", inputs: { lora_name: "a.safetensors", strength_model: 0.7, strength_clip: 0.7, model: ["4", 0], clip: ["4", 1] } });
+    expect(g["21"]!.inputs).toMatchObject({ lora_name: "b.safetensors", strength_model: 1.2, model: ["20", 0], clip: ["20", 1] });
+    expect(g["30"]).toMatchObject({ class_type: "CLIPSetLastLayer", inputs: { stop_at_clip_layer: -2, clip: ["21", 1] } });
+    expect(g["6"]!.inputs).toEqual({ text: "masterpiece, 1girl, fox ears", clip: ["30", 0] });
+    expect(g["3"]!.inputs).toMatchObject({ seed: 7, sampler_name: "dpmpp_2m", scheduler: "karras", denoise: 0.9, model: ["21", 0] });
+  });
+
+  it("without the new settings the default workflow is the plain one", async () => {
+    reset(done("m2"));
+    await endpointGenerate({ name: "Comfy", kind: "comfyui", baseUrl: base }, undefined, "m", "x");
+    const g = graphOf();
+    expect(Object.keys(g).sort()).toEqual(["3", "4", "5", "6", "7", "8", "9"]);
+    expect(g["3"]!.inputs).toMatchObject({ sampler_name: "euler_ancestral", scheduler: "normal", denoise: 1, model: ["4", 0] });
+    expect(g["6"]!.inputs).toEqual({ text: "x", clip: ["4", 1] });
+  });
+
+  it("a custom workflow gets LoRA slots, with None for the empty ones (rgthree Lora Loader Stack)", async () => {
+    reset(done("m3"));
+    const workflow = JSON.stringify({
+      "4": { class_type: "KSampler", inputs: { seed: "%seed%", sampler_name: "%sampler%", scheduler: "%scheduler%", denoise: "%denoise%" } },
+      "5": { class_type: "CLIPTextEncode", inputs: { text: "%prompt%" } },
+      "12": { class_type: "Lora Loader Stack (rgthree)", inputs: { lora_01: "%LORA_1%", strength_01: "%LORA_1_strength%", lora_02: "%LORA_2%", strength_02: "%LORA_2_strength%" } },
+    });
+    await endpointGenerate({ name: "Comfy", kind: "comfyui", baseUrl: base, workflow, loras: [{ name: "Anime_Detailed", strength: 1 }] }, undefined, "m", "x");
+    const g = graphOf();
+    expect(g["12"]!.inputs).toEqual({ lora_01: "Anime_Detailed", strength_01: 1, lora_02: "None", strength_02: 1 });
+    expect(g["4"]!.inputs).toMatchObject({ sampler_name: "euler_ancestral", scheduler: "normal", denoise: 1 });
+    expect(typeof g["4"]!.inputs.seed).toBe("number");
+    expect(comfyVars({ name: "c", kind: "comfyui", baseUrl: "" }, { positive: "", negative: "", model: "", width: 1, height: 1, seed: 1, steps: 1, cfg: 1 })).toMatchObject({ "%clip_skip%": -1, "%LORA_5%": "None" });
+  });
+
+  it("Forge gets the sampler, scheduler, clip skip, seed and LoRAs as prompt tags", async () => {
+    reset({ "POST /sdapi/v1/txt2img": () => json({ images: [PNG.toString("base64")] }) });
+    await endpointGenerate(
+      { name: "Forge", kind: "a1111", baseUrl: base, prefix: "masterpiece,", sampler: "DPM++ 2M", scheduler: "Karras", seed: 5, clipSkip: 2, loras: [{ name: "detail", strength: 0.6 }] },
+      undefined, "wai", "a fox",
+    );
+    const body = seen.find((s) => s.path === "/sdapi/v1/txt2img")!.body as Record<string, unknown>;
+    expect(body).toMatchObject({
+      prompt: "masterpiece, a fox <lora:detail:0.6>", sampler_name: "DPM++ 2M", scheduler: "Karras", seed: 5,
+      override_settings: { sd_model_checkpoint: "wai", CLIP_stop_at_last_layers: 2 },
+    });
+  });
+
+  it("lists the samplers, schedulers and LoRAs a server offers", async () => {
+    reset({
+      "GET /object_info/KSampler": () => json({ KSampler: { input: { required: { sampler_name: [["euler", "dpmpp_2m"]], scheduler: [["normal", "karras"]] } } } }),
+      "GET /object_info/LoraLoader": () => json({ LoraLoader: { input: { required: { lora_name: [["a.safetensors"]] } } } }),
+    });
+    expect(await listEndpointOptions({ name: "C", kind: "comfyui", baseUrl: base })).toEqual({ samplers: ["euler", "dpmpp_2m"], schedulers: ["normal", "karras"], loras: ["a.safetensors"] });
+    reset({
+      "GET /sdapi/v1/samplers": () => json([{ name: "Euler a" }, { name: "DPM++ 2M" }]),
+      "GET /sdapi/v1/loras": () => json([{ name: "detail", path: "x" }]),
+    });
+    // no scheduler list on older builds: the rest still comes back
+    expect(await listEndpointOptions({ name: "F", kind: "a1111", baseUrl: base })).toEqual({ samplers: ["Euler a", "DPM++ 2M"], schedulers: [], loras: ["detail"] });
+  });
+
+  it("the prompt style follows the setting, else the kind", () => {
+    expect(endpointPromptStyle({ kind: "comfyui" })).toBe("tags");
+    expect(endpointPromptStyle({ kind: "openai" })).toBe("description");
+    expect(endpointPromptStyle({ kind: "comfyui", style: "description" })).toBe("description");
   });
 });
 

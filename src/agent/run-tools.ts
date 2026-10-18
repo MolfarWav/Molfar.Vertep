@@ -265,8 +265,13 @@ function imageGenerateTool(im: NonNullable<RunToolOptions["images"]>, ask: RunTo
       const mine = favs.flatMap((f) => (byRef.has(f.ref) ? [{ m: byRef.get(f.ref) as ImageModelInfo, f }] : []));
       const first = defaultImageModel(listed, favs) as ImageModelInfo;
       const models = [first, ...listed.filter((m) => m !== first)];
-      const line = (m: ImageModelInfo, f?: ImageFavorite) =>
-        `- ${imageRef(m)}: ${f?.name || m.label}${f?.use ? `, for: ${f.use}` : ""} (${m.connectionName ?? m.provider}${LOCAL_IMAGE_APIS.has(m.api) ? ", local, free, write tags" : ""})`;
+      const line = (m: ImageModelInfo, f?: ImageFavorite) => {
+        const notes = [m.connectionName ?? m.provider];
+        if (LOCAL_IMAGE_APIS.has(m.api)) notes.push("local, free");
+        if ((m.style ?? (LOCAL_IMAGE_APIS.has(m.api) ? "tags" : "description")) === "tags") notes.push("write tags");
+        const how = m.instructions ? `\n  prompt guidance: ${m.instructions.replace(/\s+/g, " ").slice(0, 500)}` : "";
+        return `- ${imageRef(m)}: ${f?.name || m.label}${f?.use ? `, for: ${f.use}` : ""} (${notes.join(", ")})${how}`;
+      };
       const prompt = typeof p.prompt === "string" ? p.prompt.trim() : "";
       if (p.list === true || !prompt) {
         const tail = prompt ? "" : "\n\nCall again with prompt to draw.";

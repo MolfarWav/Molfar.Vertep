@@ -20,7 +20,7 @@ import { inspectAssistantMessage, inspectRequest, inspectResult, type InspectorE
 import { type PromptSources, systemPartsFor } from "./prompt-sources.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
-import { ImageError, endpointGenerate, imageEndpoint, listEndpointModels, listImageEndpoints, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, readImageFavorites, type ImageFavorite, type ListedImageModel } from "./images.js";
+import { ImageError, endpointGenerate, endpointPromptStyle, imageEndpoint, listEndpointOptions, type EndpointOptions, listEndpointModels, listImageEndpoints, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, readImageFavorites, type ImageFavorite, type ListedImageModel } from "./images.js";
 import { blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
 
 /** File-backed CredentialStore over the user's auth.json (outside git). */
@@ -83,6 +83,10 @@ export interface ImageModelInfo {
   label: string;
   api: string;
   connectionName: string | null;
+  /** how prompts for this model are best written: tags (Danbooru style) or a plain description */
+  style?: "tags" | "description";
+  /** the user's own guidance for writing prompts for this server */
+  instructions?: string;
 }
 
 /** Image servers on the user's own machine or LAN: drawing there costs nothing. */
@@ -1652,7 +1656,10 @@ export class UserModelService {
     }
     for (const ep of listImageEndpoints(this.paths)) {
       lists.push(this.endpointModels(ep.id).then(
-        (ms) => ms.map((m) => ({ provider: ep.id, id: m.id, label: m.label, api: ep.kind, connectionName: ep.name })),
+        (ms) => ms.map((m) => ({
+          provider: ep.id, id: m.id, label: m.label, api: ep.kind, connectionName: ep.name,
+          style: endpointPromptStyle(ep), ...(ep.instructions ? { instructions: ep.instructions } : {}),
+        })),
         (e) => (log.warn(`[images] ${ep.name}: ${(e as Error).message}`), []),
       ));
     }
@@ -1682,6 +1689,13 @@ export class UserModelService {
     const models = await listEndpointModels(ep.def, ep.key);
     this.endpointModelCache.set(id, { at: Date.now(), baseUrl: ep.def.baseUrl, models });
     return models;
+  }
+
+  /** The samplers, schedulers and LoRAs a local server offers, for Settings. */
+  async endpointOptions(id: string): Promise<EndpointOptions> {
+    const ep = imageEndpoint(this.paths, id);
+    if (!ep) throw new ImageError("no such image endpoint", 404);
+    return listEndpointOptions(ep.def, ep.key);
   }
 
   /** Forget cached lists after Settings changes an endpoint. */

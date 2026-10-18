@@ -1620,6 +1620,13 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
     }
   });
+  app.get("/v1/images/endpoints/:id/options", async (c) => {
+    try {
+      return c.json(await c.get("models").endpointOptions(c.req.param("id")));
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
+    }
+  });
   // the picture lands in the asset store and travels as a same-origin URL:
   // chats and cards that keep it stay small, and app pages (CSP img-src
   // 'self') can show it directly

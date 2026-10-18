@@ -254,6 +254,7 @@ describe("exfiltration ways out of an app page", () => {
       expect(host.allowedRequest("roleplay", method, "/v1/images/endpoints"), method).toBe(false);
       expect(host.allowedRequest("roleplay", method, "/v1/images/endpoints/x"), method).toBe(false);
       expect(host.allowedRequest("roleplay", method, "/v1/images/endpoints/x/models", true), method).toBe(false);
+      expect(host.allowedRequest("roleplay", method, "/v1/images/endpoints/x/options", true), method).toBe(false);
     }
     // read-only catalogs: GET yes, writes no
     expect(host.allowedRequest("roleplay", "GET", "/v1/settings/connections")).toBe(true);
