@@ -54,7 +54,7 @@ import {
   EDGE_FORMATS, EDGE_VOICES, createSpeechEndpoint, deleteSpeechEndpoint, edgeSpeakFmt,
   endpointSpeak, listSpeechEndpoints, speechEndpointKey, updateSpeechEndpoint, validateSpeechEndpointInput,
 } from "../speech.js";
-import { ImageError, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput } from "../images.js";
+import { ImageError, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
 import type { EdgeFormat } from "../speech.js";
 import * as assets from "../assets/store.js";
 import { createSandbox, type SandboxRunner } from "../sandbox/index.js";
@@ -1571,10 +1571,21 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // ---------- image generation (pi-ai images API; creds never leave) ----------
   app.get("/v1/images/models", async (c) => {
     try {
-      return c.json({ models: await c.get("models").imageModels() });
+      const svc = c.get("models");
+      return c.json({ models: await svc.imageModels(), favorites: svc.imageFavorites() });
     } catch (e) {
       return c.json({ error: (e as Error).message }, 500);
     }
+  });
+  // the user's shortlist of image models (the first is the default for a call
+  // that names none; Molfar picks by each one's "use"); shell only: an app
+  // must not change what other apps and Molfar pay for
+  app.put("/v1/images/favorites", async (c) => {
+    const body = await c.req.json<{ favorites?: unknown }>().catch(() => ({}) as { favorites?: unknown });
+    const v = validateImageFavorites(body.favorites);
+    if (!v.ok || body.favorites === undefined) return c.json({ error: v.ok ? "favorites required" : v.error }, 400);
+    writeImageFavorites(c.get("paths"), v.value);
+    return c.json({ favorites: v.value });
   });
   // the user's image servers (ComfyUI, AUTOMATIC1111/Forge, OpenAI-compatible):
   // shell only, since a listing carries LAN addresses; keys are write-only
@@ -1605,6 +1616,13 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.get("/v1/images/endpoints/:id/models", async (c) => {
     try {
       return c.json({ models: await c.get("models").endpointModels(c.req.param("id"), true) });
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
+    }
+  });
+  app.get("/v1/images/endpoints/:id/options", async (c) => {
+    try {
+      return c.json(await c.get("models").endpointOptions(c.req.param("id")));
     } catch (e) {
       return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
     }

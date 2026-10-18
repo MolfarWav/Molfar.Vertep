@@ -1,13 +1,14 @@
 /**
  * Agent tools that reach past the workspace files: the plugin log, an app's
- * own routes, one test generation, a public web page, and the run budget.
+ * own routes, one test generation, a picture, a public web page, and the run budget.
  * Each needs something only the engine has (the route dispatcher, the model
  * service, the network), passed in by the caller; a tool whose dependency is
  * missing is not built.
  */
 import { Type } from "typebox";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
-import type { GenerateRequest, GenerateResult } from "../models.js";
+import type { ImageFavorite } from "../images.js";
+import { LOCAL_IMAGE_APIS, defaultImageModel, type GenerateRequest, type GenerateResult, type ImageModelInfo } from "../models.js";
 import { assertInternetHost } from "../net-guard.js";
 import { readPluginLog } from "../plugins/plugin-log.js";
 import { estimateTextTokens } from "./context-budget.js";
@@ -30,6 +31,15 @@ export interface RunToolOptions {
   tryModel?: {
     resolve: (ref?: string) => { ref: string; price: (u: Usage) => number | null } | null;
     generate: (req: GenerateRequest) => Promise<GenerateResult>;
+  };
+  /** image_generate: the user's image models (GET /v1/images/models), one drawing, and the asset store. */
+  images?: {
+    list: () => Promise<ImageModelInfo[]>;
+    /** The user's shortlist from Settings > Images; the first is the default. */
+    favorites: () => ImageFavorite[];
+    generate: (req: { prompt: string; model: string }) => Promise<{ data: Buffer; mimeType: string; model: string }>;
+    /** Keep the bytes; returns the served URL, /v1/assets/<id>. */
+    store: (data: Buffer, mimeType: string, name: string) => string;
   };
   /** web_fetch: read at call time, so the Settings switch applies to a running agent. */
   internet?: () => boolean;
@@ -224,6 +234,92 @@ function modelTryTool(m: NonNullable<RunToolOptions["tryModel"]>, ask: RunToolOp
   };
 }
 
+// ---------- image_generate ----------
+
+const IMAGE_LIST_MAX = 60;
+
+const imageRef = (m: ImageModelInfo): string => `${m.provider}/${m.id}`;
+
+function imageGenerateTool(im: NonNullable<RunToolOptions["images"]>, ask: RunToolOptions["ask"]): AgentTool {
+  return {
+    name: "image_generate",
+    label: "Draw a picture",
+    description:
+      "Draw one picture (an avatar, a background, a gallery image) with the user's image models and keep it in the asset store. Returns its URL, /v1/assets/<id>: write that URL into a card's avatar, a background or a gallery item. list: true shows the user's image models with what each is for; pick the model whose use fits the picture (a background, a character) and pass its ref as model; without model the first is used. prompt: a full visual description in English (names mean nothing to the artist); for models marked tags (ComfyUI, Forge) comma-separated Danbooru tags; things to leave out go at the end as (Avoid: ...). Paid models: the user confirms each picture; local servers draw without asking.",
+    parameters: Type.Object({
+      prompt: Type.Optional(Type.String({ description: "What to draw" })),
+      model: Type.Optional(Type.String({ description: "provider/id from list" })),
+      list: Type.Optional(Type.Boolean({ description: "List the image models instead of drawing" })),
+      all: Type.Optional(Type.Boolean({ description: "With list: every available model, not only the user's list" })),
+      name: Type.Optional(Type.String({ description: "File name to keep it under, e.g. jude-avatar" })),
+    }),
+    async execute(_id, params) {
+      const p = params as { prompt?: string; model?: string; list?: boolean; all?: boolean; name?: string };
+      const listed = await im.list();
+      if (!listed.length) {
+        return textResult("The user has no image model. They add one in Settings: an OpenRouter or NanoGPT connection, or an image server such as ComfyUI or Forge (Settings > Images).", { drawn: false });
+      }
+      // the user's list, in their order, then the rest; the default goes first
+      const favs = im.favorites();
+      const byRef = new Map(listed.map((m) => [imageRef(m), m]));
+      const mine = favs.flatMap((f) => (byRef.has(f.ref) ? [{ m: byRef.get(f.ref) as ImageModelInfo, f }] : []));
+      const first = defaultImageModel(listed, favs) as ImageModelInfo;
+      const models = [first, ...listed.filter((m) => m !== first)];
+      const line = (m: ImageModelInfo, f?: ImageFavorite) => {
+        const notes = [m.connectionName ?? m.provider];
+        if (LOCAL_IMAGE_APIS.has(m.api)) notes.push("local, free");
+        if ((m.style ?? (LOCAL_IMAGE_APIS.has(m.api) ? "tags" : "description")) === "tags") notes.push("write tags");
+        const how = m.instructions ? `\n  prompt guidance: ${m.instructions.replace(/\s+/g, " ").slice(0, 500)}` : "";
+        return `- ${imageRef(m)}: ${f?.name || m.label}${f?.use ? `, for: ${f.use}` : ""} (${notes.join(", ")})${how}`;
+      };
+      const prompt = typeof p.prompt === "string" ? p.prompt.trim() : "";
+      if (p.list === true || !prompt) {
+        const tail = prompt ? "" : "\n\nCall again with prompt to draw.";
+        if (mine.length && p.all !== true) {
+          const missing = favs.length - mine.length;
+          return textResult(
+            `The user's image models, default first:\n${mine.map((x) => line(x.m, x.f)).join("\n")}${missing ? `\n(${missing} on their list not available now)` : ""}\n${listed.length - mine.length} other model(s): list with all: true only if the user asks for one of them.${tail}`,
+            { drawn: false, count: mine.length },
+          );
+        }
+        const more = models.length > IMAGE_LIST_MAX ? `\n… ${models.length - IMAGE_LIST_MAX} more` : "";
+        const hint = mine.length ? "" : "\nThe user has not made a list (Settings > Images); if they want a different model each time, suggest it.";
+        return textResult(`${models.length} image model(s), default first:\n${models.slice(0, IMAGE_LIST_MAX).map((m) => line(m)).join("\n")}${more}${hint}${tail}`, { drawn: false, count: models.length });
+      }
+      const ref = typeof p.model === "string" ? p.model.trim() : "";
+      const pick = ref ? models.find((m) => imageRef(m) === ref || m.id === ref) : first;
+      if (!pick) return textResult(`No image model ${ref}. Call with list: true and pick a ref from it.`, { drawn: false });
+      const where = `${pick.label} (${pick.connectionName ?? pick.provider})`;
+      if (!LOCAL_IMAGE_APIS.has(pick.api)) {
+        if (!ask) return textResult("Not drawn: the user is not available to confirm a paid picture.", { drawn: false });
+        const answer = (
+          await ask({
+            question: `Draw a picture with ${where}?`,
+            options: [
+              { label: "Draw", description: "one picture; the provider may charge for it", recommended: true },
+              { label: "Skip", description: "Molfar goes on without it" },
+            ],
+            detail: cap(prompt, 600),
+          })
+        ).trim();
+        if (answer !== "Draw") {
+          return textResult(`Not drawn: the user skipped it${answer && answer !== "Skip" && answer !== "(no answer)" ? ` and said: ${answer}` : ""}. Do not retry it unasked.`, { drawn: false });
+        }
+      }
+      try {
+        const out = await im.generate({ prompt: prompt.slice(0, 4000), model: imageRef(pick) });
+        const ext = out.mimeType.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "png";
+        const base = (typeof p.name === "string" ? p.name : "").replace(/\.[a-z0-9]+$/i, "").replace(/[^A-Za-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "image";
+        const url = im.store(out.data, out.mimeType, `${base}.${ext}`);
+        return textResult(`Drawn with ${out.model}: ${url} (${out.mimeType}, ${Math.round(out.data.length / 1024)} KB). Write this URL where the picture belongs; do not read or print the image.`, { drawn: true, url, model: out.model });
+      } catch (e) {
+        // thrown, so the step shows as failed; the model reads the reason and may offer another model
+        throw new Error(`Not drawn: ${(e as Error).message}`);
+      }
+    },
+  };
+}
+
 // ---------- web_fetch ----------
 
 const FETCH_DEFAULT_BYTES = 400_000;
@@ -405,6 +501,7 @@ export function buildRunTools(username: string, o: RunToolOptions): AgentTool[] 
   const out: AgentTool[] = [pluginLogTool(username)];
   if (o.appRequest) out.push(appRequestTool(o.appRequest, o.mode === "plan"));
   if (o.tryModel) out.push(modelTryTool(o.tryModel, o.ask));
+  if (o.images && o.mode !== "plan") out.push(imageGenerateTool(o.images, o.ask));
   if (o.internet) out.push(webFetchTool(o.internet));
   if (o.budgetBasis) out.push(runBudgetTool(o.budgetBasis, o.ask, o.plan));
   return out;

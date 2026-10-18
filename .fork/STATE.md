@@ -1,13 +1,13 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-17.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-18.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
 ## pi 1.2.0 + live model lists + #59: planned 1.2.2, branch `claude/project-thread-9jjtzp` (2026-10-18)
-Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1 (#53/#54, another thread); merge both at release
-(conflicts expected only in this file and CHANGELOG). `package.json` version not bumped yet.
+Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1; main 1.2.1 merged into the branch 2026-10-18.
+`package.json` version not bumped yet (still 1.2.1).
 - pi 0.85.1 -> 1.2.0, pinned exactly (rule in CLAUDE.md, user 2026-10-18: >= 7 days old, no hotfix after it).
   1.3.0 (2026-10-15) was too fresh. Since 0.86 the agent loop passes a transcript (prompt and tools in system
   messages): `agent.ts` transformContext drops them, trims the dialogue and puts back one leading system
@@ -30,6 +30,29 @@ Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1 (#53/#54, another thr
 - Checks: typecheck, build:client pass; tests 829/832 (edge TTS x2 = network 403; hostile plugin fails on
   the old pi too). Left: the agent, OAuth flows and the APK by hand on a real model; release notes
   `.fork/release-notes/1.2.2.md` (draft).
+
+## 1.2.1: RELEASED 2026-10-18 on the user's word (main fast-forwarded in the engine and the Roleplay fork, Roleplay 4.50.0; the tag v1.2.1 is pushed by the user)
+#54 Molfar draws: agent tool `image_generate` (`src/agent/run-tools.ts`; lists the user's image models, draws through
+`Models.generateImage`, keeps the picture in the asset store, returns `/v1/assets/<id>`; paid models ask per picture,
+`comfyui`/`a1111` draw without asking; not in plan mode; group `image` in small-window mode; one prompt rule, ~85 tokens).
+Asked by the user the same day: Settings > Images "Your image models", a shortlist (`images.json` `favorites`:
+`{ref, name?, use?}`, max 30) starred from a searchable list per connection/server; the first is the default for a call
+without a model (else a local server, else the first listed); Molfar sees only the list and picks by `use`;
+`GET /v1/images/models` returns `favorites`, `PUT /v1/images/favorites` is shell-only. Card skill `edit-large-card`
+(both copies) says where a picture's URL goes (avatar + studio.avatar, studio.gallery, library.json backgrounds).
+Workspace override copies: `.fork/handoff/v121/workspace-agent-task.md`.
+#53 Roleplay 4.50.0: Prompt style (Auto / Description / Danbooru tags) in Tools > Image Generation; `ui.imageGen.promptStyle`
+and `modelApi` (the picked model's api, written by the app) in settings.json; tags rules in the `image-prompt` route and the
+generate_image tool wording at send time; the picker lists the engine's favorites first; What's new tip.
+Also asked the same day: Marinara-style server settings (`src/images.ts` ImageEndpointDef: prefix, sampler, scheduler, seed,
+denoise, clipSkip, loras ≤5, style, instructions; default workflow chains LoraLoader + CLIPSetLastLayer; custom workflows get
+%sampler% %scheduler% %denoise% %clip_skip% %LORA_n% %LORA_n_strength%, empty slot "None"; Forge gets `<lora:…>` tags;
+`GET /v1/images/endpoints/:id/options` shell-only; servers editable in Settings). Server style and guidance travel in
+`/v1/images/models` to Molfar's list and to Roleplay (`ui.imageGen.modelStyle` / `modelInstructions`).
+Checks: engine typecheck, build:client pass; tests 850 pass + 3 that fail on main in the cloud container too (edge TTS
+403, hostile-plugin dir size); Roleplay 1069 pass. Browser-checked by subagents (shots `/mnt/project-files/images-121/`):
+local and paid draws, Draw/Skip card at 390 px, the picture renders in Molfar's chat, the Roleplay tab, Settings > Images.
+Notes `.fork/release-notes/1.2.1.md`. Asked, not decided: a Gemini API image backend (Google Flow itself has no API).
 
 ## 1.2.0: RELEASED 2026-10-17 on the user's word (main fast-forwarded to the release commit, tag v1.2.0; Roleplay 4.49.0 on the fork's main, merged from `claude/slim-start` + `claude/attention`). Engine = main 1.1.1 + `claude/slim-start-engine` + `claude/image-providers-c9b607` (only conflict: this file). Notes `.fork/release-notes/1.2.0.md`. Not in it: the site branch `claude/hopeful-mccarthy-39ropd`. Checks: typecheck, build:client pass; tests 809 pass, the 15 known Windows-only failures plus 4 load flakes that pass alone; Roleplay 1060 pass, typecheck clean.
 

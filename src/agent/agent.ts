@@ -39,6 +39,7 @@ import { buildBugSolutionTool } from "./bug-solution.js";
 import { LANGUAGE_RULE, PRECEDENCE_RULE } from "./prompt-rules.js";
 import { resetAllowed } from "./protect.js";
 import { readSandboxSettings } from "../sandbox/network.js";
+import { putAsset } from "../assets/store.js";
 import { projectLayout, projectPromptSection, readSettings } from "./projects.js";
 import { rememberSystemParts, type SourceKind, type SourcePart } from "../prompt-sources.js";
 
@@ -531,6 +532,12 @@ export class UserAgent {
           return m ? { ref: `${m.provider}/${m.id}`, price: (u) => svc.costOf(m, u) } : null;
         },
         generate: (req) => svc.generate(req),
+      },
+      images: {
+        list: () => svc.imageModels(),
+        favorites: () => svc.imageFavorites(),
+        generate: (req) => svc.generateImage(req),
+        store: (data, mimeType, name) => `/v1/assets/${putAsset(paths, data, mimeType, name, null).id}`,
       },
       // offered only while internet is on; the tool re-reads the switch per call
       ...(readSandboxSettings(paths.sandbox).internet ? { internet: () => readSandboxSettings(paths.sandbox).internet } : {}),
@@ -1548,7 +1555,8 @@ ${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its
 - App data files (apps/<id>/data/) are plain JSON/JSONL you can read and edit directly — open clients sync within ~1s, no reload. Underscore-prefixed files there (_example.json) are AI-only templates: never shown in the UI, copy one to a real name to create the entity. Copy the template's field shape exactly.
 - Never delete the user's content (chats, characters, notes, uploads, memory) unless they asked for exactly that.
 - Protected paths (by default an app's src/ and index.html, plus persona.md; the user can add more) change only after the user allows it in a card, once per request and app. A no means: put the change in data/ or a plugin of your own, or explain why those files must change. Never work around it through bash or git.
-- JSON files (a character card can pass 100 KB, a lorebook several MB): json_get to see the shape or a field, json_set to change fields, several in one call. Never load a whole large JSON, and never rewrite one through bash or python, to change a value.`],
+- JSON files (a character card can pass 100 KB, a lorebook several MB): json_get to see the shape or a field, json_set to change fields, several in one call. Never load a whole large JSON, and never rewrite one through bash or python, to change a value.
+- Pictures (an avatar, a background, a gallery image): image_generate. Look at the user's image models first (list: true) and take the one whose "for" fits the picture; the card skill (edit-large-card) says where the returned /v1/assets URL goes. Never write image bytes or data URLs into files.`],
   ];
   if (isAdmin) sections.push(["tools", "Admin tools", ADMIN_TOOLS_PROMPT]);
   for (const [kind, label, text] of sections) addPart(parts, kind, label, text);

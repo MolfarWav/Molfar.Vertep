@@ -10,11 +10,16 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
-  ImageError, createImageEndpoint, endpointGenerate, imageEndpoint, imageHosts, listEndpointModels, listImageEndpoints,
+  ImageError, comfyVars, createImageEndpoint, endpointGenerate, endpointPromptStyle, listEndpointOptions, imageEndpoint, imageHosts, listEndpointModels, listImageEndpoints,
   nanoGptGenerate, nanoGptImageModels, providerError, setComfyPollMs, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
   type ImageEndpointDef,
 } from "../src/images.js";
-import { UserModelService } from "../src/models.js";
+import { UserModelService, defaultImageModel, type ImageModelInfo } from "../src/models.js";
+import { deleteImageEndpoint, readImageFavorites, validateImageFavorites, writeImageFavorites } from "../src/images.js";
+import { buildApp } from "../src/server/app.js";
+import { EventBus } from "../src/server/ws.js";
+import { SessionService } from "../src/sessions.js";
+import { UserService } from "../src/users.js";
 import { defaultInstanceConfig } from "../src/config.js";
 import { bootstrapUserDir } from "../src/paths.js";
 
@@ -198,6 +203,110 @@ describe("AUTOMATIC1111 / Forge", () => {
   });
 });
 
+describe("Marinara-style sampling settings", () => {
+  const done = (id: string) => ({
+    "POST /prompt": () => json({ prompt_id: id }),
+    [`GET /history/${id}`]: () => json({ [id]: { status: { completed: true }, outputs: { "9": { images: [{ filename: "a.png", type: "output" }] } } } }),
+    "GET /view": () => new Response(PNG, { headers: { "content-type": "image/png" } }),
+  });
+  const graphOf = () => (seen.find((s) => s.path === "/prompt")!.body as { prompt: Record<string, { class_type: string; inputs: Record<string, unknown> }> }).prompt;
+
+  it("validates and keeps the new fields, and clears them again", () => {
+    const v = validateImageEndpointInput({
+      name: "C", kind: "comfyui", baseUrl: "http://127.0.0.1:8188", prefix: " masterpiece, best quality, ", sampler: "dpmpp_2m", scheduler: "karras",
+      seed: 42, denoise: 0.555, clipSkip: 2, loras: [{ name: "Anime_Detailed", strength: 0.8 }, { name: "  " }, { name: "b.safetensors" }],
+      style: "description", instructions: "Mention the lighting.",
+    });
+    expect(v.ok && v.value).toMatchObject({
+      prefix: "masterpiece, best quality,", sampler: "dpmpp_2m", scheduler: "karras", seed: 42, denoise: 0.56, clipSkip: 2,
+      loras: [{ name: "Anime_Detailed", strength: 0.8 }, { name: "b.safetensors", strength: 1 }], style: "description", instructions: "Mention the lighting.",
+    });
+    for (const bad of [{ sampler: "x;rm" }, { seed: -2 }, { denoise: 2 }, { clipSkip: 13 }, { loras: [{ name: "<x>" }] }, { loras: Array.from({ length: 6 }, (_, i) => ({ name: `l${i}` })) }, { style: "prose" }, { instructions: "x".repeat(1001) }]) {
+      expect(validateImageEndpointInput(bad, true).ok, JSON.stringify(bad).slice(0, 60)).toBe(false);
+    }
+    const u = path.join(dataDir, "marinara");
+    fs.mkdirSync(u, { recursive: true });
+    const p = bootstrapUserDir(u, "m");
+    const ep = createImageEndpoint(p, (v as unknown as { value: never }).value);
+    const cleared = validateImageEndpointInput({ seed: -1, clipSkip: 0, denoise: null, loras: [], sampler: "", prefix: null, style: null }, true);
+    const after = updateImageEndpoint(p, ep.id, (cleared as unknown as { value: never }).value)!;
+    for (const k of ["seed", "clipSkip", "denoise", "loras", "sampler", "prefix", "style"]) expect(after, k).not.toHaveProperty(k);
+    expect(after).toMatchObject({ scheduler: "karras", instructions: "Mention the lighting." });
+  });
+
+  it("the default workflow chains the LoRAs and the clip skip and takes the sampler settings", async () => {
+    reset(done("m1"));
+    const def: ImageEndpointDef = {
+      name: "Comfy", kind: "comfyui", baseUrl: base, prefix: "masterpiece, ", sampler: "dpmpp_2m", scheduler: "karras", seed: 7, denoise: 0.9, clipSkip: 2,
+      loras: [{ name: "a.safetensors", strength: 0.7 }, { name: "b.safetensors", strength: 1.2 }],
+    };
+    await endpointGenerate(def, undefined, "wai.safetensors", "1girl, fox ears");
+    const g = graphOf();
+    expect(g["20"]).toMatchObject({ class_type: "LoraLoader", inputs: { lora_name: "a.safetensors", strength_model: 0.7, strength_clip: 0.7, model: ["4", 0], clip: ["4", 1] } });
+    expect(g["21"]!.inputs).toMatchObject({ lora_name: "b.safetensors", strength_model: 1.2, model: ["20", 0], clip: ["20", 1] });
+    expect(g["30"]).toMatchObject({ class_type: "CLIPSetLastLayer", inputs: { stop_at_clip_layer: -2, clip: ["21", 1] } });
+    expect(g["6"]!.inputs).toEqual({ text: "masterpiece, 1girl, fox ears", clip: ["30", 0] });
+    expect(g["3"]!.inputs).toMatchObject({ seed: 7, sampler_name: "dpmpp_2m", scheduler: "karras", denoise: 0.9, model: ["21", 0] });
+  });
+
+  it("without the new settings the default workflow is the plain one", async () => {
+    reset(done("m2"));
+    await endpointGenerate({ name: "Comfy", kind: "comfyui", baseUrl: base }, undefined, "m", "x");
+    const g = graphOf();
+    expect(Object.keys(g).sort()).toEqual(["3", "4", "5", "6", "7", "8", "9"]);
+    expect(g["3"]!.inputs).toMatchObject({ sampler_name: "euler_ancestral", scheduler: "normal", denoise: 1, model: ["4", 0] });
+    expect(g["6"]!.inputs).toEqual({ text: "x", clip: ["4", 1] });
+  });
+
+  it("a custom workflow gets LoRA slots, with None for the empty ones (rgthree Lora Loader Stack)", async () => {
+    reset(done("m3"));
+    const workflow = JSON.stringify({
+      "4": { class_type: "KSampler", inputs: { seed: "%seed%", sampler_name: "%sampler%", scheduler: "%scheduler%", denoise: "%denoise%" } },
+      "5": { class_type: "CLIPTextEncode", inputs: { text: "%prompt%" } },
+      "12": { class_type: "Lora Loader Stack (rgthree)", inputs: { lora_01: "%LORA_1%", strength_01: "%LORA_1_strength%", lora_02: "%LORA_2%", strength_02: "%LORA_2_strength%" } },
+    });
+    await endpointGenerate({ name: "Comfy", kind: "comfyui", baseUrl: base, workflow, loras: [{ name: "Anime_Detailed", strength: 1 }] }, undefined, "m", "x");
+    const g = graphOf();
+    expect(g["12"]!.inputs).toEqual({ lora_01: "Anime_Detailed", strength_01: 1, lora_02: "None", strength_02: 1 });
+    expect(g["4"]!.inputs).toMatchObject({ sampler_name: "euler_ancestral", scheduler: "normal", denoise: 1 });
+    expect(typeof g["4"]!.inputs.seed).toBe("number");
+    expect(comfyVars({ name: "c", kind: "comfyui", baseUrl: "" }, { positive: "", negative: "", model: "", width: 1, height: 1, seed: 1, steps: 1, cfg: 1 })).toMatchObject({ "%clip_skip%": -1, "%LORA_5%": "None" });
+  });
+
+  it("Forge gets the sampler, scheduler, clip skip, seed and LoRAs as prompt tags", async () => {
+    reset({ "POST /sdapi/v1/txt2img": () => json({ images: [PNG.toString("base64")] }) });
+    await endpointGenerate(
+      { name: "Forge", kind: "a1111", baseUrl: base, prefix: "masterpiece,", sampler: "DPM++ 2M", scheduler: "Karras", seed: 5, clipSkip: 2, loras: [{ name: "detail", strength: 0.6 }] },
+      undefined, "wai", "a fox",
+    );
+    const body = seen.find((s) => s.path === "/sdapi/v1/txt2img")!.body as Record<string, unknown>;
+    expect(body).toMatchObject({
+      prompt: "masterpiece, a fox <lora:detail:0.6>", sampler_name: "DPM++ 2M", scheduler: "Karras", seed: 5,
+      override_settings: { sd_model_checkpoint: "wai", CLIP_stop_at_last_layers: 2 },
+    });
+  });
+
+  it("lists the samplers, schedulers and LoRAs a server offers", async () => {
+    reset({
+      "GET /object_info/KSampler": () => json({ KSampler: { input: { required: { sampler_name: [["euler", "dpmpp_2m"]], scheduler: [["normal", "karras"]] } } } }),
+      "GET /object_info/LoraLoader": () => json({ LoraLoader: { input: { required: { lora_name: [["a.safetensors"]] } } } }),
+    });
+    expect(await listEndpointOptions({ name: "C", kind: "comfyui", baseUrl: base })).toEqual({ samplers: ["euler", "dpmpp_2m"], schedulers: ["normal", "karras"], loras: ["a.safetensors"] });
+    reset({
+      "GET /sdapi/v1/samplers": () => json([{ name: "Euler a" }, { name: "DPM++ 2M" }]),
+      "GET /sdapi/v1/loras": () => json([{ name: "detail", path: "x" }]),
+    });
+    // no scheduler list on older builds: the rest still comes back
+    expect(await listEndpointOptions({ name: "F", kind: "a1111", baseUrl: base })).toEqual({ samplers: ["Euler a", "DPM++ 2M"], schedulers: [], loras: ["detail"] });
+  });
+
+  it("the prompt style follows the setting, else the kind", () => {
+    expect(endpointPromptStyle({ kind: "comfyui" })).toBe("tags");
+    expect(endpointPromptStyle({ kind: "openai" })).toBe("description");
+    expect(endpointPromptStyle({ kind: "comfyui", style: "description" })).toBe("description");
+  });
+});
+
 describe("OpenAI-compatible endpoint", () => {
   const def = (): ImageEndpointDef => ({ name: "Imgs", kind: "openai", baseUrl: `${base}/v1`, models: ["flux-dev", "gpt-image-1"] });
 
@@ -304,5 +413,84 @@ describe("review follow-ups", () => {
   it("a refused history poll fails at once with its status", async () => {
     reset({ "POST /prompt": () => json({ prompt_id: "r1" }), "GET /history/r1": () => json({ error: "no" }, 403) });
     expect((await rejects(endpointGenerate({ name: "Comfy", kind: "comfyui", baseUrl: base }, "k", "m", "x"))).status).toBe(401);
+  });
+});
+
+describe("image favorites", () => {
+  const row = (provider: string, id: string, api: string): ImageModelInfo => ({ provider, id, label: id, api, connectionName: provider }) as ImageModelInfo;
+  const paid = row("or", "flux", "openrouter-images");
+  const paid2 = row("nano", "klein", "nanogpt-images");
+  const comfy = row("c1", "sdxl", "comfyui");
+  const forge = row("f1", "wai", "a1111");
+
+  it("defaultImageModel: first listed favorite, else the first local server, else the first", () => {
+    expect(defaultImageModel([paid, paid2, comfy], [{ ref: "gone/x" }, { ref: "nano/klein" }, { ref: "or/flux" }])).toBe(paid2);
+    expect(defaultImageModel([paid, forge, comfy], [])).toBe(forge);
+    expect(defaultImageModel([paid, comfy], [{ ref: "gone/model" }])).toBe(comfy);
+    expect(defaultImageModel([paid, paid2], [])).toBe(paid);
+    expect(defaultImageModel([], [{ ref: "or/flux" }])).toBeUndefined();
+  });
+
+  it("validateImageFavorites cleans and refuses", () => {
+    expect(validateImageFavorites(null)).toEqual({ ok: true, value: [] });
+    expect(validateImageFavorites(undefined)).toEqual({ ok: true, value: [] });
+    expect(validateImageFavorites([{ ref: "a/b", name: "  Pretty ", use: "  " }, { ref: "a/b", name: "dup" }, { ref: "c/d/e" }])).toEqual({
+      ok: true,
+      value: [{ ref: "a/b", name: "Pretty" }, { ref: "c/d/e" }],
+    });
+    for (const bad of ["x", {}, [{}], [{ ref: "nope" }], [{ ref: 5 }], [{ ref: "a b/c" }], [{ ref: "a/" + "b".repeat(300) }], [{ ref: "a/b", name: "n".repeat(61) }], [{ ref: "a/b", use: "u".repeat(121) }], Array.from({ length: 31 }, (_, i) => ({ ref: `p/m${i}` }))]) {
+      expect(validateImageFavorites(bad).ok, JSON.stringify(bad).slice(0, 40)).toBe(false);
+    }
+    expect(validateImageFavorites(Array.from({ length: 30 }, (_, i) => ({ ref: `p/m${i}` }))).ok).toBe(true);
+  });
+
+  it("the favorites and the endpoints share images.json without erasing each other", () => {
+    const p = bootstrapUserDir(dataDir, "favs");
+    expect(readImageFavorites(p)).toEqual([]);
+    writeImageFavorites(p, [{ ref: "or/flux", use: "cheap" }]);
+    const v = validateImageEndpointInput({ name: "Comfy", kind: "comfyui", baseUrl: base });
+    if (!v.ok) throw new Error(v.error);
+    const ep = createImageEndpoint(p, v.value);
+    expect(readImageFavorites(p)).toEqual([{ ref: "or/flux", use: "cheap" }]);
+    updateImageEndpoint(p, ep.id, { name: "Comfy 2" });
+    deleteImageEndpoint(p, ep.id);
+    expect(readImageFavorites(p)).toEqual([{ ref: "or/flux", use: "cheap" }]);
+    expect(listImageEndpoints(p)).toEqual([]);
+    const ep2 = createImageEndpoint(p, v.value);
+    writeImageFavorites(p, []);
+    expect(readImageFavorites(p)).toEqual([]);
+    expect(listImageEndpoints(p).map((e) => e.id)).toEqual([ep2.id]);
+    expect(JSON.parse(fs.readFileSync(p.images, "utf8"))).not.toHaveProperty("favorites");
+  });
+
+  it("a broken images.json reads as no favorites", () => {
+    const p = bootstrapUserDir(dataDir, "favs-bad");
+    fs.mkdirSync(path.dirname(p.images), { recursive: true });
+    fs.writeFileSync(p.images, "{nope");
+    expect(readImageFavorites(p)).toEqual([]);
+  });
+
+  it("HTTP: PUT /v1/images/favorites stores a cleaned list, GET /v1/images/models returns it", async () => {
+    const dir = fs.mkdtempSync(path.join(dataDir, "http-"));
+    const users = new UserService(dir);
+    users.create("admin", "admin", { password: "admin-pass-1" });
+    const token = users.create("root", "admin", { password: "test-pass-1" }).token;
+    const app = buildApp({ users, sessions: new SessionService(dir), config: defaultInstanceConfig(), dataDir: dir, bus: new EventBus() });
+    const h = { authorization: `Bearer ${token}`, "content-type": "application/json" };
+    const put = (body: unknown) => app.request("/v1/images/favorites", { method: "PUT", headers: h, body: JSON.stringify(body) });
+    const get = async () => (await (await app.request("/v1/images/models", { headers: h })).json()) as { models: unknown[]; favorites: unknown[] };
+
+    expect((await get()).favorites).toEqual([]);
+    const ok = await put({ favorites: [{ ref: "comfy_1/sdxl.safetensors", name: " SDXL ", use: "portraits" }, { ref: "comfy_1/sdxl.safetensors" }] });
+    expect(ok.status).toBe(200);
+    const want = [{ ref: "comfy_1/sdxl.safetensors", name: "SDXL", use: "portraits" }];
+    expect(await ok.json()).toEqual({ favorites: want });
+    expect((await get()).favorites).toEqual(want);
+    expect((await put({ favorites: [] })).status).toBe(200);
+    expect((await get()).favorites).toEqual([]);
+    for (const bad of [{}, { favorites: "nope" }, { favorites: [{ ref: "nope" }] }, { favorites: [{ ref: "a/b", name: "n".repeat(61) }] }]) {
+      expect((await put(bad)).status, JSON.stringify(bad)).toBe(400);
+    }
+    expect((await app.request("/v1/images/favorites", { method: "PUT", headers: h, body: "{not json" })).status).toBe(400);
   });
 });

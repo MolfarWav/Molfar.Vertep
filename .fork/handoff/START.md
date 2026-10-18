@@ -4,6 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+0000. **1.2.1 released** 2026-10-18 (main in both repos; the user pushes the tag v1.2.1). Workspace copies: `.fork/handoff/v121/workspace-agent-task.md`. 1.2.2 = the pi engine / model list update, its own thread and branch.
 000. **Next releases (user, 2026-10-17)**: release P0 for large libraries (#46) with the threads fix (#47) first, on the
    user's word (engine `claude/slim-start-engine` + Roleplay `claude/slim-start`, STATE). Then, easiest first, from the
    ecosystem scan (`E:\Obsidian\Vault\Projects\RP\Molfar Vertep — Ecosystem Scan 2026-10-16.md`): #50 Litopys fact

@@ -33,7 +33,8 @@ export interface ImageEndpointDef {
   baseUrl: string;
   /** openai: the image model ids to offer (an OpenAI-compatible /models lists chat models too) */
   models?: string[];
-  /** comfyui: an API-format workflow with %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg% */
+  /** comfyui: an API-format workflow with %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%,
+   *  %sampler%, %scheduler%, %denoise%, %clip_skip%, %LORA_1%..%LORA_5% and %LORA_1_strength%..%LORA_5_strength% */
   workflow?: string;
   width?: number;
   height?: number;
@@ -42,6 +43,38 @@ export interface ImageEndpointDef {
   cfg?: number;
   /** comfyui / a1111: always added to the negative prompt */
   negative?: string;
+  /** comfyui / a1111: put in front of every prompt (quality tags and the like) */
+  prefix?: string;
+  /** comfyui / a1111: sampler and scheduler names as the server lists them */
+  sampler?: string;
+  scheduler?: string;
+  /** comfyui / a1111: a fixed seed; absent = a new random one each picture */
+  seed?: number;
+  /** comfyui: denoise strength, 1 for text-to-image */
+  denoise?: number;
+  /** comfyui / a1111: skip the last CLIP layers (2 is common for anime checkpoints) */
+  clipSkip?: number;
+  /** comfyui / a1111: up to five LoRAs with their strength */
+  loras?: ImageLora[];
+  /** how prompts for this server are written; absent = tags for comfyui/a1111 */
+  style?: ImagePromptStyle;
+  /** extra guidance for whoever writes the prompt (Molfar, an app's describer) */
+  instructions?: string;
+}
+
+export interface ImageLora {
+  name: string;
+  strength: number;
+}
+
+export type ImagePromptStyle = "tags" | "description";
+
+export const MAX_LORAS = 5;
+
+/** The prompt style a server's pictures want: its own setting, else tags for
+ *  the tag-trained local servers. */
+export function endpointPromptStyle(def: Pick<ImageEndpointDef, "kind" | "style">): ImagePromptStyle {
+  return def.style ?? (def.kind === "openai" ? "description" : "tags");
 }
 
 export interface ImageEndpointInfo extends ImageEndpointDef {
@@ -77,9 +110,67 @@ function readEndpoints(p: UserPaths): Record<string, ImageEndpointDef> {
   }
 }
 
-function writeEndpoints(p: UserPaths, endpoints: Record<string, ImageEndpointDef>): void {
+function readImagesFile(p: UserPaths): Record<string, unknown> {
+  try {
+    const file = JSON.parse(fs.readFileSync(p.images, "utf8")) as unknown;
+    return file && typeof file === "object" && !Array.isArray(file) ? (file as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
+
+/** Rewrites one key of images.json, keeping the others (endpoints, favorites). */
+function writeImagesKey(p: UserPaths, key: string, value: unknown): void {
+  const file = readImagesFile(p);
+  if (value === undefined) delete file[key];
+  else file[key] = value;
   fs.mkdirSync(path.dirname(p.images), { recursive: true });
-  fs.writeFileSync(p.images, `${JSON.stringify({ endpoints }, null, 2)}\n`);
+  fs.writeFileSync(p.images, `${JSON.stringify(file, null, 2)}\n`);
+}
+
+function writeEndpoints(p: UserPaths, endpoints: Record<string, ImageEndpointDef>): void {
+  writeImagesKey(p, "endpoints", endpoints);
+}
+
+/** One model on the user's shortlist (Settings > Images): its "provider/id",
+ *  a name of their own and what it is for, which Molfar reads to pick. The
+ *  first is the default for callers that name no model. */
+export interface ImageFavorite {
+  ref: string;
+  name?: string;
+  use?: string;
+}
+
+const MAX_FAVORITES = 30;
+const REF = /^[^/\s]+\/\S+$/;
+
+export function readImageFavorites(p: UserPaths): ImageFavorite[] {
+  const v = validateImageFavorites(readImagesFile(p).favorites);
+  return v.ok ? v.value : [];
+}
+
+export function validateImageFavorites(raw: unknown): { ok: true; value: ImageFavorite[] } | { ok: false; error: string } {
+  if (raw === undefined || raw === null) return { ok: true, value: [] };
+  if (!Array.isArray(raw)) return { ok: false, error: "favorites must be a list" };
+  if (raw.length > MAX_FAVORITES) return { ok: false, error: `at most ${MAX_FAVORITES} favorites` };
+  const out: ImageFavorite[] = [];
+  const seen = new Set<string>();
+  for (const item of raw) {
+    const f = item as { ref?: unknown; name?: unknown; use?: unknown } | null;
+    if (!f || typeof f !== "object" || typeof f.ref !== "string" || f.ref.length > 300 || !REF.test(f.ref)) return { ok: false, error: "each favorite needs a provider/id ref" };
+    if (f.name !== undefined && (typeof f.name !== "string" || f.name.length > 60)) return { ok: false, error: "a favorite's name is text up to 60 characters" };
+    if (f.use !== undefined && (typeof f.use !== "string" || f.use.length > 120)) return { ok: false, error: "a favorite's use is text up to 120 characters" };
+    if (seen.has(f.ref)) continue;
+    seen.add(f.ref);
+    const name = typeof f.name === "string" ? f.name.trim() : "";
+    const use = typeof f.use === "string" ? f.use.trim() : "";
+    out.push({ ref: f.ref, ...(name ? { name } : {}), ...(use ? { use } : {}) });
+  }
+  return { ok: true, value: out };
+}
+
+export function writeImageFavorites(p: UserPaths, favorites: ImageFavorite[]): void {
+  writeImagesKey(p, "favorites", favorites.length ? favorites : undefined);
 }
 
 const authTarget = (id: string) => `images/${id}`;
@@ -150,6 +241,8 @@ async function assertEndpointHost(url: string): Promise<void> {
 type EndpointInput = {
   name?: unknown; kind?: unknown; baseUrl?: unknown; models?: unknown; workflow?: unknown;
   width?: unknown; height?: unknown; steps?: unknown; cfg?: unknown; negative?: unknown; key?: unknown;
+  prefix?: unknown; sampler?: unknown; scheduler?: unknown; seed?: unknown; denoise?: unknown; clipSkip?: unknown;
+  loras?: unknown; style?: unknown; instructions?: unknown;
 };
 type EndpointValue = Omit<ImageEndpointDef, "name" | "kind" | "baseUrl"> & { name?: string; kind?: ImageEndpointKind; baseUrl?: string; key?: string };
 
@@ -197,7 +290,11 @@ export function validateImageEndpointInput(input: EndpointInput, partial = false
   }
   for (const [field, lo, hi] of [["width", 64, 4096], ["height", 64, 4096], ["steps", 1, 150], ["cfg", 0, 30]] as const) {
     const v = input[field];
-    if (v === undefined || v === null) continue;
+    if (v === undefined) continue;
+    if (v === null || v === "") {
+      out[field] = undefined; // cleared in an edit: back to the default
+      continue;
+    }
     const n = field === "cfg" ? (typeof v === "number" && v >= lo && v <= hi ? Math.round(v * 10) / 10 : undefined) : intIn(v, lo, hi);
     if (n === undefined) return { ok: false, error: `${field} must be a number from ${lo} to ${hi}` };
     out[field] = n;
@@ -205,6 +302,55 @@ export function validateImageEndpointInput(input: EndpointInput, partial = false
   if (input.negative !== undefined) {
     if (typeof input.negative !== "string" || input.negative.length > 2000) return { ok: false, error: "the negative prompt must be text of at most 2000 characters" };
     out.negative = input.negative.trim();
+  }
+  for (const [field, max] of [["prefix", 2000], ["instructions", 1000]] as const) {
+    const v = input[field];
+    if (v === undefined) continue;
+    if (v !== null && (typeof v !== "string" || v.length > max)) return { ok: false, error: `${field} must be text of at most ${max} characters` };
+    out[field] = typeof v === "string" ? v.trim() : "";
+  }
+  for (const field of ["sampler", "scheduler"] as const) {
+    const v = input[field];
+    if (v === undefined) continue;
+    if (v !== null && v !== "" && (typeof v !== "string" || !/^[\w.+ -]{1,60}$/.test(v))) return { ok: false, error: `${field} must be a name as the server lists it` };
+    out[field] = typeof v === "string" ? v.trim() : "";
+  }
+  // a fixed seed, a denoise or a clip skip can be cleared again with null
+  if (input.seed !== undefined) {
+    const n = input.seed === null || input.seed === -1 ? null : intIn(input.seed, 0, 2 ** 47);
+    if (n === undefined) return { ok: false, error: "seed must be -1 (random) or a number from 0" };
+    out.seed = n ?? undefined;
+  }
+  if (input.denoise !== undefined) {
+    const v = input.denoise;
+    if (v !== null && !(typeof v === "number" && v >= 0 && v <= 1)) return { ok: false, error: "denoise must be a number from 0 to 1" };
+    out.denoise = v === null ? undefined : Math.round(v * 100) / 100;
+  }
+  if (input.clipSkip !== undefined) {
+    const n = input.clipSkip === null ? null : intIn(input.clipSkip, 0, 12);
+    if (n === undefined) return { ok: false, error: "clip skip must be a number from 0 to 12" };
+    out.clipSkip = n ? n : undefined;
+  }
+  if (input.loras !== undefined) {
+    if (input.loras !== null && !Array.isArray(input.loras)) return { ok: false, error: "loras must be a list" };
+    const list = (input.loras ?? []) as unknown[];
+    const loras: ImageLora[] = [];
+    for (const item of list) {
+      const l = item as { name?: unknown; strength?: unknown } | null;
+      const name = typeof l?.name === "string" ? l.name.trim() : "";
+      if (!name) continue;
+      const strength = l?.strength === undefined ? 1 : l.strength;
+      if (name.length > 200 || /[<>]/.test(name) || typeof strength !== "number" || !Number.isFinite(strength) || strength < -5 || strength > 5) {
+        return { ok: false, error: "each LoRA needs a file name and a strength from -5 to 5" };
+      }
+      loras.push({ name, strength: Math.round(strength * 100) / 100 });
+    }
+    if (loras.length > MAX_LORAS) return { ok: false, error: `at most ${MAX_LORAS} LoRAs` };
+    out.loras = loras;
+  }
+  if (input.style !== undefined) {
+    if (input.style !== null && input.style !== "" && input.style !== "tags" && input.style !== "description") return { ok: false, error: "style must be tags or description" };
+    out.style = input.style === "tags" || input.style === "description" ? input.style : undefined;
   }
   if (input.key !== undefined) {
     const key = typeof input.key === "string" ? input.key.trim() : "";
@@ -225,9 +371,13 @@ function cleanDef(def: ImageEndpointDef): ImageEndpointDef {
   if (def.kind === "comfyui" && def.workflow) out.workflow = def.workflow;
   for (const k of ["width", "height"] as const) if (def[k] !== undefined) out[k] = def[k];
   if (def.kind !== "openai") {
-    for (const k of ["steps", "cfg"] as const) if (def[k] !== undefined) out[k] = def[k];
-    if (def.negative) out.negative = def.negative;
+    for (const k of ["steps", "cfg", "seed", "clipSkip"] as const) if (def[k] !== undefined) out[k] = def[k];
+    for (const k of ["negative", "prefix", "sampler", "scheduler"] as const) if (def[k]) out[k] = def[k];
+    if (def.loras?.length) out.loras = def.loras;
   }
+  if (def.kind === "comfyui" && def.denoise !== undefined) out.denoise = def.denoise;
+  if (def.style) out.style = def.style;
+  if (def.instructions) out.instructions = def.instructions;
   return out;
 }
 
@@ -499,15 +649,58 @@ export async function nanoGptGenerate(key: string, model: string, prompt: string
 
 // ---------- configured endpoints ----------
 
-const DEFAULT_WORKFLOW = {
-  "3": { class_type: "KSampler", inputs: { seed: "%seed%", steps: "%steps%", cfg: "%cfg%", sampler_name: "euler_ancestral", scheduler: "normal", denoise: 1, model: ["4", 0], positive: ["6", 0], negative: ["7", 0], latent_image: ["5", 0] } },
-  "4": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: "%model%" } },
-  "5": { class_type: "EmptyLatentImage", inputs: { width: "%width%", height: "%height%", batch_size: 1 } },
-  "6": { class_type: "CLIPTextEncode", inputs: { text: "%prompt%", clip: ["4", 1] } },
-  "7": { class_type: "CLIPTextEncode", inputs: { text: "%negative_prompt%", clip: ["4", 1] } },
-  "8": { class_type: "VAEDecode", inputs: { samples: ["3", 0], vae: ["4", 2] } },
-  "9": { class_type: "SaveImage", inputs: { filename_prefix: "molfar", images: ["8", 0] } },
-};
+/** The built-in text-to-image graph: checkpoint, then each LoRA in turn,
+ *  then an optional CLIP skip, then the sampler. */
+function defaultWorkflow(def: Pick<ImageEndpointDef, "loras" | "clipSkip">): Record<string, unknown> {
+  const g: Record<string, unknown> = {
+    "4": { class_type: "CheckpointLoaderSimple", inputs: { ckpt_name: "%model%" } },
+    "5": { class_type: "EmptyLatentImage", inputs: { width: "%width%", height: "%height%", batch_size: 1 } },
+    "8": { class_type: "VAEDecode", inputs: { samples: ["3", 0], vae: ["4", 2] } },
+    "9": { class_type: "SaveImage", inputs: { filename_prefix: "molfar", images: ["8", 0] } },
+  };
+  let model: [string, number] = ["4", 0];
+  let clip: [string, number] = ["4", 1];
+  (def.loras ?? []).forEach((_, i) => {
+    const id = String(20 + i);
+    g[id] = {
+      class_type: "LoraLoader",
+      inputs: { lora_name: `%LORA_${i + 1}%`, strength_model: `%LORA_${i + 1}_strength%`, strength_clip: `%LORA_${i + 1}_strength%`, model, clip },
+    };
+    model = [id, 0];
+    clip = [id, 1];
+  });
+  if (def.clipSkip) {
+    g["30"] = { class_type: "CLIPSetLastLayer", inputs: { stop_at_clip_layer: -def.clipSkip, clip } };
+    clip = ["30", 0];
+  }
+  g["6"] = { class_type: "CLIPTextEncode", inputs: { text: "%prompt%", clip } };
+  g["7"] = { class_type: "CLIPTextEncode", inputs: { text: "%negative_prompt%", clip } };
+  g["3"] = {
+    class_type: "KSampler",
+    inputs: {
+      seed: "%seed%", steps: "%steps%", cfg: "%cfg%", sampler_name: "%sampler%", scheduler: "%scheduler%", denoise: "%denoise%",
+      model, positive: ["6", 0], negative: ["7", 0], latent_image: ["5", 0],
+    },
+  };
+  return g;
+}
+
+/** Placeholder values for a ComfyUI workflow. Empty LoRA slots read "None",
+ *  which rgthree's Lora Loader Stack and similar nodes take as "no LoRA". */
+export function comfyVars(def: ImageEndpointDef, v: { positive: string; negative: string; model: string; width: number; height: number; seed: number; steps: number; cfg: number }): Record<string, string | number> {
+  const vars: Record<string, string | number> = {
+    "%prompt%": v.positive, "%negative_prompt%": v.negative, "%model%": v.model, "%width%": v.width, "%height%": v.height,
+    "%seed%": v.seed, "%steps%": v.steps, "%cfg%": v.cfg,
+    "%sampler%": def.sampler ?? "euler_ancestral", "%scheduler%": def.scheduler ?? "normal", "%denoise%": def.denoise ?? 1,
+    "%clip_skip%": def.clipSkip ? -def.clipSkip : -1,
+  };
+  for (let i = 1; i <= MAX_LORAS; i++) {
+    const l = def.loras?.[i - 1];
+    vars[`%LORA_${i}%`] = l?.name ?? "None";
+    vars[`%LORA_${i}_strength%`] = l?.strength ?? 1;
+  }
+  return vars;
+}
 
 /** The one entry a custom workflow without %model% offers: the workflow
  *  picks its own model. */
@@ -519,7 +712,7 @@ export const WORKFLOW_MODEL = "workflow";
 function fillPlaceholders(value: unknown, vars: Record<string, string | number>): unknown {
   if (typeof value === "string") {
     if (Object.hasOwn(vars, value)) return vars[value];
-    return value.replace(/%[a-z_]+%/g, (m) => (Object.hasOwn(vars, m) ? String(vars[m]) : m));
+    return value.replace(/%[A-Za-z0-9_]+%/g, (m) => (Object.hasOwn(vars, m) ? String(vars[m]) : m));
   }
   if (Array.isArray(value)) return value.map((v) => fillPlaceholders(v, vars));
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, fillPlaceholders(v, vars)]));
@@ -551,6 +744,42 @@ export async function listEndpointModels(def: ImageEndpointDef, key?: string): P
   return (Array.isArray(names) ? names : []).filter((n): n is string => typeof n === "string").map((id) => ({ id, label: id }));
 }
 
+export interface EndpointOptions {
+  samplers: string[];
+  schedulers: string[];
+  loras: string[];
+}
+
+const names = (v: unknown): string[] => (Array.isArray(v) ? v.filter((n): n is string => typeof n === "string") : []);
+
+/** The samplers, schedulers and LoRA files a local server offers, for the
+ *  settings form. Empty lists for an OpenAI-compatible server. */
+export async function listEndpointOptions(def: ImageEndpointDef, key?: string): Promise<EndpointOptions> {
+  if (def.kind === "openai") return { samplers: [], schedulers: [], loras: [] };
+  const who = def.name;
+  const base = normalizeUrl(def.baseUrl);
+  await assertEndpointHost(base);
+  const init = { timeout: LIST_TIMEOUT, ...(key ? { headers: { authorization: `Bearer ${key}` } } : {}) };
+  const get = async (path: string): Promise<unknown> => {
+    const res = await call(`${base}${path}`, init, who);
+    await failUnlessOk(res, who);
+    return readJson(res, who);
+  };
+  if (def.kind === "a1111") {
+    const [samplers, schedulers, loras] = await Promise.all([
+      get("/sdapi/v1/samplers"),
+      get("/sdapi/v1/schedulers").catch(() => []), // older Forge and A1111 builds have no scheduler list
+      get("/sdapi/v1/loras").catch(() => []),
+    ]);
+    const field = (list: unknown, k: string) => (Array.isArray(list) ? list : []).map((x) => (x as Record<string, unknown>)?.[k]).filter((n): n is string => typeof n === "string");
+    return { samplers: field(samplers, "name"), schedulers: field(schedulers, "name"), loras: field(loras, "name") };
+  }
+  const info = (await get("/object_info/KSampler")) as { KSampler?: { input?: { required?: Record<string, unknown[]> } } };
+  const req = info.KSampler?.input?.required ?? {};
+  const lora = (await get("/object_info/LoraLoader").catch(() => ({}))) as { LoraLoader?: { input?: { required?: Record<string, unknown[]> } } };
+  return { samplers: names(req.sampler_name?.[0]), schedulers: names(req.scheduler?.[0]), loras: names(lora.LoraLoader?.input?.required?.lora_name?.[0]) };
+}
+
 export async function endpointGenerate(def: ImageEndpointDef, key: string | undefined, model: string, prompt: string): Promise<{ data: Buffer; mimeType: string }> {
   const who = def.name;
   const base = normalizeUrl(def.baseUrl);
@@ -578,18 +807,25 @@ export async function endpointGenerate(def: ImageEndpointDef, key: string | unde
   const neg = joinNegative(negative, def.negative);
   const steps = def.steps ?? 25;
   const cfg = def.cfg ?? 6;
-  const seed = randomInt(0, 2 ** 47);
+  const seed = def.seed ?? randomInt(0, 2 ** 47);
+  const lead = def.prefix?.trim();
+  const pos = lead ? `${lead.replace(/,\s*$/, "")}, ${positive}` : positive;
 
   if (def.kind === "a1111") {
+    const loraTags = (def.loras ?? []).map((l) => `<lora:${l.name}:${l.strength}>`).join(" ");
+    const overrides: Record<string, unknown> = {
+      ...(model ? { sd_model_checkpoint: model } : {}),
+      ...(def.clipSkip ? { CLIP_stop_at_last_layers: def.clipSkip } : {}),
+    };
     const res = await call(
       `${base}/sdapi/v1/txt2img`,
       {
         method: "POST",
         headers: { "content-type": "application/json", ...auth },
         body: JSON.stringify({
-          prompt: positive, negative_prompt: neg, width, height, steps, cfg_scale: cfg, seed,
-          sampler_name: "Euler a", batch_size: 1, n_iter: 1,
-          ...(model ? { override_settings: { sd_model_checkpoint: model }, override_settings_restore_afterwards: false } : {}),
+          prompt: loraTags ? `${pos} ${loraTags}` : pos, negative_prompt: neg, width, height, steps, cfg_scale: cfg, seed,
+          sampler_name: def.sampler ?? "Euler a", ...(def.scheduler ? { scheduler: def.scheduler } : {}), batch_size: 1, n_iter: 1,
+          ...(Object.keys(overrides).length ? { override_settings: overrides, override_settings_restore_afterwards: false } : {}),
         }),
         timeout: GENERATE_TIMEOUT,
       },
@@ -604,11 +840,8 @@ export async function endpointGenerate(def: ImageEndpointDef, key: string | unde
 
   // comfyui: queue the workflow, wait for its history entry, fetch the file
   const started = Date.now();
-  const graph = def.workflow ? (JSON.parse(def.workflow) as unknown) : DEFAULT_WORKFLOW;
-  const filled = fillPlaceholders(graph, {
-    "%prompt%": positive, "%negative_prompt%": neg, "%model%": model, "%width%": width, "%height%": height,
-    "%seed%": seed, "%steps%": steps, "%cfg%": cfg,
-  });
+  const graph = def.workflow ? (JSON.parse(def.workflow) as unknown) : defaultWorkflow(def);
+  const filled = fillPlaceholders(graph, comfyVars(def, { positive: pos, negative: neg, model, width, height, seed, steps, cfg }));
   const queued = await call(
     `${base}/prompt`,
     { method: "POST", headers: { "content-type": "application/json", ...auth }, body: JSON.stringify({ prompt: filled, client_id: "molfar-vertep" }), timeout: 30_000 },
