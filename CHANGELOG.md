@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Custom connections (OpenAI-compatible) no longer fail every reply with "malformed server-sent event JSON" (#59). Since 1.2.2 the OpenAI library rejects any stream event that is not JSON; such connections now read the stream through a tolerant reader: `[DONE]` with trailing text ends the stream, several JSON lines in one event are split, and other non-JSON events are skipped and logged (`[custom-provider:<id>] skipped a stream event that is not JSON`). A plain-text error inside a successful stream now shows as an empty reply, with the log line saying why.
+- Sync: "Replace the sync with this device" (#45), for a device that does not want what the sync holds. It sits under the "Pull first" notice, behind a confirmation; the sync then holds exactly this device's files (the keys too), and the other devices drop what only the sync had on their next pull (`POST /v1/sync/push {replace: true}`).
+
 ## 1.2.3 (2026-10-18)
 
 - Molfar's chat takes files besides pictures: text, Markdown, JSON, CSV and other text formats, plus Word and OpenDocument documents (their text). A file is saved under `uploads/<day>/` in the workspace (outside git, kept by backups, read-only for the agent), and the message names it as `@uploads/...`, so the existing mention reader puts it in (64 KB cap, a big JSON as its outline). Notepad's UTF-16 is converted; other encodings and PDFs are refused with the reason on the file's tile (`PUT /v1/agent/uploads/:name`, shell-only). Mentions now take names in any script.
