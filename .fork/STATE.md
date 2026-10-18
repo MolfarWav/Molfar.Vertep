@@ -22,7 +22,9 @@ Roleplay only; the engine repo gets docs and the card skill copy. Version picked
   Two-language chats: the DM adds the player's spelling of a name as an alias. 1107 Roleplay tests pass.
 - Release order (user via coordinator): 1.2.4 / Roleplay 4.52.0 ships first; then merge main into this branch,
   bump to 4.53.0 (manifest, APP_VERSION, tip `since`, CHANGELOG, notes), close #52 with it. The user pushes the tag.
-- Left: browser check of the full sheet (dark, light, 390 px) with the UX check block.
+- Roleplay 4.53.0 ready on the branch (version, CHANGELOG, tip `new.world-dm`, Vertep display name cherry-picked from
+  the batch branch). Browser check done (dark/light 1280 and 390, uk, peek dialog); fixed: red peek confirm, English
+  "last run" time in uk. Left: the user's word on shipping (fork main fast-forward; engine 1.2.5 or app update only).
 - main (1.2.4 / Roleplay 4.52.0) merged into both branches 2026-10-18; no conflicts in code.
 
 ## 1.2.4: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.4; Roleplay 4.52.0 on the fork's main)
