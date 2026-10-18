@@ -94,13 +94,11 @@ describe("self-update", () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  it("keeps the old program through the first run after an update, and clears it after", () => {
+  it("keeps the old program until the next update, and clears the other leftovers", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "chrysalis-clean-"));
     for (const name of ["chrysalis.old", "resources.old", "chrysalis.failed", "resources.old-123", ".update"]) fs.mkdirSync(path.join(dir, name));
-    cleanUpAfterUpdate(dir, true);
-    expect(fs.readdirSync(dir).sort()).toEqual(["chrysalis.old", "resources.old", "resources.old-123"]);
-    cleanUpAfterUpdate(dir, false);
-    expect(fs.readdirSync(dir)).toEqual([]);
+    cleanUpAfterUpdate(dir);
+    expect(fs.readdirSync(dir).sort()).toEqual(["chrysalis.old", "resources.old"]);
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -197,7 +195,8 @@ describe("self-update", () => {
     expect(code).toBe(7);
     expect(fs.readFileSync(path.join(dir, "chrysalis"), "utf8")).toBe("new");
     expect(fs.existsSync(path.join(dir, "chrysalis.old"))).toBe(true);
-    expect(fs.existsSync(path.join(data, ".update-snapshot"))).toBe(false);
+    // kept for a rollback until the next update
+    expect(fs.existsSync(path.join(data, ".update-snapshot", "users.json"))).toBe(true);
     fs.rmSync(root, { recursive: true, force: true });
   }, 30_000);
 });

@@ -1,5 +1,6 @@
 # Roll back to the previous version: design draft
 
+BUILT for desktop in 1.2.2 (see STATE.md); APK and apps below are still open. Original draft:
 Asked by the user 2026-10-18: a button that returns Molfar Vertep to the previous (working) version even when
 everything is broken; back up only what the release changes. Scope and release not decided yet (proposed: its
 own release after 1.2.2). Nothing below is built.

@@ -15,6 +15,7 @@ Planned as 1.2.2 (branch `claude/project-thread-9jjtzp`), after 1.2.1.
 - A connection whose model list fails (its `/models` refused, timed out or moved) is now logged with the reason (`[models] <id>: model list failed: ...`); it used to be dropped silently.
 - Settings > Connections: typing a second character into a manual model id no longer turns the whole app black (#59).
 - The `azure-openai-responses` provider is now `azure`; connections and stored keys move on first start.
+- Going back to the version before the last update (`src/rollback.ts`), on a computer: `chrysalis rollback` (a downloaded copy; on Windows also `Restore-previous-version.cmd` next to the program) and `Molfar-Vertep.bat previous` (from source: the release tag before the one checked out). A downloaded copy now keeps the program it replaced (`*.old`) until the next update instead of deleting it after the first healthy start. Every change of version copies the engine's account files (`users.json`, `sessions.json`, `format.json`, `credentials/`) to `data/.update-snapshot` before migrating, kept until the next change of version; a rollback puts them back only when the newer version moved the data format, so sign-ins and accounts changed since stay. Workspaces are git and never touched. The first rollback-ready update is the one from 1.2.2 on; the Android app and apps are not covered yet.
 
 ## 1.2.1 (2026-10-18)
 

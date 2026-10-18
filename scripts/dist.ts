@@ -161,6 +161,14 @@ By hand, in Terminal in this folder:
   ./chrysalis
 `;
 
+/** A double-click way back for Windows, where the command line is not where
+ *  people look. The self-update copies it into updated folders too. */
+const RESTORE_CMD = `@echo off\r
+rem Goes back to the Molfar Vertep version from before the last update.\r
+rem Stop Molfar Vertep first. Your workspaces and chats are not touched.\r
+"%~dp0chrysalis.exe" rollback\r
+`;
+
 const README = (exe: string) => `Chrysalis ${version}
 
 Start:     ${exe === "chrysalis.exe" ? "double-click chrysalis.exe" : "./chrysalis"}
@@ -179,6 +187,9 @@ files under git. Once Chrysalis has started once, in any terminal:
 prints where they are and how to reach the running engine. The first start
 makes "chrysalis" a command for you; open a new terminal to pick it up.
 Undo that with "chrysalis uninstall-cli".
+
+An update went wrong? Stop Molfar Vertep, then ${exe === "chrysalis.exe" ? "double-click Restore-previous-version.cmd" : "run ./chrysalis rollback"}.
+It brings back the version from before the last update (kept until the next one).
 `;
 
 for (const name of targets) {
@@ -195,6 +206,7 @@ for (const name of targets) {
   if (t.kind === "android") continue;
   const isMac = name.startsWith("macos-");
   fs.writeFileSync(path.join(folder, "README.txt"), README(t.exe) + (isMac ? MAC_README : ""));
+  if (t.exe === "chrysalis.exe") fs.writeFileSync(path.join(folder, "Restore-previous-version.cmd"), RESTORE_CMD);
   if (isMac) {
     // .command so Finder runs it on a double-click, like the .exe on Windows
     const launcher = path.join(folder, "start.command");

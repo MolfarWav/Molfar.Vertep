@@ -27,7 +27,15 @@ Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1; main 1.2.1 merged in
   real browser (shots in the session scratchpad only). Soji discovery: cause unknown, Chub answers 403
   "not available in your country" to our cloud; waiting on the reporter.
 - #49 (Z.ai 1113) is not from the old pi: same Coding Plan endpoint and models in 0.85.1 and 1.2.0.
-- Checks: typecheck, build:client pass; tests 829/832 (edge TTS x2 = network 403; hostile plugin fails on
+- Rollback, desktop only (user chose "Desktop now", 2026-10-18; APK and apps are separate tasks):
+  `src/rollback.ts` + `chrysalis rollback [version]`; `*.old` and `data/.update-snapshot` kept until the next
+  update (snapshot stamped from/to; also taken at start on any change of version, so source runs get one);
+  data goes back only when format.json's format moved past the snapshot's. `Restore-previous-version.cmd`
+  in the Windows archive (copied in by the self-update). `Molfar-Vertep.bat previous`: tag before HEAD's tag
+  (on a branch: newest tag), runs the rollback data step if the current code has it, then checks out.
+  Defaults taken without the user's answer: keep `*.old` (~100 MB) rather than re-download; one step back.
+  Not run on Windows: the .bat path and the exe swap via the .cmd need a hand test.
+- Checks: typecheck, build:client pass; tests 860/863 (edge TTS x2 = network 403; hostile plugin fails on
   the old pi too). Left: the agent, OAuth flows and the APK by hand on a real model; release notes
   `.fork/release-notes/1.2.2.md` (draft).
 

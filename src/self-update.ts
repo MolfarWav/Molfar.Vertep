@@ -11,7 +11,8 @@
  *
  * The swap renames rather than overwrites: a running program can be renamed
  * on every platform (Windows included) but not replaced. The old files stay
- * as *.old until a later normal start, so an update can still be undone.
+ * as *.old until the next update, so `chrysalis rollback` (src/rollback.ts)
+ * can still go back to them days later.
  *
  * The restart keeps this process as a thin parent: it stops serving, runs the
  * new program with the same arguments and terminal, passes Ctrl+C along, and
@@ -97,17 +98,17 @@ const OLD = ".old";
 const FAILED = ".failed";
 /** Files a still-running process holds are set aside under a stamped name
  *  rather than deleted. */
-const OLD_NAME = /\.old(?:-\d+)?$/;
+const OLD_STAMPED = /\.old-\d+$/;
 const FAILED_NAME = /\.failed(?:-\d+)?$/;
 
-/** Remove what an earlier update left behind. The *.old files stay while the
- *  version that replaced them is on its first run: they are how that run is
- *  undone. A file still held by a previous process stays until the next
- *  start. */
-export function cleanUpAfterUpdate(dir: string = programDir(), firstRun: boolean = process.env[UPDATED_ENV] === "1"): void {
+/** Remove what an earlier update left behind. The program before the update
+ *  (*.old) stays until the next update replaces it: it is what a rollback
+ *  goes back to. A file still held by a previous process stays until the
+ *  next start. */
+export function cleanUpAfterUpdate(dir: string = programDir()): void {
   if (!SELF_UPDATE && dir === programDir()) return;
   for (const name of fs.readdirSync(dir)) {
-    if (name === ".update" || FAILED_NAME.test(name) || (!firstRun && OLD_NAME.test(name))) {
+    if (name === ".update" || FAILED_NAME.test(name) || OLD_STAMPED.test(name)) {
       try {
         fs.rmSync(path.join(dir, name), { recursive: true, force: true });
       } catch { /* in use: next start */ }
@@ -236,9 +237,16 @@ export function swapProgram(dir: string, fresh: string, exe: string): void {
     throw e;
   }
   if (process.platform !== "win32") fs.chmodSync(path.join(dir, exe), 0o755);
-  try {
-    fs.copyFileSync(path.join(fresh, "README.txt"), path.join(dir, "README.txt"));
-  } catch { /* optional */ }
+  for (const extra of ["README.txt", "Restore-previous-version.cmd"]) {
+    try {
+      fs.copyFileSync(path.join(fresh, extra), path.join(dir, extra));
+    } catch { /* optional */ }
+  }
+}
+
+/** The program from before the last update is still next to this one. */
+export function hasPreviousProgram(dir: string, exe: string): boolean {
+  return fs.existsSync(path.join(dir, exe + OLD)) && fs.existsSync(path.join(dir, "resources" + OLD));
 }
 
 /** Put the program and resources/ from before the update back. The files that
@@ -262,8 +270,39 @@ const SNAPSHOT = ".update-snapshot";
  *  copied. */
 const SNAPSHOT_FILES = ["users.json", "sessions.json", "format.json"];
 
-/** Copy the engine's own account files aside before a new version starts. */
-export function saveEngineFiles(dataDir: string): void {
+/** What a snapshot holds and which change of version it was taken for. */
+export interface SnapshotInfo {
+  files: string[];
+  /** The version the files belong to (absent in snapshots before 1.2.2). */
+  from?: string;
+  /** The version about to start on them. */
+  to?: string;
+  at?: number;
+}
+
+/** The saved account files' record, or null when there is none. */
+export function readSnapshot(dataDir: string): SnapshotInfo | null {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(dataDir, SNAPSHOT, "files.json"), "utf8")) as SnapshotInfo;
+    return Array.isArray(raw.files) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The data format the snapshot's files were written in (1 for none recorded). */
+export function snapshotFormat(dataDir: string): number {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(dataDir, SNAPSHOT, "format.json"), "utf8")) as { format?: unknown };
+    return typeof raw.format === "number" ? raw.format : 1;
+  } catch {
+    return 1;
+  }
+}
+
+/** Copy the engine's own account files aside before a new version starts.
+ *  The copy stays until the next change of version replaces it. */
+export function saveEngineFiles(dataDir: string, versions: { from?: string; to?: string } = {}): void {
   const into = path.join(dataDir, SNAPSHOT);
   fs.rmSync(into, { recursive: true, force: true });
   fs.mkdirSync(into, { recursive: true });
@@ -281,7 +320,8 @@ export function saveEngineFiles(dataDir: string): void {
       filter: (src) => !src.split(path.sep).includes("app-upstream"),
     });
   }
-  fs.writeFileSync(path.join(into, "files.json"), JSON.stringify({ files: present }) + "\n", "utf8");
+  const info: SnapshotInfo = { files: present, ...versions, at: Date.now() };
+  fs.writeFileSync(path.join(into, "files.json"), JSON.stringify(info) + "\n", "utf8");
 }
 
 /** Put the saved account files back: files the snapshot had are restored and
@@ -299,7 +339,7 @@ export function restoreEngineFiles(dataDir: string): void {
   if (fs.existsSync(credentials)) fs.cpSync(credentials, path.join(dataDir, "credentials"), { recursive: true, force: true });
 }
 
-/** Forget saved account files (after a healthy start, or a stale leftover). */
+/** Forget saved account files (once they have been put back). */
 export function dropEngineFiles(dataDir: string): void {
   fs.rmSync(path.join(dataDir, SNAPSHOT), { recursive: true, force: true });
 }
@@ -443,7 +483,7 @@ export function runReplacement(options: ReplacementOptions): void {
   const target = state.version ?? "";
   let saved = false;
   try {
-    saveEngineFiles(dataDir);
+    saveEngineFiles(dataDir, { from: ENGINE_VERSION, to: target });
     saved = true;
   } catch (e) {
     log.warn(`[update] could not save account files before restarting: ${(e as Error).message}`);
@@ -488,7 +528,6 @@ export function runReplacement(options: ReplacementOptions): void {
       if (Date.now() - answeringSince < proveMs || proven) return;
       proven = true;
       clearInterval(watch);
-      dropEngineFiles(dataDir);
       log.info(`[update] Molfar Vertep ${target} is running`);
     })();
   }, Math.min(1000, Math.max(100, proveMs / 5)));

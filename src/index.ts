@@ -35,7 +35,8 @@ import { log, logToFile } from "./logger.js";
 import { writeStdioApproval, type McpServerConfig } from "./mcp/registry.js";
 import { bindLegacyKeys } from "./connections.js";
 import { readLock, releaseLock, runningEngine, writeLock } from "./lock.js";
-import { cleanUpAfterUpdate, dropEngineFiles, runReplacement, updateState } from "./self-update.js";
+import { rollBack, snapshotOnVersionChange } from "./rollback.js";
+import { cleanUpAfterUpdate, runReplacement, SELF_UPDATE, updateState } from "./self-update.js";
 import { dataFormatProblem, recordDataFormat } from "./data-format.js";
 import { pruneUnchangedSkillCopies } from "./agent/memory.js";
 import { registerBunOAuthFlows } from "@earendil-works/pi-ai/bun-oauth";
@@ -78,6 +79,10 @@ Commands:
                            coding agent can do anything the built-in one can
                            (body from the argument or stdin; --user picks the
                            account when there is more than one)
+  rollback [version]       Go back to the version before the last update
+                           (Molfar Vertep must be stopped). A downloaded copy
+                           swaps its program back; from source, the launcher
+                           runs this, then checks out that version
   install-cli              Put chrysalis on your PATH so the two commands above
                            work from anywhere (uninstall-cli undoes it)
 
@@ -150,6 +155,8 @@ async function main(): Promise<void> {
       return printWorkspace(dataDir, asUser);
     case "api":
       return callApi(dataDir, args, asUser);
+    case "rollback":
+      return rollbackCommand(dataDir, args[0]);
     case "install-cli":
       return installCli(dataDir, false);
     case "uninstall-cli":
@@ -447,6 +454,18 @@ async function callApi(dataDir: string, args: string[], asUser: string | undefin
   }
 }
 
+async function rollbackCommand(dataDir: string, to: string | undefined): Promise<void> {
+  const live = await runningEngine(dataDir);
+  if (live) fail(`Molfar Vertep is running (${live.url}). Stop it first, then run this again.`);
+  try {
+    const program = SELF_UPDATE ? { dir: path.dirname(process.execPath), exe: path.basename(process.execPath) } : undefined;
+    for (const line of rollBack(dataDir, { to, program })) console.log(line);
+  } catch (e) {
+    fail(`cannot go back: ${(e as Error).message}`);
+  }
+  if (process.platform === "win32" && INSTALL_KIND === "binary" && process.stdin.isTTY) prompt("Press Enter to close.");
+}
+
 async function resetPassword(dataDir: string, username: string | undefined): Promise<void> {
   if (!username) fail("usage: chrysalis reset-password <user>");
   const live = await runningEngine(dataDir);
@@ -603,6 +622,12 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
   if (newer) fail(newer);
 
   log.info(`Molfar Vertep ${ENGINE_VERSION} (${INSTALL_KIND})`);
+  // before anything migrates: what `chrysalis rollback` puts back
+  try {
+    if (snapshotOnVersionChange(dataDir, ENGINE_VERSION)) log.info("[update] saved the account files from the previous version, for a rollback");
+  } catch (e) {
+    log.warn(`[update] could not save the account files for a rollback: ${(e as Error).message}`);
+  }
   // A downloaded build is a folder someone unpacked, so `chrysalis` is not a
   // command until something makes it one. Asking people to run install-cli
   // first means the command line is only found by those who read far enough,
@@ -623,13 +648,12 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
       log.warn(`could not put chrysalis on your PATH: ${(e as Error).message}`);
     }
   }
-  // the first run after an update keeps what undoing it needs until the
-  // parent has seen this version serve; every other start drops leftovers
+  // what undoing the last update needs (the old program, the saved account
+  // files) stays until the next update; other leftovers go
   const firstRunAfterUpdate = process.env.CHRYSALIS_UPDATED === "1";
   const cameBackFromUpdate = updateState().phase === "failed";
   try {
     cleanUpAfterUpdate();
-    if (!firstRunAfterUpdate) dropEngineFiles(dataDir);
   } catch { /* best effort */ }
   for (const w of loaded.warnings) log.warn(w);
 

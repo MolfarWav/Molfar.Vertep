@@ -7,6 +7,7 @@ rem   Molfar-Vertep.bat dev        update to the newest work branch (claude/*) i
 rem   Molfar-Vertep.bat dev NAME   update to the work branch claude/NAME (another
 rem                                session's newer branch does not take its place)
 rem   Molfar-Vertep.bat nopull     start without checking for updates
+rem   Molfar-Vertep.bat previous   go back to the release before the one you have
 rem   Molfar-Vertep.bat yes        do not ask: take the update
 rem   Molfar-Vertep.bat rebuild    reinstall packages and rebuild, then start
 rem   Molfar-Vertep.bat tools      also check Git and Bun for updates
@@ -64,11 +65,12 @@ set "MV_FULL="
 set "MV_TOOLS="
 set "MV_SHORTCUT="
 set "MV_PICK="
+set "MV_PREV="
 :args_loop
 if "%~1"=="" goto args_done
 rem a word that is no option names the work branch
 set "MV_KNOWN="
-for %%o in (dev nopull yes -y rebuild tools shortcut) do if /i "%~1"=="%%o" set "MV_KNOWN=1"
+for %%o in (dev nopull yes -y rebuild tools shortcut previous) do if /i "%~1"=="%%o" set "MV_KNOWN=1"
 if not defined MV_KNOWN set "MV_PICK=%~1"
 if /i "%~1"=="dev" set "MV_DEV=1"
 if /i "%~1"=="nopull" set "MV_NOPULL=1"
@@ -77,6 +79,7 @@ if /i "%~1"=="-y" set "MV_YES=1"
 if /i "%~1"=="rebuild" set "MV_FULL=1"
 if /i "%~1"=="tools" set "MV_TOOLS=1"
 if /i "%~1"=="shortcut" set "MV_SHORTCUT=1"
+if /i "%~1"=="previous" set "MV_PREV=1"
 shift
 goto args_loop
 :args_done
@@ -188,6 +191,7 @@ if not exist "%MV_STATE%" mkdir "%MV_STATE%" >nul 2>nul
 rem a copy cloned before the repository was renamed follows it under its new name
 git remote set-url origin "%MV_REPO%" >nul 2>nul
 
+if defined MV_PREV goto previous
 if defined MV_NOPULL goto deps
 
 rem ---------- updates ----------
@@ -268,7 +272,8 @@ if errorlevel 2 (
   echo Keeping the version you have.
   goto deps
 )
-echo === Updating to %MV_LABEL%...
+:checkout
+echo === Switching to %MV_LABEL%...
 rem bun install rewrites the lock files; they are not ours to keep
 git checkout -- bun.lock client-agent/bun.lock 2>nul
 rem a launcher copied into the folder by hand would block a version that
@@ -286,6 +291,53 @@ if errorlevel 1 goto fail
 rem a version without this launcher keeps it, so the desktop shortcut still works
 if not exist "Molfar-Vertep.bat" copy /y "%MV_RUNNING%" "Molfar-Vertep.bat" >nul 2>nul
 set "MV_FULL=1"
+goto deps
+
+rem ---------- back to the previous release ----------
+rem The release tag before the one checked out (or, on a work branch, the
+rem newest release). The engine first checks the data: the account files
+rem saved at the last change of version go back only when the newer version
+rem stored them in a way the older one cannot read (chrysalis rollback).
+:previous
+git diff --quiet HEAD -- . ":(exclude)bun.lock" ":(exclude)client-agent/bun.lock"
+if errorlevel 1 (
+  echo Molfar Vertep's own files have local changes, so it cannot switch versions.
+  echo "git status" in the app folder shows them.
+  goto fail
+)
+set "MV_AT="
+for /f "delims=" %%t in ('git tag -l "v*" --points-at HEAD') do (
+  echo %%t| findstr /r /x "v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" >nul && set "MV_AT=%%t"
+)
+set "MV_TARGET="
+set "MV_SEEN="
+if not defined MV_AT set "MV_SEEN=1"
+for /f "delims=" %%t in ('git tag -l "v*" --sort^=-v:refname') do (
+  if not defined MV_TARGET (
+    echo %%t| findstr /r /x "v[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" >nul && (
+      if defined MV_SEEN (set "MV_TARGET=%%t") else if "%%t"=="%MV_AT%" set "MV_SEEN=1"
+    )
+  )
+)
+if not defined MV_TARGET (
+  echo No earlier release found: starting the version you have.
+  goto deps
+)
+call :version MV_NOW
+echo Installed: Molfar Vertep %MV_NOW%.
+call :ask "Go back to release %MV_TARGET%"
+if errorlevel 2 (
+  echo Keeping the version you have.
+  goto deps
+)
+set "MV_LABEL=release %MV_TARGET%"
+set "MV_STAY=1"
+rem versions before 1.2.2 have no rollback step: their data needs none
+if not exist "src\rollback.ts" goto checkout
+echo === Checking your data for %MV_TARGET%...
+call bun run src/index.ts rollback %MV_TARGET:~1%
+if errorlevel 1 goto fail
+goto checkout
 
 rem ---------- install and build only what is needed ----------
 :deps
@@ -351,9 +403,12 @@ echo     Keep this window open while you use it; close it or press Ctrl+C to sto
 echo     First start: the link with #setup= creates your account.
 rem tells the engine its launcher started it, so it opens the browser
 set "CHRYSALIS_LAUNCHER=1"
+if defined MV_STAY echo     To stay on this version, start with "Molfar-Vertep.bat nopull": a plain start offers the newest release again.
 call bun start
+set "MV_EXIT=%errorlevel%"
 echo.
 echo Molfar Vertep stopped.
+if not "%MV_EXIT%"=="0" echo If it fails like this since an update, "Molfar-Vertep.bat previous" goes back to the release before.
 pause
 goto done
 

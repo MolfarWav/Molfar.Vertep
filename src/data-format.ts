@@ -31,6 +31,12 @@ function readFormat(dataDir: string): FormatRecord | null {
   }
 }
 
+/** The format and version this folder was last used with, or null for a new
+ *  folder (or one from before format.json). */
+export function lastUsedBy(dataDir: string): FormatRecord | null {
+  return readFormat(dataDir);
+}
+
 /** Why this version must not open the folder, or null when it may. */
 export function dataFormatProblem(dataDir: string, format: number = DATA_FORMAT): string | null {
   const found = readFormat(dataDir);
