@@ -821,7 +821,7 @@ const dict = {
   "Up to {n} LoRAs.": "최대 {n}개의 LoRA.",
   "Strength 1 is the usual; up to {n} LoRAs.": "보통 강도는 1입니다. 최대 {n}개의 LoRA.",
   "Workflow": "워크플로",
-  "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%. LoRA slots: %LORA_1% to %LORA_5% and %LORA_1_strength% and so on; empty slots get None. Empty: a simple text-to-image workflow.": "Save (API Format)로 저장한 워크플로를 붙여 넣으세요. 들어갈 자리를 표시합니다: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%. LoRA 슬롯: %LORA_1%부터 %LORA_5%, %LORA_1_strength% 등. 빈 슬롯은 None이 됩니다. 비워 두면 간단한 텍스트-이미지 워크플로를 씁니다.",
+  "Paste a workflow exported with Workflow > Export (API). Saving puts in %prompt%, %negative_prompt%, %seed%, %width%, %height% and %model% by itself; steps, CFG and sampler stay as the workflow has them. To change more per server, mark them yourself: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%, LoRA slots %LORA_1% to %LORA_5% and %LORA_1_strength% and so on (empty slots get None). Empty: a simple text-to-image workflow.": "Workflow > Export (API)로 내보낸 workflow를 붙여 넣으세요. 저장할 때 %prompt%, %negative_prompt%, %seed%, %width%, %height%, %model%가 자동으로 들어갑니다. 스텝, CFG, 샘플러는 workflow 그대로 유지됩니다. 서버별로 더 바꾸려면 직접 표시하세요: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%, LoRA 슬롯 %LORA_1% … %LORA_5%, %LORA_1_strength% … (빈 슬롯은 None). 비우면: 간단한 텍스트-이미지 workflow.",
   "Save server": "서버 저장",
   "{ref} (not available)": "{ref} (사용할 수 없음)",
   "Star = add to your image models": "별 = 내 이미지 모델에 추가",

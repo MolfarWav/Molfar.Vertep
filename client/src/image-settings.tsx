@@ -596,7 +596,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
             {field(
               tr("Your own workflow (optional)"),
               <textarea className={cn(inputClass, "min-h-24 font-mono text-12")} spellCheck={false} placeholder='{"3": {"class_type": "KSampler", …}}' value={f.workflow} onChange={(e) => set("workflow", e.currentTarget.value)} />,
-              tr("Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%. LoRA slots: %LORA_1% to %LORA_5% and %LORA_1_strength% and so on; empty slots get None. Empty: a simple text-to-image workflow."),
+              tr("Paste a workflow exported with Workflow > Export (API). Saving puts in %prompt%, %negative_prompt%, %seed%, %width%, %height% and %model% by itself; steps, CFG and sampler stay as the workflow has them. To change more per server, mark them yourself: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%, LoRA slots %LORA_1% to %LORA_5% and %LORA_1_strength% and so on (empty slots get None). Empty: a simple text-to-image workflow."),
             )}
           </> : null}
         </div>

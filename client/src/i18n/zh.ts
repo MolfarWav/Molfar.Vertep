@@ -821,7 +821,7 @@ const dict = {
   "Up to {n} LoRAs.": "最多 {n} 个 LoRA。",
   "Strength 1 is the usual; up to {n} LoRAs.": "通常强度为 1;最多 {n} 个 LoRA。",
   "Workflow": "工作流",
-  "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%. LoRA slots: %LORA_1% to %LORA_5% and %LORA_1_strength% and so on; empty slots get None. Empty: a simple text-to-image workflow.": "粘贴用 Save (API Format) 保存的工作流。标出各项的位置:%prompt%、%negative_prompt%、%model%、%width%、%height%、%seed%、%steps%、%cfg%、%sampler%、%scheduler%、%denoise%、%clip_skip%。LoRA 槽位:%LORA_1% 到 %LORA_5% 以及 %LORA_1_strength% 等;空槽位取 None。留空:使用简单的文生图工作流。",
+  "Paste a workflow exported with Workflow > Export (API). Saving puts in %prompt%, %negative_prompt%, %seed%, %width%, %height% and %model% by itself; steps, CFG and sampler stay as the workflow has them. To change more per server, mark them yourself: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%, LoRA slots %LORA_1% to %LORA_5% and %LORA_1_strength% and so on (empty slots get None). Empty: a simple text-to-image workflow.": "粘贴通过 Workflow > Export (API) 导出的 workflow。保存时会自动填入 %prompt%, %negative_prompt%, %seed%, %width%, %height%, %model%；步数、CFG 和采样器保持 workflow 中的设置。若要按服务器调整更多，请自行标记：%steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%，LoRA 槽位 %LORA_1% … %LORA_5%, %LORA_1_strength% …（空槽位为 None）。留空：简单的文生图 workflow。",
   "Save server": "保存服务器",
   "{ref} (not available)": "{ref}（不可用）",
   "Star = add to your image models": "星标 = 加入你的图像模型",

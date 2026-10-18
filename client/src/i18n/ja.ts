@@ -821,7 +821,7 @@ const dict = {
   "Up to {n} LoRAs.": "最大 {n} 個の LoRA。",
   "Strength 1 is the usual; up to {n} LoRAs.": "通常の強度は 1 です。最大 {n} 個の LoRA。",
   "Workflow": "ワークフロー",
-  "Paste a workflow saved with Save (API Format). Mark where things go: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%. LoRA slots: %LORA_1% to %LORA_5% and %LORA_1_strength% and so on; empty slots get None. Empty: a simple text-to-image workflow.": "Save (API Format) で保存したワークフローを貼り付けます。差し込む位置を印で示します: %prompt%, %negative_prompt%, %model%, %width%, %height%, %seed%, %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%。LoRA スロット: %LORA_1% から %LORA_5% と %LORA_1_strength% など。空きスロットは None になります。空欄: シンプルなテキストから画像へのワークフロー。",
+  "Paste a workflow exported with Workflow > Export (API). Saving puts in %prompt%, %negative_prompt%, %seed%, %width%, %height% and %model% by itself; steps, CFG and sampler stay as the workflow has them. To change more per server, mark them yourself: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%, LoRA slots %LORA_1% to %LORA_5% and %LORA_1_strength% and so on (empty slots get None). Empty: a simple text-to-image workflow.": "Workflow > Export (API) で書き出した workflow を貼り付けてください。保存時に %prompt%, %negative_prompt%, %seed%, %width%, %height%, %model% は自動で入ります。ステップ、CFG、サンプラーは workflow のままです。サーバーごとに変えたい項目は自分で指定します: %steps%, %cfg%, %sampler%, %scheduler%, %denoise%, %clip_skip%、LoRA スロット %LORA_1% … %LORA_5%, %LORA_1_strength% …（空のスロットは None）。空欄: シンプルなテキストから画像への workflow。",
   "Save server": "サーバーを保存",
   "{ref} (not available)": "{ref}（利用不可）",
   "Star = add to your image models": "★ = 画像モデルに追加",
