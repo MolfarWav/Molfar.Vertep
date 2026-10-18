@@ -7,6 +7,15 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+Planned as 1.2.2 (branch `claude/project-thread-9jjtzp`), after 1.2.1.
+
+- pi-ai and pi-agent-core 0.85.1 -> 1.2.0, pinned to the exact version (no range: the lock is not committed and pi breaks its API in minor releases). The built-in catalogs grow from 1227 to 1554 chat models. The agent keeps sending one system prompt with only the visible tools (the library now carries both inside the transcript); image models moved into the main registry. Models the old catalog had and the new one drops (Moonshot's Kimi K2 ids, DeepSeek's `deepseek-v4-flash`, six Z.AI Coding CN models, some OpenCode ids) are no longer offered; a chat set to one asks for another model (#60).
+- Anthropic's newest models now come from the library's catalog instead of the engine's copies of older siblings (`src/model-additions.ts` is gone). The copies sent settings those models refuse (inferred cause of the HTTP 400 seen on them through OAuth).
+- OpenRouter, DeepSeek and Moonshot add the models their live `/models` lists and the bundled catalog does not know yet (`src/providers/live-catalog.ts`); the catalog stays the source for every model it knows. OpenRouter's list quotes windows and prices; the others leave the window unknown.
+- A connection whose model list fails (its `/models` refused, timed out or moved) is now logged with the reason (`[models] <id>: model list failed: ...`); it used to be dropped silently.
+- Settings > Connections: typing a second character into a manual model id no longer turns the whole app black (#59).
+- The `azure-openai-responses` provider is now `azure`; connections and stored keys move on first start.
+
 ## 1.2.0 (2026-10-17)
 
 - Image generation beyond OpenRouter (`src/images.ts`): NanoGPT (the existing NanoGPT key, its public image catalog with prices) and your own image servers in a new Settings > Images tab: a local ComfyUI (a built-in text-to-image workflow or your own API-format workflow with placeholders), AUTOMATIC1111/Forge, or any OpenAI-compatible `/images/generations`. Their models join `GET /v1/images/models`, so apps such as Roleplay offer them unchanged. Keys live in `auth.json` bound to the server's address; servers may be on this computer or the LAN, never link-local; redirects are not followed; failures come back in plain words with a fitting status instead of a raw 500.

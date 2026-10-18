@@ -5,6 +5,32 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## pi 1.2.0 + live model lists + #59: planned 1.2.2, branch `claude/project-thread-9jjtzp` (2026-10-18)
+Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1 (#53/#54, another thread); merge both at release
+(conflicts expected only in this file and CHANGELOG). `package.json` version not bumped yet.
+- pi 0.85.1 -> 1.2.0, pinned exactly (rule in CLAUDE.md, user 2026-10-18: >= 7 days old, no hotfix after it).
+  1.3.0 (2026-10-15) was too fresh. Since 0.86 the agent loop passes a transcript (prompt and tools in system
+  messages): `agent.ts` transformContext drops them, trims the dialogue and puts back one leading system
+  message with only the visible tools; streamFn and the inspector read them with getCurrentSystemPrompt /
+  getCurrentTools. Images: `builtinModels()` + `getModelsOfType("image")`. `azure-openai-responses` -> `azure`
+  (`migrateRenamedProviders`, connections.ts). `model-additions.ts` removed (the catalog has the newer
+  Anthropic models). Dropped ids: moonshotai kimi-k2*, deepseek-v4-flash, six zai-coding-cn models.
+- Claude 5.5 via OAuth gave HTTP 400 (user, 2026-10-18). Inferred cause: our copies of older siblings sent
+  `temperature` (Sonnet/Haiku copies) and allowed thinking levels 5.5 refuses. Not verified (no OAuth token
+  in the cloud); the user re-tests with `dev`.
+- Live lists (`src/providers/live-catalog.ts`): OpenRouter (public, quotes windows and prices), DeepSeek,
+  Moonshot add ids the catalog lacks; nothing removed. Other built-ins left static on purpose: own APIs
+  (Anthropic, Google, Bedrock, Vertex, Copilot, Codex), fixed plans (coding/token plans), or lists that mix
+  non-chat models (Groq, Together, NVIDIA, Hugging Face: check their /models before adding them).
+- Failed dynamic lists are logged now (`[models] <id>: model list failed`); pi's refresh never rejects.
+- #59 black screen: ModelsEditor read `e.currentTarget` inside a state updater; reproduced and fixed in a
+  real browser (shots in the session scratchpad only). Soji discovery: cause unknown, Chub answers 403
+  "not available in your country" to our cloud; waiting on the reporter.
+- #49 (Z.ai 1113) is not from the old pi: same Coding Plan endpoint and models in 0.85.1 and 1.2.0.
+- Checks: typecheck, build:client pass; tests 829/832 (edge TTS x2 = network 403; hostile plugin fails on
+  the old pi too). Left: the agent, OAuth flows and the APK by hand on a real model; release notes
+  `.fork/release-notes/1.2.2.md` (draft).
+
 ## 1.2.0: RELEASED 2026-10-17 on the user's word (main fast-forwarded to the release commit, tag v1.2.0; Roleplay 4.49.0 on the fork's main, merged from `claude/slim-start` + `claude/attention`). Engine = main 1.1.1 + `claude/slim-start-engine` + `claude/image-providers-c9b607` (only conflict: this file). Notes `.fork/release-notes/1.2.0.md`. Not in it: the site branch `claude/hopeful-mccarthy-39ropd`. Checks: typecheck, build:client pass; tests 809 pass, the 15 known Windows-only failures plus 4 load flakes that pass alone; Roleplay 1060 pass, typecheck clean.
 
 ## World + DM (#52): designed 2026-10-17, not started

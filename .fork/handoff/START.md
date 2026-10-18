@@ -48,8 +48,8 @@ Finished work is not listed here: see STATE ("Released") and git history.
 7. **"Reply ready" notification** (user, 2026-10-05): a Settings option, off by default, that pops up
    when a reply is ready while the app is in the background (browser Notifications API; check whether
    the Android service should post it). Plan and spec it first.
-10. **pi-ai upgrade** (builtin catalogs miss newer models; latest major 1.x): its own careful step on a
-    branch with the full test run, the agent and every OAuth flow checked on desktop and APK.
+10. **pi-ai upgrade**: done on branch `claude/project-thread-9jjtzp` for 1.2.2 (STATE, "pi 1.2.0"). Left before the
+    release: the agent, every OAuth flow and the APK checked by hand on a real model. From now on: the pin rule in CLAUDE.md.
 12. **Long-range: an RPG layer next to the Dashboard** (user, 2026-10-13; idea only): inventory, HP, skills,
     conditions for adventure campaigns, built on the Dashboard sensor and the dice tool.
     `.fork/handoff/rpg-layer/IDEAS.md` (what exists, ideas from Discord and SpatialEngine, open questions).
