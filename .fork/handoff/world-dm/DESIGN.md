@@ -1,6 +1,6 @@
 # World + DM: a Roleplay plugin that builds the world and moves it during play (GitHub #52)
 
-Status: design agreed with the user 2026-10-17. P0 built 2026-10-18 on branch `claude/issue-52-t5omkq`
+Status: design agreed with the user 2026-10-17. P0-P2 built 2026-10-18 on branch `claude/issue-52-t5omkq`
 (Roleplay fork + this repo's docs): see "P0 as built" at the end. Replaces the first #52 shape (a one-off
 lorebook builder). `ux-review` before building any UI. Code lives in the Roleplay fork
 (MolfarWav/Molfar.Vertep-Roleplay), assembled in a scratch copy as usual.
@@ -177,3 +177,15 @@ The format change:
   changes; a known name in `add` becomes an update; retired records never change again and are cut to two
   sentences, `order` 50 instead of 100. A failed or non-JSON reply records `lastError` and leaves `lastKey`,
   so the next run reads the same messages. One retry on a rate limit.
+
+## P1/P2 as built (2026-10-18)
+Scope P0-P2 on the user's word; the player may peek at the records (spoiler warning), never at fronts or events.
+- Direction comes from the Dashboard sensor (new part "Direction", 8 values, `before` kept for explicit); without
+  the Dashboard the DM names it itself. Explicit: no run, no event, chaos and World turn included.
+- Triggers: every N, transition (once per sensor snapshot), stagnation (place and cast unchanged, scaled by
+  direction: domestic x2, travel x0.5, combat paused), manual. Toggles for stagnation, transition and the insert.
+- Fronts: up to 8 active, clocks of 4/6/8. Event: one at a time, hard for director and above, soft news for
+  living; carried by one reply (send, next, swipe), checked against the prose next run, re-sent once, then dropped.
+  No new event in combat below antagonist. Antagonist and director read the Dashboard's threads.
+- Two languages in one chat: record text in the replies' language, the player's spelling of each name as an alias;
+  the engine already matches Cyrillic keys in any word form.

@@ -13,8 +13,16 @@ Roleplay only; the engine repo gets docs and the card skill copy. Version picked
   never lists it), sheet "World DM" in the chat menu (en + uk), DATA-FORMATS "World DM", both card skill copies,
   workspace task `.fork/handoff/world-dm/workspace-agent-task.md`. 1094 Roleplay tests pass, typecheck clean.
   Details and the answers to the design's open questions: `.fork/handoff/world-dm/DESIGN.md`, "P0 as built".
-- Waiting on the user: the release's scope (P0 only, P0-P2, or P0-P3; recommended P0-P2), and whether the player may
-  peek at the world book (proposed: a "Look at the world" button with a spoiler warning).
+- Scope decided P0-P2 (user, 2026-10-18); P3 (interview, create from cards, recipes, carry to a new chat) later.
+  Peek accepted: "Look at the world" button behind a spoiler warning, records only; fronts and events stay hidden.
+- P1/P2 built 2026-10-18 (Roleplay commit b157928): living/director/antagonist/chaos levels, fronts with clocks,
+  one event per reply through the llmRequest hook (missed: re-sent once, then dropped), Dashboard sensor part
+  "Direction" (`scene.direction`/`before`; explicit freezes the DM, combat pauses, transition runs it), stagnation
+  trigger, toggles, `plugin:world` prompt-board switch, guide tip `help.world-dm`, peek route + dialog.
+  Two-language chats: the DM adds the player's spelling of a name as an alias. 1107 Roleplay tests pass.
+- Release order (user via coordinator): 1.2.4 / Roleplay 4.52.0 ships first; then merge main into this branch,
+  bump to 4.53.0 (manifest, APP_VERSION, tip `since`, CHANGELOG, notes), close #52 with it. The user pushes the tag.
+- Left: browser check of the full sheet (dark, light, 390 px) with the UX check block.
 - Overlap with the 18.10 batch: `plugins/engine/plugin.js` (different functions), `src/lib/store.ts`, `src/lib/i18n.ts`
   (new keys after `nav.showRail`). Merge after it ships.
 
