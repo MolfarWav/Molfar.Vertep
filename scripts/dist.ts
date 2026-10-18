@@ -129,7 +129,7 @@ const defines = (kind: string): string[] => [
 const ENTRIES = ["src/index.ts", "src/plugins/sandbox-worker.mjs"];
 
 const MAC_LAUNCHER = `#!/bin/sh
-# Start Chrysalis on macOS: clear the download flag, sign the program for this
+# Start Molfar Vertep on macOS: clear the download flag, sign the program for this
 # Mac, run it. Both steps touch this folder only and are safe to repeat.
 set -e
 cd "$(dirname "$0")"
@@ -137,7 +137,7 @@ cd "$(dirname "$0")"
 xattr -dr com.apple.quarantine . 2>/dev/null || true
 
 if ! codesign --verify --quiet ./chrysalis 2>/dev/null; then
-  echo "Preparing Chrysalis for macOS (once per download)..."
+  echo "Preparing Molfar Vertep for macOS (once per download)..."
   codesign --remove-signature ./chrysalis 2>/dev/null || true
   codesign --force --sign - ./chrysalis
 fi
@@ -169,7 +169,7 @@ rem Stop Molfar Vertep first. Your workspaces and chats are not touched.\r
 "%~dp0chrysalis.exe" rollback\r
 `;
 
-const README = (exe: string) => `Chrysalis ${version}
+const README = (exe: string) => `Molfar Vertep ${version}
 
 Start:     ${exe === "chrysalis.exe" ? "double-click chrysalis.exe" : "./chrysalis"}
 Help:      ${exe} --help
@@ -179,8 +179,8 @@ Settings:  config.yaml in your app-data folder (${exe} paths shows where).
 The first start prints a link that creates your account.
 Keep the resources folder next to ${exe}.
 
-Using your own editor or coding agent? Everything Chrysalis stores is plain
-files under git. Once Chrysalis has started once, in any terminal:
+Using your own editor or coding agent? Everything Molfar Vertep stores is plain
+files under git. Once Molfar Vertep has started once, in any terminal:
 
   chrysalis workspace
 

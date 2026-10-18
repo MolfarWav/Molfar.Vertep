@@ -5,9 +5,7 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
-## Unreleased
-
-Planned as 1.2.2 (branch `claude/project-thread-9jjtzp`), after 1.2.1.
+## 1.2.2 (2026-10-18)
 
 - pi-ai and pi-agent-core 0.85.1 -> 1.2.0, pinned to the exact version (no range: the lock is not committed and pi breaks its API in minor releases). The built-in catalogs grow from 1227 to 1554 chat models. The agent keeps sending one system prompt with only the visible tools (the library now carries both inside the transcript); image models moved into the main registry. Models the old catalog had and the new one drops (Moonshot's Kimi K2 ids, DeepSeek's `deepseek-v4-flash`, six Z.AI Coding CN models, some OpenCode ids) are no longer offered; a chat set to one asks for another model (#60).
 - Anthropic's newest models now come from the library's catalog instead of the engine's copies of older siblings (`src/model-additions.ts` is gone). The copies sent settings those models refuse (inferred cause of the HTTP 400 seen on them through OAuth).

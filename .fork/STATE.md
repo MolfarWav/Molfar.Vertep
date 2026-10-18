@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## pi 1.2.0 + live model lists + #59: planned 1.2.2, branch `claude/project-thread-9jjtzp` (2026-10-18)
+## 1.2.2: RELEASED 2026-10-18 on the user's word (main fast-forwarded; the user pushes the tag v1.2.2). pi 1.2.0 + live model lists + #59 + desktop rollback
 Asked by the user 2026-10-18 (#60, #59). Ships after 1.2.1; main 1.2.1 merged into the branch 2026-10-18.
 `package.json` version not bumped yet (still 1.2.1).
 - pi 0.85.1 -> 1.2.0, pinned exactly (rule in CLAUDE.md, user 2026-10-18: >= 7 days old, no hotfix after it).
