@@ -2528,28 +2528,40 @@ function ModelsEditor(props: {
                   className="min-w-[140px] flex-1 rounded-md border border-line bg-panel px-2 py-1 text-12 outline-none focus:border-line-focus"
                   placeholder={tr("model id (e.g. my-model-v2)")}
                   value={m.id}
-                  onChange={(e) => props.setModels((prev) => prev.map((x, j) => (j === i ? { ...x, id: e.currentTarget.value } : x)))}
+                  onChange={(e) => {
+                    const id = e.currentTarget.value
+                    props.setModels((prev) => prev.map((x, j) => (j === i ? { ...x, id } : x)))
+                  }}
                 />
                 <input
                   className={cell}
                   inputMode="numeric"
                   placeholder={tr("context (tok)")}
                   value={m.contextWindow}
-                  onChange={(e) => props.setModels((prev) => prev.map((x, j) => (j === i ? { ...x, contextWindow: e.currentTarget.value.replace(/[^\d]/g, "") } : x)))}
+                  onChange={(e) => {
+                    const contextWindow = e.currentTarget.value.replace(/[^\d]/g, "")
+                    props.setModels((prev) => prev.map((x, j) => (j === i ? { ...x, contextWindow } : x)))
+                  }}
                 />
                 <input
                   className={cell}
                   inputMode="numeric"
                   placeholder={tr("max out (tok)")}
                   value={m.maxTokens}
-                  onChange={(e) => props.setModels((prev) => prev.map((x, j) => (j === i ? { ...x, maxTokens: e.currentTarget.value.replace(/[^\d]/g, "") } : x)))}
+                  onChange={(e) => {
+                    const maxTokens = e.currentTarget.value.replace(/[^\d]/g, "")
+                    props.setModels((prev) => prev.map((x, j) => (j === i ? { ...x, maxTokens } : x)))
+                  }}
                 />
                 <label className="flex items-center gap-1 text-11 text-ink-muted" title={tr("Model supports reasoning/thinking")}>
                   <input
                     type="checkbox"
                     className="size-3.5"
                     checked={m.reasoning}
-                    onChange={(e) => props.setModels((prev) => prev.map((x, j) => (j === i ? { ...x, reasoning: e.currentTarget.checked } : x)))}
+                    onChange={(e) => {
+                      const reasoning = e.currentTarget.checked
+                      props.setModels((prev) => prev.map((x, j) => (j === i ? { ...x, reasoning } : x)))
+                    }}
                   />
                   {tr("thinking")}
                 </label>
