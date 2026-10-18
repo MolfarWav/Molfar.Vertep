@@ -182,6 +182,37 @@ describe("push and pull between two devices", () => {
     expect(read(b, "apps/roleplay/data/chats/c1.jsonl")).toBe("desktop\n");
   });
 
+  it("replace makes the sync hold exactly this device's files (#45)", async () => {
+    await firstRound();
+    // a third device never synced and does not want what the sync holds
+    const c = mk("laptop");
+    setState(c, { deviceName: "Laptop" });
+    put(c, "apps/roleplay/data/chats/own.jsonl", "laptop\n");
+    put(c, "apps/roleplay/data/chats/c1.jsonl", "laptop's c1\n");
+    await expect(push(ctx(c))).rejects.toThrow(/pull first/);
+    const r = await push(ctx(c), { replace: true });
+    expect(r.rev).toBe(2);
+    expect((await check(ctx(c))).behind).toBe(false);
+    expect((await check(ctx(c))).push.files).toBe(0);
+    // the phone pulls the replacement: the desktop's chat meta and avatar are gone, the laptop's files came
+    await pull(ctx(b), {});
+    expect(read(b, "apps/roleplay/data/chats/own.jsonl")).toBe("laptop\n");
+    expect(read(b, "apps/roleplay/data/chats/c1.jsonl")).toBe("laptop's c1\n");
+    expect(has(b, "apps/roleplay/data/chats/c1.meta.json")).toBe(false);
+    expect(has(b, "apps/roleplay/data/characters/belle/avatar.png")).toBe(false);
+  });
+
+  it("replace when the sync already matches only moves the base", async () => {
+    await firstRound();
+    put(a, "notes/x.md", "x");
+    await push(ctx(a));
+    setState(b, { base: null });
+    put(b, "notes/x.md", "x");
+    const r = await push(ctx(b), { replace: true });
+    expect(r.changed).toBe(0);
+    expect((await check(ctx(b))).behind).toBe(false);
+  });
+
   it("a pull against a rev that moved is refused", async () => {
     await firstRound();
     put(a, "notes/x.md", "x");

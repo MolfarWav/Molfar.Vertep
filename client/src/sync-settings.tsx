@@ -196,6 +196,7 @@ export function SyncTab(props: { isAdmin: boolean }) {
   const [passphrase, setPassphrase] = useState("")
   const [showPassphrase, setShowPassphrase] = useState(false)
   const [reloading, setReloading] = useState(false)
+  const [replaceOpen, setReplaceOpen] = useState(false)
 
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const reloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -571,6 +572,27 @@ export function SyncTab(props: { isAdmin: boolean }) {
                   {view.base === null
                     ? tr("This sync already holds {device}'s files. Pull first.", { device: status.remote?.device || "" })
                     : tr("{device} pushed since this device last synced. Pull first.", { device: status.remote?.device || "" })}
+                </div>
+              )}
+              {status?.behind && !replaceOpen && (
+                <div>
+                  <Button variant="ghost" size="small" disabled={anyBusy} onClick={() => setReplaceOpen(true)}>
+                    {tr("Don't want what the sync holds? Replace it with this device…")}
+                  </Button>
+                </div>
+              )}
+              {status?.behind && replaceOpen && (
+                <div className="rounded-md border border-warning p-2 flex flex-col gap-2">
+                  <span className="text-13 font-medium text-ink">{tr("Replace the sync with this device")}</span>
+                  <span className="text-12 text-ink-muted break-words">
+                    {tr("The sync will hold exactly this device's files. What only the sync has from {device} is removed there, and from your other devices when they next pull. Pull first if you want to keep any of it.", { device: status.remote?.device || "" })}
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="warning" size="small" disabled={anyBusy} onClick={() => { setReplaceOpen(false); void startJob("push", { replace: true }) }}>
+                      {tr("Replace the sync")}
+                    </Button>
+                    <Button variant="ghost" size="small" disabled={anyBusy} onClick={() => setReplaceOpen(false)}>{tr("Cancel")}</Button>
+                  </div>
                 </div>
               )}
             </div>

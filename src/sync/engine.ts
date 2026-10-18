@@ -173,23 +173,34 @@ export interface PushResult {
   changed: number;
 }
 
-export async function push(ctx: SyncContext, opts: { replaceKeys?: boolean } = {}): Promise<PushResult> {
+/** `replace`: this device's files become the sync's (GitHub #45), for a device that does not want
+ *  what the sync holds. The push skips the "pull first" refusal and plans against the remote as if
+ *  this device had just pulled it, so what only the sync has goes as deleted. The keys there are
+ *  replaced too. Other devices pull the result like any other push. */
+export async function push(ctx: SyncContext, opts: { replaceKeys?: boolean; replace?: boolean } = {}): Promise<PushResult> {
   const cd = credDir(ctx.paths);
   const state = readState(cd);
   ctx.progress?.({ phase: "scan", done: 0, total: 0, bytes: 0 });
   const { scan: s, local } = scan(ctx);
   ctx.progress?.({ phase: "remote", done: 0, total: 0, bytes: 0 });
   const { head, manifest } = await readRemote(ctx.store);
-  if (head && head.rev !== state.base?.rev) {
+  if (head && head.rev !== state.base?.rev && !opts.replace) {
     throw new SyncError(
       state.base ? `${head.device.name || "another device"} pushed since this device last synced: pull first` : `this sync already holds ${head.device.name || "another device"}'s files: pull first`,
       409,
     );
   }
   const remote = compareRemote(manifest);
-  const base = state.base?.files ?? {};
+  const base = opts.replace ? inScopeOnly(remote, state.scope) : (state.base?.files ?? {});
   const pl = plan(local, base, remote, state.scope);
-  if (head && pl.up.length === 0) return { rev: head.rev, uploaded: 0, bytes: 0, changed: 0 };
+  if (head && pl.up.length === 0) {
+    if (opts.replace) {
+      // the sync already holds exactly this device's files: only the base moves
+      state.base = { rev: head.rev, files: base };
+      writeState(cd, state);
+    }
+    return { rev: head.rev, uploaded: 0, bytes: 0, changed: 0 };
+  }
 
   // the files themselves, each read once more: one changed since the scan
   // goes up as it is now
@@ -228,7 +239,7 @@ export async function push(ctx: SyncContext, opts: { replaceKeys?: boolean } = {
     const bundle = readSecretBundle(ctx.paths);
     if (bundle) {
       if (!state.passphrase) throw new SyncError("keys are switched on: enter the passphrase that protects them first");
-      if (remoteSealed && !opts.replaceKeys) {
+      if (remoteSealed && !opts.replaceKeys && !opts.replace) {
         const sealed = Buffer.from(await ctx.store.getBlob(remoteSealed.h));
         try {
           openSecrets(decodeBlob(sealed, remoteSealed).toString("utf8"), state.passphrase);
