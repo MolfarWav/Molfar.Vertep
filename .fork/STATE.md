@@ -174,6 +174,11 @@ https://claude.ai/artifact/Dq4q3RJkCX2Meiw27y7gKk . Branch `claude/world-dm-p3-i
 - Molfar's workspace fixes merged (21e25be): #48 Dashboard re-read after an earlier change (reworked: snapshots
   record `base`, off-line swipe snapshots kept, no whole-chat re-read after an old branch) and #63 card editor in
   5 groups. #67/#68 closed (shipped in 4.52.0), #74 closed as duplicate of #48.
+- RELEASED 2026-10-19: Roleplay 4.54.0 on main (e75ed3e), engine 1.2.6 on main (release notes .fork/release-notes/1.2.6.md);
+  the tag v1.2.6 is the user's. #48 and #61 closed. After the test: record keys written by the DM plus pins and a
+  one-call key fill (the old records keyed only by full name rarely fired), image model in its own dialog, places
+  from the card books and found in the cards. 4.55.0 work sits on the local Roleplay branch rp-455 (engine for
+  "New world" without a chat, commits 8447512, a3a83a5); its UI and the Characters page are next.
 - User test of 4.54.0 (2026-10-19) found: Translate fired from its whole label row (fixed f8543ce), last-run summary
   cut mid-word (fixed), editor tab dots and missed clicks, a flat "So far" block, streaming jumps with the Molfar
   preset's regexes (subagent on all three). Decided: 4.54.0 ships after those fixes; 4.55.0 = (1a) "New world" in
