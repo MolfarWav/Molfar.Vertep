@@ -88,6 +88,28 @@ Decision 2 adds the app's rail section and a new view (`src/components/views/`),
 4. Monitoring: all three (run history, Prompt peek line, Inspector KEEP 50).
 5. Interview: a form.
 
+## The World section (proposal 2026-10-19, waits for the user's word)
+The user wants the DM as its own controllable part, like Litopys (Library) and Canvas: finer settings, prompts the
+user can change. Proposal:
+- A rail item **World** in `src/components/shell/sections.ts`, group 1 after Canvas, a master-detail page like
+  `litopys-view.tsx`: left, the chats that have a DM (level, last run, an error dot); right, one chat's world.
+- Tabs of a chat's world: **Overview** (level, triggers, World turn, status: today's sheet), **Records** (the world
+  book's records; edit, retire, add by hand: writes go to `state.entities`, the book follows), **Fronts and events**
+  (behind an "Author view" switch, off by default, same spoiler confirm as peek), **Runs** (history: time, reason,
+  changes, tokens, cost, error; the last run's input and raw reply for debugging), **Start** (create from cards,
+  interview, carry from another chat: P3 steps 3-5).
+- **World settings** (all chats), a gear on the page: the DM model + "Test the model", limits (new text per run,
+  changes per run, records max), prompts, recipes.
+- **Prompts** follow Litopys (`plugins/litopys/plugin.js` `customPrompts`/`resetPrompts`: only what differs from the
+  default is stored, reset per prompt, a "changed" mark). Editable: the keeper's rules, each level's rules, the event
+  insert texts (hard and soft). Locked: the output JSON shape and its parser instructions, shown read-only under
+  the editor, because `parseReply`/`applyReport` depend on them and a broken shape means silent failed runs.
+- The chat keeps a small piece: the current sheet slimmed to on/off, level, World turn, status line, and
+  "Open in World". The Canvas prompt board switch stays.
+- Per-chat prompt overrides: not now (global prompts + per-chat level); later if asked.
+Order with this: section shell with Overview + Runs + token control + monitoring first, then Records and prompts,
+then Start (cards, carry, interview).
+
 ## Token control for the DM (user, 2026-10-18)
 Seen on the user's machine: model `nanogpt/z-ai/glm-5.3:thinking`, error "the DM model spent its whole reply limit
 thinking and wrote no answer", the DM never ran. Cause (inference from `callParams`): the reply limit is
