@@ -17,6 +17,9 @@
  * A body with no reply in it at all, only text (Chub's geo block answers 200
  * with "This service is not available in your country."), fails the reply
  * with that text: dropping it would leave an empty reply and no reason.
+ * The end marker and chunks with nothing in them (a role, usage) are not a
+ * reply: Chub also sends `data: chatcmpl-upstream error : ...` and then
+ * `data: [DONE]`, and that must fail with the error text too.
  */
 import { log } from "../logger.js";
 
@@ -34,6 +37,30 @@ function isJson(text: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** Whether a JSON chunk carries any of the reply: text, reasoning or a tool call. */
+function carriesReply(json: string): boolean {
+  let v: unknown;
+  try {
+    v = JSON.parse(json);
+  } catch {
+    return false;
+  }
+  const choices = v && typeof v === "object" ? (v as { choices?: unknown }).choices : undefined;
+  if (!Array.isArray(choices)) return false;
+  const has = (x: unknown) => (typeof x === "string" ? x.length > 0 : Array.isArray(x) ? x.length > 0 : !!x);
+  return choices.some((c) => {
+    if (!c || typeof c !== "object") return false;
+    const ch = c as Record<string, unknown>;
+    if (has(ch.text)) return true;
+    for (const part of [ch.delta, ch.message]) {
+      if (!part || typeof part !== "object") continue;
+      const d = part as Record<string, unknown>;
+      if (has(d.content) || has(d.reasoning) || has(d.reasoning_content) || has(d.tool_calls)) return true;
+    }
+    return false;
+  });
 }
 
 /** One event (its lines, without the blank line that ends it) → the text to send on, or "" to drop it. */
@@ -64,6 +91,7 @@ export function cleanSseBody(body: ReadableStream<Uint8Array>, label: string): R
   let dropped = 0;
   let replied = false;
   let textSample = "";
+  let failed = false;
   const onDrop = (d: string) => {
     dropped++;
     if (!textSample && d.trim()) textSample = d.trim();
@@ -86,8 +114,18 @@ export function cleanSseBody(body: ReadableStream<Uint8Array>, label: string): R
     for (const ev of events) {
       if (ev === "") continue;
       const cleaned = cleanSseEvent(ev, onDrop);
-      if (/^data/m.test(cleaned)) replied = true;
-      else if (!textSample) {
+      if (!replied && /^data/m.test(cleaned)) {
+        for (const one of cleaned.split("\n\n")) {
+          const data = one.split("\n").filter((l) => l.startsWith("data:")).map((l) => l.slice(l.startsWith("data: ") ? 6 : 5));
+          if (data.length && carriesReply(data.join("\n"))) replied = true;
+        }
+      }
+      if (!replied && textSample && cleaned === `data: ${DONE}\n\n`) {
+        // the SDK stops reading at the end marker and would never see the error in flush
+        failed = true;
+        break;
+      }
+      if (!/^data/m.test(cleaned) && !textSample) {
         // a line that is not an SSE field or comment: the host sent plain text
         const plain = ev.split("\n").filter((l) => l.trim() && !l.startsWith(":") && !FIELD.test(l));
         if (plain.length) textSample = plain.join(" ").trim();
@@ -96,22 +134,26 @@ export function cleanSseBody(body: ReadableStream<Uint8Array>, label: string): R
     }
     return out;
   };
+  const fail = (controller: TransformStreamDefaultController<Uint8Array>) => {
+    log.warn(`[custom-provider:${label}] the stream held no reply, only text: ${JSON.stringify(textSample.slice(0, SAMPLE_CHARS))}`);
+    controller.error(new Error(`The connection sent no reply, only this text: ${textSample.slice(0, SAMPLE_CHARS)}`));
+  };
   return body.pipeThrough(
     new TransformStream<Uint8Array, Uint8Array>({
       transform(chunk, controller) {
+        if (failed) return;
         buffer += decoder.decode(chunk, { stream: true });
         const out = drain(false);
         if (out) controller.enqueue(encoder.encode(out));
+        if (failed) fail(controller);
       },
       flush(controller) {
+        if (failed) return;
         buffer += decoder.decode();
         const out = drain(true);
         if (out) controller.enqueue(encoder.encode(out));
         if (dropped > MAX_LOGGED) log.warn(`[custom-provider:${label}] skipped ${dropped} stream events that are not JSON`);
-        if (!replied && textSample) {
-          log.warn(`[custom-provider:${label}] the stream held no reply, only text: ${JSON.stringify(textSample.slice(0, SAMPLE_CHARS))}`);
-          controller.error(new Error(`The connection sent no reply, only this text: ${textSample.slice(0, SAMPLE_CHARS)}`));
-        }
+        if (!replied && textSample) fail(controller);
       },
     }),
   );

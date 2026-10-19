@@ -113,3 +113,25 @@ describe("a custom connection's stream with no reply, only text (#59, Chub's geo
     });
   }
 });
+
+describe("a custom connection's stream whose only data is an error text and the end marker (Chub's upstream timeout)", () => {
+  const UPSTREAM = "chatcmpl-upstream error : Error during inference: upstream timed out. Server may be overloaded, or your input too large or malformed.";
+  for (const [name, raw] of [
+    ["error, then [DONE]", `data: ${UPSTREAM}\n\ndata: [DONE]\n\n`],
+    ["empty role chunk, error, [DONE]", `data: {"id":"x","choices":[{"index":0,"delta":{"role":"assistant"}}]}\n\ndata: ${UPSTREAM}\n\ndata: [DONE]\n\n`],
+  ] as const) {
+    it(`fails with the host's text: ${name}`, async () => {
+      body = raw;
+      byteByByte = false;
+      const m = await viaConnection();
+      expect(m.stopReason).toBe("error");
+      expect(m.errorMessage ?? "").toContain("upstream timed out");
+    });
+  }
+  it("keeps a reply that also carried a dropped event", async () => {
+    body = `data: {"id":"x","choices":[{"index":0,"delta":{"content":"Hi"}}]}\n\ndata: ${UPSTREAM}\n\ndata: [DONE]\n\n`;
+    byteByByte = false;
+    const m = await viaConnection();
+    expect(m.stopReason).not.toBe("error");
+  });
+});
