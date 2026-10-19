@@ -1,5 +1,5 @@
 // The prompt inspector: the last requests the models received, as the engine
-// kept them (in its memory only, newest first, at most 20). A row is one
+// kept them (in its memory only, newest first, at most 50). A row is one
 // request; opening it shows what the model saw, message by message, with a
 // token estimate for each and the share of the context window it took.
 import { GUIDE_PANEL_EVENT } from "./guide/events"
@@ -433,7 +433,7 @@ export function Inspector({ caption }: { caption?: string } = {}): ReactNode {
               <DialogHeader className="pr-8">
                 <DialogTitle>Prompt inspector</DialogTitle>
                 <DialogDescription>
-                  The last requests the models received, newest first, up to 20. They live in the engine&apos;s memory only; a restart clears them.
+                  The last requests the models received, newest first, up to 50. They live in the engine&apos;s memory only; a restart clears them.
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-wrap items-center gap-2">

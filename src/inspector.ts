@@ -13,7 +13,8 @@
 import { estimateMessageTokens, estimateTextTokens, toolsTokens } from "./agent/context-budget.js";
 import { type LocatedSources, locateSources, mergePromptSources, type PromptSources } from "./prompt-sources.js";
 
-const KEEP = 20;
+// a chat reply can bring three more calls (Dashboard sensor, World DM, Litopys): 20 lost the reply fast
+const KEEP = 50;
 /** Long tool results and files dominate a context; the view needs their size, not all of them.
  *  A system prompt is kept far longer: app prompts put their lorebook and plugin inserts there,
  *  and the sources view must be able to show where they landed. */

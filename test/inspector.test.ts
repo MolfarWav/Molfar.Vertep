@@ -81,10 +81,10 @@ describe("prompt inspector", () => {
     expect(e?.source).toBe("app:roleplay/engine");
   }, 30_000);
 
-  it("holds the last 20 per user and clips huge messages", () => {
-    for (let i = 0; i < 25; i++) inspectRequest("mia", { source: "t", model: "x/y", messages: [{ role: "user", content: `m${i}` }] });
-    expect(listInspected("mia")).toHaveLength(20);
-    expect(listInspected("mia")[0]?.preview).toBe("m24");
+  it("holds the last 50 per user and clips huge messages", () => {
+    for (let i = 0; i < 55; i++) inspectRequest("mia", { source: "t", model: "x/y", messages: [{ role: "user", content: `m${i}` }] });
+    expect(listInspected("mia")).toHaveLength(50);
+    expect(listInspected("mia")[0]?.preview).toBe("m54");
     expect(listInspected("bob")).toEqual([]);
     const big = inspectRequest("mia", { source: "t", model: "x/y", messages: [{ role: "toolResult", content: [{ type: "text", text: "a".repeat(80_000) }] }] });
     expect(big.messages[0]?.truncated).toBe(true);
