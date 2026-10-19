@@ -88,7 +88,13 @@ Decision 2 adds the app's rail section and a new view (`src/components/views/`),
 4. Monitoring: all three (run history, Prompt peek line, Inspector KEEP 50).
 5. Interview: a form.
 
-## The World section (proposal 2026-10-19, waits for the user's word)
+## The World section (agreed with the user 2026-10-19)
+User: the section is the DM's hub, prompts shared by all chats; the chat's piece is the fine setting per chat
+(how often it runs, which DM). Order agreed: section shell with Overview + Runs + token control first, then
+Records and prompts, then Start. Prior art read and mapped in `PRIOR-ART.md` (same folder): the DM prompt as a block
+list, per-chat "what the DM reads", Start as drafts to review, the recipe question shape. "Which DM" per chat
+suggests named DM profiles in the hub (model + prompt blocks + defaults), a chat picks one: open, ask the user.
+Original proposal:
 The user wants the DM as its own controllable part, like Litopys (Library) and Canvas: finer settings, prompts the
 user can change. Proposal:
 - A rail item **World** in `src/components/shell/sections.ts`, group 1 after Canvas, a master-detail page like
