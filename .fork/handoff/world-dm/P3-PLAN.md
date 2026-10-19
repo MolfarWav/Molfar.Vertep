@@ -254,6 +254,13 @@ as its first message instead of the card's greeting), set by "Start a world" / "
 plugin's prompt assembly uses the override when present. Design it with stage 3; check prior art (second research
 pass, 2026-10-19) first.
 
+## Decisions after prior art round 2 (user, 2026-10-19)
+1. Scenario and first-message override: yes, as a world override at the chat (stage 3, as sketched above).
+2. Rolling the world back on swipe/delete: later, issue #75 (needed with the RPG layer).
+3. Clocks ticked by code: a profile option, default off (built: `options.clocks`, `clockEvery`).
+- Arbiter's events deck (built with the world at Start, consumed once): yes, as an optional feature (stage 3).
+- Story Engine's wording by clock stage and "no harm already done": yes, optional (built: `options.eventByClock`).
+
 ## Unknown / not decided
 - `/worldbuild` (START.md queue, #52 line): a slash command in the chat, a Molfar tool, or both is not written
   anywhere. Ask before building.
