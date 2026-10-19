@@ -223,6 +223,13 @@ Workaround today: pick the model without `:thinking`, or "Use the chat's model".
   the place to fix it (World section, Library, the chat's Dashboard settings). A row clears by itself when the next
   run of that worker succeeds, or by "Dismiss" until a new failure. On by default, with a switch per kind like the
   existing attention settings.
+- **A failure also pops up** (user, 2026-10-19: the inbox is easy to ignore, theirs holds 6 Soul reviews left for
+  later): an error toast once per new failure, saying where (World DM / Litopys / Dashboard, which chat) and what,
+  with an "Open" button to the place to fix it. Not again for the same failure (worker + chat + its time); the same
+  error code again within 10 minutes is not repeated. No toast while the player already looks at that panel.
+- **Inbox colours by kind**: the inbox count turns red when any row is a failure (else the usual colour); rows differ
+  by kind: failure red, Litopys approvals (proposals to accept) one colour and icon, Soul reviews of a card another,
+  with a short kind label, so "needs a fix", "needs a decision" and "can wait" read apart at a glance.
 - **Toasts by type** (Roleplay `src/components/ui/sonner.tsx`): today success, error and plain toasts share one
   colour, only the icon differs. Error red-tinted and staying longer, warning amber, success green, info blue, plain
   neutral; both themes. Audit plain `toast()` calls that report a failure and make them `toast.error`.
