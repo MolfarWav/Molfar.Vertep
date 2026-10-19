@@ -239,6 +239,21 @@ Workaround today: pick the model without `:thinking`, or "Use the chat's model".
   neutral; both themes. Audit plain `toast()` calls that report a failure and make them `toast.error`.
   The shell (`client/`) has no toasts, so this is Roleplay only.
 
+## Stage 2 (built 2026-10-19, Roleplay 86c9eba engine part; UI in progress)
+- Profiles: the five levels are built-in profiles (`world/profiles/<level>.json` stores only changed blocks and
+  defaults); own profiles `world/profiles/p-<slug>.json` `{v, name, description, base, blocks, defaults}`. Blocks:
+  keeper (the chronicler's rules), level, shared, event (the insert text, must keep `{event}`); the output block is
+  locked. A chat's `settings.profile` names an own profile on its level; "" = the level's own. Routes
+  `GET|PUT|DELETE /world/profiles`. Not built: block reorder and on/off per block (WREC style), per-chat prompt overrides.
+- Records by hand: `PUT /world/records {chatId, op, record}`; records keep `by: "player"`.
+
+## Stage 3 addition (user, 2026-10-19): the chat's own scenario and first message
+When the DM builds a world, the chat needs to override the card's scenario and first message (today the card's
+text always applies). Plan: chat meta fields (e.g. `scenarioOverride`, an opening message written into the new chat
+as its first message instead of the card's greeting), set by "Start a world" / "New chat in this world"; the engine
+plugin's prompt assembly uses the override when present. Design it with stage 3; check prior art (second research
+pass, 2026-10-19) first.
+
 ## Unknown / not decided
 - `/worldbuild` (START.md queue, #52 line): a slash command in the chat, a Molfar tool, or both is not written
   anywhere. Ask before building.
