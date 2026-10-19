@@ -93,7 +93,14 @@ User: the section is the DM's hub, prompts shared by all chats; the chat's piece
 (how often it runs, which DM). Order agreed: section shell with Overview + Runs + token control first, then
 Records and prompts, then Start. Prior art read and mapped in `PRIOR-ART.md` (same folder): the DM prompt as a block
 list, per-chat "what the DM reads", Start as drafts to review, the recipe question shape. "Which DM" per chat
-suggests named DM profiles in the hub (model + prompt blocks + defaults), a chat picks one: open, ask the user.
+means DM profiles (user, 2026-10-19): the five levels already are profiles, only their prompts are hidden
+(`LEVEL_RULES`, `CHRONICLER_SYSTEM` in `plugins/world/plugin.js`). They become built-in default profiles the user
+can open, change and roll back, the pattern we already use (built-in `_`-prefixed files shipped in the app's
+`data/` beside the user's copy, as presets `_molfar.json` / `molfar.json`; Litopys's stored-diff prompts with a
+reset per prompt). A profile = prompt blocks (output block locked) + defaults (triggers, what the DM reads, hard
+or soft events, model optional). The user can also add a profile of their own. A chat picks a profile; its fine
+settings (how often, what it reads) override the profile's defaults. User's aim: gather the scattered tools into
+one, adapted and improved, instead of inventing from scratch.
 Original proposal:
 The user wants the DM as its own controllable part, like Litopys (Library) and Canvas: finer settings, prompts the
 user can change. Proposal:
