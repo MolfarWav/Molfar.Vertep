@@ -144,6 +144,24 @@ sheet with an error). New decisions from the user on 2026-10-19, built into it:
   primary action at the thumb; status line; errors in plain words with the fix buttons; a status dot on a globe
   icon in the chat header so a failed run shows without opening anything.
 
+## UI design, round 2 (user review 2026-10-19)
+- Links become buttons everywhere; chips carry colour by kind (person pink, place teal, group violet, thing/front
+  amber, fact/built-in blue, hard event red), the same scheme across the hub.
+- **Models**: the parameters stay in Settings > API connections (the model's "World DM" block, as the user set it
+  up); the hub only shows them and offers an "Override for the World" checkbox that opens its own fields. Fallbacks:
+  play model not set -> the Dashboard sensor's model, then Litopys's; build model not set -> the chat's model.
+- **Backgrounds**: no live per-scene generation (Marinara style). Pre-generated sets with the cost shown first:
+  a direction for the whole set (style text + quick styles), a list of places (from the world's place records,
+  plus the user's: tavern, castle, modern house, school), variants per place; or upload, or pick existing images.
+  All land in one folder of the existing Backgrounds library (`BackgroundItem` has `folderId`) named after the
+  world. In play, when the Dashboard names the scene's place, the chat's `backgroundId` switches to the image
+  whose name matches the place or one of its aliases; no match = no change. Off by default (World settings).
+- Storage answer given to the user: a saved world is our own JSON (`data/world/worlds/<id>.json`); in a chat its
+  records become the chat's world lorebook (keyword entries, as P0-P2) and fronts + event live in the state file;
+  the event is injected after the chat history through the `llmRequest` hook. Not the data bank (P0-P2 never used
+  it). Litopys stays separate: it keeps what happened, the DM keeps the world off screen; the DM does not read
+  Litopys today (open: let the DM read the Litopys record instead of raw messages for long chats).
+
 ## Token control for the DM (user, 2026-10-18)
 Seen on the user's machine: model `nanogpt/z-ai/glm-5.3:thinking`, error "the DM model spent its whole reply limit
 thinking and wrote no answer", the DM never ran. Cause (inference from `callParams`): the reply limit is
