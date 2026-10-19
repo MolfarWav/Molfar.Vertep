@@ -210,6 +210,11 @@ https://claude.ai/artifact/Dq4q3RJkCX2Meiw27y7gKk . Branch `claude/world-dm-p3-i
   "New chat in this world"), Characters page: tiles without description and "by", chats and tokens bigger in colour,
   lorebook and sprite icons, "0 chats" hidden (2b); tags wrap to two rows + "All tags (N)" with search and sort (3a);
   one header bar: Characters/Groups switch, search, sort, view, Import (download icon), New with Character/Group (4a).
+- RELEASED 2026-10-19: Roleplay 4.55.0 on main (e6aeb1d): "New world" in Worlds (start route takes worldId, draft in
+  world/library/<id>.draft.json, {worldId, peek:true} reads it without a call) and the Characters page (one header
+  bar, tiles with chats/tokens and lore/sprite icons, two-row tags + All tags). The engine plugin's list summary
+  carries spriteCount (index cache v2, rebuilt once). No engine release needed. The user's update source is back on
+  HEAD. A parallel thread's branch claude/project-thread-tqxguf (prompt-cache reorder) rebases onto this itself.
 - Next (old line): browser check of the card editor and the 1280 backgrounds runs; release docs (version, CHANGELOG, guide,
   tips' `since`, APP_VERSION) on the user's word; close #48, #61 with that release. Later: rollback (#75).
 - Filed today: #71 (steer arrow), #72 (letters from cards, inbox filters for them), #73 (stale ask card, steer timing).
