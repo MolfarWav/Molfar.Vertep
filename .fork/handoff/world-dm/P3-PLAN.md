@@ -215,6 +215,19 @@ Workaround today: pick the model without `:thinking`, or "Use the chat's model".
   dependency. Keep GIF/animated files as they are (canvas would freeze them) and skip a file if WebP comes out larger.
   Existing library images: an explicit "Convert to WebP" button, never a silent rewrite.
 
+## Stage 1b (user, 2026-10-19): failures reach the inbox, toasts by colour
+- **Failed background work in the inbox** ("Waiting on you", `src/components/shell/inbox.tsx`, `src/lib/attention.ts`):
+  today it lists only what Litopys or Soul want reviewed; a failed run shows nowhere unless the player opens its
+  panel. Add a kind "failed" with one row per chat and worker: World DM (`lastError`, from `/world/chats`), Litopys
+  (worker `failed`/`retry`), Dashboard sensor (`lastError`). A red mark, one plain line by error code, the row opens
+  the place to fix it (World section, Library, the chat's Dashboard settings). A row clears by itself when the next
+  run of that worker succeeds, or by "Dismiss" until a new failure. On by default, with a switch per kind like the
+  existing attention settings.
+- **Toasts by type** (Roleplay `src/components/ui/sonner.tsx`): today success, error and plain toasts share one
+  colour, only the icon differs. Error red-tinted and staying longer, warning amber, success green, info blue, plain
+  neutral; both themes. Audit plain `toast()` calls that report a failure and make them `toast.error`.
+  The shell (`client/`) has no toasts, so this is Roleplay only.
+
 ## Unknown / not decided
 - `/worldbuild` (START.md queue, #52 line): a slash command in the chat, a Molfar tool, or both is not written
   anywhere. Ask before building.
