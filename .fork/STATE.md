@@ -174,7 +174,14 @@ https://claude.ai/artifact/Dq4q3RJkCX2Meiw27y7gKk . Branch `claude/world-dm-p3-i
 - Molfar's workspace fixes merged (21e25be): #48 Dashboard re-read after an earlier change (reworked: snapshots
   record `base`, off-line swipe snapshots kept, no whole-chat re-read after an old branch) and #63 card editor in
   5 groups. #67/#68 closed (shipped in 4.52.0), #74 closed as duplicate of #48.
-- Next: browser check of the card editor and the 1280 backgrounds runs; release docs (version, CHANGELOG, guide,
+- User test of 4.54.0 (2026-10-19) found: Translate fired from its whole label row (fixed f8543ce), last-run summary
+  cut mid-word (fixed), editor tab dots and missed clicks, a flat "So far" block, streaming jumps with the Molfar
+  preset's regexes (subagent on all three). Decided: 4.54.0 ships after those fixes; 4.55.0 = (1a) "New world" in
+  the Worlds tab without a chat (cards or interview -> draft -> accepted into the library; characters come with
+  "New chat in this world"), Characters page: tiles without description and "by", chats and tokens bigger in colour,
+  lorebook and sprite icons, "0 chats" hidden (2b); tags wrap to two rows + "All tags (N)" with search and sort (3a);
+  one header bar: Characters/Groups switch, search, sort, view, Import (download icon), New with Character/Group (4a).
+- Next (old line): browser check of the card editor and the 1280 backgrounds runs; release docs (version, CHANGELOG, guide,
   tips' `since`, APP_VERSION) on the user's word; close #48, #61 with that release. Later: rollback (#75).
 - Filed today: #71 (steer arrow), #72 (letters from cards, inbox filters for them), #73 (stale ask card, steer timing).
 
