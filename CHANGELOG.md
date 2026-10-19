@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.6 (2026-10-19)
+
+- Ships Roleplay 4.54.0 (an app update): the World section with DM profiles, records you edit by hand and real lorebook keys for them (or a pin that keeps a record in every prompt), a world built from the cards before the first message, saved worlds and New chat in this world, and backgrounds drawn for a world and picked by scene (#52, #61). Also from Molfar's workspace: the Dashboard re-reads the story after an earlier message changes (#48), and the card editor groups its tabs on a phone (#63). A streaming reply no longer jumps when a display regex hides a thinking block.
+- The prompt Inspector keeps the last 50 requests instead of 20: a Roleplay reply can now bring three more calls (Dashboard sensor, World DM, Litopys), and the reply itself fell out of 20 fast.
+- pi stays at 1.2.0: 1.3.0 is younger than the 7 days a new pi version waits.
+
 ## 1.2.5 (2026-10-18)
 
 - Ships Roleplay 4.53.0 (an app update): the World DM (#52), a game master per chat that keeps the world's records in the chat's own lorebook and, from Living world up, moves the world and brings events into the next reply. The card skill copy (`.fork/app-skills/roleplay/edit-large-card/SKILL.md`) knows a book with `ownerChatId` is one chat's world book.
