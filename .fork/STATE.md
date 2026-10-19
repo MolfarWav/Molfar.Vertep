@@ -143,12 +143,21 @@ Notes `.fork/release-notes/1.2.1.md`. Asked, not decided: a Gemini API image bac
 
 ## 1.2.0: RELEASED 2026-10-17 on the user's word (main fast-forwarded to the release commit, tag v1.2.0; Roleplay 4.49.0 on the fork's main, merged from `claude/slim-start` + `claude/attention`). Engine = main 1.1.1 + `claude/slim-start-engine` + `claude/image-providers-c9b607` (only conflict: this file). Notes `.fork/release-notes/1.2.0.md`. Not in it: the site branch `claude/hopeful-mccarthy-39ropd`. Checks: typecheck, build:client pass; tests 809 pass, the 15 known Windows-only failures plus 4 load flakes that pass alone; Roleplay 1060 pass, typecheck clean.
 
-## World + DM (#52): P0-P2 released in 1.2.5 / Roleplay 4.53.0; P3 prepared, not started
-Design and phases: `.fork/handoff/world-dm/DESIGN.md`. P3 (catch up on a whole chat, recipes, create from cards,
-carry to a new chat, interview) plus monitoring gaps found 2026-10-18 (Prompt peek never shows hook inserts, the
-Inspector keeps only 20 requests, run history hidden): `.fork/handoff/world-dm/P3-PLAN.md`; decisions answered 2026-10-18 (DM gets its own rail section, token
-control first); not started, the user is still collecting what the DM does in play.
-Plan on engine branch `claude/world-dm-p3-i5a7bo`; the Roleplay fork has no P3 commits yet.
+## World + DM (#52): P0-P2 released in 1.2.5 / Roleplay 4.53.0; P3 stages 1 and 1b built (2026-10-19), not released
+Design: `.fork/handoff/world-dm/DESIGN.md`; P3 plan, decisions and stages: `.fork/handoff/world-dm/P3-PLAN.md`; mockups
+https://claude.ai/artifact/Dq4q3RJkCX2Meiw27y7gKk . Branch `claude/world-dm-p3-i5a7bo` in both repos.
+- Stage 1 (Roleplay 512819f + 2629b6c): run history with tokens/limit/errors, error codes in plain words, a retry on a
+  thinking-only reply, no lost unread text (fair share per message, catch-up runs without events), lastKey fix, play
+  model fallback (World > Dashboard sensor > Litopys > chat > default), routes chats/runs/test; the World rail section
+  (Overview, Runs, World settings with a model test), the chat header globe dot, the prompt peek note. Engine: Inspector
+  KEEP 50 (commit on this branch).
+- Stage 1b (Roleplay 0141eaa): background failures (World DM, Library, Dashboard sensor of the open chat, Soul rating)
+  as an inbox kind and as toasts (once each, Open, quiet while looking, 10 min repeat cut, none older than a day), red
+  inbox count, the inbox as a drawer with filters, toasts tinted by type. Roleplay 1142 tests pass, browser-checked
+  (dark/light 1280, 390 uk). At release: tip `new.inbox-failures` `since` and APP_VERSION go to the release version.
+- For the user to try it: `.fork/handoff/world-dm/try-p3-stage1-task.md` (task for the built-in agent).
+- Next: stage 2 (Records, DM profiles and prompts), then Start (from cards, interview, saved worlds library, carry).
+- Filed today: #71 (steer arrow), #72 (letters from cards, inbox filters for them), #73 (stale ask card, steer timing).
 
 ## Large libraries, P0 (#46): RELEASED in 1.2.0 / Roleplay 4.49.0 (2026-10-17)
 Why: a long-time SillyTavern player has 2,000+ cards; Roleplay's `/bootstrap` read every card whole in a 64 MB
