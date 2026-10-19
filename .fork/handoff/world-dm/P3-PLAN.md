@@ -261,7 +261,16 @@ pass, 2026-10-19) first.
 - Arbiter's events deck (built with the world at Start, consumed once): yes, as an optional feature (stage 3).
 - Story Engine's wording by clock stage and "no harm already done": yes, optional (built: `options.eventByClock`).
 
+## Stage 3 decisions (user, 2026-10-19)
+1. Start writes a draft: the player removes what they do not want, then "Accept all" (free models invent extras).
+2. Saved worlds library in the centre: "Save world" stores a snapshot (records, fronts, deck); "New chat in this
+   world" takes a world from the library or from any chat that has one.
+3. The DM drafts the new chat's scenario and first message from the world and the card; the player edits before start.
+4. The scenario override replaces the card's scenario, with a switch "add to the card's scenario".
+5. Events deck: a profile option, off by default; built at start (8-12 events), the DM picks one by id when an event
+   is due instead of inventing; empty deck: "New deck".
+6. Start lives in the hub (a chat's Start tab, a "New world" button) and in the new-chat step (a "World" select).
+7. `/worldbuild` only meant a separate place for the DM: the hub and the new-chat step are enough. Not built.
+
 ## Unknown / not decided
-- `/worldbuild` (START.md queue, #52 line): a slash command in the chat, a Molfar tool, or both is not written
-  anywhere. Ask before building.
 - RPG layer (`.fork/handoff/rpg-layer/IDEAS.md`) and DM dice rolls stay "later", outside P3.
