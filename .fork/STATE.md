@@ -167,8 +167,15 @@ https://claude.ai/artifact/Dq4q3RJkCX2Meiw27y7gKk . Branch `claude/world-dm-p3-i
   `worldScenario` read by the engine plugin's assembly. Hub: Chats | Worlds | Profiles, chat tab Start, opening
   dialog, World select in the new-chat step. Not exercised in a browser: interview build, page reload mid-draft.
   Shots: /mnt/project-files/world-dm/stage3/.
-- Next: backgrounds (sets, WebP, sensor switching off by default, vision naming); release docs (CHANGELOG, guide,
-  tips' `since`, APP_VERSION) on the user's word. Later: rollback on swipe/delete (#75).
+- Backgrounds (#61; Roleplay 97e77dd engine, fa69568 UI): new images go to the asset store as WebP, Convert to WebP
+  for old data URLs, a world's own folder (kept by saved worlds and carry), sets planned by the build model and drawn
+  by the image model, vision naming, chat switch "change background by scene" (off by default; the sensor picks a
+  name in the folder). backgroundBlob decodes data URLs itself (the frame's fetch only reaches the engine).
+- Molfar's workspace fixes merged (21e25be): #48 Dashboard re-read after an earlier change (reworked: snapshots
+  record `base`, off-line swipe snapshots kept, no whole-chat re-read after an old branch) and #63 card editor in
+  5 groups. #67/#68 closed (shipped in 4.52.0), #74 closed as duplicate of #48.
+- Next: browser check of the card editor and the 1280 backgrounds runs; release docs (version, CHANGELOG, guide,
+  tips' `since`, APP_VERSION) on the user's word; close #48, #61 with that release. Later: rollback (#75).
 - Filed today: #71 (steer arrow), #72 (letters from cards, inbox filters for them), #73 (stale ask card, steer timing).
 
 ## Large libraries, P0 (#46): RELEASED in 1.2.0 / Roleplay 4.49.0 (2026-10-17)
