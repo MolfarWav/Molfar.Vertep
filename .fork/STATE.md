@@ -143,7 +143,7 @@ Notes `.fork/release-notes/1.2.1.md`. Asked, not decided: a Gemini API image bac
 
 ## 1.2.0: RELEASED 2026-10-17 on the user's word (main fast-forwarded to the release commit, tag v1.2.0; Roleplay 4.49.0 on the fork's main, merged from `claude/slim-start` + `claude/attention`). Engine = main 1.1.1 + `claude/slim-start-engine` + `claude/image-providers-c9b607` (only conflict: this file). Notes `.fork/release-notes/1.2.0.md`. Not in it: the site branch `claude/hopeful-mccarthy-39ropd`. Checks: typecheck, build:client pass; tests 809 pass, the 15 known Windows-only failures plus 4 load flakes that pass alone; Roleplay 1060 pass, typecheck clean.
 
-## World + DM (#52): P0-P2 released in 1.2.5 / Roleplay 4.53.0; P3 stages 1 and 1b built (2026-10-19), not released
+## World + DM (#52): P0-P2 released in 1.2.5 / Roleplay 4.53.0; P3 stages 1, 1b and 2 built (2026-10-19), not released
 Design: `.fork/handoff/world-dm/DESIGN.md`; P3 plan, decisions and stages: `.fork/handoff/world-dm/P3-PLAN.md`; mockups
 https://claude.ai/artifact/Dq4q3RJkCX2Meiw27y7gKk . Branch `claude/world-dm-p3-i5a7bo` in both repos.
 - Stage 1 (Roleplay 512819f + 2629b6c): run history with tokens/limit/errors, error codes in plain words, a retry on a
@@ -156,7 +156,13 @@ https://claude.ai/artifact/Dq4q3RJkCX2Meiw27y7gKk . Branch `claude/world-dm-p3-i
   inbox count, the inbox as a drawer with filters, toasts tinted by type. Roleplay 1142 tests pass, browser-checked
   (dark/light 1280, 390 uk). At release: tip `new.inbox-failures` `since` and APP_VERSION go to the release version.
 - For the user to try it: `.fork/handoff/world-dm/try-p3-stage1-task.md` (task for the built-in agent).
-- Next: stage 2 (Records, DM profiles and prompts), then Start (from cards, interview, saved worlds library, carry).
+- Stage 2 (Roleplay 86c9eba engine + 4204014 UI): DM profiles (the five levels as editable built-ins with reset, own
+  profiles `world/profiles/p-*.json`, four prompt blocks, locked reply format, options: clocks by model or by code, news
+  by clock stage), a profile picker instead of the level radios, hub Chats | Profiles switch, a chat's Records tab
+  (`PUT /world/records`, `by: 'player'`), parseReply takes the last reply-shaped object. Non-World failure texts get
+  the app's wording for common causes. Shots: /mnt/project-files/world-dm/stage2/.
+- Next: stage 3 Start (from cards, interview, saved worlds library, carry, scenario/first-message override per chat,
+  optional events deck), waits for the user's go. Later: backgrounds; rollback on swipe/delete (#75).
 - Filed today: #71 (steer arrow), #72 (letters from cards, inbox filters for them), #73 (stale ask card, steer timing).
 
 ## Large libraries, P0 (#46): RELEASED in 1.2.0 / Roleplay 4.49.0 (2026-10-17)
