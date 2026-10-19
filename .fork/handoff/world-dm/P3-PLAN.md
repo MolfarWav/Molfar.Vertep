@@ -230,6 +230,10 @@ Workaround today: pick the model without `:thinking`, or "Use the chat's model".
 - **Inbox colours by kind**: the inbox count turns red when any row is a failure (else the usual colour); rows differ
   by kind: failure red, Litopys approvals (proposals to accept) one colour and icon, Soul reviews of a card another,
   with a short kind label, so "needs a fix", "needs a decision" and "can wait" read apart at a glance.
+- **The inbox becomes a drawer** (user, 2026-10-19, with #72): its own window that opens like a drawer, with filters
+  (system: failures; from cards: later #72; reminders; from Molfar; what's new in this app version). Stage 1b ships
+  the drawer, the filters that have content now (failures, Litopys approvals, Soul reviews) and the "what's new" kind
+  if cheap; card letters come with #72.
 - **Toasts by type** (Roleplay `src/components/ui/sonner.tsx`): today success, error and plain toasts share one
   colour, only the icon differs. Error red-tinted and staying longer, warning amber, success green, info blue, plain
   neutral; both themes. Audit plain `toast()` calls that report a failure and make them `toast.error`.
