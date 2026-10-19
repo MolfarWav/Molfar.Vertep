@@ -123,6 +123,27 @@ user can change. Proposal:
 Order with this: section shell with Overview + Runs + token control + monitoring first, then Records and prompts,
 then Start (cards, carry, interview).
 
+## UI design, round 1 (2026-10-19, waits for the user's review)
+Mockups (private canvas): https://claude.ai/artifact/Dq4q3RJkCX2Meiw27y7gKk . Nine boards: hub Overview, saved
+Worlds, Plot (author view), Runs, Profiles, Start (review drafts), World settings, the chat piece (phone, desktop
+sheet with an error). New decisions from the user on 2026-10-19, built into it:
+- **Two models** in World settings: a **play model** (runs after replies: fast, cheap, multilingual; empty = the
+  chat's model) and a **build model** (creates, remixes, reads cards: stronger, more inventive; empty = the play
+  model). Each with "Test", and the limit in force from the engine's model block ("World DM" / "World DM build").
+  A chat may override the play model.
+- **Saved worlds are a library** (tab Worlds): a world is kept apart from chats, reused in new chats, remixed (the
+  build model changes era, genre or place; the user reviews the changes), exported. A chat plays its **own copy**;
+  "Save as a world" in a chat keeps its state as a new world or version. Format sketch: `data/world/worlds/<id>.json`
+  `{ v, id, name, blurb, tags, cover?, origin {kind, from, recipe, at}, entities, fronts, opening? }`; the chat
+  state gets `worldId` (where its copy came from). Carry-to-new-chat becomes "New chat in this world".
+- **Backgrounds**: "Make a background" on a world, through the app's existing image connection (Settings, Images);
+  shown in Worlds and optionally behind the world's chats. Image model picked in World settings.
+- Hub tabs: Worlds | In chats | Profiles (recipes live under Start and the gear). A chat's world: Overview, Records,
+  Plot (behind an author-view confirm), Runs, Start.
+- The chat piece: on/off, World (its own or a saved one), Profile, every N, a "More" fold, World turn as the one
+  primary action at the thumb; status line; errors in plain words with the fix buttons; a status dot on a globe
+  icon in the chat header so a failed run shows without opening anything.
+
 ## Token control for the DM (user, 2026-10-18)
 Seen on the user's machine: model `nanogpt/z-ai/glm-5.3:thinking`, error "the DM model spent its whole reply limit
 thinking and wrote no answer", the DM never ran. Cause (inference from `callParams`): the reply limit is
