@@ -162,6 +162,23 @@ sheet with an error). New decisions from the user on 2026-10-19, built into it:
   it). Litopys stays separate: it keeps what happened, the DM keeps the world off screen; the DM does not read
   Litopys today (open: let the DM read the Litopys record instead of raw messages for long chats).
 
+## Round 3 (user, 2026-10-19)
+- **What the DM reads today** (checked in code, `unreadMessages` + `dmInput`): only messages after `lastKey`, each cut
+  to 2500 chars, the whole joined text cut to its newest 8000 chars (about 2-3k tokens). Not the whole history. But
+  two real gaps: (a) when more than 8000 chars are unread, the older part is dropped for good, since `lastKey` jumps
+  to the newest message; (b) `lastKey` stays null when the state file existed before a level was picked (a first
+  save with level off), so the first run reads "everything" and keeps only the last 8000 chars. P3 fix: catch-up
+  reads in chunks (step 1), and the user agreed the DM should read Litopys's record for long chats instead of raw
+  messages (cheaper and deeper): a "What the DM reads" option "Litopys summary + new messages".
+- **Who switches the background**: the Dashboard sensor, not the DM (user's call). One more part in its existing
+  call, no extra model call: it gets the names and tags of the images in the chat's background folder (the world's
+  folder when the chat has a world) and returns the one that fits the scene, by place or by association, or none.
+  The app sets the chat's `backgroundId`. A Dashboard part with its own switch, off by default.
+- **"Look at and name the images"**: for uploaded or existing images, a vision model (the app already does this for
+  card avatars: appearance from the picture) proposes an English snake_case file name and tags (tavern, tavern_2,
+  tavern_kitchen; night, rain, crowded); the user checks the list, then the files are renamed. Names in English only.
+  Cost shown before it runs.
+
 ## Token control for the DM (user, 2026-10-18)
 Seen on the user's machine: model `nanogpt/z-ai/glm-5.3:thinking`, error "the DM model spent its whole reply limit
 thinking and wrote no answer", the DM never ran. Cause (inference from `callParams`): the reply limit is
