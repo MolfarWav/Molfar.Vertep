@@ -208,6 +208,13 @@ Plan, first in P3 (with monitoring):
   model that cannot turn it off (catalog flag or the remembered 400).
 Workaround today: pick the model without `:thinking`, or "Use the chat's model".
 
+- **Background switching is off by default** (user, 2026-10-19): it changes how the chat looks, so it is opt-in
+  per chat (and a default in the hub settings).
+- **Backgrounds are stored as WebP** (user, 2026-10-19): generated, uploaded and renamed images are converted on save
+  (quality ~85, longest side capped, e.g. 1920 px). Do it in the client with `canvas.toBlob('image/webp')`: no new
+  dependency. Keep GIF/animated files as they are (canvas would freeze them) and skip a file if WebP comes out larger.
+  Existing library images: an explicit "Convert to WebP" button, never a silent rewrite.
+
 ## Unknown / not decided
 - `/worldbuild` (START.md queue, #52 line): a slash command in the chat, a Molfar tool, or both is not written
   anywhere. Ask before building.
