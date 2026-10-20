@@ -5,6 +5,18 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## Polish my message (#15): rebuilt 2026-10-20, Roleplay fork branch `claude/project-thread-blw38z`, not released
+The workspace version (built by an external agent) always ended in "the helper model gave nothing usable": its
+`plugins/polish/plugin.js` answered `{ status, body }`, and `runPluginRoute` passes on only `{ status, json | text }`,
+so the page got an empty 200 (verified by running the old plugin through the runtime). Rebuilt in the fork:
+`plugins/polish` (plain two-phase llm, `{ status, json }`, no result files or polling), the model is the chat's own
+(page `modelFor(chat)` → chat meta → app default), the built-in prompt corrects and enriches the draft keeping its
+language, person, actions and speech; `utilityPrompts.polish` (blank = built-in, `DEFAULT_POLISH_PROMPT` mirrors the
+plugin, `test/rp-polish.test.ts`); a Polish button in the composer's quick moves (icon-only on a phone) and in the
+"+" menu; the result comes back as a composer fill with Undo. Testing: the user's `roleplay.source.json` ref points at
+the branch (switch back to `HEAD` after the release); his workspace copy must be dropped first
+(task prompt in the project files, `polish-15/workspace-agent-task.md`). No engine change.
+
 ## 1.2.5 = #52 World DM: RELEASED 2026-10-18 on the user's word (main fast-forwarded in both repos; the user pushes the tag v1.2.5; Roleplay 4.53.0 on the fork's main). Notes `.fork/release-notes/1.2.5.md`. Checks: engine typecheck, build:client pass, tests 897 pass + the 3 known failures; Roleplay 1130 pass. Also carries the #59 text-only stream fix from the batch branch
 Roleplay only; the engine repo gets docs and the card skill copy. Version picked when the release order is clear
 (the 18.10 batch on `claude/soji-sse-parse-48vyqm` targets Roleplay 4.52.0; this would be 4.53.0 after it).
@@ -475,7 +487,7 @@ turn and a new scene drops a carried one, gallery migration only when the add sa
 - **#17 gallery**: images go to `PUT /v1/assets`, the card keeps `/v1/assets/<id>`; data-URL items move on the next add; a failed
   character save rolls back and names the size; app body cap 8 MB. Known gap: the Roleplay studio backup zip does not carry asset
   bytes (true for generated pictures before too); the engine's profile backup does.
-- Not done: **#15** "Polish my message" (enhancement: a composer button, a utility-model setting, a new prompt). Next batch.
+- Not done: **#15** "Polish my message": rebuilt 2026-10-20, see its section at the top.
 - Browser check (Chromium, real engine + Roleplay build): #20 at 390 px dark/light and 1280 px (desktop unchanged), no sideways
   scroll; #18 draft kept after an in-frame reload 1 s, 10 ms and 0 ms after the last key. Shots: project files `bug-batch-1014/`.
 - Tests: Roleplay 999 pass. Engine 713 pass, 2 fail: edge-tts (live network 403 in the cloud). Lint adds nothing on changed lines.
