@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.8 (2026-10-20)
+
+- Ships Roleplay 4.57.0 (an app update): the prompt cache works again. The Dashboard and Litopys notes changed every reply and sat above the history, so the provider read the whole history again each time, in every preset; they now sit just before the newest turn (78% of the prompt cached over 40 turns instead of 62%). Vertep Lite's world info moves below the history too.
+- Roleplay 4.57.0: a thinking model (GLM, Gemma) no longer leaves Vertep Lite's `<plan>` in the story; it goes into the reply's thinking. Chat info shows how much of the last prompt came from the cache, and its Context line counts the cached part.
+- pi stays at 1.2.0: 1.3.0 is younger than the 7 days a new pi version waits.
+
 ## 1.2.7 (2026-10-20)
 
 - Ships Roleplay 4.56.0 (an app update): Polish my message works (#15). The button next to Send has the chat's own model correct the draft and make it more vivid, keeping its actions, speech, language, person and tense; the result goes back into the box with an Undo. Before, every press ended in "the helper model gave nothing usable".

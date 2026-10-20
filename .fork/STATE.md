@@ -5,6 +5,8 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## 1.2.8 = prompt cache + Vertep Lite plan: RELEASED 2026-10-20 on the user's word (main fast-forwarded in both repos; the user pushes the tag v1.2.8; Roleplay 4.57.0 on the fork's main). Brought in the Roleplay half of `claude/project-thread-tqxguf` (Dashboard/Litopys notes before the newest turn); its engine half (Chub SSE `[DONE]` after an error, #59) is still only on that branch. Plan leak: the engine splits `reasoningTags` only when the provider sent no reasoning (`src/models.ts`, `!hasThinking`/`!reasoning`), so Roleplay's `cutInlineThinking` moves the tagged block on commit; an engine-side fix would also cover streaming. NanoGPT cache measured: Gemma 4 31B 3-6 min, GLM 5.3 unreliable.
+
 ## 1.2.7 = Polish (#15) + Vertep Lite: RELEASED 2026-10-20 on the user's word (main fast-forwarded in both repos; the user pushes the tag v1.2.7; Roleplay 4.56.0 on the fork's main). Notes `.fork/release-notes/1.2.7.md`. The user's `roleplay.source.json` ref is back on `HEAD`. Close #15 once the tag is out.
 
 ### Polish my message (#15): rebuilt 2026-10-20
