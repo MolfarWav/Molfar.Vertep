@@ -282,6 +282,9 @@ describe("exfiltration ways out of an app page", () => {
       expect(host.allowedRequest("roleplay", method, path), path).toBe(false);
       expect(host.allowedRequest("roleplay", method, path, true), path).toBe(true);
     }
+    // checking a model's cache spends the user's tokens: the shell's button only, never an app
+    expect(host.allowedRequest("roleplay", "POST", "/v1/models/cache-check")).toBe(false);
+    expect(host.allowedRequest("roleplay", "POST", "/v1/models/cache-check", true)).toBe(false);
   });
 
   it("the bridge bus filter drops agent, other-app and cross-app events", async () => {

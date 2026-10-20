@@ -841,6 +841,13 @@ const dict = {
   "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "Noch keine. Markiere unten Modelle mit dem Stern; ohne Liste nimmt Molfar zuerst einen lokalen Server, sonst das erste Modell.",
   "Used for": "Verwendung",
   "e.g. backgrounds, cheap": "z. B. Hintergründe, günstig",
+  "Prompt cache": "Prompt-Cache",
+  "Check the cache": "Cache prüfen",
+  "Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.": "Sendet einen Prompt von etwa 2.500 Tokens zwei- bis dreimal hintereinander und zeigt, was der Anbieter aus seinem Cache entnommen hat.",
+  "Caches: {n} of {m} tokens came from the cache on the second call.": "Cache aktiv: {n} von {m} Tokens stammten beim zweiten Aufruf aus dem Cache.",
+  "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Kein Cache: Der zweite Aufruf hat nichts aus dem Cache übernommen. Der Anbieter cached dieses Modell nicht oder meldet es nicht.",
+  "The provider sent no token counts, so the cache cannot be checked.": "Der Anbieter hat keine Token-Zahlen übermittelt, daher kann der Cache nicht geprüft werden.",
+  "Time: {a} s, then {b} s.": "Zeit: {a} s, danach {b} s.",
 }
 
 export default dict

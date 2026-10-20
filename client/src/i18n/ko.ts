@@ -841,6 +841,13 @@ const dict = {
   "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "아직 없습니다. 아래 모델에 별표를 붙이세요. 목록이 없으면 Molfar는 로컬 서버를 먼저, 없으면 첫 번째 모델을 씁니다.",
   "Used for": "용도",
   "e.g. backgrounds, cheap": "예: 배경, 저렴함",
+  "Prompt cache": "프롬프트 캐시",
+  "Check the cache": "캐시 확인",
+  "Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.": "약 2,500 토큰의 프롬프트를 연달아 두세 번 전송하여, 공급자가 캐시에서 가져온 내용을 보여줍니다.",
+  "Caches: {n} of {m} tokens came from the cache on the second call.": "캐시 있음: 두 번째 호출에서 {m}개 토큰 중 {n}개가 캐시에서 제공되었습니다.",
+  "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "캐시 없음: 두 번째 호출에서 캐시를 사용하지 않았습니다. 공급자가 이 모델을 캐시하지 않거나 캐시를 보고하지 않는 것입니다.",
+  "The provider sent no token counts, so the cache cannot be checked.": "공급자가 토큰 수를 보내지 않아 캐시를 확인할 수 없습니다.",
+  "Time: {a} s, then {b} s.": "시간: {a}초, 이후 {b}초.",
 }
 
 export default dict

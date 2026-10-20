@@ -841,6 +841,13 @@ const dict = {
   "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "暂无。请在下方给模型加星标；没有列表时，Molfar 先用本地服务器，否则用第一个模型。",
   "Used for": "用途",
   "e.g. backgrounds, cheap": "例如：背景、便宜",
+  "Prompt cache": "提示词缓存",
+  "Check the cache": "检查缓存",
+  "Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.": "连续发送约 2,500 个 token 的提示词两到三次，并显示提供商从缓存中读取的部分。",
+  "Caches: {n} of {m} tokens came from the cache on the second call.": "有缓存：第二次调用中，{m} 个 token 中有 {n} 个来自缓存。",
+  "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "无缓存：第二次调用未从缓存中取用任何内容。提供商未对此模型进行缓存，或未报告相关数据。",
+  "The provider sent no token counts, so the cache cannot be checked.": "提供商未返回 token 数量，因此无法检查缓存。",
+  "Time: {a} s, then {b} s.": "耗时：{a} 秒，随后 {b} 秒。",
 }
 
 export default dict

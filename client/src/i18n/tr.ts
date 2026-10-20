@@ -841,6 +841,13 @@ const dict = {
   "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "Henüz yok. Aşağıdaki modelleri yıldızlayın; liste yoksa Molfar önce yerel sunucuyu, yoksa ilk modeli kullanır.",
   "Used for": "Kullanım amacı",
   "e.g. backgrounds, cheap": "örn. arka planlar, ucuz",
+  "Prompt cache": "Prompt önbelleği",
+  "Check the cache": "Önbelleği kontrol et",
+  "Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.": "Yaklaşık 2.500 tokenlık bir istemi (prompt) art arda iki veya üç kez gönderir ve sağlayıcının önbellekten ne aldığını gösterir.",
+  "Caches: {n} of {m} tokens came from the cache on the second call.": "Önbellek var: ikinci çağrıda {m} token'ın {n} tanesi önbellekten geldi.",
+  "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Önbellek yok: ikinci çağrı önbellekten hiçbir şey almadı. Sağlayıcı bu modeli önbelleğe almıyor ya da bunu bildirmiyor.",
+  "The provider sent no token counts, so the cache cannot be checked.": "Sağlayıcı token sayıları göndermedi, bu yüzden önbellek kontrol edilemiyor.",
+  "Time: {a} s, then {b} s.": "Süre: {a} sn, ardından {b} sn.",
 }
 
 export default dict

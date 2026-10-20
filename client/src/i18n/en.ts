@@ -843,6 +843,13 @@ const en = {
   "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "",
   "Used for": "",
   "e.g. backgrounds, cheap": "",
+  "Prompt cache": "",
+  "Check the cache": "",
+  "Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.": "",
+  "Caches: {n} of {m} tokens came from the cache on the second call.": "",
+  "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "",
+  "The provider sent no token counts, so the cache cannot be checked.": "",
+  "Time: {a} s, then {b} s.": "",
 } as const
 
 export default en

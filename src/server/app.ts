@@ -50,6 +50,7 @@ import { type SyncTarget, readState as readSyncState, writeState as writeSyncSta
 import { summarizeSession } from "../agent/compact.js";
 import * as agentMemory from "../agent/memory.js";
 import { listConnections, createConnection, updateConnection, deleteConnection, validateConnectionInput, validatePromptFormatInput, readConnections, connectionKeyUsable, type ConnectionInfo } from "../connections.js";
+import { cacheProbe } from "../cache-probe.js";
 import { PROMPT_FORMATS, type PromptFormat } from "../providers/prompt-formats.js";
 import {
   EDGE_FORMATS, EDGE_VOICES, createSpeechEndpoint, deleteSpeechEndpoint, edgeSpeakFmt,
@@ -1490,6 +1491,19 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // live embeddings capability probe — one tiny call through the user's
   // connections, so the memory UI can say honestly whether semantic recall
   // works or is falling back to keyword matching
+  // Settings → model panel: does this model's provider cache the prompt? Two calls in turn.
+  app.post("/v1/models/cache-check", async (c) => {
+    const body = await c.req.json<{ model?: unknown }>().catch(() => ({}) as { model?: unknown });
+    const model = typeof body.model === "string" ? body.model.trim() : "";
+    if (!model || model.length > 300 || !model.includes("/")) return c.json({ error: "model (provider/model-id) required" }, 400);
+    const models = c.get("models");
+    try {
+      return c.json(await cacheProbe((req) => models.generate(req), model));
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 502);
+    }
+  });
+
   app.post("/v1/embeddings/probe", async (c) => {
     try {
       const r = await c.get("models").embedProbe();

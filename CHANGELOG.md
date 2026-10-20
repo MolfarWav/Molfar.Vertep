@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Settings → Connections and models → a model's settings: **Check the cache** sends a prompt of about 2,500 tokens two or three times, one call after the other, and says whether the provider read it from its cache, with the token counts and times. A provider that reports no token counts is named as such. Shell only: apps cannot spend tokens through it.
+
 ## 1.2.8 (2026-10-20)
 
 - Ships Roleplay 4.57.0 (an app update): the prompt cache works again. The Dashboard and Litopys notes changed every reply and sat above the history, so the provider read the whole history again each time, in every preset; they now sit just before the newest turn (78% of the prompt cached over 40 turns instead of 62%). Vertep Lite's world info moves below the history too.

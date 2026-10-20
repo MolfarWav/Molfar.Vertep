@@ -841,6 +841,13 @@ const dict = {
   "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "Пока пусто. Отметьте модели звёздочкой ниже; без списка Molfar берёт сначала локальный сервер, иначе первую модель.",
   "Used for": "Для чего",
   "e.g. backgrounds, cheap": "напр. фоны, дёшево",
+  "Prompt cache": "Кэш промптов",
+  "Check the cache": "Проверить кэш",
+  "Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.": "Отправляет промпт примерно на 2500 токенов два-три раза подряд и показывает, что провайдер взял из кэша.",
+  "Caches: {n} of {m} tokens came from the cache on the second call.": "Кэш есть: во втором вызове {n} из {m} токенов взяты из кэша.",
+  "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Кэша нет: второй вызов не взял ничего из кэша. Провайдер не кэширует эту модель или не сообщает об этом.",
+  "The provider sent no token counts, so the cache cannot be checked.": "Провайдер не прислал количество токенов, поэтому кэш проверить нельзя.",
+  "Time: {a} s, then {b} s.": "Время: {a} с, затем {b} с.",
 }
 
 export default dict

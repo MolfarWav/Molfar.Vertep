@@ -841,6 +841,13 @@ const dict = {
   "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "まだありません。下のモデルに★を付けてください。一覧が空のときは、ローカルサーバー、なければ先頭のモデルを使います。",
   "Used for": "用途",
   "e.g. backgrounds, cheap": "例: 背景、低コスト",
+  "Prompt cache": "プロンプトキャッシュ",
+  "Check the cache": "キャッシュを確認",
+  "Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.": "約2,500トークンのプロンプトを2〜3回連続で送信し、プロバイダーがキャッシュからどこを取得したかを表示します。",
+  "Caches: {n} of {m} tokens came from the cache on the second call.": "キャッシュあり：2回目の呼び出しで、{m}トークンのうち{n}トークンがキャッシュから取得されました。",
+  "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "キャッシュなし：2回目の呼び出しではキャッシュから何も取得されませんでした。プロバイダーがこのモデルをキャッシュしていないか、報告していない可能性があります。",
+  "The provider sent no token counts, so the cache cannot be checked.": "プロバイダーがトークン数を返さなかったため、キャッシュを確認できません。",
+  "Time: {a} s, then {b} s.": "所要時間：{a}秒、その後{b}秒。",
 }
 
 export default dict

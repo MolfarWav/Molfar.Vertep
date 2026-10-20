@@ -841,6 +841,13 @@ const dict = {
   "None yet. Star models below; without a list Molfar uses a local server first, else the first model.": "Na razie pusto. Oznacz modele gwiazdką poniżej; bez listy Molfar używa najpierw serwera lokalnego, inaczej pierwszego modelu.",
   "Used for": "Do czego",
   "e.g. backgrounds, cheap": "np. tła, tanie",
+  "Prompt cache": "Pamięć podręczna promptów",
+  "Check the cache": "Sprawdź pamięć podręczną",
+  "Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.": "Wysyła prompt o około 2500 tokenów dwa lub trzy razy, jedno wywołanie po drugim, i pokazuje, co dostawca pobrał ze swojej pamięci podręcznej.",
+  "Caches: {n} of {m} tokens came from the cache on the second call.": "Z pamięcią podręczną: {n} z {m} tokenów pochodziło z pamięci podręcznej przy drugim wywołaniu.",
+  "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Bez pamięci podręcznej: drugie wywołanie nie pobrało nic z pamięci podręcznej. Dostawca nie buforuje tego modelu albo tego nie raportuje.",
+  "The provider sent no token counts, so the cache cannot be checked.": "Dostawca nie przesłał liczby tokenów, więc nie można sprawdzić pamięci podręcznej.",
+  "Time: {a} s, then {b} s.": "Czas: {a} s, potem {b} s.",
 }
 
 export default dict

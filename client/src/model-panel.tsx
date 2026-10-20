@@ -8,7 +8,7 @@ import { Button, IconButton } from "./ui/button"
 import { Select } from "./ui/select"
 import { tr } from "./i18n/index"
 import { inputClass } from "./settings"
-import { listPlugins, modelParamsApi, modelsApi, type ModelDetails, type ModelParamsEntry, type ParamBlock } from "./api"
+import { listPlugins, modelParamsApi, modelsApi, type CacheCheck, type ModelDetails, type ModelParamsEntry, type ParamBlock } from "./api"
 
 type Key = keyof ParamBlock
 type Kind = "number" | "int" | "reasoning" | "tags" | "json"
@@ -284,6 +284,7 @@ export function ModelPanel(props: { model: ModelDetails; onClose: () => void; on
 
       <ContextRow model={model} refName={ref} onChanged={props.onChanged} />
       <PriceRow model={model} refName={ref} onChanged={props.onChanged} />
+      <CacheRow refName={ref} />
 
       <div className="flex flex-col gap-1 border-t border-line pt-3">
         <h4 className="text-12 font-medium text-ink">{tr("Parameters")}</h4>
@@ -548,6 +549,45 @@ function PriceRow(props: { model: ModelDetails; refName: string; onChanged?: () 
         <Button variant="ghost" size="small" disabled={busy} onClick={() => void put(null)}>{tr("Use the catalog prices")}</Button>
         {!more ? <Button variant="ghost" size="small" onClick={() => setMore(true)}>{tr("Cache prices")}</Button> : null}
       </div>
+      {err ? <div className="text-11 text-danger">{err}</div> : null}
+    </div>
+  )
+}
+
+function CacheRow(props: { refName: string }) {
+  const [busy, setBusy] = useState(false)
+  const [res, setRes] = useState<CacheCheck | null>(null)
+  const [err, setErr] = useState("")
+  const run = async () => {
+    setBusy(true)
+    setErr("")
+    setRes(null)
+    try {
+      setRes(await modelsApi.cacheCheck(props.refName))
+    } catch (e) {
+      setErr(errText(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  const sec = (ms: number) => (ms / 1000).toFixed(1)
+  return (
+    <div className="flex flex-col gap-1" data-testid="cache-check">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="min-w-32 flex-1 text-12 text-ink-muted">{tr("Prompt cache")}</span>
+        <Button variant="ghost" size="small" disabled={busy} onClick={() => void run()}>{busy ? tr("Checking…") : tr("Check the cache")}</Button>
+      </div>
+      <div className="text-11 text-ink-faint">{tr("Sends a prompt of about 2,500 tokens two or three times, one call after the other, and shows what the provider took from its cache.")}</div>
+      {res ? (
+        <div role="status" className={cn("text-12", res.verdict === "cached" ? "text-success" : "text-ink")}>
+          {res.verdict === "cached"
+            ? tr("Caches: {n} of {m} tokens came from the cache on the second call.", { n: res.second.cacheRead, m: res.second.prompt })
+            : res.verdict === "none"
+              ? tr("No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.")
+              : tr("The provider sent no token counts, so the cache cannot be checked.")}
+          <span className="block text-11 text-ink-faint">{tr("Time: {a} s, then {b} s.", { a: sec(res.first.ms), b: sec(res.second.ms) })}</span>
+        </div>
+      ) : null}
       {err ? <div className="text-11 text-danger">{err}</div> : null}
     </div>
   )

@@ -88,6 +88,23 @@ export const modelsApi = {
   setContext: (ref: string, contextWindow: number | null) => api<{ ok: boolean }>("PUT", "/v1/models/context", { ref, contextWindow }),
   /** null clears back to the catalog prices. */
   setPricing: (ref: string, pricing: ModelPricing | null) => api<{ ok: boolean }>("PUT", "/v1/models/pricing", { ref, pricing }),
+  /** The same prompt twice, in turn: did the provider read the second one from its cache? */
+  cacheCheck: (model: string) => api<CacheCheck>("POST", "/v1/models/cache-check", { model }),
+}
+
+export interface CacheCall {
+  prompt: number
+  cacheRead: number
+  cacheWrite: number
+  ms: number
+}
+/** Engine src/cache-probe.ts. */
+export interface CacheCheck {
+  model: string
+  verdict: "cached" | "none" | "silent"
+  first: CacheCall
+  second: CacheCall
+  calls: number
 }
 
 /** One block of a model's parameters (engine src/model-params.ts). An absent field is not sent. */
