@@ -7,7 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.9 (2026-10-20)
+
 - Settings → Connections and models → a model's settings: **Check the cache** sends a prompt of about 2,500 tokens two or three times, one call after the other, and says whether the provider read it from its cache, with the token counts and times. A provider that reports no token counts is named as such. Shell only: apps cannot spend tokens through it.
+- pi stays at 1.2.0: 1.3.0 is younger than the 7 days a new pi version waits.
 
 ## 1.2.8 (2026-10-20)
 
