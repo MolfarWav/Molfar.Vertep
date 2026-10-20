@@ -7,6 +7,13 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.7 (2026-10-20)
+
+- Ships Roleplay 4.56.0 (an app update): Polish my message works (#15). The button next to Send has the chat's own model correct the draft and make it more vivid, keeping its actions, speech, language, person and tense; the result goes back into the box with an Undo. Before, every press ended in "the helper model gave nothing usable".
+- Roleplay 4.56.0 also adds a third built-in preset, Vertep Lite: about 2k tokens instead of 13k, long replies with a length choice, a hidden micro plan, a Muse with one fresh idea per reply, and the notes of Litopys, the Dashboard and the World DM built in. What changes per reply sits after the newest message, so the prompt cache holds.
+- Roleplay 4.55.0, already out as an app update since 1.2.6: New world builds a world before any chat, and the Characters page has one header bar.
+- pi stays at 1.2.0: 1.3.0 is younger than the 7 days a new pi version waits.
+
 ## 1.2.6 (2026-10-19)
 
 - Ships Roleplay 4.54.0 (an app update): the World section with DM profiles, records you edit by hand and real lorebook keys for them (or a pin that keeps a record in every prompt), a world built from the cards before the first message, saved worlds and New chat in this world, and backgrounds drawn for a world and picked by scene (#52, #61). Also from Molfar's workspace: the Dashboard re-reads the story after an earlier message changes (#48), and the card editor groups its tabs on a phone (#63). A streaming reply no longer jumps when a display regex hides a thinking block.

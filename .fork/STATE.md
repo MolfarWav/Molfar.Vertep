@@ -1,11 +1,13 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-18.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-20.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## Polish my message (#15): rebuilt 2026-10-20, Roleplay fork branch `claude/project-thread-blw38z`, not released
+## 1.2.7 = Polish (#15) + Vertep Lite: RELEASED 2026-10-20 on the user's word (main fast-forwarded in both repos; the user pushes the tag v1.2.7; Roleplay 4.56.0 on the fork's main). Notes `.fork/release-notes/1.2.7.md`. The user's `roleplay.source.json` ref is back on `HEAD`. Close #15 once the tag is out.
+
+### Polish my message (#15): rebuilt 2026-10-20
 The workspace version (built by an external agent) always ended in "the helper model gave nothing usable": its
 `plugins/polish/plugin.js` answered `{ status, body }`, and `runPluginRoute` passes on only `{ status, json | text }`,
 so the page got an empty 200 (verified by running the old plugin through the runtime). Rebuilt in the fork:
