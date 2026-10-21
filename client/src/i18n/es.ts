@@ -859,6 +859,7 @@ const dict = {
   "Ask before spending (on)": "Preguntar antes de gastar (sí)",
   "Never ask (off)": "No preguntar nunca (no)",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "Solo para los modelos de esta conexión. «No preguntar nunca» también oculta sus precios en la página del agente.",
+  "{files} files · ~{kb} KB": "{files} archivos · ~{kb} KB",
 }
 
 export default dict

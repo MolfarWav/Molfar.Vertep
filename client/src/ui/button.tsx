@@ -32,9 +32,11 @@ export interface IconButtonProps extends Omit<ComponentProps<"button">, "childre
   size?: Size
   variant?: "neutral" | "contrast" | "ghost" | "ghost-muted"
   state?: "rest" | "hover" | "pressed"
+  /** 40 px square on phones (a tap target), whatever the size says; desktop keeps the size */
+  touch?: boolean
 }
 
-export function IconButton({ variant, size, state, icon, className, type, ...rest }: IconButtonProps) {
+export function IconButton({ variant, size, state, touch, icon, className, type, ...rest }: IconButtonProps) {
   return (
     <button
       type={type ?? "button"}
@@ -42,6 +44,7 @@ export function IconButton({ variant, size, state, icon, className, type, ...res
       data-size={size ?? "normal"}
       data-variant={variant ?? "neutral"}
       data-state={state}
+      data-touch={touch ? "true" : undefined}
       className={cn(className)}
       {...rest}
     >

@@ -26,6 +26,10 @@
 [data-component="icon-button"][data-size="small"] { height: 1.5rem; width: 1.5rem; }
 [data-component="icon-button"][data-size="normal"] { height: 2rem; width: 2rem; }
 [data-component="icon-button"][data-size="large"] { height: 2.5rem; width: 2.5rem; }
+/* a tap target on phones: 40 px, in px because the shell scales rem */
+@media (max-width: 767px) {
+  [data-component="icon-button"][data-touch="true"] { height: 40px; width: 40px; }
+}
 
 [data-component="button"]:disabled,
 [data-component="icon-button"]:disabled {

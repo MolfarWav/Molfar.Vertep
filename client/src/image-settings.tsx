@@ -268,9 +268,9 @@ function ImageFavorites(props: { favorites: ImageFavorite[]; models: ImageModel[
               onBlur={() => edit(f, "use", uses[f.ref] ?? f.use ?? "")}
             />
             <span title={f.ref} className={cn("min-w-0 flex-1 truncate text-11", known ? "text-ink-faint" : "text-danger")}>{known ? source(f.ref) : tr("{ref} (not available)", { ref: f.ref })}</span>
-            <IconButton icon={<IconSmall name="outline-chevron-down" className="rotate-180" />} variant="ghost-muted" size="small" title={tr("Move up")} aria-label={tr("Move up")} disabled={props.busy || i === 0} onClick={() => move(i, -1)} />
-            <IconButton icon={<IconSmall name="outline-chevron-down" />} variant="ghost-muted" size="small" title={tr("Move down")} aria-label={tr("Move down")} disabled={props.busy || i === props.favorites.length - 1} onClick={() => move(i, 1)} />
-            <IconButton icon={<IconSmall name="outline-xmark" />} variant="ghost-muted" size="small" title={tr("Remove from your image models")} aria-label={tr("Remove from your image models")} disabled={props.busy} onClick={() => props.onSave(props.favorites.filter((x) => x.ref !== f.ref))} />
+            <IconButton touch icon={<IconSmall name="outline-chevron-down" className="rotate-180" />} variant="ghost-muted" size="small" title={tr("Move up")} aria-label={tr("Move up")} disabled={props.busy || i === 0} onClick={() => move(i, -1)} />
+            <IconButton touch icon={<IconSmall name="outline-chevron-down" />} variant="ghost-muted" size="small" title={tr("Move down")} aria-label={tr("Move down")} disabled={props.busy || i === props.favorites.length - 1} onClick={() => move(i, 1)} />
+            <IconButton touch icon={<IconSmall name="outline-xmark" />} variant="ghost-muted" size="small" title={tr("Remove from your image models")} aria-label={tr("Remove from your image models")} disabled={props.busy} onClick={() => props.onSave(props.favorites.filter((x) => x.ref !== f.ref))} />
           </div>
         )
       })}
@@ -317,7 +317,7 @@ function EndpointRow(props: { ep: ImageEndpoint; onEdit: () => void; models: Ima
             }
           }}>{tr("Delete")}</Button>
         ) : (
-          <IconButton icon={<IconSmall name="trash" />} variant="ghost-muted" size="small" title={tr("Delete server")} aria-label={tr("Delete server")} onClick={() => setConfirming(true)} />
+          <IconButton touch icon={<IconSmall name="trash" />} variant="ghost-muted" size="small" title={tr("Delete server")} aria-label={tr("Delete server")} onClick={() => setConfirming(true)} />
         )}
       </div>
       {!state.busy ? (
@@ -537,7 +537,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
     <section className="flex flex-col gap-3 rounded-lg border border-line p-3">
       <div className="flex items-center gap-2">
         <h3 className="flex-1 text-13 font-medium text-ink">{ep ? tr("Edit image server") : tr("New image server")}</h3>
-        <IconButton icon={<IconSmall name="outline-xmark" />} variant="ghost-muted" size="small" title={tr("Cancel")} aria-label={tr("Cancel")} onClick={props.onCancel} />
+        <IconButton touch icon={<IconSmall name="outline-xmark" />} variant="ghost-muted" size="small" title={tr("Cancel")} aria-label={tr("Cancel")} onClick={props.onCancel} />
       </div>
       {ep ? null : (
         <div role="radiogroup" aria-label={tr("Kind")} className="grid grid-cols-3 gap-1 rounded-lg border border-line p-1 max-sm:grid-cols-1">
@@ -622,7 +622,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
                   <span className="text-11 text-ink-faint">{tr("Strength")}</span>
                   <input className={inputClass} type="number" step="0.05" min={-5} max={5} placeholder="1" value={l.strength} onChange={(e) => setLora(i, { strength: e.currentTarget.value })} />
                 </label>
-                <IconButton icon={<IconSmall name="outline-xmark" />} variant="ghost-muted" size="small" title={tr("Remove LoRA")} aria-label={tr("Remove LoRA")} onClick={() => set("loras", f.loras.filter((_, j) => j !== i))} />
+                <IconButton touch icon={<IconSmall name="outline-xmark" />} variant="ghost-muted" size="small" title={tr("Remove LoRA")} aria-label={tr("Remove LoRA")} onClick={() => set("loras", f.loras.filter((_, j) => j !== i))} />
               </div>
             ))}
             <div className="flex items-center gap-2">

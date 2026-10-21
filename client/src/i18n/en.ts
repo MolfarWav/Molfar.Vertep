@@ -861,6 +861,7 @@ const en = {
   "Ask before spending (on)": "",
   "Never ask (off)": "",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "",
+  "{files} files · ~{kb} KB": "",
 } as const
 
 export default en

@@ -1640,7 +1640,7 @@ function LaunchPicker(props: {
         </div>
       </div>
       {props.launch?.engine ? (
-          <div className="flex items-center gap-2 px-1 pb-1 pt-0.5 text-11 text-ink-faint">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 pb-1 pt-0.5 text-11 text-ink-faint [&>*]:whitespace-nowrap">
             <span data-guide="home.version">{tr("Molfar Vertep v{version}", { version: props.launch.engine.version })}</span>
             {props.launch.engine.admin ? <EngineUpdateButton release={props.engineRelease} /> : null}
             {props.launch.engine.repository ? <a
@@ -1824,7 +1824,7 @@ function AppDetail(props: {
         <div className="min-w-0 flex-1">
           <p className="truncate text-14 font-medium text-ink">{props.appId}</p>
           <p className="truncate text-11 text-ink-faint">
-            {detail.loading ? tr("reading files…") : `${stats().files} files · ~${stats().kb} KB`}
+            {detail.loading ? tr("reading files…") : tr("{files} files · ~{kb} KB", { files: stats().files, kb: stats().kb })}
             {detail.data?.manifest?.version ? ` · v${detail.data.manifest.version}` : ""}
           </p>
         </div>

@@ -859,6 +859,7 @@ const dict = {
   "Ask before spending (on)": "Harcamadan önce sor (açık)",
   "Never ask (off)": "Asla sorma (kapalı)",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "Yalnızca bu bağlantının modelleri için. “Asla sorma” seçeneği, ajan sayfasında bu modellerin fiyatlarını da gizler.",
+  "{files} files · ~{kb} KB": "{files} dosya · ~{kb} KB",
 }
 
 export default dict

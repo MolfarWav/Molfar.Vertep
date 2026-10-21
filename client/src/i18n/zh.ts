@@ -859,6 +859,7 @@ const dict = {
   "Ask before spending (on)": "花费前询问（开）",
   "Never ask (off)": "从不询问（关）",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "仅适用于此连接的模型。选择“从不询问”还会在智能体页面隐藏这些模型的价格。",
+  "{files} files · ~{kb} KB": "{files} 个文件 · 约 {kb} KB",
 }
 
 export default dict

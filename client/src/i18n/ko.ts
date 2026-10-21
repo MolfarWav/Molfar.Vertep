@@ -859,6 +859,7 @@ const dict = {
   "Ask before spending (on)": "지출 전에 확인(켜짐)",
   "Never ask (off)": "묻지 않음(꺼짐)",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "이 연결의 모델에만 적용됩니다. ‘묻지 않음’은 에이전트 페이지에서 해당 모델의 가격도 숨깁니다.",
+  "{files} files · ~{kb} KB": "파일 {files}개 · ~{kb} KB",
 }
 
 export default dict
