@@ -2152,15 +2152,9 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
             // is aborted when the callback wins the race.
             if (prompt.type === "manual_code") return askUser(prompt);
             // subscription flows drive their happy path: first option for
-            // selects (browser login), defaults for text (e.g. github.com);
-            // manual code entry waits for the callback to win the race
+            // selects (browser login), defaults for text (e.g. github.com)
             if (prompt.type === "select") return Promise.resolve(prompt.options[0]?.id ?? "");
-            if (prompt.type === "text" || prompt.type === "secret") return Promise.resolve("");
-            return new Promise<never>((_, reject) => {
-              const onAbort = () => reject(new Error("cancelled"));
-              controller.signal.addEventListener("abort", onAbort, { once: true });
-              prompt.signal?.addEventListener("abort", onAbort, { once: true });
-            });
+            return Promise.resolve("");
           },
         });
         // the user walked away mid-flow: drop the result, save nothing
