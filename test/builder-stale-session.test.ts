@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { depsOf, sessionStale } from "../src/builder/browser/stale";
+import { depsOf, sessionStale } from "../src/builder/browser/stale.js";
 
 describe("a builder session that no longer matches dist (#26)", () => {
   const meta = (depsJs: string) => ({ format: 1, depsKey: "k", depsJs, depsCss: null, snapshot: "dev/snap-1.js", hot: [], seq: 0, retired: [] });
