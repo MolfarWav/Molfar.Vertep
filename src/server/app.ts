@@ -2113,6 +2113,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return new Promise<string>((resolve, reject) => {
         const onAbort = () => {
           pendingAnswers.delete(u.username);
+          if (flow.prompt?.id === id) flow.prompt = undefined;
           reject(new Error("cancelled"));
         };
         controller.signal.addEventListener("abort", onAbort, { once: true });
@@ -2146,6 +2147,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
           },
           prompt: (prompt) => {
             if (method.guided) return askUser(prompt);
+            // a browser on another machine cannot reach this machine's callback
+            // port: the user pastes the redirect URL or code (#80). The prompt
+            // is aborted when the callback wins the race.
+            if (prompt.type === "manual_code") return askUser(prompt);
             // subscription flows drive their happy path: first option for
             // selects (browser login), defaults for text (e.g. github.com);
             // manual code entry waits for the callback to win the race

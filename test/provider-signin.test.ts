@@ -158,6 +158,19 @@ describe("guided provider sign-ins", () => {
     expect(await currentFlow()).toBeNull();
   });
 
+  it("a subscription sign-in offers the redirect URL or code box, for a browser on another machine (#80)", async () => {
+    expect((await post("/v1/settings/oauth/anthropic/start")).status).toBe(200);
+    const step = await waitPrompt("anthropic", (p) => p.type === "manual_code");
+    expect(step.message).toContain("paste");
+    expect((await currentFlow()) as { url?: string }).toMatchObject({ url: expect.stringContaining("claude.ai/oauth/authorize") });
+    // a pasted redirect URL with the wrong state is refused before anything leaves the machine
+    expect((await post("/v1/settings/oauth/anthropic/answer", { id: step.id, value: "http://localhost:53692/callback?code=abc&state=wrong" })).status).toBe(200);
+    for (let i = 0; i < 100 && (await currentFlow())?.status === "pending"; i++) await new Promise((r) => setTimeout(r, 10));
+    expect(await currentFlow()).toMatchObject({ status: "error", error: expect.stringContaining("state mismatch") });
+    const auth = fs.existsSync(path.join(dataDir, "credentials", "alice", "auth.json")) ? authFile() : {};
+    expect(auth.anthropic).toBeUndefined();
+  });
+
   it("answers bounce when no flow is running", async () => {
     expect((await post("/v1/settings/oauth/google-vertex/answer", { id: 1, value: "adc" })).status).toBe(409);
     expect((await post("/v1/settings/oauth/google-vertex/start")).status).toBe(200);

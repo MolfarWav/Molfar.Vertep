@@ -2284,6 +2284,9 @@ function OAuthForm(props: { pick: OAuthPick; onBack: () => void; onDone: () => v
           {tr("Sign in")}
         </Button> : <div className="flex flex-col gap-2 rounded-lg border border-line-focus p-3">
             {flow!.prompt ? <>
+                {flow!.url ? <a className="truncate text-13 text-accent underline" href={flow!.url} target="_blank" rel="noreferrer">
+                    {tr("Open the sign-in page ↗")}
+                  </a> : null}
                 {flow!.message ? <div className="text-12 text-ink-muted">{flow!.message}</div> : null}
                 <div className="text-13 text-ink">{flow!.prompt.message}</div>
                 {flow!.prompt.type === "select" ? <div className="flex flex-col gap-1">
