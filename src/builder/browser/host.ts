@@ -10,6 +10,8 @@
  * chose; it can never name another app or reach anything but the file route.
  */
 
+import { depsOf, sessionStale } from "./stale";
+
 declare const __BUILDER_VERSION__: string;
 
 interface BuildMessage {
@@ -191,6 +193,8 @@ class AppBuild {
   private settling: Promise<ServerStatus | null> | null = null;
   private again = false;
   private retried = false;
+  /** The deps bundle the frame's session builds on (see stale.ts). */
+  private sessionDeps: string | null = null;
   /** Why the next full build runs; the shell shows it when the page reloads for it (#24). */
   private fullWhy = "the built files did not match the sources when the app opened";
   private renew: ReturnType<typeof setInterval> | undefined;
@@ -292,6 +296,7 @@ class AppBuild {
         this.status(st.status?.errors?.length ? { phase: "error", errors: st.status.errors } : { phase: "ready" });
         if (this.running) return;
         this.frame = new BuilderFrame(this.appId, st.dev);
+        this.sessionDeps = depsOf(st.dev);
         // warm the session in the background so the first edit is quick
         void this.frame.build("warm").catch(() => {});
         // no build to run: do not keep the lease, or another device that
@@ -397,15 +402,34 @@ class AppBuild {
 
   private async run(kind: "full" | "update", rev: string, changed: string[] = []): Promise<void> {
     if (this.disposed) return;
+    // another tab or device may have built since this session last did: a session that still keeps
+    // its old deps bundle would be refused by the engine (#26), so it is replaced by one that
+    // continues from what dist holds now
+    let dist: unknown = undefined;
+    if (this.frame && !this.frame.dead) {
+      try {
+        dist = ((await api(this.base())) as ServerStatus).dev;
+        if (sessionStale(dist, this.sessionDeps)) {
+          this.frame.dispose();
+          this.frame = null;
+        }
+      } catch {
+        /* keep the session */
+      }
+    }
     if (!this.frame || this.frame.dead) {
       // a new builder continues from what dist holds (its dev sequence)
       let prior: unknown = null;
-      try {
-        prior = ((await api(this.base())) as ServerStatus).dev;
-      } catch {
-        /* start fresh */
+      if (dist !== undefined) prior = dist;
+      else {
+        try {
+          prior = ((await api(this.base())) as ServerStatus).dev;
+        } catch {
+          /* start fresh */
+        }
       }
       this.frame = new BuilderFrame(this.appId, prior);
+      this.sessionDeps = depsOf(prior);
     }
     if (kind === "full") this.status({ phase: "building", message: "Building the app" });
     let output: Record<string, unknown>;
@@ -457,6 +481,7 @@ class AppBuild {
       return;
     }
     this.retried = false;
+    this.sessionDeps = depsOf(output.meta) ?? this.sessionDeps;
     const errors = (output.errors as BuildMessage[] | undefined) ?? [];
     if (output.ok === false) this.status({ phase: "error", errors });
     else {
