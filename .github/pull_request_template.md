@@ -1,4 +1,4 @@
-<!-- Pull requests go to `staging`, not `main`. -->
+<!-- Pull requests go to `main`. Read CONTRIBUTING.md first. -->
 
 **What this changes**
 

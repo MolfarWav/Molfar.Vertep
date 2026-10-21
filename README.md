@@ -308,5 +308,5 @@ The idea comes from [pi](https://pi.dev), the minimal coding agent you adapt by 
 ## 💬 Support
 
 - Chat, help and news: our [Discord](https://discord.gg/NMqSehTCTs).
-- Bugs and questions: [GitHub issues](https://github.com/MolfarWav/Molfar.Vertep/issues).
+- Bugs and questions: [GitHub issues](https://github.com/MolfarWav/Molfar.Vertep/issues). Wanting to help: [CONTRIBUTING.md](CONTRIBUTING.md).
 - Security problems: private vulnerability report via the **Security** tab, not a public issue.
