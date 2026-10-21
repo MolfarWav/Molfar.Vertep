@@ -18,7 +18,7 @@ declare global {
       watch(
         appId: string,
         onStatus: (s: AppBuildStatus) => void,
-        onReload: () => void,
+        onReload: (why: string) => void,
       ): { ready: Promise<void>; dispose(): void };
       rebuild(appId: string): Promise<void>;
     };

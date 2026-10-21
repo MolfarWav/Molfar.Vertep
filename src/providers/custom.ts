@@ -418,8 +418,10 @@ function toModel(m: CustomModelDef, providerId: string, api: Api, def: CustomPro
   // host it does not know, and servers that read only `max_tokens` (Chub's Soji and mobile) then
   // cut every reply at their own default, near 500 tokens (GitHub #19). OpenAI itself keeps the
   // newer field, which its reasoning models require.
-  const maxTokensField = /^https?:\/\/api\.openai\.com(\/|$)/i.test(baseUrl) ? {} : { maxTokensField: "max_tokens" as const };
-  const compat = api === "openai-completions" ? { ...withThinking, ...maxTokensField, supportsFinishReason: false } : withThinking;
+  // `store` is OpenAI's own request field; Marinara and curl do not send it to other hosts, so a
+  // host that is picky about the body (Chub, #59) gets one field less to choke on.
+  const hostCompat = /^https?:\/\/api\.openai\.com(\/|$)/i.test(baseUrl) ? {} : { maxTokensField: "max_tokens" as const, supportsStore: false };
+  const compat = api === "openai-completions" ? { ...withThinking, ...hostCompat, supportsFinishReason: false } : withThinking;
   const known = catalogEntry(baseUrl, m.id);
   const model: Model<Api> = {
     id: m.id,

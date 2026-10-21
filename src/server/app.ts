@@ -649,18 +649,20 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         ...(project ? { project } : {}),
         // app_request: the same dispatch an app page's request goes through
         appRequest: (appId, method, rel, query, body) => dispatchAppRoute(u, appId, method, rel, query, body),
-        ask: (q) =>
-          new Promise<string>((resolve) => {
-            const id = nodeCrypto.randomUUID();
-            const askSessionId = resolvedSessionId;
-            if (!askSessionId) {
-              resolve("(question could not be delivered)");
-              return;
-            }
-            pendingQuestions.set(id, { resolve, sessionId: askSessionId, username: u.username });
-            bus.emit(u.username, "agent_event", {
-              sessionId: askSessionId,
-              ev: {
+        // One card at a time per chat: the page holds a single pending question, so two asked
+        // together (parallel edits to a protected app) replaced each other's card and the hidden
+        // one waited out its 10 minutes (#76). The rest queue behind the one on screen.
+        ask: (q) => {
+          const askSessionId = resolvedSessionId;
+          if (!askSessionId) return Promise.resolve("(question could not be delivered)");
+          const queueKey = `${u.username}:${askSessionId}`;
+          const epoch = askEpoch.get(queueKey) ?? 0;
+          const show = () =>
+            new Promise<string>((resolve) => {
+              // Stop was pressed while this one waited its turn
+              if ((askEpoch.get(queueKey) ?? 0) !== epoch) return resolve("(stopped)");
+              const id = nodeCrypto.randomUUID();
+              const ev = {
                 type: "ask_user",
                 id,
                 question: q.question,
@@ -670,12 +672,23 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
                 ...(q.questions?.length ? { questions: q.questions } : {}),
                 ...(q.detail ? { detail: q.detail } : {}),
                 ...(q.detail && q.detailKind ? { detailKind: q.detailKind } : {}),
-              },
+              };
+              pendingQuestions.set(id, { resolve, sessionId: askSessionId, username: u.username, ev });
+              bus.emit(u.username, "agent_event", { sessionId: askSessionId, ev });
+              setTimeout(() => {
+                if (!pendingQuestions.delete(id)) return;
+                resolve("(no answer — timed out)");
+                // close the card on the page too, or its answer would meet "no pending question" (#73)
+                bus.emit(u.username, "agent_event", { sessionId: askSessionId, ev: { type: "ask_user_done", id } });
+              }, 10 * 60_000).unref();
             });
-            setTimeout(() => {
-              if (pendingQuestions.delete(id)) resolve("(no answer — timed out)");
-            }, 10 * 60_000).unref();
-          }),
+          const turn = (askQueues.get(queueKey) ?? Promise.resolve()).then(show);
+          askQueues.set(queueKey, turn);
+          void turn.then(() => {
+            if (askQueues.get(queueKey) === turn) askQueues.delete(queueKey);
+          });
+          return turn;
+        },
       });
       resolvedSessionId = a.sessionId;
       a.docsStamp = docsNow;
@@ -685,7 +698,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   };
 
   // pending ask_user questions: id → resolver (answered via /v1/agent/answer)
-  const pendingQuestions = new Map<string, { resolve: (answer: string) => void; sessionId: string; username: string }>();
+  const pendingQuestions = new Map<string, { resolve: (answer: string) => void; sessionId: string; username: string; ev: Record<string, unknown> }>();
+  // username:sessionId -> the asks of that chat, one after another; askEpoch counts Stop presses
+  const askQueues = new Map<string, Promise<unknown>>();
+  const askEpoch = new Map<string, number>();
 
   // ---------- health (no auth) ----------
   app.get("/v1/health", (c) => c.json({ ok: true, version: ENGINE_VERSION, ...(deps.instance ? { instance: deps.instance } : {}) }));
@@ -2616,7 +2632,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     }
     const agent = activeRuns.get(`${u.username}:${body.sessionId}`);
     if (!agent) return c.json({ error: "no active run for this session" }, 409);
-    // unblock any pending ask_user from this run so the abort can settle
+    // unblock any pending ask_user from this run so the abort can settle; asks still queued
+    // behind it see the new epoch and answer "(stopped)" without showing a card
+    const stopKey = `${u.username}:${body.sessionId}`;
+    askEpoch.set(stopKey, (askEpoch.get(stopKey) ?? 0) + 1);
     for (const [askId, pending] of pendingQuestions) {
       if (pending.sessionId === body.sessionId && pending.username === u.username) {
         pendingQuestions.delete(askId);
@@ -2625,6 +2644,18 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     }
     agent.stop();
     return c.json({ ok: true });
+  });
+
+  // The card that is waiting for this chat, if any. The page asks after a reconnect, when the
+  // tab comes back and while a run goes on: a card event lost on the way would otherwise leave
+  // the run blocked until the 10 minute timeout (#76).
+  app.get("/v1/agent/pending", (c) => {
+    const u = c.get("user");
+    const sessionId = c.req.query("sessionId") ?? "";
+    for (const pending of pendingQuestions.values()) {
+      if (pending.username === u.username && pending.sessionId === sessionId) return c.json({ ev: pending.ev });
+    }
+    return c.json({ ev: null });
   });
 
   // answer a pending ask_user question (resolves the blocked tool call)

@@ -1,6 +1,6 @@
 {
   "name": "molfar-vertep",
-  "version": "1.2.9",
+  "version": "1.2.10",
   "private": true,
   "description": "Molfar Vertep: the AI frontend you can reshape just by asking (a fork of Chrysalis Engine)",
   "type": "module",

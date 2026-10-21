@@ -30,9 +30,11 @@ let server: http.Server;
 let base = "";
 let body = "";
 let byteByByte = false;
+let lastRequest = "";
 beforeAll(async () => {
   server = http.createServer((req, res) => {
-    req.resume();
+    lastRequest = "";
+    req.on("data", (c) => (lastRequest += c));
     req.on("end", async () => {
       res.writeHead(200, { "content-type": "text/event-stream" });
       if (!byteByByte) return res.end(body);
@@ -133,5 +135,17 @@ describe("a custom connection's stream whose only data is an error text and the 
     byteByByte = false;
     const m = await viaConnection();
     expect(m.stopReason).not.toBe("error");
+  });
+});
+
+describe("the request a custom connection sends (#59, compared with Marinara)", () => {
+  it("leaves OpenAI's `store` field out and sends max_tokens", async () => {
+    body = BODIES.plain!;
+    byteByByte = false;
+    await viaConnection();
+    const sent = JSON.parse(lastRequest) as Record<string, unknown>;
+    expect(sent).not.toHaveProperty("store");
+    expect(sent).toHaveProperty("max_tokens");
+    expect(sent).not.toHaveProperty("max_completion_tokens");
   });
 });

@@ -848,6 +848,8 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Кешу немає: другий виклик не взяв нічого з кешу. Провайдер не кешує цю модель або не повідомляє про це.",
   "The provider sent no token counts, so the cache cannot be checked.": "Провайдер не надіслав кількість токенів, тож кеш перевірити неможливо.",
   "Time: {a} s, then {b} s.": "Час: {a} с, потім {b} с.",
+  "Molfar is asking you": "Molfar питає",
+  "Open Molfar": "Відкрити Molfar",
 }
 
 export default dict

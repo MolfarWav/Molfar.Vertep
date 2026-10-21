@@ -238,9 +238,20 @@ export function normalizeAsk(params: unknown): AskRequest | null {
 
 export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOptions = { dataDir: "." }): AgentTool[] {
   const guard = makePathGuard(p.root);
+  // area -> the last protected-path question of that area in THIS agent's chat (see askToChange);
+  // per chat, so a card left unanswered elsewhere does not hold this one back
+  const askLocks = new Map<string, Promise<void>>();
 
-  /** Ask once per request and area before a protected path changes (protect.ts). */
-  const askToChange = async (area: ProtectedArea, detail: string, diff: boolean): Promise<void> => {
+  /** Ask once per request and area before a protected path changes (protect.ts). Calls in
+   *  one area go one at a time: parallel edits to the same app used to open one card each
+   *  (the page shows one, #76); the later ones now see the first answer and do not ask again. */
+  const askToChange = (area: ProtectedArea, detail: string, diff: boolean): Promise<void> => {
+    const lockKey = `${username}:${area.key}`;
+    const turn = (askLocks.get(lockKey) ?? Promise.resolve()).then(() => askToChangeNow(area, detail, diff));
+    askLocks.set(lockKey, turn.catch(() => undefined));
+    return turn;
+  };
+  const askToChangeNow = async (area: ProtectedArea, detail: string, diff: boolean): Promise<void> => {
     if (isAllowed(username, area.key)) return;
     if (!opts.ask) throw new Error(`Refused: ${area.label} are protected and the user is not available to allow a change.`);
     const answer = (
@@ -429,14 +440,27 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
       guard.assertReadable(abs, rel);
       guard.assertWritable(abs, rel);
       if (!fs.existsSync(abs)) throw new Error(`File not found: ${rel}`);
-      const content = fs.readFileSync(abs, "utf8");
-      const count = content.split(oldText).length - 1;
-      if (count === 0) throw new Error("oldText not found in file.");
-      if (count > 1) throw new Error(`oldText matches ${count} times — include more surrounding lines to make it unique.`);
-      const next = content.replace(oldText, newText);
-      keepJsonValid(rel, content, next);
+      const replaceOnce = (text: string): string => {
+        const count = text.split(oldText).length - 1;
+        if (count === 0) throw new Error("oldText not found in file.");
+        if (count > 1) throw new Error(`oldText matches ${count} times — include more surrounding lines to make it unique.`);
+        const out = text.replace(oldText, newText);
+        keepJsonValid(rel, text, out);
+        return out;
+      };
+      let content = fs.readFileSync(abs, "utf8");
+      let next = replaceOnce(content);
       const area = protectedFor(rel);
-      if (area) await askToChange(area, fileDiff(rel, content, next) ?? rel, true);
+      if (area) {
+        await askToChange(area, fileDiff(rel, content, next) ?? rel, true);
+        // another edit to this file (a parallel call that waited on the same card) may have
+        // landed while the question was open: redo the replacement on what is there now
+        const fresh = fs.readFileSync(abs, "utf8");
+        if (fresh !== content) {
+          content = fresh;
+          next = replaceOnce(fresh);
+        }
+      }
       fs.writeFileSync(abs, next, "utf8");
       let committed = "";
       try {
@@ -619,15 +643,30 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
       if (!Array.isArray(edits) || !edits.length) throw new Error("edits is empty");
       const denied = agentWriteDenied(rel);
       if (denied) throw new Error(`Refused: ${rel} is not agent-writable.`);
-      const { abs, raw, doc } = loadJson(rel);
+      const first = loadJson(rel);
+      const abs = first.abs;
       guard.assertWritable(abs, rel);
-      const { doc: next, lines } = applyEdits(doc, edits);
-      const out = serialize(next, detectStyle(raw));
+      const change = (src: { raw: string; doc: unknown }) => {
+        const { doc: next, lines: done } = applyEdits(src.doc, edits);
+        return { lines: done, out: serialize(next, detectStyle(src.raw)) };
+      };
+      let raw = first.raw;
+      let { lines, out } = change(first);
       if (out === raw) return textResult(`Nothing changed in ${rel}.`, { path: rel });
       // a one-line file's diff is the whole file: shown only when small
-      const diff = out.length + raw.length < 40_000 ? fileDiff(rel, raw, out) : undefined;
+      let diff = out.length + raw.length < 40_000 ? fileDiff(rel, raw, out) : undefined;
       const area = protectedFor(rel);
-      if (area) await askToChange(area, diff ?? `${rel}:\n${lines.join("\n")}`, !!diff);
+      if (area) {
+        await askToChange(area, diff ?? `${rel}:\n${lines.join("\n")}`, !!diff);
+        // redo the change on the file as it is after the wait (see edit_file)
+        const fresh = loadJson(rel);
+        if (fresh.raw !== raw) {
+          raw = fresh.raw;
+          ({ lines, out } = change(fresh));
+          if (out === raw) return textResult(`Nothing changed in ${rel}.`, { path: rel });
+          diff = out.length + raw.length < 40_000 ? fileDiff(rel, raw, out) : undefined;
+        }
+      }
       fs.writeFileSync(abs, out, "utf8");
       let committed = "";
       try {

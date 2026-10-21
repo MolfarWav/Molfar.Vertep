@@ -848,6 +848,8 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Önbellek yok: ikinci çağrı önbellekten hiçbir şey almadı. Sağlayıcı bu modeli önbelleğe almıyor ya da bunu bildirmiyor.",
   "The provider sent no token counts, so the cache cannot be checked.": "Sağlayıcı token sayıları göndermedi, bu yüzden önbellek kontrol edilemiyor.",
   "Time: {a} s, then {b} s.": "Süre: {a} sn, ardından {b} sn.",
+  "Molfar is asking you": "Molfar sana soruyor",
+  "Open Molfar": "Molfar'ı aç",
 }
 
 export default dict

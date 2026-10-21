@@ -515,6 +515,33 @@ const Composer: FC<{ autoFocus: boolean }> = ({ autoFocus }) => {
   );
 };
 
+// Shown for the whole run so the option is visible before typing (#71). Empty
+// box: dimmed and inert, but not `disabled`, so the tooltip still explains it.
+// The form's submit handler already ignores an empty composer.
+const SteerButton: FC = () => {
+  const empty = useAuiState((s) => s.composer.isEmpty);
+  return (
+    <TooltipIconButton
+      tooltip={empty ? "Type a message to send it to Molfar now" : "Send to Molfar now"}
+      side="bottom"
+      type="submit"
+      variant="default"
+      size="icon"
+      aria-disabled={empty}
+      onClick={(e) => {
+        if (empty) e.preventDefault();
+      }}
+      className={cn(
+        "aui-composer-steer bg-brand text-brand-foreground hover:bg-brand/90 size-8 rounded-full",
+        empty && "bg-muted text-muted-foreground hover:bg-muted cursor-default",
+      )}
+      aria-label="Send to Molfar now"
+    >
+      <ArrowUp className="aui-composer-send-icon size-4" />
+    </TooltipIconButton>
+  );
+};
+
 const ComposerAction: FC = () => {
   return (
     // one row at every width; on a narrow one the model name moves to a row of its own above
@@ -575,18 +602,8 @@ const ComposerAction: FC = () => {
             </TooltipIconButton>
           </ComposerPrimitive.Send>
         </AuiIf>
-        <AuiIf condition={(s) => s.thread.isRunning && !s.composer.isEmpty}>
-          <TooltipIconButton
-            tooltip="Send to Molfar now"
-            side="bottom"
-            type="submit"
-            variant="default"
-            size="icon"
-            className="aui-composer-steer bg-brand text-brand-foreground hover:bg-brand/90 size-8 rounded-full"
-            aria-label="Send to Molfar now"
-          >
-            <ArrowUp className="aui-composer-send-icon size-4" />
-          </TooltipIconButton>
+        <AuiIf condition={(s) => s.thread.isRunning}>
+          <SteerButton />
         </AuiIf>
         <AuiIf condition={(s) => s.thread.isRunning}>
           <ComposerPrimitive.Cancel asChild>

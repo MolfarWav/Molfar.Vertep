@@ -850,6 +850,8 @@ const en = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "",
   "The provider sent no token counts, so the cache cannot be checked.": "",
   "Time: {a} s, then {b} s.": "",
+  "Molfar is asking you": "",
+  "Open Molfar": "",
 } as const
 
 export default en

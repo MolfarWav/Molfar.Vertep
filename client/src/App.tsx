@@ -322,10 +322,18 @@ function Shell(props: { theme: ThemeControl }) {
     pendingAgentPrompt.current = null
     target.postMessage({ __chrysalisAgent: pending.kind, text: pending.text }, location.origin)
   }
+  // Molfar's question waiting for an answer: the agent page tells the shell, which shows it
+  // beside whatever the user is looking at (the agent tab stays mounted, hidden)
+  const [agentAsk, setAgentAsk] = useState<{ id: string; question: string } | null>(null)
+  const [askDismissed, setAskDismissed] = useState<string | null>(null)
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== location.origin || e.source !== agentFrame.current?.contentWindow) return
-      const d = e.data as { __chrysalisAgent?: unknown; appId?: unknown } | null
+      const d = e.data as { __chrysalisAgent?: unknown; appId?: unknown; open?: unknown; id?: unknown; question?: unknown } | null
+      if (d?.__chrysalisAgent === "ask") {
+        setAgentAsk(d.open === true && typeof d.id === "string" ? { id: d.id, question: typeof d.question === "string" ? d.question.slice(0, 300) : "" } : null)
+        return
+      }
       // the project pane's "Open app": only an installed app, by its id
       if (d?.__chrysalisAgent === "open-app") {
         const id = d.appId
@@ -333,6 +341,8 @@ function Shell(props: { theme: ThemeControl }) {
         return
       }
       if (d?.__chrysalisAgent !== "ready") return
+      // a (re)loaded agent page: whatever it asked before is gone, it announces a waiting one again
+      setAgentAsk(null)
       agentReady.current = true
       deliverAgentPrompt()
     }
@@ -675,6 +685,11 @@ function Shell(props: { theme: ThemeControl }) {
             closeSettings: () => setSettingsOpen(false),
           }}
         />
+        <AgentAskPopup
+          ask={agentAsk && !pinned && active?.kind !== "agent" && askDismissed !== agentAsk.id ? agentAsk : null}
+          onOpen={openAgent}
+          onDismiss={() => setAskDismissed(agentAsk?.id ?? null)}
+        />
         <BugReportDialog
           onAskMolfar={(prompt) => askAgent(prompt, "start")}
           open={bugOpen}
@@ -691,6 +706,37 @@ function Shell(props: { theme: ThemeControl }) {
         </>
       ) : null}
     </>
+  )
+}
+
+/** Molfar's open question, at the right edge (under the bar, so the app's bottom controls stay free;
+ *  above the guide's cards, since a waiting run matters more than a tip) while the agent is not on screen. The agent
+ *  page keeps the real card (and the answer); this only says Molfar waits and where. */
+function AgentAskPopup({ ask, onOpen, onDismiss }: { ask: { id: string; question: string } | null; onOpen: () => void; onDismiss: () => void }) {
+  if (!ask) return null
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed right-4 top-[3.6rem] z-[80] flex w-[22rem] max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-[10px] border border-line bg-base p-3 text-13 text-ink shadow-[var(--s-raised)] max-md:left-2 max-md:right-2 max-md:top-[3.6rem] max-md:w-auto max-md:max-w-none"
+    >
+      <div className="flex items-center gap-2">
+        <MolfarAvatar size={18} />
+        <span className="min-w-0 flex-1 truncate font-medium">{tr("Molfar is asking you")}</span>
+        <button
+          className="flex size-[32px] shrink-0 items-center justify-center rounded-[4px] text-16 text-ink-muted hover:bg-line/50 max-md:size-[40px]"
+          onClick={onDismiss}
+          title={tr("Dismiss")}
+          aria-label={tr("Dismiss")}
+        >
+          ×
+        </button>
+      </div>
+      {ask.question ? <p className="line-clamp-3 whitespace-pre-wrap break-words text-ink-muted">{ask.question}</p> : null}
+      <button className="self-end rounded-[6px] bg-accent px-3 py-1.5 text-12 font-medium text-white hover:opacity-90" onClick={onOpen}>
+        {tr("Open Molfar")}
+      </button>
+    </div>
   )
 }
 
@@ -1007,7 +1053,14 @@ function AppCanvas(props: {
           setBuild(s)
           if (s.phase !== "error") setHideErrors(false)
         },
-        () => alive && load(),
+        (why) => {
+          if (!alive) return
+          // a reload nobody asked for is hard to explain afterwards (#24): keep the cause
+          // in the console and in the recent errors a bug report carries
+          console.info("[molfar] app reloaded:", why)
+          recordClientError(props.tab.name, `The app page was reloaded: ${why}`)
+          load()
+        },
       )
       void w.ready.finally(() => alive && load())
     } else {

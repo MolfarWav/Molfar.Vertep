@@ -848,6 +848,8 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "无缓存：第二次调用未从缓存中取用任何内容。提供商未对此模型进行缓存，或未报告相关数据。",
   "The provider sent no token counts, so the cache cannot be checked.": "提供商未返回 token 数量，因此无法检查缓存。",
   "Time: {a} s, then {b} s.": "耗时：{a} 秒，随后 {b} 秒。",
+  "Molfar is asking you": "Molfar 在向你提问",
+  "Open Molfar": "打开 Molfar",
 }
 
 export default dict

@@ -848,6 +848,8 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "캐시 없음: 두 번째 호출에서 캐시를 사용하지 않았습니다. 공급자가 이 모델을 캐시하지 않거나 캐시를 보고하지 않는 것입니다.",
   "The provider sent no token counts, so the cache cannot be checked.": "공급자가 토큰 수를 보내지 않아 캐시를 확인할 수 없습니다.",
   "Time: {a} s, then {b} s.": "시간: {a}초, 이후 {b}초.",
+  "Molfar is asking you": "Molfar이(가) 질문하고 있어요",
+  "Open Molfar": "Molfar 열기",
 }
 
 export default dict

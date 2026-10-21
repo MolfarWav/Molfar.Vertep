@@ -7,6 +7,17 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.10 (2026-10-21)
+
+- Molfar's approval cards (a change to an app's protected files) no longer get lost (#76). When the model asked to edit the same protected app twice at once, the page showed one card and the other edit waited for the engine's 10 minute timeout with no buttons. Questions of one chat now come one at a time, a second edit in the same app reuses the answer to the first, and the page asks the engine for a waiting card after a reconnect, when you come back to the tab, and every few seconds during a run. A question that times out now closes its card on the page (part of #73).
+- Molfar's question now pops up at the right edge of the shell when the agent tab is not on screen (another tab is open, no split view), with the question text and an Open Molfar button. The card to answer stays on the agent page.
+- Two edits to the same protected file made at once no longer lose one of them: after the question the second edit is redone on the file the first one changed (`edit_file`, `json_set`).
+- The "send now" arrow next to Stop shows for the whole run, dimmed while the box is empty, so a correction can be found before you type (#71).
+- A stream that holds only an error text and the end marker (Chub's `upstream timed out`) now fails the reply with that text instead of an empty `...` (#59). Custom connections to a host other than api.openai.com no longer send OpenAI's `store` field, the one body field Marinara and plain curl do not send.
+- When the app page reloads because the builder rebuilt it, the cause is written to the browser console and to the recent errors a bug report carries (#24).
+- Docs: open work lives in GitHub issues; state notes for Roleplay 4.55.0.
+- pi stays at 1.2.0: 1.3.0 is younger than the 7 days a new pi version waits.
+
 ## 1.2.9 (2026-10-20)
 
 - Settings → Connections and models → a model's settings: **Check the cache** sends a prompt of about 2,500 tokens two or three times, one call after the other, and says whether the provider read it from its cache, with the token counts and times. A provider that reports no token counts is named as such. Shell only: apps cannot spend tokens through it.

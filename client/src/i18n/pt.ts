@@ -848,6 +848,8 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Sem cache: a segunda chamada não pegou nada do cache. O provedor não armazena esse modelo em cache ou não informa isso.",
   "The provider sent no token counts, so the cache cannot be checked.": "O provedor não enviou contagens de tokens, então não é possível verificar o cache.",
   "Time: {a} s, then {b} s.": "Tempo: {a} s, depois {b} s.",
+  "Molfar is asking you": "O Molfar está a perguntar-te",
+  "Open Molfar": "Abrir o Molfar",
 }
 
 export default dict

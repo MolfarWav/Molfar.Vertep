@@ -848,6 +848,8 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "キャッシュなし：2回目の呼び出しではキャッシュから何も取得されませんでした。プロバイダーがこのモデルをキャッシュしていないか、報告していない可能性があります。",
   "The provider sent no token counts, so the cache cannot be checked.": "プロバイダーがトークン数を返さなかったため、キャッシュを確認できません。",
   "Time: {a} s, then {b} s.": "所要時間：{a}秒、その後{b}秒。",
+  "Molfar is asking you": "Molfarが質問しています",
+  "Open Molfar": "Molfarを開く",
 }
 
 export default dict

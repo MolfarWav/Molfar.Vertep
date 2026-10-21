@@ -7,6 +7,7 @@ import {
   getSettings,
   listMcp,
   listModels,
+  pendingAsk,
   projectsApi,
   setModelsShown,
   sendAgent,
@@ -24,6 +25,7 @@ import {
   type ModelFavorite,
 } from "./api"
 import { applyStreamEvent, keepShownIds, msgsFromRuns, partsFromResponse, runInfo, uid, type Msg, type PartData } from "./runs"
+import { announceAsk } from "./shell"
 import { createStreamDeltaBatcher, type AskOption, type AskQuestion, type StreamEvent } from "./streaming"
 
 export interface PendingAsk {
@@ -398,6 +400,8 @@ export const useAgent = create<AgentState>()((set, get) => {
       try {
         const r = await sessionsApi.get(id)
         if (get().sessionId === id) set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []) })
+        // a run of this chat may be waiting for an answer (a reloaded page does not know)
+        void syncPendingAsk(true)
       } catch (e) {
         set({ banner: { kind: "error", text: e instanceof Error ? e.message : String(e) } })
       }
@@ -736,7 +740,16 @@ function adoptSessionKey(id: string): void {
 
 let retry = 0
 
+let askPoll: number | undefined
+
 export function connectWs(): void {
+  if (askPoll === undefined) {
+    // cheap while nothing runs (syncPendingAsk returns before any request)
+    askPoll = window.setInterval(() => void syncPendingAsk(), 5000)
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") void syncPendingAsk(true)
+    })
+  }
   const proto = location.protocol === "https:" ? "wss:" : "ws:"
   let seenBuild: number | null = null
   let reloadPending = false
@@ -744,6 +757,7 @@ export function connectWs(): void {
   ws.onopen = () => {
     retry = 0
     useAgent.setState({ wsDown: false })
+    void syncPendingAsk(true)
   }
   ws.onclose = () => {
     useAgent.setState({ wsDown: true })
@@ -841,27 +855,59 @@ function foldStreamBatch(events: StreamEvent[]): void {
   })
 }
 
+function showAsk(ev: StreamEvent): void {
+  const sessionId = useAgent.getState().sessionId
+  if (!sessionId) return
+  useAgent.setState({
+    ask: {
+      sessionId,
+      id: ev.id ?? uid("ask"),
+      question: ev.question ?? "",
+      options: ev.options,
+      multiSelect: ev.multiSelect,
+      questions: ev.questions,
+      detail: ev.detail,
+      detailKind: ev.detailKind,
+    },
+  })
+}
+
+/** Ask the engine whether this chat's run waits for an answer and show the card if the page
+ *  does not have it: the card event can be lost (a dropped socket, a hidden tab), and the run
+ *  would then sit blocked until the engine's 10 minute timeout (#76). */
+export async function syncPendingAsk(anyTime = false): Promise<void> {
+  const st = useAgent.getState()
+  // on a timer only while this page believes a run is going; on a reconnect or a return to
+  // the tab always (a reloaded page does not know the engine's run is still waiting)
+  if (!st.sessionId || st.ask || (!anyTime && !st.running)) return
+  try {
+    const { ev } = await pendingAsk(st.sessionId)
+    const now = useAgent.getState()
+    if (ev?.id && !now.ask && now.sessionId === st.sessionId) showAsk(ev)
+  } catch {
+    // the next tick tries again
+  }
+}
+
 function foldStream(ev: StreamEvent): void {
   const store = useAgent.getState()
   if (ev.type === "ask_user") {
-    if (store.sessionId)
-      useAgent.setState({
-        ask: {
-          sessionId: store.sessionId,
-          id: ev.id ?? uid("ask"),
-          question: ev.question ?? "",
-          options: ev.options,
-          multiSelect: ev.multiSelect,
-          questions: ev.questions,
-          detail: ev.detail,
-          detailKind: ev.detailKind,
-        },
-      })
+    showAsk(ev)
     return
   }
   if (ev.type === "ask_user_done") {
-    useAgent.setState({ ask: null })
+    // a late "done" for an earlier card must not close the one on screen
+    if (!ev.id || !store.ask || store.ask.id === ev.id) useAgent.setState({ ask: null })
     return
   }
   foldStreamBatch([ev])
 }
+
+// the shell shows a popup for a waiting question while this page is hidden behind another tab
+let announcedAsk: string | null = null
+useAgent.subscribe((st) => {
+  const id = st.ask?.id ?? null
+  if (id === announcedAsk) return
+  announcedAsk = id
+  announceAsk(st.ask ? { id: st.ask.id, question: st.ask.question } : null)
+})

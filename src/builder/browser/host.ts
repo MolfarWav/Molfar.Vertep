@@ -179,7 +179,7 @@ class BuilderFrame {
   }
 }
 
-type Watcher = { onStatus: (s: BuildStatus) => void; onReload: () => void };
+type Watcher = { onStatus: (s: BuildStatus) => void; onReload: (why: string) => void };
 
 class AppBuild {
   private holder = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -191,6 +191,8 @@ class AppBuild {
   private settling: Promise<ServerStatus | null> | null = null;
   private again = false;
   private retried = false;
+  /** Why the next full build runs; the shell shows it when the page reloads for it (#24). */
+  private fullWhy = "the built files did not match the sources when the app opened";
   private renew: ReturnType<typeof setInterval> | undefined;
   private listener: BusListener;
   private lastStatus: BuildStatus = { phase: "checking" };
@@ -208,9 +210,9 @@ class AppBuild {
         // open page keeps serving the version it was loaded with, which reads
         // as "the update did nothing". Full, not update: the new version may
         // add, remove or rewire files no change event ever named.
-        void this.rebuild();
+        void this.rebuild("the app was updated");
       } else if (type === "app_built" && payload.kind === "full" && payload.holder !== this.holder) {
-        for (const w of this.watchers) w.onReload();
+        for (const w of this.watchers) w.onReload("another open tab or device rebuilt the app");
       }
     };
     busListeners.add(this.listener);
@@ -249,8 +251,9 @@ class AppBuild {
 
   /** Build the current sources now, even when dist looks current. The user's
    *  Rebuild button and the agent's build requests both land here. */
-  async rebuild(): Promise<void> {
+  async rebuild(why = "a rebuild was requested"): Promise<void> {
     if (this.disposed) return;
+    this.fullWhy = why;
     let rev = "";
     try {
       rev = ((await api(this.base())) as ServerStatus).rev;
@@ -458,7 +461,17 @@ class AppBuild {
     if (output.ok === false) this.status({ phase: "error", errors });
     else {
       this.status(errors.length ? { phase: "error", errors } : { phase: "ready" });
-      if (output.full || output.mode === "production") for (const w of this.watchers) w.onReload();
+      if (output.full || output.mode === "production") {
+        // a full result to an "update" means the builder's session had restarted or dist was not
+        // from these sources: name the files that asked for it
+        const why =
+          output.mode === "production"
+            ? "a production build finished"
+            : kind === "full"
+              ? this.fullWhy
+              : `an update became a full rebuild (changed: ${changed.slice(0, 5).join(", ") || "nothing named"})`;
+        for (const w of this.watchers) w.onReload(why);
+      }
     }
   }
 
@@ -530,7 +543,7 @@ busListeners.add((type, payload) => {
  * `onReload` fires when a rebuild replaced the whole app and its frame
  * should load again.
  */
-function watch(appId: string, onStatus: (s: BuildStatus) => void, onReload: () => void): { ready: Promise<void>; dispose: () => void } {
+function watch(appId: string, onStatus: (s: BuildStatus) => void, onReload: (why: string) => void): { ready: Promise<void>; dispose: () => void } {
   let b = builds.get(appId);
   if (!b) {
     b = new AppBuild(appId);

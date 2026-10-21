@@ -80,6 +80,33 @@ describe("protected paths", () => {
     expect(read("persona.md")).toBe(DEFAULT_PERSONA);
   });
 
+  it("edits started together ask once: one card at a time, the rest see the answer (#76)", async () => {
+    const asked: AskRequest[] = [];
+    let open = 0;
+    let most = 0;
+    const tools = buildUserTools("mia", p, {
+      dataDir: p.root,
+      ask: async (q) => {
+        asked.push(q);
+        open++;
+        most = Math.max(most, open);
+        await new Promise((r) => setTimeout(r, 20));
+        open--;
+        return "Allow";
+      },
+    });
+    put("apps/rp/src/App.tsx", "export const A = 1;\nexport const B = 1;\n");
+    const edit = tools.find((t) => t.name === "edit_file")!;
+    await Promise.all([
+      edit.execute("a", { path: "apps/rp/src/App.tsx", oldText: "A = 1", newText: "A = 2" }, undefined as never),
+      edit.execute("b", { path: "apps/rp/src/App.tsx", oldText: "B = 1", newText: "B = 2" }, undefined as never),
+    ]);
+    expect(asked).toHaveLength(1);
+    expect(most).toBe(1);
+    // both edits landed: the second was redone on the file the first had changed
+    expect(read("apps/rp/src/App.tsx")).toBe("export const A = 2;\nexport const B = 2;\n");
+  });
+
   it("the sandbox write-back and git restore refuse what was not allowed", async () => {
     const b64 = Buffer.from("hacked").toString("base64");
     expect(() => workspaceFs(p.root, { op: "write", files: [{ path: "apps/rp/src/App.tsx", b64 }] } as never, (rel) => protectedRefusal("mia", p.settings, rel))).toThrow("protected");

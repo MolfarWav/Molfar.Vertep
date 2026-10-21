@@ -1,4 +1,5 @@
 import type { Mentionable } from "./file-mentions.js"
+import type { StreamEvent } from "./streaming.js"
 
 // Engine HTTP client. Cookie-authenticated (same-origin); errors surface as
 // readable messages, never "[object Object]".
@@ -213,6 +214,11 @@ export function steerAgent(sessionId: string, message: string): Promise<void> {
 
 export function stopAgent(sessionId: string): Promise<{ ok: boolean }> {
   return api("POST", "/v1/agent/stop", { sessionId })
+}
+
+/** The question this chat's run is waiting on, if any (a card event can be lost on the way). */
+export function pendingAsk(sessionId: string): Promise<{ ev: StreamEvent | null }> {
+  return api("GET", `/v1/agent/pending?sessionId=${encodeURIComponent(sessionId)}`)
 }
 
 export function answerAgent(sessionId: string, id: string, answer: string): Promise<{ ok: boolean }> {
