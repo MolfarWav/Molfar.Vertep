@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.12 (2026-10-21)
+
+- A builder session that no longer matches what is built is replaced before it builds (#26): after an app update another tab or device could leave an open tab keeping a deps bundle that had gone, which showed as "build output keeps dev/deps-… which dist does not have" and one automatic retry. Cause inferred from the report, not reproduced; the engine check and the retry stay.
+- Roleplay 4.59.0 through an app update: SillyTavern preset import with structure (groups, Choices, text variables, regex scripts, macros) and a report of what came over (#57); a Marinara regex file imports; pictures in a card's greeting load (#84); unsent attachments survive a reload (#31); Canvas wires to a card above their source go round the cards (#41); a Dashboard thread the sensor resolves stays closed (#81).
+
 ## 1.2.11 (2026-10-21)
 
 - A correction sent while Molfar works now says when it will be read: under your message, "Molfar reads this after its current step. Stop ends the run now." stays until the model has taken it in (#73).
