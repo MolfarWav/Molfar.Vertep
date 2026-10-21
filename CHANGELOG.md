@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.13 (2026-10-22)
+
+- A connection can carry its own **Cost checks** choice (#91): Follow the global setting (default), Ask before spending, or Never ask, in the Add and Edit forms in Settings → Connections and models. It covers that connection's models; `MOLFAR_VERTEP_COST_CHECKS=off` still wins over it. With the checks off for a model, the agent page also drops its price figures (the phone header line, run summaries, the Inspector); tokens stay and the cost stays in the data. `ModelInfo.costChecks` rides the existing `/v1/models` list.
+- The size line on an app's page is translated ("{files} files · ~{kb} KB" in the 14 locales), the launcher footer wraps in whole items at 390 px in Ukrainian, and the icon-only buttons in Settings → Images are 40 px on phones (#88, the rest of it stays open).
+- Roleplay 4.59.1 to 4.59.3 through an app update: the inbox opens at the first click with a section open; "Change the background by scene" is back on the chat's Backgrounds tab; places typed in the set builder show as chips; "Add from existing" and a search in Tools → Backgrounds; a Cancel for card, field and lorebook translation; one total on the Prompt board on a phone; the Dashboard shows when sensor facts were left out and the sensor prompt says whose facts they are, with the last ten sensor runs kept in debug (#97).
+
 ## 1.2.12 (2026-10-21)
 
 - A builder session that no longer matches what is built is replaced before it builds (#26): after an app update another tab or device could leave an open tab keeping a deps bundle that had gone, which showed as "build output keeps dev/deps-… which dist does not have" and one automatic retry. Cause inferred from the report, not reproduced; the engine check and the retry stay.
