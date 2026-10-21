@@ -4984,13 +4984,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // session cookie on the engine's own routes. The embedding iframe's
   // sandbox attribute is not enough on its own; opening the URL directly
   // used to drop it.
-  // allow-popups-to-escape-sandbox: a link an app opens in a new tab (a card page
-  // on JannyAI) is an ordinary page there. Without it the popup inherits this
-  // sandbox, an opaque origin with no storage, and sites behind a challenge
-  // answer "blocked" (#58). An engine page opened that way still gets its own
-  // sandbox from its response header.
   const frameCsp = (origin: string): string =>
-    "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms; " +
+    "sandbox allow-scripts allow-popups allow-downloads allow-forms; " +
     "default-src 'none'; " +
     `script-src ${origin} 'wasm-unsafe-eval'; ` +
     `style-src ${origin} 'unsafe-inline'; ` +
@@ -5280,7 +5275,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const rev = typeof body.rev === "string" && body.rev.length < 100 ? body.rev : sourceRev(a.dir);
     const builder = typeof body.builder === "string" && body.builder.length <= 100 ? body.builder : undefined;
     // which step a phone build dies at is otherwise invisible: no access log
-    log.info(`[build] ${u.username}/${a.id} output ${Math.round(capped.bytes.length / 1024)} KB, ${out.ok ? "ok" : "failed"}`);
+    log.info(`[build] ${u.username}/${a.id} output ${Math.round(capped.bytes.length / 1024)} KB, ${out.ok ? "ok" : "failed"}, ${out.hot ? "hot update" : "full build: open pages reload"}`);
     try {
       writeOutput(c.get("paths").apps, a.id, out, rev, builder);
     } catch (e) {
@@ -5378,7 +5373,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
 #boot .spin{width:16px;height:16px;border:2px solid #2a2e36;border-top-color:#8a8f98;border-radius:50%;animation:sp 0.9s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style></head>
-<body><iframe id="frame" title="${safeId}" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms"></iframe>
+<body><iframe id="frame" title="${safeId}" sandbox="allow-scripts allow-popups allow-downloads allow-forms"></iframe>
 <div id="boot"><div class="spin"></div><div id="bootmsg">Opening…</div></div>
 <script>
   var frame = document.getElementById("frame");

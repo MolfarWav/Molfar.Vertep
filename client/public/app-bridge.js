@@ -598,6 +598,37 @@
     });
   } catch { /* no observer */ }
 
+  // ---------- links to other sites ----------
+  // The frame's response carries Connection-Allowlist, and a tab opened from
+  // the frame inherits it: a page outside the list (a card's page on JannyAI)
+  // answers ERR_NETWORK_ACCESS_REVOKED (#58). A link or window.open to another
+  // site goes to the shell, which opens it from its own page.
+  function externalUrl(href) {
+    try {
+      var u = new URL(href, location.href);
+      return (u.protocol === "http:" || u.protocol === "https:") && !sameEngine(u) ? u.href : null;
+    } catch { return null; }
+  }
+  function openExternal(url) { whenReady(function () { post({ type: "open-external", url: url }); }); }
+  document.addEventListener("click", function (e) {
+    if (e.defaultPrevented || e.button > 0 || !e.target || !e.target.closest) return;
+    var a = e.target.closest("a[href]");
+    if (!a || a.hasAttribute("download") || !(a.target === "_blank" || e.ctrlKey || e.metaKey || e.shiftKey)) return;
+    var url = externalUrl(a.href);
+    if (!url) return;
+    e.preventDefault();
+    openExternal(url);
+  }, true);
+  try {
+    var nativeOpen = window.open;
+    window.open = function (url) {
+      var u = url ? externalUrl(String(url)) : null;
+      if (!u) return nativeOpen.apply(window, arguments);
+      openExternal(u);
+      return null;
+    };
+  } catch { /* frozen window */ }
+
   // ---------- handshake ----------
   // the host may not have registered this frame yet when the script runs, so
   // hello repeats until init lands

@@ -216,6 +216,16 @@
       .then(function (data) { reply(true, data); }, function (e) { reply(false, (e && e.message) || "refused"); });
   }
 
+  /** A link the app wants in a new tab (see app-bridge.js): only another
+   *  site over http(s), only right after a click, and never an engine page. */
+  function handleOpenExternal(d) {
+    var url;
+    try { url = new URL(String(d.url), location.href); } catch { return; }
+    if ((url.protocol !== "http:" && url.protocol !== "https:") || url.origin === location.origin || url.href.length > 2048) return;
+    if (typeof navigator !== "undefined" && navigator.userActivation && !navigator.userActivation.isActive) return;
+    window.open(url.href, "_blank", "noopener,noreferrer");
+  }
+
   function wsAllowed(path) {
     return path === "/v1/ws" || path.indexOf("/v1/ws?") === 0;
   }
@@ -330,6 +340,7 @@
     if (d.nonce !== record.nonce) return;
     if (d.type === "fetch") handleFetch(record, e.source, d);
     else if (d.type === "shell") handleShell(record, e.source, d);
+    else if (d.type === "open-external") handleOpenExternal(d);
     else if (d.type === "ws-open") handleWsOpen(record, e.source, d);
     else if (d.type === "ws-send") {
       var ws = wsClients.get(wsKey(record.appId, d.wsId));
