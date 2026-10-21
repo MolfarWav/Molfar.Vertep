@@ -46,6 +46,7 @@ import { currentProjectId, effectiveModel, useAgent as useAgentStore } from "@/s
 import type { EngineSession } from "@/api";
 import { RunCheckpoints } from "@/Checkpoints";
 import { RunInfo } from "@/RunInfo";
+import { modelShowsCost } from "@/lib/cost-display";
 import { compactTokens, usd, whenLabel } from "@/lib/format";
 import { MolfarAvatar, MolfarHalo } from "@/MolfarAvatar";
 import { ComposerProjectRow, ProjectAttachButton, ProjectContextLine, SaveToProjectAction } from "@/ProjectChat";
@@ -406,10 +407,13 @@ const ComposerContextRing: FC = () => {
  *  so this is usually far more than the context ring's last-call figure. */
 const ComposerSpend: FC = () => {
   const spend = useAgentStore((s) => s.spend)
+  const showCost = useAgentStore((s) => modelShowsCost(s.models, effectiveModel(s)))
   if (!spend) return null
-  const priced = spend.cost > 0
+  const priced = showCost && spend.cost > 0
   const label = `chat ${compactTokens(spend.tokens)} tok${priced ? ` · ${spend.unpriced ? "≥" : ""}${usd(spend.cost)}` : ""}`
-  const title = !priced
+  const title = !showCost
+    ? `This chat used ${spend.tokens.toLocaleString()} tokens.`
+    : !priced
     ? `This chat used ${spend.tokens.toLocaleString()} tokens. Its model has no known price: set one in Settings to see the cost.`
     : spend.unpriced
       ? `This chat used ${spend.tokens.toLocaleString()} tokens. Some runs have no known price, so the cost is at least ${usd(spend.cost)}.`

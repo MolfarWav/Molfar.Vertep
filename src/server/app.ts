@@ -50,7 +50,7 @@ import { SyncJobs, credDirOf as syncCredDir, storeFor as syncStoreFor, viewOf as
 import { type SyncTarget, readState as readSyncState, writeState as writeSyncState } from "../sync/state.js";
 import { summarizeSession } from "../agent/compact.js";
 import * as agentMemory from "../agent/memory.js";
-import { listConnections, createConnection, updateConnection, deleteConnection, validateConnectionInput, validatePromptFormatInput, readConnections, connectionKeyUsable, type ConnectionInfo } from "../connections.js";
+import { listConnections, createConnection, updateConnection, deleteConnection, validateConnectionInput, validateCostChecksInput, validatePromptFormatInput, readConnections, connectionKeyUsable, type ConnectionInfo } from "../connections.js";
 import { cacheProbe } from "../cache-probe.js";
 import { PROMPT_FORMATS, type PromptFormat } from "../providers/prompt-formats.js";
 import {
@@ -3590,7 +3590,9 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.patch("/v1/settings/connections/:id", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const body = await c.req.json<{ name?: string; baseUrl?: string; key?: string; models?: unknown; promptFormat?: unknown; promptFormatCustom?: unknown; thinking?: unknown }>().catch(() => null) ?? {};
+    const body = await c.req.json<{ name?: string; baseUrl?: string; key?: string; models?: unknown; promptFormat?: unknown; promptFormatCustom?: unknown; thinking?: unknown; costChecks?: unknown }>().catch(() => null) ?? {};
+    const costChecks = validateCostChecksInput(body.costChecks);
+    if (!costChecks.ok) return c.json({ error: costChecks.error }, 400);
     if (body.thinking !== undefined && typeof body.thinking !== "boolean") return c.json({ error: "thinking must be true or false" }, 400);
     let models: import("../connections.js").ConnectionDef["models"] | undefined;
     if (body.models !== undefined) {
@@ -3610,6 +3612,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       ...(typeof body.key === "string" ? { key: body.key } : {}),
       ...(models !== undefined ? { models } : {}),
       ...(typeof body.thinking === "boolean" ? { thinking: body.thinking } : {}),
+      ...(body.costChecks !== undefined ? { costChecks: costChecks.value ?? null } : {}),
       ...format,
     });
     if (!updated) return c.json({ error: "connection not found" }, 404);

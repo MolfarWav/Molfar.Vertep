@@ -11,6 +11,7 @@ import { ArrowLeft, ArrowsClockwise, Check, Copy, Eye, Trash } from "@phosphor-i
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { inspectorApi, type InspectorEntry, type InspectorSummary } from "./api"
 import { MarkedText, SourcesPanel } from "./inspector-sources"
+import { modelShowsCost } from "@/lib/cost-display"
 import { useAgent } from "./store"
 
 /** A text longer than this starts collapsed. */
@@ -231,6 +232,7 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState<"yes" | "no" | null>(null)
   const [active, setActive] = useState<number | null>(null)
+  const showCost = useAgent((s) => modelShowsCost(s.models, entry?.model))
   const load = useCallback(() => {
     setError(null)
     inspectorApi.get(id).then(setEntry, (e: Error) => setError(e.message))
@@ -301,7 +303,7 @@ function Detail({ id, chatId, onBack }: { id: string; chatId: string | null; onB
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           <Facts entry={entry} />
           {entry.stopReason ? <span>stop: {entry.stopReason}</span> : null}
-          {entry.usage?.cost ? <span>{usd(entry.usage.cost)}</span> : null}
+          {entry.usage?.cost && showCost ? <span>{usd(entry.usage.cost)}</span> : null}
           {entry.usage?.cacheRead ? <span>cache read {tok(entry.usage.cacheRead)}</span> : null}
           {entry.usage?.cacheWrite ? <span>cache write {tok(entry.usage.cacheWrite)}</span> : null}
         </div>

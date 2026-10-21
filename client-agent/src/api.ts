@@ -133,6 +133,8 @@ export interface EngineModel {
   shown: boolean
   /** the model accepts image input */
   images: boolean
+  /** the cost checks apply to it (off: the page shows no prices for its runs) */
+  costChecks?: boolean
 }
 
 export interface McpServer {

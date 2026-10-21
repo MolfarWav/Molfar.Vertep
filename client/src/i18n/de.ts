@@ -855,6 +855,10 @@ const dict = {
   "Auto (ask, except for a local model)": "Auto (fragen, außer bei einem lokalen Modell)",
   "Always ask": "Immer fragen",
   "Never ask": "Nie fragen",
+  "Follow the global setting": "Der globalen Einstellung folgen",
+  "Ask before spending (on)": "Vor Ausgaben fragen (an)",
+  "Never ask (off)": "Nie fragen (aus)",
+  "For this connection's models only. Never ask also hides their prices on the agent page.": "Nur für die Modelle dieser Verbindung. „Nie fragen“ blendet außerdem ihre Preise auf der Agentenseite aus.",
 }
 
 export default dict

@@ -857,6 +857,10 @@ const en = {
   "Auto (ask, except for a local model)": "",
   "Always ask": "",
   "Never ask": "",
+  "Follow the global setting": "",
+  "Ask before spending (on)": "",
+  "Never ask (off)": "",
+  "For this connection's models only. Never ask also hides their prices on the agent page.": "",
 } as const
 
 export default en

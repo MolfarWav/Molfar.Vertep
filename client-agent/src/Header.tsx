@@ -5,6 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CaretDown, Folder, MagnifyingGlass, Question, SidebarSimple } from "@phosphor-icons/react"
 import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react"
 import { focusSidebarSearch } from "./Sidebar"
+import { modelShowsCost } from "@/lib/cost-display"
 import { compactTokens, usd } from "@/lib/format"
 import { CommandItem } from "@/components/ui/command"
 import { currentProjectId, effectiveModel, effectiveReasoning, useAgent } from "./store"
@@ -421,7 +422,8 @@ function PhoneHeader(): ReactNode {
   const { name } = useCurrentModel()
   const current = model ? models.find((m) => `${m.provider}/${m.modelId}` === model) : models.find((m) => m.shown)
   const hasLevels = !!current?.reasoning && current.reasoningLevels.includes(reasoning)
-  const priced = !!spend && spend.cost > 0
+  const showCost = useAgent((s) => modelShowsCost(s.models, effectiveModel(s)))
+  const priced = showCost && !!spend && spend.cost > 0
   return (
     <header className="shrink-0 border-b">
       <div className="flex h-14 items-center gap-1 px-2">

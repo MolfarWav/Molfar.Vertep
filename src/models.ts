@@ -13,6 +13,7 @@ import { withLiveCatalog } from "./providers/live-catalog.js";
 import { loadCustomProviders, curatedProviders, buildProvider, reservedProviderIds, isLocalEndpoint, abortLocalGeneration, type CredentialWithBinding } from "./providers/custom.js";
 import { readConnections, authTarget, connectionKeyUsable, migrateRenamedProviders, readAuth, type ConnectionDef } from "./connections.js";
 import { formatFromModelName, formatFromTemplate, parsePromptFormat, promptFormatById, renderPrompt, stopStrings, type PromptFormat } from "./providers/prompt-formats.js";
+import { costChecksApply, connectionCostChecks, readCostChecksMode, resolveCostChecksMode } from "./agent/cost-checks.js";
 import { log } from "./logger.js";
 import { llmLogRequest, llmLogResult, llmLogError, llmLogTool } from "./llm-logger.js";
 import { AsyncLocalStorage } from "node:async_hooks";
@@ -181,6 +182,10 @@ export interface ModelInfo {
   /** USD per million tokens (user override first, then the catalog). null when
    *  nobody knows what this model costs — spend for it is NOT reported. */
   pricing: ModelPricing | null;
+  /** The cost checks apply to this model: it can be asked about before it
+   *  spends money, and its price is shown. False when the user (globally or for
+   *  its connection) or its own-machine endpoint says no (#91). */
+  costChecks: boolean;
 }
 
 /** A starred model in the quick-switch list. */
@@ -813,6 +818,8 @@ export class UserModelService {
     await this.ensureRefreshed();
     const overrides = this.contextOverrides();
     const pricing = this.pricingOverrides();
+    const globalCost = readCostChecksMode(this.paths.settings);
+    const conns = readConnections(this.paths).connections;
     return (await this.models.getAvailable()).map((m) => ({
       provider: m.provider,
       modelId: m.id,
@@ -824,6 +831,7 @@ export class UserModelService {
       reasoningLevels: getSupportedThinkingLevels(m),
       images: Array.isArray(m.input) && m.input.includes("image"),
       pricing: pricing[`${m.provider}/${m.id}`] ?? normalizePricing(m.cost),
+      costChecks: costChecksApply(resolveCostChecksMode(globalCost, connectionCostChecks(conns, m.provider)), m),
     }));
   }
 

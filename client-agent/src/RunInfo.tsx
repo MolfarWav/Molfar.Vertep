@@ -4,8 +4,9 @@ import { useAuiState } from "@assistant-ui/react"
 import { BookOpen, Brain } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
 import type { RunSkill, RunSpend } from "./api"
+import { modelShowsCost } from "./lib/cost-display"
 import { compactTokens, usd } from "./lib/format"
-import { useAgent } from "./store"
+import { effectiveModel, useAgent } from "./store"
 
 interface SkillChip extends RunSkill {
   count: number
@@ -27,18 +28,18 @@ export function mergeSkills(list: readonly RunSkill[]): SkillChip[] {
 
 const spendTokens = (s: RunSpend): number => s.input + s.output + s.cacheRead + s.cacheWrite
 
-function spendLabel(s: RunSpend): string {
+function spendLabel(s: RunSpend, showCost: boolean): string {
   const parts: string[] = []
   if (s.calls) parts.push(s.calls === 1 ? "1 step" : `${s.calls} steps`)
   parts.push(`${compactTokens(spendTokens(s))} tok`)
-  if (s.cost !== null && s.cost > 0) parts.push(usd(s.cost))
+  if (showCost && s.cost !== null && s.cost > 0) parts.push(usd(s.cost))
   return parts.join(" · ")
 }
 
-function spendTitle(s: RunSpend): string {
+function spendTitle(s: RunSpend, showCost: boolean): string {
   const n = (v: number): string => v.toLocaleString()
   const price = s.cost === null ? "no known price" : usd(s.cost)
-  return `This run: input ${n(s.input)}, output ${n(s.output)}, cache read ${n(s.cacheRead)}, cache write ${n(s.cacheWrite)} tokens${s.calls ? `, ${s.calls} model calls` : ""}; ${price}`
+  return `This run: input ${n(s.input)}, output ${n(s.output)}, cache read ${n(s.cacheRead)}, cache write ${n(s.cacheWrite)} tokens${s.calls ? `, ${s.calls} model calls` : ""}${showCost ? `; ${price}` : ""}`
 }
 
 export function RunInfo(): ReactNode {
@@ -46,6 +47,7 @@ export function RunInfo(): ReactNode {
   const msg = useAgent((s) => s.msgs.find((m) => m.id === id))
   const openSkill = useAgent((s) => s.openSkill)
   const openMemory = useAgent((s) => s.openMemory)
+  const showCost = useAgent((s) => modelShowsCost(s.models, effectiveModel(s)))
   if (!msg || msg.streaming) return null
   const chips = msg.skills?.length ? mergeSkills(msg.skills) : []
   const spend = msg.spend && spendTokens(msg.spend) > 0 ? msg.spend : null
@@ -90,8 +92,8 @@ export function RunInfo(): ReactNode {
         </div>
       ) : null}
       {spend ? (
-        <span className="ms-auto" title={spendTitle(spend)} data-testid="run-spend">
-          {spendLabel(spend)}
+        <span className="ms-auto" title={spendTitle(spend, showCost)} data-testid="run-spend">
+          {spendLabel(spend, showCost)}
         </span>
       ) : null}
     </div>

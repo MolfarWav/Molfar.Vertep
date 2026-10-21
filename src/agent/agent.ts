@@ -21,7 +21,7 @@ import { log } from "../logger.js";
 import { clampThinkingLevel, getCurrentSystemPrompt, getCurrentTools, isContextOverflow, toToolDeclaration, type AssistantMessage, type SystemMessage } from "@earendil-works/pi-ai";
 import { clampMaxTokens, estimateMessageTokens, estimateTextTokens, fitContext, newTrimState, toolsTokens } from "./context-budget.js";
 import { buildRunTools, newAppRefusal, newPlanState, planGate, type PlanState, type RunToolOptions } from "./run-tools.js";
-import { costChecksApply, readCostChecksMode } from "./cost-checks.js";
+import { costChecksApply, effectiveCostChecksMode } from "./cost-checks.js";
 import { foldToolResults } from "./context-fold.js";
 import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
@@ -533,8 +533,9 @@ export class UserAgent {
     // tools that reach past the files (run-tools.ts): built after the model
     // pick, since model_try and run_budget price on it
     let agentRef: Agent | undefined;
-    // questions about money (cost-checks.ts): off for a model on the user's own machine, or when the user says so
-    const costMode = readCostChecksMode(paths.settings);
+    // questions about money (cost-checks.ts): off for a model on the user's own machine, or when the user says so,
+    // globally or for the model's connection (#91)
+    const costMode = effectiveCostChecksMode(paths, model);
     const costChecks = costChecksApply(costMode, model);
     tools.push(...buildRunTools(username, {
       ...(opts.ask ? { ask: opts.ask } : {}),
@@ -543,7 +544,7 @@ export class UserAgent {
       tryModel: {
         resolve: (ref) => {
           const m = ref ? pick(ref) : model;
-          return m ? { ref: `${m.provider}/${m.id}`, price: (u) => svc.costOf(m, u), confirm: costChecksApply(costMode, m) } : null;
+          return m ? { ref: `${m.provider}/${m.id}`, price: (u) => svc.costOf(m, u), confirm: costChecksApply(effectiveCostChecksMode(paths, m), m) } : null;
         },
         generate: (req) => svc.generate(req),
       },

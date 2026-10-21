@@ -855,6 +855,10 @@ const dict = {
   "Auto (ask, except for a local model)": "自動（ローカルモデル以外は確認）",
   "Always ask": "常に確認",
   "Never ask": "確認しない",
+  "Follow the global setting": "全体の設定に従う",
+  "Ask before spending (on)": "支出の前に確認する（オン）",
+  "Never ask (off)": "確認しない（オフ）",
+  "For this connection's models only. Never ask also hides their prices on the agent page.": "この接続のモデルだけに適用されます。「確認しない」にすると、エージェントページでそれらの料金も非表示になります。",
 }
 
 export default dict

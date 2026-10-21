@@ -7,7 +7,10 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
-import { costChecksApply, readCostChecksMode } from "../src/agent/cost-checks.js";
+import { connectionCostChecks, costChecksApply, costChecksFor, effectiveCostChecksMode, readCostChecksMode, resolveCostChecksMode } from "../src/agent/cost-checks.js";
+import { createConnection, readConnections, updateConnection, validateConnectionInput } from "../src/connections.js";
+import { bootstrapUserDir } from "../src/paths.js";
+import { modelShowsCost } from "../client-agent/src/lib/cost-display.js";
 import { buildRunTools, newAppRefusal } from "../src/agent/run-tools.js";
 import type { AskRequest } from "../src/agent/tools.js";
 
@@ -104,5 +107,98 @@ describe("new app guard", () => {
     expect(newAppRefusal(root, "write_file", { path: "projects/demo/index.html", content: "x" })).toBeUndefined();
     expect(newAppRefusal(root, "write_file", { path: "notes/apps/x.md", content: "x" })).toBeUndefined();
     expect(newAppRefusal(root, "read_file", { path: "apps/messenger/src/App.tsx" })).toBeUndefined();
+  });
+});
+
+describe("a connection's own cost checks (#91)", () => {
+  const paid = { baseUrl: "https://api.example.com/v1" };
+  const mkUser = () => bootstrapUserDir(tmp(), "alice");
+
+  it("the override beats the global setting, unset follows it", () => {
+    expect(resolveCostChecksMode("on", "off", {})).toBe("off");
+    expect(resolveCostChecksMode("off", "on", {})).toBe("on");
+    expect(resolveCostChecksMode("off", undefined, {})).toBe("off");
+    expect(resolveCostChecksMode("on", undefined, {})).toBe("on");
+    expect(resolveCostChecksMode("on", "auto", {})).toBe("auto");
+  });
+
+  it("the instance switch MOLFAR_VERTEP_COST_CHECKS=off beats every override", () => {
+    expect(resolveCostChecksMode("on", "on", { MOLFAR_VERTEP_COST_CHECKS: "off" })).toBe("off");
+  });
+
+  it("finds the connection of a model: a custom connection by id, a builtin one by provider id", () => {
+    const conns = {
+      c_a: { name: "A", api: "openai-completions", baseUrl: "https://a.example/v1", costChecks: "off" },
+      c_b: { name: "B", providerId: "openrouter", costChecks: "on" },
+      c_c: { name: "C", api: "openai-completions", baseUrl: "https://c.example/v1" },
+    } as const;
+    expect(connectionCostChecks(conns as never, "c_a")).toBe("off");
+    expect(connectionCostChecks(conns as never, "openrouter")).toBe("on");
+    expect(connectionCostChecks(conns as never, "c_c")).toBeUndefined();
+    expect(connectionCostChecks(conns as never, "unknown")).toBeUndefined();
+    expect(connectionCostChecks(conns as never, undefined)).toBeUndefined();
+  });
+
+  it("reads the effective mode and the yes or no for a model from the user's files", () => {
+    const p = mkUser();
+    const a = createConnection(p, { name: "Quiet", api: "openai-completions", baseUrl: "https://quiet.example/v1", models: "auto", costChecks: "off" });
+    const b = createConnection(p, { name: "Loud", api: "openai-completions", baseUrl: "https://loud.example/v1", models: "auto", costChecks: "on" });
+    const c = createConnection(p, { name: "Plain", api: "openai-completions", baseUrl: "https://plain.example/v1", models: "auto" });
+    expect(readConnections(p).connections[c.id]?.costChecks).toBeUndefined();
+    fs.writeFileSync(p.settings, JSON.stringify({ costChecks: "on" }));
+    expect(effectiveCostChecksMode(p, { provider: a.id }, {})).toBe("off");
+    expect(effectiveCostChecksMode(p, { provider: c.id }, {})).toBe("on");
+    expect(costChecksFor(p, { provider: a.id, ...paid }, {})).toBe(false);
+    expect(costChecksFor(p, { provider: c.id, ...paid }, {})).toBe(true);
+    fs.writeFileSync(p.settings, JSON.stringify({ costChecks: "off" }));
+    expect(costChecksFor(p, { provider: b.id, ...paid }, {})).toBe(true);
+    expect(costChecksFor(p, { provider: c.id, ...paid }, {})).toBe(false);
+    // a local model under a connection set to on is still asked about
+    expect(costChecksFor(p, { provider: b.id, baseUrl: "http://localhost:8080/v1" }, {})).toBe(true);
+  });
+
+  it("validates the value on create and rejects a wrong one", () => {
+    const ok = validateConnectionInput({ name: "X", api: "openai-completions", baseUrl: "https://x.example/v1", costChecks: "off" });
+    expect(ok.ok && ok.value.costChecks).toBe("off");
+    const builtin = validateConnectionInput({ name: "X", providerId: "openrouter", key: "k", costChecks: "on" });
+    expect(builtin.ok && builtin.value.costChecks).toBe("on");
+    const unset = validateConnectionInput({ name: "X", api: "openai-completions", baseUrl: "https://x.example/v1" });
+    expect(unset.ok && unset.value.costChecks).toBeUndefined();
+    const bad = validateConnectionInput({ name: "X", api: "openai-completions", baseUrl: "https://x.example/v1", costChecks: "sometimes" });
+    expect(bad.ok).toBe(false);
+    const wrongType = validateConnectionInput({ name: "X", providerId: "openrouter", costChecks: true });
+    expect(wrongType.ok).toBe(false);
+  });
+
+  it("patches the value and clears it with null", () => {
+    const p = mkUser();
+    const c = createConnection(p, { name: "Plain", api: "openai-completions", baseUrl: "https://plain.example/v1", models: "auto" });
+    expect(updateConnection(p, c.id, { costChecks: "off" })?.costChecks).toBe("off");
+    expect(readConnections(p).connections[c.id]?.costChecks).toBe("off");
+    expect(updateConnection(p, c.id, { name: "Renamed" })?.costChecks).toBe("off");
+    expect(updateConnection(p, c.id, { costChecks: null })?.costChecks).toBeUndefined();
+    expect(Object.keys(readConnections(p).connections[c.id] ?? {})).not.toContain("costChecks");
+  });
+});
+
+describe("price figures on the agent page (#91)", () => {
+  const model = (id: string, costChecks?: boolean, shown = true) =>
+    ({ provider: "c_x", modelId: id, label: id, connectionName: null, reasoning: false, reasoningLevels: [], contextWindow: null, shown, images: false, ...(costChecks === undefined ? {} : { costChecks }) });
+  const models = [model("paid", true), model("quiet", false), model("old")];
+
+  it("hides the price for a model whose cost checks are off, keeps it otherwise", () => {
+    expect(modelShowsCost(models, "c_x/quiet")).toBe(false);
+    expect(modelShowsCost(models, "c_x/paid")).toBe(true);
+  });
+
+  it("counts an engine that sends no flag, an unknown model and no model as on", () => {
+    expect(modelShowsCost(models, "c_x/old")).toBe(true);
+    expect(modelShowsCost(models, "c_x/missing")).toBe(true);
+    expect(modelShowsCost([], null)).toBe(true);
+  });
+
+  it("with no model named, the first shown model decides", () => {
+    expect(modelShowsCost([model("a", false, false), model("b", true)], null)).toBe(true);
+    expect(modelShowsCost([model("a", false), model("b", true)], null)).toBe(false);
   });
 });

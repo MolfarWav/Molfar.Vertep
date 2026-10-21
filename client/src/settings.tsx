@@ -1953,6 +1953,7 @@ function EditConnection(props: { connection: EngineConnection; onDone: () => voi
   const [format, setFormat] = useState<FormatChoice>({ id: c.promptFormat ?? "auto", custom: c.promptFormatCustom ?? EMPTY_FORMAT })
   const thinkable = c.api === "openai-completions" && !c.proxyOf
   const [thinking, setThinking] = useState(c.thinking === true)
+  const [costChecks, setCostChecks] = useState<ConnectionCostChecks>(c.costChecks ?? "")
   const initialModels = Array.isArray(c.models) ? c.models : []
   const [modelsMode, setModelsMode] = useState<"auto" | "manual">(Array.isArray(c.models) ? "manual" : "auto")
   const [models, setModels] = useState(
@@ -1987,6 +1988,7 @@ function EditConnection(props: { connection: EngineConnection; onDone: () => voi
         ...(isCustom() ? { models: modelDefs() as never } : {}),
         ...(c.api === "openai-text" ? formatBody(format) : {}),
         ...(thinkable ? { thinking } : {}),
+        costChecks: costChecks || null,
       })
       props.onDone()
     } catch (e: any) {
@@ -2022,6 +2024,7 @@ function EditConnection(props: { connection: EngineConnection; onDone: () => voi
             : tr("API key")}
         {c.credentialType !== "oauth" ? <input className={inputClass} type="password" placeholder={c.hasKey ? tr("keep current") : tr("paste key")} autoComplete="off" value={key} onChange={(e) => setKey(e.currentTarget.value)} /> : null}
       </label>
+      <ConnectionCostChecksField value={costChecks} onChange={setCostChecks} />
       <div className="flex items-center gap-2">
         <Button variant="neutral" size="normal" disabled={busy || !name.trim() || (!c.providerId && !baseUrl.trim())} onClick={submit}>
           {tr("Save")}
@@ -2360,6 +2363,7 @@ function ProviderForm(props: { provider: ProviderPick; onBack: () => void; onDon
   const [proxyUrl, setProxyUrl] = useState("")
   const [proxyOpen, setProxyOpen] = useState(false)
   const [thinking, setThinking] = useState(false)
+  const [costChecks, setCostChecks] = useState<ConnectionCostChecks>("")
 
   const modelDefs = () =>
     modelsMode === "auto"
@@ -2397,6 +2401,7 @@ function ProviderForm(props: { provider: ProviderPick; onBack: () => void; onDon
               }
             : { providerId: props.provider.id }),
         ...(key.trim() ? { key: key.trim() } : {}),
+        ...(costChecks ? { costChecks } : {}),
       })
       props.onDone()
     } catch (e: any) {
@@ -2458,6 +2463,7 @@ function ProviderForm(props: { provider: ProviderPick; onBack: () => void; onDon
         </div> : null}
       {props.provider.baseUrl && !isCustom() && !usingProxy() ? <div className="text-11 text-ink-faint">{tr("endpoint: {url}", { url: props.provider.baseUrl })}</div> : null}
       {isLocal() ? <p className="text-11 leading-4 text-ink-faint">{tr("Start the server with a model loaded first. On another computer, use its LAN address.")}</p> : null}
+      <ConnectionCostChecksField value={costChecks} onChange={setCostChecks} />
       <Button variant="neutral" size="normal" disabled={busy || (isCustom() ? !baseUrl.trim() : !key.trim())} onClick={submit}>
         {tr("Connect")}
       </Button>
@@ -2544,6 +2550,25 @@ function PromptFormatEditor(props: { value: FormatChoice; onChange: (v: FormatCh
           <p className="text-11 leading-4 text-ink-faint sm:col-span-2">{tr("Type \\n for a newline.")}</p>
         </div> : null}
     </div>
+  )
+}
+
+/** A connection's own choice for the cost checks of its models: "" follows
+ *  the global setting (Settings > Molfar). "Never ask" also hides the price
+ *  figures on the agent page for these models. */
+type ConnectionCostChecks = "" | "auto" | "on" | "off"
+function ConnectionCostChecksField(props: { value: ConnectionCostChecks; onChange: (v: ConnectionCostChecks) => void }) {
+  return (
+    <label className="flex flex-col gap-1 text-12 text-ink-muted">
+      {tr("Cost checks")}
+      <select className={inputClass} value={props.value} onChange={(e) => props.onChange(e.currentTarget.value as ConnectionCostChecks)}>
+        <option value="">{tr("Follow the global setting")}</option>
+        <option value="on">{tr("Ask before spending (on)")}</option>
+        <option value="off">{tr("Never ask (off)")}</option>
+        {props.value === "auto" ? <option value="auto">{tr("Auto (ask, except for a local model)")}</option> : null}
+      </select>
+      <span className="text-11 leading-4 text-ink-faint">{tr("For this connection's models only. Never ask also hides their prices on the agent page.")}</span>
+    </label>
   )
 }
 

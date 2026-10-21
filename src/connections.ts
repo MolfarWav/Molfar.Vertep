@@ -18,6 +18,7 @@ import { randomBytes } from "node:crypto";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
 import type { UserPaths } from "./paths.js";
 import { CURATED_PROVIDERS, keyBoundTo, reservedProviderIds } from "./providers/custom.js";
+import { isCostChecksMode, type CostChecksMode } from "./agent/cost-checks.js";
 import { parsePromptFormat, promptFormatById, type PromptFormat } from "./providers/prompt-formats.js";
 
 export interface ConnectionDef {
@@ -42,6 +43,17 @@ export interface ConnectionDef {
   /** openai-completions endpoints only: the models think, switched by chat_template_kwargs.enable_thinking
    *  (llama.cpp, vLLM, LM Studio). */
   thinking?: boolean;
+  /** Cost checks for the models of this connection: "on" always asks before spending, "off" never,
+   *  "auto" decides by the endpoint. Unset follows the global setting (#91). */
+  costChecks?: CostChecksMode;
+}
+
+/** The per-connection cost checks choice from untrusted input: undefined and
+ *  null both mean "follow the global setting". */
+export function validateCostChecksInput(v: unknown): { ok: true; value: CostChecksMode | undefined } | { ok: false; error: string } {
+  if (v === undefined || v === null) return { ok: true, value: undefined };
+  if (isCostChecksMode(v)) return { ok: true, value: v };
+  return { ok: false, error: "costChecks must be auto, on or off" };
 }
 
 /** A text completion connection's format choice from untrusted input. */
@@ -211,6 +223,29 @@ export function validateConnectionInput(input: {
   promptFormat?: unknown;
   promptFormatCustom?: unknown;
   thinking?: unknown;
+  costChecks?: unknown;
+}):
+  | { ok: true; value: ConnectionInput }
+  | { ok: false; error: string } {
+  const costChecks = validateCostChecksInput(input.costChecks);
+  if (!costChecks.ok) return costChecks;
+  const result = validateConnectionKind(input);
+  return result.ok && costChecks.value ? { ok: true, value: { ...result.value, costChecks: costChecks.value } } : result;
+}
+
+function validateConnectionKind(input: {
+  name?: unknown;
+  providerId?: unknown;
+  oauthProvider?: unknown;
+  gateway?: unknown;
+  api?: unknown;
+  baseUrl?: unknown;
+  proxyUrl?: unknown;
+  models?: unknown;
+  key?: unknown;
+  promptFormat?: unknown;
+  promptFormatCustom?: unknown;
+  thinking?: unknown;
 }):
   | { ok: true; value: ConnectionInput }
   | { ok: false; error: string } {
@@ -313,7 +348,7 @@ export function listConnections(p: UserPaths): ConnectionInfo[] {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-type ConnectionInput = Pick<ConnectionDef, "providerId" | "oauthProvider" | "gateway" | "api" | "baseUrl" | "proxyOf" | "models" | "promptFormat" | "promptFormatCustom" | "thinking"> & { name: string; key?: string };
+type ConnectionInput = Pick<ConnectionDef, "providerId" | "oauthProvider" | "gateway" | "api" | "baseUrl" | "proxyOf" | "models" | "promptFormat" | "promptFormatCustom" | "thinking" | "costChecks"> & { name: string; key?: string };
 
 export function createConnection(p: UserPaths, value: ConnectionInput): ConnectionInfo {
   const file = readConnections(p);
@@ -332,6 +367,7 @@ export function createConnection(p: UserPaths, value: ConnectionInput): Connecti
           ...(value.thinking ? { thinking: true } : {}),
           ...(value.api === "openai-text" ? { promptFormat: value.promptFormat ?? "auto", ...(value.promptFormatCustom ? { promptFormatCustom: value.promptFormatCustom } : {}) } : {}),
         };
+  if (value.costChecks) def.costChecks = value.costChecks;
   file.connections[id] = def;
   writeConnections(p, file);
   if (value.key) {
@@ -347,7 +383,7 @@ export function createConnection(p: UserPaths, value: ConnectionInput): Connecti
 export function updateConnection(
   p: UserPaths,
   id: string,
-  patch: { name?: string; baseUrl?: string; key?: string; models?: ConnectionDef["models"]; promptFormat?: string; promptFormatCustom?: PromptFormat; thinking?: boolean },
+  patch: { name?: string; baseUrl?: string; key?: string; models?: ConnectionDef["models"]; promptFormat?: string; promptFormatCustom?: PromptFormat; thinking?: boolean; costChecks?: CostChecksMode | null },
 ): ConnectionInfo | null {
   const file = readConnections(p);
   const def = file.connections[id];
@@ -366,6 +402,10 @@ export function updateConnection(
   if (patch.thinking !== undefined && def.api === "openai-completions" && !def.proxyOf) {
     if (patch.thinking) def.thinking = true;
     else delete def.thinking;
+  }
+  if (patch.costChecks !== undefined) {
+    if (patch.costChecks) def.costChecks = patch.costChecks;
+    else delete def.costChecks;
   }
   writeConnections(p, file);
   const endpoint = connectionEndpoint(def);

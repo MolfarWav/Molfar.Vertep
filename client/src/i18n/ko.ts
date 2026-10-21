@@ -855,6 +855,10 @@ const dict = {
   "Auto (ask, except for a local model)": "자동(로컬 모델이 아니면 확인)",
   "Always ask": "항상 확인",
   "Never ask": "묻지 않음",
+  "Follow the global setting": "전체 설정 따르기",
+  "Ask before spending (on)": "지출 전에 확인(켜짐)",
+  "Never ask (off)": "묻지 않음(꺼짐)",
+  "For this connection's models only. Never ask also hides their prices on the agent page.": "이 연결의 모델에만 적용됩니다. ‘묻지 않음’은 에이전트 페이지에서 해당 모델의 가격도 숨깁니다.",
 }
 
 export default dict

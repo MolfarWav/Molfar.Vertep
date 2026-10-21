@@ -855,6 +855,10 @@ const dict = {
   "Auto (ask, except for a local model)": "Otomatik (yerel model dışında sor)",
   "Always ask": "Her zaman sor",
   "Never ask": "Hiç sorma",
+  "Follow the global setting": "Genel ayarı izle",
+  "Ask before spending (on)": "Harcamadan önce sor (açık)",
+  "Never ask (off)": "Asla sorma (kapalı)",
+  "For this connection's models only. Never ask also hides their prices on the agent page.": "Yalnızca bu bağlantının modelleri için. “Asla sorma” seçeneği, ajan sayfasında bu modellerin fiyatlarını da gizler.",
 }
 
 export default dict

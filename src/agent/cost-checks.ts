@@ -8,6 +8,8 @@
 import fs from "node:fs";
 import { readEnv } from "../env.js";
 import { isLocalEndpoint } from "../providers/custom.js";
+import { readConnections, type ConnectionDef } from "../connections.js";
+import type { UserPaths } from "../paths.js";
 
 export type CostChecksMode = "auto" | "on" | "off";
 export const COST_CHECKS_MODES: readonly CostChecksMode[] = ["auto", "on", "off"];
@@ -45,4 +47,45 @@ function isHomeName(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** MOLFAR_VERTEP_COST_CHECKS=off: the instance says "never", and no setting
+ *  of a connection overrides it. */
+export function costChecksOffByEnv(env: NodeJS.ProcessEnv = process.env): boolean {
+  return readEnv("COST_CHECKS", env)?.trim().toLowerCase() === "off";
+}
+
+/** The override a connection carries for the models it serves (#91); the
+ *  model's `provider` is the connection id, or the builtin provider id the
+ *  connection labels. undefined = follow the global setting. */
+export function connectionCostChecks(connections: Record<string, ConnectionDef>, provider: string | undefined): CostChecksMode | undefined {
+  if (!provider) return undefined;
+  for (const [id, def] of Object.entries(connections)) {
+    const target = def.oauthProvider === "radius" ? "radius" : (def.providerId ?? id);
+    if (target === provider && isCostChecksMode(def.costChecks)) return def.costChecks;
+  }
+  return undefined;
+}
+
+/** The mode that decides for one model: the connection's override when it has
+ *  one, else the global setting. The instance-wide env switch beats both. */
+export function resolveCostChecksMode(global: CostChecksMode, override: CostChecksMode | undefined, env: NodeJS.ProcessEnv = process.env): CostChecksMode {
+  if (costChecksOffByEnv(env)) return "off";
+  return override ?? global;
+}
+
+type CostPaths = Pick<UserPaths, "settings" | "connections">;
+
+/** The effective mode for a model, read from the user's settings and
+ *  connections files. */
+export function effectiveCostChecksMode(paths: CostPaths, model: { provider?: unknown } | null | undefined, env: NodeJS.ProcessEnv = process.env): CostChecksMode {
+  const global = readCostChecksMode(paths.settings, env);
+  const provider = typeof model?.provider === "string" ? model.provider : undefined;
+  return resolveCostChecksMode(global, connectionCostChecks(readConnections(paths as UserPaths).connections, provider), env);
+}
+
+/** Does a question about money (and a price on screen) apply to this model,
+ *  with the connection's override and the global setting taken together? */
+export function costChecksFor(paths: CostPaths, model: { provider?: unknown; baseUrl?: unknown } | null | undefined, env: NodeJS.ProcessEnv = process.env): boolean {
+  return costChecksApply(effectiveCostChecksMode(paths, model, env), model);
 }

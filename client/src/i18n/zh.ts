@@ -855,6 +855,10 @@ const dict = {
   "Auto (ask, except for a local model)": "自动（本地模型除外，其余询问）",
   "Always ask": "始终询问",
   "Never ask": "从不询问",
+  "Follow the global setting": "跟随全局设置",
+  "Ask before spending (on)": "花费前询问（开）",
+  "Never ask (off)": "从不询问（关）",
+  "For this connection's models only. Never ask also hides their prices on the agent page.": "仅适用于此连接的模型。选择“从不询问”还会在智能体页面隐藏这些模型的价格。",
 }
 
 export default dict
