@@ -32,6 +32,7 @@ import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
 import type { AuthPrompt, Credential, ProviderAuthInteraction } from "@earendil-works/pi-ai";
 import { curatedProviders, loadCustomProviders, reservedProviderIds } from "../providers/custom.js";
 import { isSmallModelMode } from "../agent/small-window.js";
+import { isCostChecksMode } from "../agent/cost-checks.js";
 import { UserAgent, instructionDocsStamp, listSessions, renameSession, archiveSession, moveSession, sessionDir, sessionProject, isReasoningLevel, type ReasoningLevel } from "../agent/agent.js";
 import { normalizeAskOption } from "../agent/tools.js";
 import { findMentionables, mentionedFiles } from "../agent/mentions.js";
@@ -174,7 +175,11 @@ class HttpError extends Error {
  *  app updates in place. The engine itself never builds. */
 export const armLookWatch = (username: string, appsDir: string, bus: EventBus): void => {
   ensureLookWatcher(username, appsDir, bus, {
-    onBuild: (appId, paths) => bus.emit(username, "build_needed", { app: appId, paths }),
+    onBuild: (appId, paths) => {
+      // which change makes an open page rebuild and reload (the "Reloaded: ..." toast)
+      log.info(`[apps] ${username}/${appId} build_needed: ${paths.slice(0, 5).join(", ")}${paths.length > 5 ? ` (+${paths.length - 5})` : ""}`);
+      bus.emit(username, "build_needed", { app: appId, paths });
+    },
   });
 };
 
@@ -1904,6 +1909,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
             ? settings.autoCompact
             : true,
       smallModelMode: isSmallModelMode(settings.smallModelMode) ? settings.smallModelMode : "auto",
+      costChecks: isCostChecksMode(settings.costChecks) ? settings.costChecks : "auto",
       guide: parseGuideState(settings.guide),
     });
   });
@@ -1911,14 +1917,17 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.put("/v1/settings", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; guide?: unknown }>().catch(() => null) ?? {};
-    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("guide" in body)) {
-      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode or guide required" }, 400);
+    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; costChecks?: unknown; guide?: unknown }>().catch(() => null) ?? {};
+    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("costChecks" in body) && !("guide" in body)) {
+      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode, costChecks or guide required" }, 400);
     }
     const guide = body.guide === undefined ? undefined : parseGuideState(body.guide);
     if (guide === null) return c.json({ error: "guide must be { seen?, tours?, lastVersion?, showTours? }" }, 400);
     if (body.smallModelMode !== undefined && !isSmallModelMode(body.smallModelMode)) {
       return c.json({ error: "smallModelMode must be auto, on or off" }, 400);
+    }
+    if (body.costChecks !== undefined && !isCostChecksMode(body.costChecks)) {
+      return c.json({ error: "costChecks must be auto, on or off" }, 400);
     }
     if (body.storeSeen !== undefined && !(typeof body.storeSeen === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.storeSeen))) {
       return c.json({ error: "storeSeen must be a date (YYYY-MM-DD)" }, 400);
@@ -1950,6 +1959,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.reasoning !== undefined) settings.reasoning = body.reasoning;
     if (body.autoCompact !== undefined) settings.autoCompact = body.autoCompact;
     if (body.smallModelMode !== undefined) settings.smallModelMode = body.smallModelMode;
+    if (body.costChecks !== undefined) settings.costChecks = body.costChecks;
     if (guide !== undefined) settings.guide = guide;
     fs.writeFileSync(p.settings, JSON.stringify(settings, null, 2) + "\n");
     const changes: string[] = [];
@@ -1959,6 +1969,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.reasoning !== undefined) changes.push("thinking level");
     if (body.autoCompact !== undefined) changes.push("auto-compact");
     if (body.smallModelMode !== undefined) changes.push("small-model mode");
+    if (body.costChecks !== undefined) changes.push("cost checks");
     if (guide !== undefined) changes.push("guide");
     await git.commitAll(p.root, u.username, `settings: ${changes.join(", ")}`).catch(() => undefined);
     // agents snapshot model + reasoning at creation; the guide's state is not in their prompt
@@ -2122,6 +2133,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return new Promise<string>((resolve, reject) => {
         const onAbort = () => {
           pendingAnswers.delete(u.username);
+          if (flow.prompt?.id === id) flow.prompt = undefined;
           reject(new Error("cancelled"));
         };
         controller.signal.addEventListener("abort", onAbort, { once: true });
@@ -2155,16 +2167,14 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
           },
           prompt: (prompt) => {
             if (method.guided) return askUser(prompt);
+            // a browser on another machine cannot reach this machine's callback
+            // port: the user pastes the redirect URL or code (#80). The prompt
+            // is aborted when the callback wins the race.
+            if (prompt.type === "manual_code") return askUser(prompt);
             // subscription flows drive their happy path: first option for
-            // selects (browser login), defaults for text (e.g. github.com);
-            // manual code entry waits for the callback to win the race
+            // selects (browser login), defaults for text (e.g. github.com)
             if (prompt.type === "select") return Promise.resolve(prompt.options[0]?.id ?? "");
-            if (prompt.type === "text" || prompt.type === "secret") return Promise.resolve("");
-            return new Promise<never>((_, reject) => {
-              const onAbort = () => reject(new Error("cancelled"));
-              controller.signal.addEventListener("abort", onAbort, { once: true });
-              prompt.signal?.addEventListener("abort", onAbort, { once: true });
-            });
+            return Promise.resolve("");
           },
         });
         // the user walked away mid-flow: drop the result, save nothing
@@ -5300,7 +5310,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const rev = typeof body.rev === "string" && body.rev.length < 100 ? body.rev : sourceRev(a.dir);
     const builder = typeof body.builder === "string" && body.builder.length <= 100 ? body.builder : undefined;
     // which step a phone build dies at is otherwise invisible: no access log
-    log.info(`[build] ${u.username}/${a.id} output ${Math.round(capped.bytes.length / 1024)} KB, ${out.ok ? "ok" : "failed"}`);
+    log.info(`[build] ${u.username}/${a.id} output ${Math.round(capped.bytes.length / 1024)} KB, ${out.ok ? "ok" : "failed"}, ${out.hot ? "hot update" : "full build: open pages reload"}`);
     try {
       writeOutput(c.get("paths").apps, a.id, out, rev, builder);
     } catch (e) {

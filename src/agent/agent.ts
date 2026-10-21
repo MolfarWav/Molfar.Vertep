@@ -20,7 +20,8 @@ import { Type } from "typebox";
 import { log } from "../logger.js";
 import { clampThinkingLevel, getCurrentSystemPrompt, getCurrentTools, isContextOverflow, toToolDeclaration, type AssistantMessage, type SystemMessage } from "@earendil-works/pi-ai";
 import { clampMaxTokens, estimateMessageTokens, estimateTextTokens, fitContext, newTrimState, toolsTokens } from "./context-budget.js";
-import { buildRunTools, newPlanState, planGate, type PlanState, type RunToolOptions } from "./run-tools.js";
+import { buildRunTools, newAppRefusal, newPlanState, planGate, type PlanState, type RunToolOptions } from "./run-tools.js";
+import { costChecksApply, readCostChecksMode } from "./cost-checks.js";
 import { foldToolResults } from "./context-fold.js";
 import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
@@ -532,6 +533,9 @@ export class UserAgent {
     // tools that reach past the files (run-tools.ts): built after the model
     // pick, since model_try and run_budget price on it
     let agentRef: Agent | undefined;
+    // questions about money (cost-checks.ts): off for a model on the user's own machine, or when the user says so
+    const costMode = readCostChecksMode(paths.settings);
+    const costChecks = costChecksApply(costMode, model);
     tools.push(...buildRunTools(username, {
       ...(opts.ask ? { ask: opts.ask } : {}),
       ...(opts.mode ? { mode: opts.mode } : {}),
@@ -539,11 +543,12 @@ export class UserAgent {
       tryModel: {
         resolve: (ref) => {
           const m = ref ? pick(ref) : model;
-          return m ? { ref: `${m.provider}/${m.id}`, price: (u) => svc.costOf(m, u) } : null;
+          return m ? { ref: `${m.provider}/${m.id}`, price: (u) => svc.costOf(m, u), confirm: costChecksApply(costMode, m) } : null;
         },
         generate: (req) => svc.generate(req),
       },
       images: {
+        confirm: costMode !== "off",
         list: () => svc.imageModels(),
         favorites: () => svc.imageFavorites(),
         generate: (req) => svc.generateImage(req),
@@ -552,13 +557,17 @@ export class UserAgent {
       // offered only while internet is on; the tool re-reads the switch per call
       ...(readSandboxSettings(paths.sandbox).internet ? { internet: () => readSandboxSettings(paths.sandbox).internet } : {}),
       plan: runState.plan,
-      budgetBasis: () => {
-        const st = agentRef?.state;
-        const contextTokens = st
-          ? estimateTextTokens(st.systemPrompt) + st.messages.reduce((n, m) => n + (m.role === "system" ? 0 : estimateMessageTokens(m)), 0) + toolsTokens(visibleTools(st.tools, small, unlocked))
-          : 0;
-        return { contextTokens, model: `${model.provider}/${model.id}`, price: (u) => svc.costOf(model, u) };
-      },
+      ...(costChecks
+        ? {
+            budgetBasis: () => {
+              const st = agentRef?.state;
+              const contextTokens = st
+                ? estimateTextTokens(st.systemPrompt) + st.messages.reduce((n, m) => n + (m.role === "system" ? 0 : estimateMessageTokens(m)), 0) + toolsTokens(visibleTools(st.tools, small, unlocked))
+                : 0;
+              return { contextTokens, model: `${model.provider}/${model.id}`, price: (u) => svc.costOf(model, u) };
+            },
+          }
+        : {}),
     }));
 
     const messages = loadSessionDialogue(sFile, model);
@@ -595,7 +604,7 @@ export class UserAgent {
     const projectSection = project ? projectPromptSection(paths.root, project) : "";
     const planSection = opts.mode === "plan" ? PLAN_MODE_PROMPT : "";
     const systemPrompt =
-      (small ? compactPromptFor(username, isAdmin, paths, shellOn, availableGroups(tools), promptParts) : systemPromptFor(username, isAdmin, paths, opts.sandbox, promptParts)) +
+      (small ? compactPromptFor(username, isAdmin, paths, shellOn, availableGroups(tools), promptParts) : systemPromptFor(username, isAdmin, paths, opts.sandbox, promptParts, costChecks)) +
       memorySection + projectSection + planSection;
     addPart(promptParts, "memory", "Memory", memorySection);
     addPart(promptParts, "docs", "Project instructions", projectSection);
@@ -635,7 +644,13 @@ export class UserAgent {
       beforeToolCall: async (ctx) => {
         // plan first: only where someone can answer the card, and not when the
         // user chose Accept (run without asking) or Plan (writes are off anyway)
-        if (opts.ask && opts.mode !== "accept" && opts.mode !== "plan") {
+        const notAnApp = newAppRefusal(paths.root, ctx.toolCall.name, ctx.args);
+        if (notAnApp) {
+          // app_create sits in the app group, hidden until now: show it for the next step
+          unlocked.add("app");
+          return { block: true, reason: notAnApp };
+        }
+        if (costChecks && opts.ask && opts.mode !== "accept" && opts.mode !== "plan") {
           const refused = planGate(runState.plan, ctx.toolCall.name, ctx.args, appCodeTouched(ctx.toolCall.name, ctx.args));
           if (refused) {
             // run_budget sits in the app group in small mode: show it for the next step
@@ -1571,7 +1586,7 @@ function addPart(parts: SourcePart[] | undefined, kind: SourceKind, label: strin
   if (parts && text.trim()) parts.push({ kind, label, text: text.trim() });
 }
 
-function systemPromptFor(username: string, isAdmin: boolean, paths: UserPaths, sandbox?: AgentToolOptions["sandbox"], parts?: SourcePart[]): string {
+function systemPromptFor(username: string, isAdmin: boolean, paths: UserPaths, sandbox?: AgentToolOptions["sandbox"], parts?: SourcePart[], costChecks = true): string {
   // labeled sections joined by blank lines: the text is what it always was
   const sections: [SourceKind, string, string][] = [
     ["rules", "Who Molfar is", `You are Molfar, the personal agent of "${username}" in Molfar Vertep, a local engine where EVERYTHING is files you can edit like code: apps, characters, chats, plugins, looks. You build and change them for the user, who may not be a programmer.`],
@@ -1581,14 +1596,15 @@ ${LANGUAGE_RULE}`],
 ${PRECEDENCE_RULE}`],
     ["rules", "How you work", `# How you work
 1. Look before you change anything: the project's instructions and files, the notes/ list, memory (memory_search), the app's AGENTS.md and data/README.md. Read the code you are about to change; never guess a field, an export or an API.
-2. Ask when it matters. Before building a new app, a UI or a large feature, call ask_user ONCE with 2-6 questions, each with 2-4 options, a one-line description per option and one marked recommended; then plan the file layout, then build. Skip the questions when the request already settles those choices; a small, clear task you just do. Before a big run (about 10+ steps, an app's code, or more than 3 files), call run_budget with your step count, plan and the files you will change; it shows the user the cost, and such writes wait for their yes.
+2. Ask when it matters. Before building a new app, a UI or a large feature, call ask_user ONCE with 2-6 questions, each with 2-4 options, a one-line description per option and one marked recommended; then plan the file layout, then build. Skip the questions when the request already settles those choices; a small, clear task you just do.${costChecks ? " Before a big run (about 10+ steps, an app's code, or more than 3 files), call run_budget with your step count, plan and the files you will change; it shows the user the cost, and such writes wait for their yes." : ""}
 3. Put each change in the lightest place that carries it: the app's data/ first, then a plugin of your own, the app's src/ only when the change needs it (the workspace contract below explains why).
 4. Work in small steps and check each one: app_check after editing src/ or package.json, read back JSON you wrote, call a route you wrote once (app_request) and read plugin_log for backend errors, app_console for page errors. If an edit broke a file, restore it from git before going on. Never call something done that you have not verified (skill finish-change has the checklist).
 5. Finish with a short report in plain words: what changed, what you checked, what you could not check, and how to undo it.
 6. Few steps, not many small ones: every step is a model call that resends the whole conversation. Put independent actions in ONE reply as several tool calls (the files you need via read_file paths, several greps, a check after an edit); read a file once, not in small slices; a change in a JSON file is one json_set.`],
     ["workspace", "Workspace layout", workspaceLayout(paths)],
     ["rules", "Building apps and plugins", `# Building apps and plugins
-Before you build or change an app's code, a plugin, a manifest or an app's UI, call skill_load app-authoring and follow it: the plugin contract, the host API, the UI build rules and the checks (app_check after src/ edits, app_rebuild, app_console, checkpoints) are there. The app tools show once you work on an app's code or load that skill; tools_enable shows them sooner.`],
+Before you build or change an app's code, a plugin, a manifest or an app's UI, call skill_load app-authoring and follow it: the plugin contract, the host API, the UI build rules and the checks (app_check after src/ edits, app_rebuild, app_console, checkpoints) are there. The app tools show once you work on an app's code or load that skill; tools_enable shows them sooner.
+A new app is made with app_create, always: it creates apps/<id>/ with the manifest that registers the app, so it appears in the app switcher (New Tab) and the engine serves it at /app/<user>/<id>/. A folder written by hand, or a page run with node, python or a dev server on some port, is not an app: nothing lists it and the user cannot open it. Never give the user a localhost address or a file path to open an app; tell them to pick it in the app switcher.`],
     ["apps", "Installed apps", `# Learn from the apps already installed
 ${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its exact files, field shapes and gotchas. To learn how to build one, read its plugins/ for backend behavior (routes, two-phase LLM turns, how it lays out data/) and its src/ for the UI. Take the patterns, not the subject matter. New app: app_create (UI app scaffolded), app_deps, then write plugins + src/ + seed data.`],
     ["rules", "Workflow rules", `# Workflow rules

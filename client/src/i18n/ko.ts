@@ -850,6 +850,11 @@ const dict = {
   "Time: {a} s, then {b} s.": "시간: {a}초, 이후 {b}초.",
   "Molfar is asking you": "Molfar이(가) 질문하고 있어요",
   "Open Molfar": "Molfar 열기",
+  "Cost checks": "비용 확인",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "큰 작업, 유료 테스트 생성, 유료 이미지 전에 Molfar가 예상 비용을 보여 주고 승인을 기다립니다. 자동은 모델이 내 컴퓨터나 네트워크에서 실행될 때 이를 건너뜁니다. ‘묻지 않음’은 앱 코드를 바꾸기 전의 계획 카드도 없앱니다.",
+  "Auto (ask, except for a local model)": "자동(로컬 모델이 아니면 확인)",
+  "Always ask": "항상 확인",
+  "Never ask": "묻지 않음",
 }
 
 export default dict

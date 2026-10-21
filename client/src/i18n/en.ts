@@ -852,6 +852,11 @@ const en = {
   "Time: {a} s, then {b} s.": "",
   "Molfar is asking you": "",
   "Open Molfar": "",
+  "Cost checks": "",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "",
+  "Auto (ask, except for a local model)": "",
+  "Always ask": "",
+  "Never ask": "",
 } as const
 
 export default en

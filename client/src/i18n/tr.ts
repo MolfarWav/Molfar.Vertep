@@ -850,6 +850,11 @@ const dict = {
   "Time: {a} s, then {b} s.": "Süre: {a} sn, ardından {b} sn.",
   "Molfar is asking you": "Molfar sana soruyor",
   "Open Molfar": "Molfar'ı aç",
+  "Cost checks": "Maliyet kontrolleri",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "Büyük bir görevden, ücretli bir test üretiminden veya ücretli bir görselden önce Molfar bir tahmin gösterir ve onayınızı bekler. Otomatik, model kendi bilgisayarınızda veya ağınızda çalışıyorsa bunu atlar. “Hiç sorma” ayrıca bir uygulamanın kodunda değişiklik yapmadan önceki plan kartını da kaldırır.",
+  "Auto (ask, except for a local model)": "Otomatik (yerel model dışında sor)",
+  "Always ask": "Her zaman sor",
+  "Never ask": "Hiç sorma",
 }
 
 export default dict

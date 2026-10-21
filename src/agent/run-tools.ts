@@ -5,6 +5,8 @@
  * service, the network), passed in by the caller; a tool whose dependency is
  * missing is not built.
  */
+import fs from "node:fs";
+import path from "node:path";
 import { Type } from "typebox";
 import type { AgentTool } from "@earendil-works/pi-agent-core";
 import type { ImageFavorite } from "../images.js";
@@ -29,7 +31,7 @@ export interface RunToolOptions {
   ) => Promise<{ status: number; payload: unknown; contentType?: string } | null>;
   /** model_try: resolve a model ref (undefined = the session's model), price usage, generate. */
   tryModel?: {
-    resolve: (ref?: string) => { ref: string; price: (u: Usage) => number | null } | null;
+    resolve: (ref?: string) => { ref: string; price: (u: Usage) => number | null; /** false: no question about money for this model (cost-checks.ts) */ confirm?: boolean } | null;
     generate: (req: GenerateRequest) => Promise<GenerateResult>;
   };
   /** image_generate: the user's image models (GET /v1/images/models), one drawing, and the asset store. */
@@ -40,6 +42,8 @@ export interface RunToolOptions {
     generate: (req: { prompt: string; model: string }) => Promise<{ data: Buffer; mimeType: string; model: string }>;
     /** Keep the bytes; returns the served URL, /v1/assets/<id>. */
     store: (data: Buffer, mimeType: string, name: string) => string;
+    /** false: draw without asking even on a paid model (cost checks off). */
+    confirm?: boolean;
   };
   /** web_fetch: read at call time, so the Settings switch applies to a running agent. */
   internet?: () => boolean;
@@ -82,6 +86,23 @@ export function planGate(st: PlanState, tool: string, args: unknown, appCode: bo
   }
   st.written.add(key);
   return undefined;
+}
+
+/**
+ * A file written into apps/<id>/ where that folder is not an app (no
+ * manifest.json) makes a folder the engine never lists or serves: the app
+ * switcher and /app/<user>/<id>/ only know apps app_create made (#78). The
+ * prompt says so; this holds when a model writes the files first anyway.
+ * Returns the refusal for the model, or undefined to let the call through.
+ */
+export function newAppRefusal(root: string, tool: string, args: unknown): string | undefined {
+  if (tool !== "write_file") return undefined;
+  const file = (args as { path?: unknown } | null)?.path;
+  if (typeof file !== "string") return undefined;
+  const m = /^apps\/([A-Za-z0-9][A-Za-z0-9_-]{0,63})\/(.+)$/.exec(file.replace(/\\/g, "/").replace(/^\.\//, ""));
+  if (!m || m[2] === "manifest.json") return undefined;
+  if (fs.existsSync(path.join(root, "apps", m[1]!, "manifest.json"))) return undefined;
+  return `Not written: apps/${m[1]}/ is not an app yet (it has no manifest.json), so it would never show in the app switcher or be served. Call app_create (id "${m[1]}", name, a short description) first: it makes the app, then write its files.`;
 }
 
 const textResult = (text: string, details: Record<string, unknown> = {}) => ({ content: [{ type: "text" as const, text }], details });
@@ -204,19 +225,21 @@ function modelTryTool(m: NonNullable<RunToolOptions["tryModel"]>, ask: RunToolOp
       const maxTokens = Math.min(Math.max(16, Math.floor(p.maxTokens ?? TRY_DEFAULT_TOKENS)), TRY_MAX_TOKENS);
       const input = estimateTextTokens([p.system ?? "", ...p.messages.map((x) => x.content)].join("\n\n"));
       const est = target.price({ input, output: maxTokens, cacheRead: 0, cacheWrite: 0 });
-      if (!ask) return textResult("Not sent: the user is not available to confirm a paid model call.", { sent: false });
-      const answer = (
-        await ask({
-          question: `Send one test generation to ${target.ref}?`,
-          options: [
-            { label: "Send", description: est === null ? "this model has no known price" : `about ${usd(est)} at most`, recommended: true },
-            { label: "Skip", description: "Molfar goes on without it" },
-          ],
-          detail: `~${input.toLocaleString("en-US")} tokens in, up to ${maxTokens.toLocaleString("en-US")} out${est === null ? "" : `, at most ${usd(est)}`}\n\n${cap(p.messages.at(-1)?.content ?? "", 600)}`,
-        })
-      ).trim();
-      if (answer !== "Send") {
-        return textResult(`Not sent: the user skipped it${answer && answer !== "Skip" && answer !== "(no answer)" ? ` and said: ${answer}` : ""}. Do not retry it unasked.`, { sent: false });
+      if (target.confirm !== false) {
+        if (!ask) return textResult("Not sent: the user is not available to confirm a paid model call.", { sent: false });
+        const answer = (
+          await ask({
+            question: `Send one test generation to ${target.ref}?`,
+            options: [
+              { label: "Send", description: est === null ? "this model has no known price" : `about ${usd(est)} at most`, recommended: true },
+              { label: "Skip", description: "Molfar goes on without it" },
+            ],
+            detail: `~${input.toLocaleString("en-US")} tokens in, up to ${maxTokens.toLocaleString("en-US")} out${est === null ? "" : `, at most ${usd(est)}`}\n\n${cap(p.messages.at(-1)?.content ?? "", 600)}`,
+          })
+        ).trim();
+        if (answer !== "Send") {
+          return textResult(`Not sent: the user skipped it${answer && answer !== "Skip" && answer !== "(no answer)" ? ` and said: ${answer}` : ""}. Do not retry it unasked.`, { sent: false });
+        }
       }
       const res = await m.generate({
         messages: p.messages,
@@ -290,7 +313,7 @@ function imageGenerateTool(im: NonNullable<RunToolOptions["images"]>, ask: RunTo
       const pick = ref ? models.find((m) => imageRef(m) === ref || m.id === ref) : first;
       if (!pick) return textResult(`No image model ${ref}. Call with list: true and pick a ref from it.`, { drawn: false });
       const where = `${pick.label} (${pick.connectionName ?? pick.provider})`;
-      if (!LOCAL_IMAGE_APIS.has(pick.api)) {
+      if (!LOCAL_IMAGE_APIS.has(pick.api) && im.confirm !== false) {
         if (!ask) return textResult("Not drawn: the user is not available to confirm a paid picture.", { drawn: false });
         const answer = (
           await ask({

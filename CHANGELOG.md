@@ -7,8 +7,16 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.11 (2026-10-21)
+
 - A correction sent while Molfar works now says when it will be read: under your message, "Molfar reads this after its current step. Stop ends the run now." stays until the model has taken it in (#73).
 - Answering a question card that has already timed out no longer ends in a red "no pending question": during a run the words go to Molfar as a correction (#73).
+- Signing in to a subscription (Claude and the like) from a browser on another machine now has a box to paste the redirect URL or code (#80). The engine's own callback port is only reachable from the machine it runs on, so on a VPS or in a container the sign-in page's redirect failed with nowhere to put it; the sign-in step now shows the link and the paste box, and finishes by itself when the callback does arrive.
+- Settings → Molfar → **Cost checks** (#77): Molfar's questions about money (the estimate card before a big task and the plan-first wait that follows it, the confirmation before a paid test generation, the one before a paid picture) are skipped for a model on your own machine or network (localhost, LAN addresses, container names such as `llama-swap` or `host.docker.internal`). Choose Always ask or Never ask to override; `MOLFAR_VERTEP_COST_CHECKS=off` switches them off for the whole instance (a container). With the checks off Molfar's prompt no longer mentions `run_budget`.
+- A new app made by Molfar now shows up in the app switcher (#78). A file written into `apps/<id>/` where that folder has no `manifest.json` is refused with "call app_create first", which also shows the app tools; the prompt (full and small-model) and the app-authoring skill say that an app is made with `app_create`, and that the user opens it in the app switcher, never at a localhost address.
+- A card's page on JannyAI (and any site an app links to that its plugins do not list) opens from an app (#58). A tab opened from the app's frame inherited the frame's Connection-Allowlist and answered ERR_NETWORK_ACCESS_REVOKED; links to other sites (`target="_blank"`, Ctrl-click, `window.open`) now go through the shell, which opens them as ordinary tabs, after a click only, never to an engine page.
+- Roleplay 4.58.0 through an app update: the inbox rows can be dismissed one by one or in a batch (Select, Select all, Dismiss N), and Soul reviews of deleted cards no longer show up as a blank "..." row that opens nothing (#82). Details in the app's own changelog.
+- The engine log says which changed files made an open app rebuild (`[apps] <user>/<app> build_needed: ...`) and whether a build was a hot update or a full one that reloads open pages.
 
 ## 1.2.10 (2026-10-21)
 

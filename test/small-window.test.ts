@@ -98,7 +98,7 @@ describe("when the mode is on", () => {
 });
 
 describe("what a small model is sent", () => {
-  it("stays under 3.75k tokens before the first message", async () => {
+  it("stays under 3.8k tokens before the first message", async () => {
     const [s] = await run({ window: 16_000 });
     expect(s!.systemPrompt).toContain("# Workspace (compact mode)");
     expect(s!.systemPrompt).not.toContain("# Building apps and plugins");
@@ -110,7 +110,9 @@ describe("what a small model is sent", () => {
     // call each where a card edit took dozens of bash, jq and python steps
     // 1.0.9: the fix-bug skill line (+~25 tokens): "Ask Molfar first" in the
     // bug dialog runs on small free models too
-    expect(size(s!)).toBeLessThan(3_750);
+    // 1.2.11: the new-app rule (+~30 tokens): a model that builds an app by
+    // hand never registers it (#78)
+    expect(size(s!)).toBeLessThan(3_800);
   });
 
   it("a large model keeps the full prompt and every tool but the app tools, which tools_enable shows", async () => {

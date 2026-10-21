@@ -27,7 +27,8 @@ function makeShell(bus: Bus) {
   const store = new Map<string, string>();
   let quotaFull = false;
   const listeners: Listener[] = [];
-  const win: Record<string, unknown> = { addEventListener: (_t: string, fn: Listener) => listeners.push(fn) };
+  const opened: unknown[][] = [];
+  const win: Record<string, unknown> = { addEventListener: (_t: string, fn: Listener) => listeners.push(fn), open: (...a: unknown[]) => { opened.push(a); return null; } };
   const localStorage = {
     getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
     setItem: (k: string, v: string) => {
@@ -44,6 +45,7 @@ function makeShell(bus: Bus) {
   return {
     host,
     deliver,
+    opened,
     setQuotaFull: (v: boolean) => { quotaFull = v; },
     saved: (app = "rp", user = "u") => JSON.parse(store.get(host.storageKey(user, app)) ?? '{"local":{},"session":{}}') as { local: Record<string, string> },
   };
@@ -53,7 +55,7 @@ function makeShell(bus: Bus) {
  *  the bridge from the URL hash. `refuseRewrites` makes history.replaceState throw. */
 function makeFrame(bus: Bus, shell: ReturnType<typeof makeShell>, opts: { app?: string } = {}) {
   const app = opts.app ?? "rp";
-  let doc: { listeners: Listener[]; events: unknown[]; win: Record<string, any> } | null = null;
+  let doc: { listeners: Listener[]; events: unknown[]; win: Record<string, any>; clicks: Array<(e: unknown) => void> } | null = null;
   let url = "http://localhost:8788" + shell.host.frameSrc(app, "u");
   let refuseRewrites = false;
   let reloads = 0;
@@ -66,6 +68,7 @@ function makeFrame(bus: Bus, shell: ReturnType<typeof makeShell>, opts: { app?: 
   shell.host.serve({ contentWindow }, app, "u");
   const boot = () => {
     const listeners: Listener[] = [];
+    const clicks: Array<(e: unknown) => void> = [];
     const events: unknown[] = [];
     const win: Record<string, any> = {
       parent: { postMessage: (data: unknown) => shell.deliver(contentWindow, data) },
@@ -90,18 +93,26 @@ function makeFrame(bus: Bus, shell: ReturnType<typeof makeShell>, opts: { app?: 
     };
     class CustomEvent { constructor(public type: string, public init?: { detail?: unknown }) {} }
     class StorageEvent { constructor(public type: string, public init?: Record<string, unknown>) {} }
-    Object.assign(win, { location, history, CustomEvent, StorageEvent, document: { documentElement: null, cookie: "" } });
+    Object.assign(win, { location, history, CustomEvent, StorageEvent, open: () => "native", document: { documentElement: null, cookie: "", addEventListener: (t: string, fn: (e: unknown) => void) => { if (t === "click") clicks.push(fn); } } });
     vm.runInContext(FRAME_SRC, vm.createContext(Object.assign(win, {
       TextEncoder, TextDecoder, btoa, atob, URL, URLSearchParams, Uint8Array, Proxy, Reflect, Object, JSON, Promise, Date, String, Error, Array,
       setTimeout, clearTimeout, setInterval: () => 0, clearInterval: () => undefined, encodeURIComponent, decodeURIComponent,
     })));
-    doc = { listeners, events, win };
+    doc = { listeners, events, win, clicks };
   };
   boot();
   return {
     get ls(): Storage { return doc!.win.localStorage; },
     get win() { return doc!.win; },
     get events() { return doc!.events; },
+    /** Click an <a> in the app: returns whether the page's own navigation was cancelled. */
+    click(a: { href: string; target?: string; download?: boolean }, mods: { ctrlKey?: boolean } = {}) {
+      let prevented = false;
+      const el = { href: a.href, target: a.target ?? "", hasAttribute: (n: string) => n === "download" && !!a.download };
+      const e = { defaultPrevented: false, button: 0, ctrlKey: false, metaKey: false, shiftKey: false, ...mods, target: { closest: () => el }, preventDefault: () => { prevented = true; } };
+      for (const fn of doc!.clicks) fn(e);
+      return prevented;
+    },
     get reloads() { return reloads; },
     reload() { bus.queue.length = 0; boot(); },
     refuseRewrites(v: boolean) { refuseRewrites = v; },
@@ -287,4 +298,43 @@ describe("app storage: acknowledgements and catching up after a reload", () => {
     expect(f.reloads).toBe(0);
     expect(f.ls.getItem("draft")).toBe("plain");
   });
+});
+
+describe("links to other sites open from the shell (#58)", () => {
+  const setup = () => {
+    const bus = makeBus();
+    const shell = makeShell(bus);
+    const f = makeFrame(bus, shell);
+    bus.flush();
+    return { bus, shell, f };
+  };
+
+  it("a target=_blank link to another site is handed to the shell, which opens it detached", () => {
+    const { bus, shell, f } = setup();
+    expect(f.click({ href: "https://jannyai.com/characters/abc", target: "_blank" })).toBe(true);
+    bus.flush();
+    expect(shell.opened).toEqual([["https://jannyai.com/characters/abc", "_blank", "noopener,noreferrer"]]);
+  });
+
+  it("window.open to another site goes the same way; engine pages and other schemes do not", () => {
+    const { bus, shell, f } = setup();
+    expect(f.win.open("https://chub.ai/characters/x")).toBeNull();
+    bus.flush();
+    expect(shell.opened.length).toBe(1);
+    expect(f.win.open("/app/u/other/")).toBe("native");
+    expect(f.click({ href: "http://localhost:8788/v1/apps", target: "_blank" })).toBe(false);
+    expect(f.click({ href: "javascript:alert(1)", target: "_blank" })).toBe(false);
+    expect(f.click({ href: "mailto:a@b.c", target: "_blank" })).toBe(false);
+    bus.flush();
+    expect(shell.opened.length).toBe(1);
+  });
+
+  it("a plain link, a download and a click already handled are left alone", () => {
+    const { bus, shell, f } = setup();
+    expect(f.click({ href: "https://jannyai.com/x" })).toBe(false);
+    expect(f.click({ href: "https://jannyai.com/x", target: "_blank", download: true })).toBe(false);
+    bus.flush();
+    expect(shell.opened).toEqual([]);
+  });
+
 });

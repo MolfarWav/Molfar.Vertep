@@ -850,6 +850,11 @@ const dict = {
   "Time: {a} s, then {b} s.": "Tempo: {a} s, depois {b} s.",
   "Molfar is asking you": "O Molfar está a perguntar-te",
   "Open Molfar": "Abrir o Molfar",
+  "Cost checks": "Verificações de custo",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "Antes de uma tarefa grande, de uma geração de teste paga ou de uma imagem paga, o Molfar mostra uma estimativa e espera o seu sim. Auto ignora isso quando o modelo roda no seu computador ou rede. «Nunca perguntar» também remove o cartão de plano antes de mudanças no código de um app.",
+  "Auto (ask, except for a local model)": "Auto (perguntar, exceto com modelo local)",
+  "Always ask": "Sempre perguntar",
+  "Never ask": "Nunca perguntar",
 }
 
 export default dict

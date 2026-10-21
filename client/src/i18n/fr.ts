@@ -850,6 +850,11 @@ const dict = {
   "Time: {a} s, then {b} s.": "Temps : {a} s, puis {b} s.",
   "Molfar is asking you": "Molfar vous pose une question",
   "Open Molfar": "Ouvrir Molfar",
+  "Cost checks": "Contrôles de coût",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "Avant une grosse tâche, une génération de test payante ou une image payante, Molfar montre une estimation et attend votre accord. Auto saute cette étape quand le modèle tourne sur votre propre ordinateur ou réseau. « Ne jamais demander » retire aussi la carte de plan avant de modifier le code d’une application.",
+  "Auto (ask, except for a local model)": "Auto (demander, sauf pour un modèle local)",
+  "Always ask": "Toujours demander",
+  "Never ask": "Ne jamais demander",
 }
 
 export default dict

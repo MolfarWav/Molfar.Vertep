@@ -441,6 +441,10 @@ describe("agent loop + sessions (faux provider)", () => {
     );
     handle.setResponses([toolCall, fauxAssistantMessage("Created Bee and committed.")]);
     svc.models.setProvider(handle.provider);
+    // a file goes into an app, and an app has a manifest (the new-app guard)
+    const appDir = path.join(userPaths(dataDir, "alice").root, "apps/roleplay");
+    fs.mkdirSync(appDir, { recursive: true });
+    fs.writeFileSync(path.join(appDir, "manifest.json"), '{"name":"Roleplay","version":"1.0.0","kind":"web"}');
 
     const p = userPaths(dataDir, "alice");
     const agent = await UserAgent.create("alice", svc, p, users, defaultInstanceConfig());
