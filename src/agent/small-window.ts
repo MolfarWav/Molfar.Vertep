@@ -218,7 +218,7 @@ ${o.apps ? `Installed apps:\n${o.apps}` : ""}
 # Rules
 - Look first: the project's instructions, notes/, memory_search, the app's AGENTS.md. Read code before you change it; never guess.
 - Put a change in the lightest place: the app's data/ first, then a plugin of your own, src/ only when needed.
-- Before you build or change an app, a plugin or a UI, call skill_load app-authoring and follow it.
+- Before you build or change an app, a plugin or a UI, call skill_load app-authoring and follow it. A new app starts with app_create (a hand-made folder is no app); the user opens apps in the app switcher, never at a localhost address.
 - write_file/edit_file commit on their own. Commit bash changes with git (commit -m "...").
 - Protected files (an app's src/ and index.html, persona.md) change only after the user allows it in a card. Never work around a no.
 - Never delete the user's content (chats, characters, notes, uploads) unless asked for exactly that.

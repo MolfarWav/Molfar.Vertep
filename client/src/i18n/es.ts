@@ -848,6 +848,11 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Sin caché: la segunda llamada no tomó nada de la caché. El proveedor no almacena este modelo en caché o no lo informa.",
   "The provider sent no token counts, so the cache cannot be checked.": "El proveedor no envió conteos de tokens, por lo que no se puede comprobar la caché.",
   "Time: {a} s, then {b} s.": "Tiempo: {a} s, luego {b} s.",
+  "Cost checks": "Control de costes",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "Antes de una tarea grande, una generación de prueba de pago o una imagen de pago, Molfar muestra una estimación y espera tu confirmación. Auto lo omite cuando el modelo se ejecuta en tu propio equipo o red. «No preguntar nunca» también quita la tarjeta de plan antes de cambiar el código de una app.",
+  "Auto (ask, except for a local model)": "Auto (preguntar, salvo con un modelo local)",
+  "Always ask": "Preguntar siempre",
+  "Never ask": "No preguntar nunca",
 }
 
 export default dict

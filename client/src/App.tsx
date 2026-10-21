@@ -1085,7 +1085,7 @@ function AppCanvas(props: {
         <iframe
           ref={frameRef}
           title={props.tab.name}
-          sandbox="allow-scripts allow-popups allow-downloads allow-forms"
+          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms"
           className="min-h-0 w-full flex-1 border-0 bg-transparent"
         />
         {!loaded ? (

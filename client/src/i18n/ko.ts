@@ -848,6 +848,11 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "캐시 없음: 두 번째 호출에서 캐시를 사용하지 않았습니다. 공급자가 이 모델을 캐시하지 않거나 캐시를 보고하지 않는 것입니다.",
   "The provider sent no token counts, so the cache cannot be checked.": "공급자가 토큰 수를 보내지 않아 캐시를 확인할 수 없습니다.",
   "Time: {a} s, then {b} s.": "시간: {a}초, 이후 {b}초.",
+  "Cost checks": "비용 확인",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "큰 작업, 유료 테스트 생성, 유료 이미지 전에 Molfar가 예상 비용을 보여 주고 승인을 기다립니다. 자동은 모델이 내 컴퓨터나 네트워크에서 실행될 때 이를 건너뜁니다. ‘묻지 않음’은 앱 코드를 바꾸기 전의 계획 카드도 없앱니다.",
+  "Auto (ask, except for a local model)": "자동(로컬 모델이 아니면 확인)",
+  "Always ask": "항상 확인",
+  "Never ask": "묻지 않음",
 }
 
 export default dict

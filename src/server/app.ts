@@ -32,6 +32,7 @@ import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
 import type { AuthPrompt, Credential, ProviderAuthInteraction } from "@earendil-works/pi-ai";
 import { curatedProviders, loadCustomProviders, reservedProviderIds } from "../providers/custom.js";
 import { isSmallModelMode } from "../agent/small-window.js";
+import { isCostChecksMode } from "../agent/cost-checks.js";
 import { UserAgent, instructionDocsStamp, listSessions, renameSession, archiveSession, moveSession, sessionDir, sessionProject, isReasoningLevel, type ReasoningLevel } from "../agent/agent.js";
 import { normalizeAskOption } from "../agent/tools.js";
 import { findMentionables, mentionedFiles } from "../agent/mentions.js";
@@ -1888,6 +1889,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
             ? settings.autoCompact
             : true,
       smallModelMode: isSmallModelMode(settings.smallModelMode) ? settings.smallModelMode : "auto",
+      costChecks: isCostChecksMode(settings.costChecks) ? settings.costChecks : "auto",
       guide: parseGuideState(settings.guide),
     });
   });
@@ -1895,14 +1897,17 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.put("/v1/settings", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; guide?: unknown }>().catch(() => null) ?? {};
-    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("guide" in body)) {
-      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode or guide required" }, 400);
+    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; costChecks?: unknown; guide?: unknown }>().catch(() => null) ?? {};
+    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("costChecks" in body) && !("guide" in body)) {
+      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode, costChecks or guide required" }, 400);
     }
     const guide = body.guide === undefined ? undefined : parseGuideState(body.guide);
     if (guide === null) return c.json({ error: "guide must be { seen?, tours?, lastVersion?, showTours? }" }, 400);
     if (body.smallModelMode !== undefined && !isSmallModelMode(body.smallModelMode)) {
       return c.json({ error: "smallModelMode must be auto, on or off" }, 400);
+    }
+    if (body.costChecks !== undefined && !isCostChecksMode(body.costChecks)) {
+      return c.json({ error: "costChecks must be auto, on or off" }, 400);
     }
     if (body.storeSeen !== undefined && !(typeof body.storeSeen === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.storeSeen))) {
       return c.json({ error: "storeSeen must be a date (YYYY-MM-DD)" }, 400);
@@ -1934,6 +1939,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.reasoning !== undefined) settings.reasoning = body.reasoning;
     if (body.autoCompact !== undefined) settings.autoCompact = body.autoCompact;
     if (body.smallModelMode !== undefined) settings.smallModelMode = body.smallModelMode;
+    if (body.costChecks !== undefined) settings.costChecks = body.costChecks;
     if (guide !== undefined) settings.guide = guide;
     fs.writeFileSync(p.settings, JSON.stringify(settings, null, 2) + "\n");
     const changes: string[] = [];
@@ -1943,6 +1949,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.reasoning !== undefined) changes.push("thinking level");
     if (body.autoCompact !== undefined) changes.push("auto-compact");
     if (body.smallModelMode !== undefined) changes.push("small-model mode");
+    if (body.costChecks !== undefined) changes.push("cost checks");
     if (guide !== undefined) changes.push("guide");
     await git.commitAll(p.root, u.username, `settings: ${changes.join(", ")}`).catch(() => undefined);
     // agents snapshot model + reasoning at creation; the guide's state is not in their prompt
@@ -4978,8 +4985,13 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // session cookie on the engine's own routes. The embedding iframe's
   // sandbox attribute is not enough on its own; opening the URL directly
   // used to drop it.
+  // allow-popups-to-escape-sandbox: a link an app opens in a new tab (a card page
+  // on JannyAI) is an ordinary page there. Without it the popup inherits this
+  // sandbox, an opaque origin with no storage, and sites behind a challenge
+  // answer "blocked" (#58). An engine page opened that way still gets its own
+  // sandbox from its response header.
   const frameCsp = (origin: string): string =>
-    "sandbox allow-scripts allow-popups allow-downloads allow-forms; " +
+    "sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms; " +
     "default-src 'none'; " +
     `script-src ${origin} 'wasm-unsafe-eval'; ` +
     `style-src ${origin} 'unsafe-inline'; ` +
@@ -5367,7 +5379,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
 #boot .spin{width:16px;height:16px;border:2px solid #2a2e36;border-top-color:#8a8f98;border-radius:50%;animation:sp 0.9s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style></head>
-<body><iframe id="frame" title="${safeId}" sandbox="allow-scripts allow-popups allow-downloads allow-forms"></iframe>
+<body><iframe id="frame" title="${safeId}" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms"></iframe>
 <div id="boot"><div class="spin"></div><div id="bootmsg">Opening…</div></div>
 <script>
   var frame = document.getElementById("frame");

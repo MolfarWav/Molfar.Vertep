@@ -848,6 +848,11 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Кэша нет: второй вызов не взял ничего из кэша. Провайдер не кэширует эту модель или не сообщает об этом.",
   "The provider sent no token counts, so the cache cannot be checked.": "Провайдер не прислал количество токенов, поэтому кэш проверить нельзя.",
   "Time: {a} s, then {b} s.": "Время: {a} с, затем {b} с.",
+  "Cost checks": "Проверки стоимости",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "Перед большой задачей, платной тестовой генерацией или платной картинкой Molfar показывает оценку и ждёт вашего «да». Авто пропускает это, когда модель работает на вашем компьютере или в вашей сети. «Никогда не спрашивать» также убирает карточку плана перед изменениями в коде приложения.",
+  "Auto (ask, except for a local model)": "Авто (спрашивать, кроме локальной модели)",
+  "Always ask": "Всегда спрашивать",
+  "Never ask": "Никогда не спрашивать",
 }
 
 export default dict

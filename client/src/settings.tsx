@@ -789,6 +789,7 @@ function AgentTab() {
         <InternetSection />
         <AutoCompactSection />
         <SmallModelSection />
+        <CostChecksSection />
         <div className="flex flex-col gap-2">
           <h3 className="text-13 font-medium text-ink">{tr("Molfar's instructions")}</h3>
           <p className="text-12 text-ink-muted">
@@ -929,6 +930,67 @@ function SmallModelSection() {
           <option value="auto">{tr("Auto (32k tokens or less, or unknown)")}</option>
           <option value="on">{tr("On")}</option>
           <option value="off">{tr("Off")}</option>
+        </select>
+        {saved ? <span className="text-12 text-success">{tr("Saved")}</span> : null}
+      </div>
+      {err ? <div className="text-12 text-danger">{err}</div> : null}
+    </div>
+  )
+}
+
+/** Cost checks: Molfar's questions about money (an estimate before a big task,
+ *  a paid test generation, a paid picture). Auto skips them for a local model. */
+function CostChecksSection() {
+  const [mode, setMode] = useState<SmallModelMode>("auto")
+  const [loaded, setLoaded] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [err, setErr] = useState("")
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const s = await api<{ costChecks?: SmallModelMode }>("GET", "/v1/settings")
+        if (s.costChecks === "on" || s.costChecks === "off") setMode(s.costChecks)
+      } catch {}
+      setLoaded(true)
+    })()
+  }, [])
+
+  const change = async (next: SmallModelMode) => {
+    const prev = mode
+    setMode(next)
+    setBusy(true)
+    setErr("")
+    try {
+      await api("PUT", "/v1/settings", { costChecks: next })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 1500)
+    } catch (e) {
+      setMode(prev)
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-13 font-medium text-ink">{tr("Cost checks")}</h3>
+      <p className="text-12 leading-4 text-ink-muted">
+        {tr("Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.")}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          className={`${inputClass} max-w-[360px] flex-none`}
+          aria-label={tr("Cost checks")}
+          value={mode}
+          disabled={!loaded || busy}
+          onChange={(e) => void change(e.currentTarget.value as SmallModelMode)}
+        >
+          <option value="auto">{tr("Auto (ask, except for a local model)")}</option>
+          <option value="on">{tr("Always ask")}</option>
+          <option value="off">{tr("Never ask")}</option>
         </select>
         {saved ? <span className="text-12 text-success">{tr("Saved")}</span> : null}
       </div>

@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Settings → Molfar → **Cost checks** (#77): Molfar's questions about money (the estimate card before a big task and the plan-first wait that follows it, the confirmation before a paid test generation, the one before a paid picture) are skipped for a model on your own machine or network (localhost, LAN addresses, container names such as `llama-swap` or `host.docker.internal`). Choose Always ask or Never ask to override; `MOLFAR_VERTEP_COST_CHECKS=off` switches them off for the whole instance (a container). With the checks off Molfar's prompt no longer mentions `run_budget`.
+- A new app made by Molfar now shows up in the app switcher (#78). A file written into `apps/<id>/` where that folder has no `manifest.json` is refused with "call app_create first", which also shows the app tools; the prompt (full and small-model) and the app-authoring skill say that an app is made with `app_create`, and that the user opens it in the app switcher, never at a localhost address.
+- Links an app opens in a new tab (Get on JannyAI, Open on Chub) are ordinary pages now (#58): the app frame's sandbox gets `allow-popups-to-escape-sandbox`, so the new tab no longer inherits an opaque origin with no storage, which sites behind a challenge answer with "blocked". Cause inferred, not reproduced here; #58 stays open until the reporter confirms.
+
 ## 1.2.9 (2026-10-20)
 
 - Settings → Connections and models → a model's settings: **Check the cache** sends a prompt of about 2,500 tokens two or three times, one call after the other, and says whether the provider read it from its cache, with the token counts and times. A provider that reports no token counts is named as such. Shell only: apps cannot spend tokens through it.

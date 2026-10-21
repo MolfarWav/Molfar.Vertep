@@ -71,7 +71,7 @@ afterEach(() => {
     // response-level sandbox: the document is opaque-origin even if the URL is
     // opened top-level (bookmark, PWA window, popup), so it can never read
     // shell storage or spend the session cookie on engine routes
-    expect(csp).toContain("sandbox allow-scripts allow-popups allow-downloads allow-forms");
+    expect(csp).toContain("sandbox allow-scripts allow-popups allow-popups-to-escape-sandbox allow-downloads allow-forms");
     expect(csp).not.toContain("allow-same-origin");
     // WebRTC is blocked through the platform header (Chromium enforces it
     // from Chrome 152; the CSP directive above is ignored there)

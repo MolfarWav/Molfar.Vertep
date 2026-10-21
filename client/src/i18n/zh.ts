@@ -848,6 +848,11 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "无缓存：第二次调用未从缓存中取用任何内容。提供商未对此模型进行缓存，或未报告相关数据。",
   "The provider sent no token counts, so the cache cannot be checked.": "提供商未返回 token 数量，因此无法检查缓存。",
   "Time: {a} s, then {b} s.": "耗时：{a} 秒，随后 {b} 秒。",
+  "Cost checks": "费用确认",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "在执行大任务、付费测试生成或付费图片之前，Molfar 会显示预估并等待你同意。自动模式下，如果模型运行在你自己的电脑或网络上，则跳过这一步。“从不询问”还会取消修改应用代码前的计划卡片。",
+  "Auto (ask, except for a local model)": "自动（本地模型除外，其余询问）",
+  "Always ask": "始终询问",
+  "Never ask": "从不询问",
 }
 
 export default dict

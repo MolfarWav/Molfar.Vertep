@@ -848,6 +848,11 @@ const dict = {
   "No cache: the second call took nothing from the cache. The provider does not cache this model, or does not report it.": "Önbellek yok: ikinci çağrı önbellekten hiçbir şey almadı. Sağlayıcı bu modeli önbelleğe almıyor ya da bunu bildirmiyor.",
   "The provider sent no token counts, so the cache cannot be checked.": "Sağlayıcı token sayıları göndermedi, bu yüzden önbellek kontrol edilemiyor.",
   "Time: {a} s, then {b} s.": "Süre: {a} sn, ardından {b} sn.",
+  "Cost checks": "Maliyet kontrolleri",
+  "Before a big task, a paid test generation or a paid picture, Molfar shows an estimate and waits for your yes. Auto skips this when the model runs on your own computer or network. Never ask also drops the plan card before changes to an app's code.": "Büyük bir görevden, ücretli bir test üretiminden veya ücretli bir görselden önce Molfar bir tahmin gösterir ve onayınızı bekler. Otomatik, model kendi bilgisayarınızda veya ağınızda çalışıyorsa bunu atlar. “Hiç sorma” ayrıca bir uygulamanın kodunda değişiklik yapmadan önceki plan kartını da kaldırır.",
+  "Auto (ask, except for a local model)": "Otomatik (yerel model dışında sor)",
+  "Always ask": "Her zaman sor",
+  "Never ask": "Hiç sorma",
 }
 
 export default dict
