@@ -820,6 +820,9 @@ const UserImagePart: ImageMessagePartComponent = (part) => (
 );
 
 const UserMessage: FC = () => {
+  const messageId = useAuiState((s) => s.message.id);
+  // a correction sent mid-run is read when the current step ends (#73)
+  const unread = useAgentStore((s) => s.steerPending.some((p) => p.id === messageId));
   return (
     <MessagePrimitive.Root
       data-slot="aui_user-message-root"
@@ -838,6 +841,11 @@ const UserMessage: FC = () => {
           <UserActionBar />
         </div>
       </div>
+      {unread ? (
+        <p className="aui-user-message-unread text-muted-foreground col-start-2 text-end text-xs" role="status">
+          Molfar reads this after its current step. Stop ends the run now.
+        </p>
+      ) : null}
 
       <BranchPicker
         data-slot="aui_user-branch-picker"

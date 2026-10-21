@@ -116,7 +116,9 @@ export type AgentStreamEvent =
   | { type: "thinking"; delta: string }
   | { type: "thinking_end"; ms: number }
   | { type: "tool_start"; id: string; name: string; args: Record<string, unknown> }
-  | { type: "tool_end"; id: string; name: string; ok: boolean; summary: string; output?: string; diff?: string };
+  | { type: "tool_end"; id: string; name: string; ok: boolean; summary: string; output?: string; diff?: string }
+  /** a correction sent during the run (steer) has reached the model */
+  | { type: "steer_landed"; text: string };
 
 /** `summary` is what a resumed session replays to the model, so it stays short;
  *  `output` carries the result for the reader, up to this many characters, and
@@ -752,6 +754,11 @@ export class UserAgent {
       if (thinkingStart && !thinkingEnd) thinkingEnd = Date.now();
     };
     const unsub = this.agent.subscribe((ev) => {
+      if (ev.type === "message_start" && (ev.message as { role?: string }).role === "user") {
+        const c = (ev.message as { content?: unknown }).content;
+        const said = typeof c === "string" ? c : Array.isArray(c) ? c.filter((b) => (b as { type?: string }).type === "text").map((b) => (b as { text: string }).text).join("") : "";
+        if (this.steered.includes(said)) opts.onEvent?.({ type: "steer_landed", text: said });
+      }
       const ame = ev.type === "message_update" ? ev.assistantMessageEvent : undefined;
       if (ame && ame.type === "thinking_start") {
         if (!thinkingStart) thinkingStart = Date.now()

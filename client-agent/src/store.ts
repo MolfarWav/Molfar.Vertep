@@ -117,6 +117,8 @@ export interface AgentState {
   running: boolean
   banner: Banner | null
   ask: PendingAsk | null
+  /** corrections sent during a run that the model has not read yet (message id + text) */
+  steerPending: { id: string; text: string }[]
   models: EngineModel[]
   /** a short list of models is chosen (Settings > Models or the picker's stars) */
   modelsFiltered: boolean
@@ -307,7 +309,7 @@ export const useAgent = create<AgentState>()((set, get) => {
     msgs: [],
     running: false,
     banner: null,
-    ask: null,
+    ask: null, steerPending: [],
     models: [],
     modelsFiltered: false,
     favorites: [],
@@ -396,7 +398,7 @@ export const useAgent = create<AgentState>()((set, get) => {
       if (get().running) await get().stop()
       streamDeltaBatcher.reset()
       rememberSession(id)
-      set({ sessionId: id, draftProject: null, view: { kind: "chat" }, msgs: [], banner: null, ask: null, sidebarOpen: false })
+      set({ sessionId: id, draftProject: null, view: { kind: "chat" }, msgs: [], banner: null, ask: null, steerPending: [], sidebarOpen: false })
       try {
         const r = await sessionsApi.get(id)
         if (get().sessionId === id) set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []) })
@@ -481,7 +483,7 @@ export const useAgent = create<AgentState>()((set, get) => {
         msgs: [],
         spend: null,
         banner: null,
-        ask: null,
+        ask: null, steerPending: [],
         sidebarOpen: false,
       })
     },
@@ -490,12 +492,14 @@ export const useAgent = create<AgentState>()((set, get) => {
       const s = get()
       if (s.running && s.sessionId) {
         const live = uid("live")
+        const steerId = uid("m")
         streamDeltaBatcher.flush()
         const prev = liveId
         liveId = live
         set({
           // the bubble the correction interrupts stops streaming; the run goes on in a new one
-          msgs: [...s.msgs.map((m) => (m.id === prev ? { ...m, streaming: false } : m)), { id: uid("m"), role: "user", parts: [{ kind: "text", text }] }, { id: live, role: "assistant", parts: [], streaming: true }],
+          msgs: [...s.msgs.map((m) => (m.id === prev ? { ...m, streaming: false } : m)), { id: steerId, role: "user", parts: [{ kind: "text", text }] }, { id: live, role: "assistant", parts: [], streaming: true }],
+          steerPending: [...s.steerPending, { id: steerId, text }],
           ...(images?.length ? { banner: { kind: "info", text: "Pictures can't be added while Molfar is working; only the text was sent." } } : {}),
         })
         try {
@@ -539,6 +543,7 @@ export const useAgent = create<AgentState>()((set, get) => {
         set((st) => ({
           msgs: st.msgs.map((m) => (m.id === id ? { ...m, parts: finalParts, streaming: false, ...(res.checkpoints?.length ? { checkpoints: res.checkpoints } : {}), ...runInfo(res) } : m)),
           running: false,
+          steerPending: [],
           sessionId: res.sessionId,
           usage: res.usage ?? null,
           banner: res.error
@@ -559,6 +564,7 @@ export const useAgent = create<AgentState>()((set, get) => {
             return [...partial, { kind: "text", text: `\n\n**Failed:** ${msg}` } satisfies PartData]
           }),
           running: false,
+          steerPending: [],
           banner: { kind: "error", text: msg },
         }))
         liveId = null
@@ -582,6 +588,12 @@ export const useAgent = create<AgentState>()((set, get) => {
       try {
         await answerAgent(a.sessionId, a.id, text)
       } catch (e) {
+        // the question timed out or was closed while the card was still up: the words are
+        // still meant for Molfar, so during a run they go as a correction (#73)
+        if (/no pending question/i.test(e instanceof Error ? e.message : String(e)) && get().running) {
+          await get().send(text)
+          return
+        }
         set({ banner: { kind: "error", text: e instanceof Error ? e.message : String(e) } })
       }
     },
@@ -827,7 +839,7 @@ export function connectWs(): void {
       } else {
         streamDeltaBatcher.flush()
       }
-      if (e.type === "thinking_end" || e.type === "tool_start" || e.type === "tool_end" || e.type === "ask_user" || e.type === "ask_user_done") {
+      if (e.type === "thinking_end" || e.type === "tool_start" || e.type === "tool_end" || e.type === "ask_user" || e.type === "ask_user_done" || e.type === "steer_landed") {
         foldStream(e)
       }
     }
@@ -891,6 +903,11 @@ export async function syncPendingAsk(anyTime = false): Promise<void> {
 
 function foldStream(ev: StreamEvent): void {
   const store = useAgent.getState()
+  if (ev.type === "steer_landed") {
+    const at = store.steerPending.findIndex((p) => p.text === ev.text)
+    if (at >= 0) useAgent.setState({ steerPending: store.steerPending.filter((_, i) => i !== at) })
+    return
+  }
   if (ev.type === "ask_user") {
     showAsk(ev)
     return

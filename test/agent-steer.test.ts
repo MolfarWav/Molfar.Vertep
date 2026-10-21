@@ -42,6 +42,7 @@ describe("steering a run", () => {
     svc.models.setProvider(handle.provider);
     let agent: UserAgent | null = null;
     const seen: string[][] = [];
+    const events: string[] = [];
     handle.setResponses([
       () => {
         agent!.steer("make it blue");
@@ -57,8 +58,11 @@ describe("steering a run", () => {
       },
     ]);
     agent = await UserAgent.create("mia", svc, userPaths(dataDir, "mia"), users, defaultInstanceConfig(), { sessionId: "s1" });
-    expect((await agent.run("paint the button")).finalText).toBe("blue it is");
+    expect((await agent.run("paint the button", { onEvent: (e) => events.push(e.type === "steer_landed" ? `steer_landed:${e.text}` : e.type === "tool_end" ? `tool_end:${e.name}` : e.type) })).finalText).toBe("blue it is");
     expect(seen[0]?.at(-1)).toBe("make it blue");
+    // the page is told when the model has read the correction (#73), after the first turn's tool ran
+    expect(events.filter((e) => e.startsWith("steer_landed")).length).toBe(1);
+    expect(events.indexOf("steer_landed:make it blue")).toBeGreaterThan(events.indexOf("tool_end:list_dir"));
 
     const file = fs.readdirSync(path.join(userPaths(dataDir, "mia").root), { recursive: true }).map(String).find((f) => f.endsWith("s1.jsonl"));
     expect(file).toBeTruthy();

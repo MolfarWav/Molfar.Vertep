@@ -12,8 +12,10 @@ export interface AskQuestion {
 }
 
 export interface StreamEvent {
-  type: "text" | "thinking" | "thinking_end" | "tool_start" | "tool_end" | "ask_user" | "ask_user_done" | "autocompact"
+  type: "text" | "thinking" | "thinking_end" | "tool_start" | "tool_end" | "ask_user" | "ask_user_done" | "autocompact" | "steer_landed"
   id?: string
+  /** steer_landed: the correction the model has now read */
+  text?: string
   name?: string
   args?: Record<string, unknown>
   delta?: string

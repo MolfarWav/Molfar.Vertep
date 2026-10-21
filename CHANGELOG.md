@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- A correction sent while Molfar works now says when it will be read: under your message, "Molfar reads this after its current step. Stop ends the run now." stays until the model has taken it in (#73).
+- Answering a question card that has already timed out no longer ends in a red "no pending question": during a run the words go to Molfar as a correction (#73).
+
 ## 1.2.10 (2026-10-21)
 
 - Molfar's approval cards (a change to an app's protected files) no longer get lost (#76). When the model asked to edit the same protected app twice at once, the page showed one card and the other edit waited for the engine's 10 minute timeout with no buttons. Questions of one chat now come one at a time, a second edit in the same app reuses the answer to the first, and the page asks the engine for a waiting card after a reconnect, when you come back to the tab, and every few seconds during a run. A question that times out now closes its card on the page (part of #73).
