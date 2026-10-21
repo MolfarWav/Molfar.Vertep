@@ -175,7 +175,11 @@ class HttpError extends Error {
  *  app updates in place. The engine itself never builds. */
 export const armLookWatch = (username: string, appsDir: string, bus: EventBus): void => {
   ensureLookWatcher(username, appsDir, bus, {
-    onBuild: (appId, paths) => bus.emit(username, "build_needed", { app: appId, paths }),
+    onBuild: (appId, paths) => {
+      // which change makes an open page rebuild and reload (the "Reloaded: ..." toast)
+      log.info(`[apps] ${username}/${appId} build_needed: ${paths.slice(0, 5).join(", ")}${paths.length > 5 ? ` (+${paths.length - 5})` : ""}`);
+      bus.emit(username, "build_needed", { app: appId, paths });
+    },
   });
 };
 
