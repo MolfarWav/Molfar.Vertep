@@ -64,6 +64,17 @@ F. Skills (#106, the newest part). Characters > a card > tab Memory > block "Ski
    - The real test: does the character act on the rule (here: goes silent at a threat) on Gemma/GLM, and does the
      block feel too long (default room 250 tokens)? Does the model quote the skill text back at you (it should not)?
 
+G. Skills earned in play (newest, Roleplay `fb01efb`). Play a few scenes with one card until Litopys closes scenes (chapters
+   appear in Library). Most scenes must give NO skill; a skill appears only when a character shows a clear habit.
+   - Library > the chat > tab Skills: "Candidates" (seen once, does not act) and "Earned" (seen in 2 scenes, acts in this chat).
+     A toast "X earned a skill: ..." appears when one is earned. To see it sooner: Library settings (Litopys) >
+     "Earned after (scenes)" = 1.
+   - Earned skill: switch off/on, Edit, Reject, "Keep on the card" (then it shows in the card's Memory tab > Skills and
+     acts in new chats). A candidate must not appear in the prompt (request inspector).
+   - What to judge: does Litopys notice real habits, or invent them? Too many or too few? If too many, say so: I will
+     tighten the rule or raise the threshold. Switch "Look for skills in scenes" off in Library settings to stop it.
+   - Not built on purpose: the Dashboard sensor as a second detector (add only if Litopys alone misses habits).
+
 E. Things that are NOT there yet (not bugs): a "Chat memory" panel per chat (only the Prompt board switch), changes
    in the Memory tab, a model proposing skills from a story (#111), a model-written summary (the summary comes from Litopys arcs; a chat with no
    chapters yet has none and only facts/notes/said are offered).
