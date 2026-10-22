@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.3.1 (2026-10-22)
+
+- Roleplay 4.62.0 through an app update; the engine has no code change in this release. A narrator card with several characters is split by Structure it, and Fill empty works on every character (#115). The Dashboard blocks have tinted title bars by kind and marks coloured by meaning. Every import (characters, presets, lorebooks, personas, regex, chats, backups, links) shows a progress card with Cancel between files (#116).
+
 ## 1.3.0 (2026-10-22)
 
 - Roleplay 4.61.0 through an app update: a chat that continues another carries its Dashboard (#100), a card has a long memory with a Memory tab (#102), skills a character is given and earns in play (#106), a stricter list of what was said (#98), a strip of what a chat carries (#107), memory parts that say what they are for (#110), and Rebuild from scratch no longer empties a chat with no closed scene. Notes `.fork/release-notes/1.3.0.md`.
