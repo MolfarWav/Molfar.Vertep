@@ -62,8 +62,9 @@ card-memory block. Default: on, all sources that are on in the card.
     "notes": [{ "who": "Aria", "how": "saw", "text": "..." }],
     "said": [{ "text": "...", "kind": "promise" }]
   }],
-  "acquired": [{ "id": "a1", "kind": "skill|scar|title|other", "text": "Reads lips", "sourceId": "s1", "state": "proposed|accepted" }],
-  "inject": { "enabled": true, "maxTokens": 400 }
+  "changes": [{ "id": "a1", "kind": "scar|title|other", "text": "Scar on the left palm", "sourceId": "s1", "state": "proposed|accepted" }],
+  "skills": [{ "id": "k1", "name": "Answers threats with silence", "rule": "2-6 lines: how she acts and what she does", "when": "optional one line", "on": true, "origin": "user|molfar|proposed", "sourceId": "s1", "state": "proposed|accepted" }],
+  "inject": { "enabled": true, "maxTokens": 400, "skillsMaxTokens": 250 }
 }
 ```
 
@@ -75,8 +76,15 @@ card-memory block. Default: on, all sources that are on in the card.
   (top by weight/recency, default 9), live notes (default 6), strongest said (4). Built by the card-tasks model
   (#104) as a proposal the user reviews in the import dialog (checkboxes per part); raw chapters are never copied.
   A chat can be deleted afterwards; the entries keep its title and id.
-- **Acquired** one-line records are proposed by the sensor (Soul rating style) and need the user's confirmation;
-  not SKILL.md files.
+- **Changes** (a scar, a title, a lasting fact about the character) are one-line records, proposed by the sensor
+  (Soul rating style), confirmed by the user, injected in the card-memory block.
+- **Skills** (owner, 2026-10-22, issue #106): NOT abilities ("reads lips") but short collections of rules for how and
+  what to do, like Molfar's skills in small: a name, 2-6 lines of rule and an optional one-line `when`. They are the
+  seed of the Canvas "character behaviour preset" (`.fork/handoff/canvas/PLAN.md` section 15, item 3): later a
+  skill's `when` becomes a Decider condition and a generated behaviour board is a set of skills. Written by the
+  user or Molfar, or proposed from a story and confirmed; each keeps the chat it came from. Own injection block
+  "Character skills" (only the ones that are on, about 250 tokens, own Prompt board switch), deduplicated against
+  the card text and the Soul by similarity (4b). Not SKILL.md files, not big.
 - **Injection block** "Character memory": arc of each active source (shortest first), then facts ranked by
   relevance to the scene (Litopys ranking), then notes; budget 400 tokens (setting on the card), a Prompt board
   switch. Independent canons: sources with `canon: "separate"` are only injected when the chat selects them alone.
@@ -118,7 +126,7 @@ fact survives; the order and the budget hold when all three are present.
 
 ## 5. Sectors (organising lens, Proposed, after the above)
 
-Semantic (facts) / episodic (chapters) / procedural (acquired, behaviour patterns) / emotional (Dashboard state) /
+Semantic (facts) / episodic (chapters) / procedural (skills, behaviour patterns) / emotional (Dashboard state) /
 reflective (Soul, arcs) / said. A "Memory" panel per chat lists the blocks that were injected with their token
 cost and a switch each; it reuses the Prompt board's `promptSources` entries rather than a new store.
 
@@ -140,6 +148,6 @@ cost and a switch each; it reuses the Prompt board's `promptSources` entries rat
    import dialog; chat panel "Chat memory"; Prompt board block. Updates in the same change: Roleplay
    `docs/DATA-FORMATS.md`, the card skill `.skills/edit-large-card/SKILL.md` and its engine copy
    `.fork/app-skills/roleplay/edit-large-card/SKILL.md`, a task for the built-in agent.
-4. Acquired proposals, then the sector panel.
+4. Changes and skills (#106) as proposals, then the sector panel.
 5. Small neighbours when the files are open: #86 (threads dropped at the limit, retire stale ones), #85
    (post-history on imported ST presets, hidden blocks in the sensor window).
