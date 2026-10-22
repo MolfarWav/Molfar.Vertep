@@ -1,7 +1,8 @@
 # Trying the memory bridge branch on your machine (2026-10-22)
 
-What is on the branch: Roleplay fork `MolfarWav/Molfar.Vertep-Roleplay`, branch `claude/memory-bridge`, head `1853ab4`
-(11 commits on top of 4.60.0, nothing merged into the fork's main). Engine: nothing to test there; the engine branch
+What is on the branch: Roleplay fork `MolfarWav/Molfar.Vertep-Roleplay`, branch `claude/memory-bridge`, head `e112e1c`
+(the card skills are the newest commit; nothing merged into the fork's main). Already pinned on the desktop
+(`roleplay.source.json` has the branch): just open the Roleplay update panel and update, no restart of the engine needed. Engine: nothing to test there; the engine branch
 `claude/memory-bridge` is 1.2.14 plus notes. The Chub fix is a separate engine branch, `claude/chub-system-role`.
 
 ## 1. Set up
@@ -52,8 +53,19 @@ D. Card memory (the big one).
    - Delete the source chat. The story stays in the tab as "only in memory" and still reaches new chats.
    - Prompt board switch "Character memory" off for one chat: the message disappears for that chat only.
 
-E. Things that are NOT there yet (not bugs): a "Chat memory" panel per chat (only the Prompt board switch), skills and
-   changes in the Memory tab (#106), a model-written summary (the summary comes from Litopys arcs; a chat with no
+F. Skills (#106, the newest part). Characters > a card > tab Memory > block "Skills" (violet).
+   - "Add a skill": name "Answers threats with silence", rule "When someone threatens her, she says nothing and keeps
+     working." (up to 6 lines), when "a threat is spoken". It shows with a switch; edit it, switch it off and on, remove it.
+   - A proposal: ask Molfar to suggest a skill for the card (he adds it as a proposal), or skip this. It shows in the amber
+     list "Waiting for your yes": Accept / Edit / Dismiss. It must not reach the prompt before Accept.
+   - Open a NEW chat with that card, send one message. Prompt board: a row "Character skills" with its own switch; the
+     request inspector shows "[Character skills: how <name> acts ...]" above the history, right after the character memory.
+     Two replies in a row: the same text. The chat strip under the header has a "Skills of <name>" chip.
+   - The real test: does the character act on the rule (here: goes silent at a threat) on Gemma/GLM, and does the
+     block feel too long (default room 250 tokens)? Does the model quote the skill text back at you (it should not)?
+
+E. Things that are NOT there yet (not bugs): a "Chat memory" panel per chat (only the Prompt board switch), changes
+   in the Memory tab, a model proposing skills from a story (#111), a model-written summary (the summary comes from Litopys arcs; a chat with no
    chapters yet has none and only facts/notes/said are offered).
 
 ## 3. What to tell me
