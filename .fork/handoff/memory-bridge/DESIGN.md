@@ -63,7 +63,7 @@ card-memory block. Default: on, all sources that are on in the card.
     "said": [{ "text": "...", "kind": "promise" }]
   }],
   "changes": [{ "id": "a1", "kind": "scar|title|other", "text": "Scar on the left palm", "from": { "chatId": "c1", "title": "Winter watch", "at": 1760000000000 }, "state": "proposed|accepted" }],
-  "skills": [{ "id": "k1", "name": "Answers threats with silence", "rule": "2-6 lines: how she acts and what she does", "when": "optional one line", "on": true, "origin": "user|molfar|proposed", "from": { "chatId": "c1", "title": "Winter watch", "at": 1760000000000 }, "state": "proposed|accepted" }],
+  "skills": [{ "id": "k1", "name": "Answers threats with silence", "rule": "2-6 lines: how she acts and what she does", "when": "optional one line", "on": true, "origin": "user|molfar|story" /* built so; state says whether it waits */, "from": { "chatId": "c1", "title": "Winter watch", "at": 1760000000000 }, "state": "proposed|accepted" }],
   "inject": { "enabled": true, "maxTokens": 400, "skillsMaxTokens": 250 }
 }
 ```

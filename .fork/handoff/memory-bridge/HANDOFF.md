@@ -8,7 +8,7 @@ The owner is doing a physical check of the branch now and will bring the finding
 
 | What | Where | Head (2026-10-22) |
 |---|---|---|
-| Roleplay (all the features) | fork `MolfarWav/Molfar.Vertep-Roleplay`, branch `claude/memory-bridge`, worktree `E:\Claude\rp-memory`, from fork main 4.60.0 | `505e01b` (clean, pushed) |
+| Roleplay (all the features) | fork `MolfarWav/Molfar.Vertep-Roleplay`, branch `claude/memory-bridge`, worktree `E:\Claude\rp-memory`, from fork main 4.60.0 | `e112e1c` (card skills #106 on top, clean, pushed) |
 | Engine notes (STATE, handoffs, card skill copy) | this repo, branch `claude/memory-bridge`, worktree `.claude/worktrees/memory-bridge` | `470b2cf` + this file |
 | Chub fix (separate release candidate) | engine branch `claude/chub-system-role`, worktree `.claude/worktrees/chub-system-role` | `06ed6fc` |
 
