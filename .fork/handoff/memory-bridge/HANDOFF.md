@@ -45,6 +45,7 @@ or the release. The branch only adds files and keys, the old code ignores them: 
 
 - **#109** UX/UI of the strip: the owner wants the chips in the header's free middle, not a row under it; what to show,
   how expanded. Design decision first (owner with Opus), no code until then.
+- **Findings of the owner's physical check (2026-10-22):** the Jude rebuild worked (Dashboard and relations carried, the Memory tab opens and edits), but (1) the model still would not admit the story is a continuation even when asked: the Litopys headers say "do not retell it, do not contradict it" and the card memory block gives no instruction, and the chat's own first message was written without the memory: **#110** (an explicit instruction at the start of the memory parts, the owner's OOC idea; test on Gemma/GLM with the Jude chat); (2) the Said list fills too much and too often (a self-introduction and an ordinary request were stored as "confession" and "order"): comment on **#98** with the ideas (stricter wording with negative examples, perTurn default 1, a strength field, cooldown, per-character cap, compare with notes). The owner will take **#106 skills** next in a new chat.
 - **#106** card skills: short rule blocks, the seed of the Canvas behaviour preset; `memory.json` keeps unknown keys so
   `skills`/`changes` can be added; design in `DESIGN.md` (sections 4 and 5).
 - **#108** Canvas: save the Chat links board and start a new one (owner's screen: old links stay on the board).
