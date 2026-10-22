@@ -62,8 +62,8 @@ card-memory block. Default: on, all sources that are on in the card.
     "notes": [{ "who": "Aria", "how": "saw", "text": "..." }],
     "said": [{ "text": "...", "kind": "promise" }]
   }],
-  "changes": [{ "id": "a1", "kind": "scar|title|other", "text": "Scar on the left palm", "sourceId": "s1", "state": "proposed|accepted" }],
-  "skills": [{ "id": "k1", "name": "Answers threats with silence", "rule": "2-6 lines: how she acts and what she does", "when": "optional one line", "on": true, "origin": "user|molfar|proposed", "sourceId": "s1", "state": "proposed|accepted" }],
+  "changes": [{ "id": "a1", "kind": "scar|title|other", "text": "Scar on the left palm", "from": { "chatId": "c1", "title": "Winter watch", "at": 1760000000000 }, "state": "proposed|accepted" }],
+  "skills": [{ "id": "k1", "name": "Answers threats with silence", "rule": "2-6 lines: how she acts and what she does", "when": "optional one line", "on": true, "origin": "user|molfar|proposed", "from": { "chatId": "c1", "title": "Winter watch", "at": 1760000000000 }, "state": "proposed|accepted" }],
   "inject": { "enabled": true, "maxTokens": 400, "skillsMaxTokens": 250 }
 }
 ```
@@ -89,6 +89,30 @@ card-memory block. Default: on, all sources that are on in the card.
   relevance to the scene (Litopys ranking), then notes; budget 400 tokens (setting on the card), a Prompt board
   switch. Independent canons: sources with `canon: "separate"` are only injected when the chat selects them alone.
 - Saved through the card editor's Save changes (#103); every tab dot and the leave guard apply.
+
+### 4a. A deleted chat breaks nothing  (owner, 2026-10-22)
+
+Every record that remembers its chat keeps a **copy** of the origin, never a pointer it must resolve:
+`from: { chatId, title, at }` on each skill, change and import source (and `title` + `importedAt` on a source).
+Rules:
+
+1. The prompt is built from `memory.json` alone. The chat's files are never read to inject a skill, a change, a
+   fact, a note or a said line; a missing chat is the normal case (that is the point of importing before deleting).
+2. Deleting a chat, or its Litopys and Dashboard files, never writes to `memory.json`. The tab shows
+   "chat deleted" next to the source and drops only the "Open chat" link (existence is checked when the tab loads,
+   not stored).
+3. Removing an **import source** from the card asks what to do with its skills and changes: keep them (default;
+   they keep `from.title` and show "source removed") or remove them too. Skills are the user's rules, so they are
+   never deleted silently with a source.
+4. A skill the user edited or wrote by hand has `origin: user` and no `from`; it stays valid with no history at all.
+5. Dedupe rule 2 (4b) compares `chatId`s as plain strings; an id that no longer exists simply never matches a live
+   chat, so that source is injected normally.
+6. Chat ids that are re-used or restored from a backup: the copy of the title is what the user reads; the id is
+   only compared for dedupe, so a wrong match can at worst skip one source's duplicates, never lose data.
+
+Tests: delete the source chat's files, then build the injection and open the tab: same output, the source shows as
+deleted, skills still on; remove a source with the "keep" choice: skills stay with their title; with "remove too":
+only that source's skills go; a hand-written skill has no `from` and loads.
 
 ### 4b. No duplicate injections  (owner, 2026-10-22: facts must not reach the model twice, from Litopys and from the card)
 
