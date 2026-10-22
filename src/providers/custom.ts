@@ -420,7 +420,11 @@ function toModel(m: CustomModelDef, providerId: string, api: Api, def: CustomPro
   // newer field, which its reasoning models require.
   // `store` is OpenAI's own request field; Marinara and curl do not send it to other hosts, so a
   // host that is picky about the body (Chub, #59) gets one field less to choke on.
-  const hostCompat = /^https?:\/\/api\.openai\.com(\/|$)/i.test(baseUrl) ? {} : { maxTokensField: "max_tokens" as const, supportsStore: false };
+  // The system prompt goes out as `system`: for a model marked as reasoning the library otherwise sends the
+  // role `developer`, which only OpenAI knows; servers that check the body answer "malformed input" at once
+  // (Chub's "upstream timed out ... input too large or malformed" within 1.5 s, #59), where Marinara's
+  // `system` is accepted everywhere.
+  const hostCompat = /^https?:\/\/api\.openai\.com(\/|$)/i.test(baseUrl) ? {} : { maxTokensField: "max_tokens" as const, supportsStore: false, supportsDeveloperRole: false };
   const compat = api === "openai-completions" ? { ...withThinking, ...hostCompat, supportsFinishReason: false } : withThinking;
   const known = catalogEntry(baseUrl, m.id);
   const model: Model<Api> = {
