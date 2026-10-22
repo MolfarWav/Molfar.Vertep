@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.2.14 (2026-10-22)
+
+- Roleplay 4.60.0 through an app update: the card editor keeps a draft until **Save changes** (#103; Discard, a guard when leaving, a choice when the card changed meanwhile), exported cards mark the Profile sections with headings and import takes them out again (#105), and a card or Settings > Card tasks picks the model for Structure it, Fill empty and the Soul rating, with limits from the model's real window and long cards read in parts (#104). No engine change.
+
 ## 1.2.13 (2026-10-22)
 
 - A connection can carry its own **Cost checks** choice (#91): Follow the global setting (default), Ask before spending, or Never ask, in the Add and Edit forms in Settings → Connections and models. It covers that connection's models; `MOLFAR_VERTEP_COST_CHECKS=off` still wins over it. With the checks off for a model, the agent page also drops its price figures (the phone header line, run summaries, the Inspector); tokens stay and the cost stays in the data. `ModelInfo.costChecks` rides the existing `/v1/models` list.
