@@ -56,6 +56,10 @@ holds the rules that do not change between tasks; the handoff holds the task.
 - Anything a thread leaves undecided or undone (ideas, follow-ups, questions waiting on the user) becomes a GitHub issue
   in MolfarWav/Molfar.Vertep before the thread ends, label `enhancement` or `bug`, so the user picks work from GitHub
   instead of searching `.fork/` notes. A decision made later goes into the issue as a comment.
+- An issue is closed with a comment "How it was solved" (user, 2026-10-22): the release it shipped in and the commits,
+  the design in a few lines (where the change lives, why this way), where it differs from what the issue proposed,
+  what was left out on purpose or is still known, and how it was checked (tests, browser run). The user reads it to
+  look back at why something is the way it is.
 
 ## Done means
 1. `bun run typecheck`, `bun run test`, `bun run build:client` pass.
