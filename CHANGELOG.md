@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.3.0 (2026-10-22)
+
+- Roleplay 4.61.0 through an app update: a chat that continues another carries its Dashboard (#100), a card has a long memory with a Memory tab (#102), skills a character is given and earns in play (#106), a stricter list of what was said (#98), a strip of what a chat carries (#107), memory parts that say what they are for (#110), and Rebuild from scratch no longer empties a chat with no closed scene. Notes `.fork/release-notes/1.3.0.md`.
+- Engine: a custom connection to a model marked as reasoning sends the system prompt as `system`, not `developer` (Chub and other strict servers, #59; confirmed by the reporter). The NanoGPT compat test follows.
+
 ## 1.2.14 (2026-10-22)
 
 - Roleplay 4.60.0 through an app update: the card editor keeps a draft until **Save changes** (#103; Discard, a guard when leaving, a choice when the card changed meanwhile), exported cards mark the Profile sections with headings and import takes them out again (#105), and a card or Settings > Card tasks picks the model for Structure it, Fill empty and the Soul rating, with limits from the model's real window and long cards read in parts (#104). No engine change.
