@@ -82,6 +82,40 @@ card-memory block. Default: on, all sources that are on in the card.
   switch. Independent canons: sources with `canon: "separate"` are only injected when the chat selects them alone.
 - Saved through the card editor's Save changes (#103); every tab dot and the leave guard apply.
 
+### 4b. No duplicate injections  (owner, 2026-10-22: facts must not reach the model twice, from Litopys and from the card)
+
+The same story fact can arrive by four routes: the chat's own Litopys record, the Litopys backstory of the
+chat it continues, the card memory (imported from that same chat or a sibling), and the Dashboard notebook.
+Rules, in the order they apply, all enforced in code and covered by tests:
+
+1. **One builder, one pool.** The card-memory block is built inside the Litopys plugin, next to its insert and
+   backstory (which already hold facts, ranking, `DICE_LIMIT` 0.85 and the backstory's `usedFacts` set). It does
+   not live in a separate plugin: two plugins would each spend a budget and could not see what the other chose.
+   Every candidate carries its origin (`chat`, `backstory`, `card`), and a fact is injected once.
+2. **By source, exactly.** A card-memory source whose `chatId` is the chat itself, or any chat in this chat's
+   backstory chain (`loadLinks` chain, at most 3), is skipped in full: Litopys already brings that story in
+   its own, fresher form. The same source is skipped for the Dashboard when `state.inherited.from` is that chat
+   (its notes were carried).
+3. **By text, for the rest.** Before the card block is cut to its budget, each card fact is compared with the
+   facts already chosen for the chat (own insert, then backstory) with the same Dice similarity as Litopys
+   (`diceSimilarity` against `DICE_LIMIT`); a near copy is dropped from the card block, never from Litopys
+   (the chat's own record is newer and has the scene ranking). The arc paragraph is dropped when every fact it
+   summarises is already covered by a chapter of the chat or its backstory (a source-id rule, not text).
+4. **Notes and said.** Card notes are compared with the chat's live notebook (`readDash`) by holder and
+   similarity; card `said` lines with the chat's `said` list. A hit drops the card line.
+5. **Budget order.** Litopys insert first, then backstory, then card memory gets what remains of its own
+   budget (never more than 400), so a busy chat squeezes the card block, not the story.
+6. **At import**, not only at injection: the dialog marks facts that the chat's Litopys already holds as one
+   source (they are the same chat), and facts already in another imported source (similarity) are shown as
+   "already in memory" and unchecked by default, so the card file does not grow with repeats either.
+7. **Visible.** The Prompt board shows each block with its token cost; the "Chat memory" panel shows how many
+   card lines were left out as duplicates ("3 lines already in the story"), so the user sees why a source gives
+   less than it holds.
+
+Tests (Roleplay `test/`): the same fact in the chat record and in a card source is injected once; a card source
+equal to the continued chat contributes nothing; a near copy (text differs by a few words) is dropped; a distinct
+fact survives; the order and the budget hold when all three are present.
+
 ## 5. Sectors (organising lens, Proposed, after the above)
 
 Semantic (facts) / episodic (chapters) / procedural (acquired, behaviour patterns) / emotional (Dashboard state) /
