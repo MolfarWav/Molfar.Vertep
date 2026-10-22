@@ -21,6 +21,7 @@ the Litopys backstory. One thing touches the card skill `edit-large-card`.
      every id in the file, `nextSkill` is the app's counter). Always `state: "proposed"`: the user confirms it in
      the Memory tab, you never write an accepted one. If the file is missing, write
      `{"v":1,"sources":[],"skills":[]}` first. Keep a skill to habits and reactions worth reusing in every chat,
-     not a fact about one story, and not a copy of the card's own text.
+     not a fact about one story, and not a copy of the card's own text. To choose and write skills, use the skill
+     `card-skills`.
 
 3. If I have no own copies, change nothing and tell me so. Show me the diff before saving.
