@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.3.4 (2026-10-23)
+
+- Roleplay 4.64.0 through an app update: Groups have their own section in the menu, right after Characters (on a phone: in More), instead of a Characters | Groups switch inside Characters. Characters has a plain New character button, Groups has New group, and a card opened from a chat lands in its own section.
 - An app built in the browser (Roleplay) no longer reloads its whole window at start and about once an hour with "Reloaded: live editing could not patch a change in place" (#83). On Windows the file watcher reports files nobody wrote (indexers, antivirus, backup and sync tools touch attributes or access times); an event on `index.html` or `bun.lock` made the builder run a full build and every open page reload. The engine now remembers each build source's size and modification time and passes a change on only when one of them moved.
 
 ## 1.3.3 (2026-10-23)
