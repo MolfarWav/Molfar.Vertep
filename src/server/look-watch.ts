@@ -29,7 +29,61 @@ export interface WatchOpts {
 
 const active = new Map<string, LookWatch>();
 
-const flush = (username: string, changed: Set<string>, changedBuild: Set<string>, bus: EventBus, opts?: WatchOpts): void => {
+/** What a build source looked like when last seen: size (or "d" for a
+ *  directory) and mtime; null when the path does not exist. */
+const sigOf = (full: string): string | null => {
+  try {
+    const s = fs.statSync(full);
+    return `${s.isDirectory() ? "d" : s.size}:${s.mtimeMs}`;
+  } catch {
+    return null;
+  }
+};
+
+/** Every build source under appsDir (forward-slash relative paths) with its
+ *  signature: the baseline a change event is checked against. */
+const scanSources = (appsDir: string): Map<string, string> => {
+  const out = new Map<string, string>();
+  const walk = (dir: string, rel: string, depth: number): void => {
+    if (depth > 16) return;
+    let entries: fs.Dirent[] = [];
+    try {
+      entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of entries) {
+      const r = rel ? `${rel}/${e.name}` : e.name;
+      if (rel && !isBuildSource(r)) continue;
+      const full = path.join(dir, e.name);
+      if (rel) {
+        const sig = sigOf(full);
+        if (sig) out.set(r, sig);
+      }
+      if (e.isDirectory()) walk(full, r, depth + 1);
+    }
+  };
+  walk(appsDir, "", 0);
+  return out;
+};
+
+/** Whether a build source really changed since it was last seen, recording
+ *  what it looks like now. Windows reports events for files nobody wrote
+ *  (attribute, security or access-time touches from indexers, antivirus,
+ *  backup and sync tools); one on index.html or bun.lock made the builder
+ *  run a full build and every open page reload (#83). */
+const changedSince = (seen: Map<string, string>, appsDir: string, rel: string): boolean => {
+  const key = rel.replace(/\\/g, "/");
+  const now = sigOf(path.join(appsDir, rel));
+  const was = seen.get(key);
+  if (now === null) seen.delete(key);
+  else seen.set(key, now);
+  // never seen and not there now: a temp file that came and went
+  return was === undefined ? now !== null : was !== now;
+};
+
+const flush = (username: string, appsDir: string, seen: Map<string, string>, changed: Set<string>, changedBuild: Set<string>, bus: EventBus, opts?: WatchOpts): void => {
+  for (const rel of changedBuild) if (!changedSince(seen, appsDir, rel)) changedBuild.delete(rel);
   if (changed.size === 0 && changedBuild.size === 0) return;
   const byApp = new Map<string, string[]>();
   for (const rel of changed) {
@@ -77,6 +131,7 @@ export function ensureLookWatcher(username: string, appsDir: string, bus: EventB
   let watcher: fs.FSWatcher | undefined;
   let closed = false;
   let backoff = 2_000;
+  const seen = scanSources(appsDir);
 
   const arm = (): void => {
     if (closed || !fs.existsSync(appsDir)) return;
@@ -87,7 +142,7 @@ export function ensureLookWatcher(username: string, appsDir: string, bus: EventB
         else if (isAppData(rel)) changed.add(rel); // data/** → look_changed, no rebuild
         else return;
         clearTimeout(timer);
-        timer = setTimeout(() => flush(username, changed, changedBuild, bus, opts), 400);
+        timer = setTimeout(() => flush(username, appsDir, seen, changed, changedBuild, bus, opts), 400);
       });
       watcher.on("error", () => {
         // recursive watchers die when a watched subtree is removed (app
@@ -133,7 +188,7 @@ export function ensureLookWatcher(username: string, appsDir: string, bus: EventB
       }
       for (const rel of prev.keys()) if (!next.has(rel)) route(rel); // deletions
       prev = next;
-      flush(username, changed, changedBuild, bus, opts);
+      flush(username, appsDir, seen, changed, changedBuild, bus, opts);
     }, 700);
   };
   arm();

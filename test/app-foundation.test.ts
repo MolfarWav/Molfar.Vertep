@@ -171,6 +171,32 @@ afterEach(() => {
     expect(needed[0]!.payload).toMatchObject({ app: "notes", paths: ["src/main.tsx"] });
   });
 
+  it("a change event on a file nobody wrote is not build_needed (#83)", async () => {
+    const seen: Array<{ type: string; payload: unknown }> = [];
+    const origEmit = bus.emit.bind(bus);
+    bus.emit = (username: string, type: string, payload: unknown) => {
+      seen.push({ type, payload });
+      return origEmit(username, type, payload);
+    };
+    expect((await app.request("/app/alice/notes/")).status).toBe(200);
+    const appDir = path.join(dataDir, "users", "alice", "apps", "notes");
+    // an attribute touch (indexers, antivirus, sync tools on Windows) fires
+    // the watcher but leaves size and mtime as they were
+    for (const f of ["index.html", "src/main.tsx"]) {
+      fs.chmodSync(path.join(appDir, f), 0o444);
+      fs.chmodSync(path.join(appDir, f), 0o644);
+    }
+    await new Promise((r) => setTimeout(r, 1200));
+    expect(seen.filter((e) => e.type === "build_needed")).toHaveLength(0);
+    // a real edit still goes through, and only with what changed
+    fs.appendFileSync(path.join(appDir, "src", "main.tsx"), "\n/* probe 2 */\n");
+    await new Promise((r) => setTimeout(r, 1200));
+    bus.emit = origEmit;
+    const needed = seen.filter((e) => e.type === "build_needed");
+    expect(needed.length).toBeGreaterThan(0);
+    expect(needed[0]!.payload).toMatchObject({ app: "notes", paths: ["src/main.tsx"] });
+  });
+
   it("isBuildSource: whatever a build reads, never data, plugins, output or deps", async () => {
     const { isBuildSource } = await import("../src/builder/server.js");
     for (const yes of ["demo/src/main.tsx", "demo/index.html", "demo/package.json", "demo/tsconfig.json", "demo/public/logo.svg", "demo/lib/util.ts", "demo/.env", "demo/.env.production"]) {

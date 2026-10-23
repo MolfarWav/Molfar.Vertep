@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- An app built in the browser (Roleplay) no longer reloads its whole window at start and about once an hour with "Reloaded: live editing could not patch a change in place" (#83). On Windows the file watcher reports files nobody wrote (indexers, antivirus, backup and sync tools touch attributes or access times); an event on `index.html` or `bun.lock` made the builder run a full build and every open page reload. The engine now remembers each build source's size and modification time and passes a change on only when one of them moved.
+
 ## 1.3.3 (2026-10-23)
 
 - Molfar works in several chats at once (#69). New chat, or opening another chat, no longer stops the run: it goes on, and opening the chat again shows its live text. A chat that is not open shows in the list a spinner (working), an amber question mark (waits for your answer) or a green check (finished while you were elsewhere), and a strip under the header lists those chats, so a question that waits is not missed on a phone. The engine lists `running` and `waiting` per chat, announces a run's start and end (`agent_run`), refuses a second run in a chat that is already working (409; a message there is a correction) and refuses to delete a working chat. A new chat gets its id when you press Send. No limit on parallel runs: a rate-limited model reports its own error in that chat.
