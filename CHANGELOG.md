@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.3.5 (2026-10-23)
+
+- Roleplay 4.65.0 through an app update: the Dashboard's threads become quests (main, side, everyday, with steps under a main quest). A quest that does not fit its limit, or that the story left alone for long, waits under Suggestions for your answer instead of being dropped or left open forever. Story, move can pick a quest or a step, or add a Twist (something outside the quests). Event ids the sensor makes up are matched to the nearest known event, and the ones nobody can place are listed under Not recognised in Dashboard settings. No engine code change.
+
 ## 1.3.4 (2026-10-23)
 
 - Roleplay 4.64.0 through an app update: Groups have their own section in the menu, right after Characters (on a phone: in More), instead of a Characters | Groups switch inside Characters. Characters has a plain New character button, Groups has New group, and a card opened from a chat lands in its own section.
