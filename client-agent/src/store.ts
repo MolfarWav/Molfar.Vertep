@@ -485,7 +485,14 @@ export const useAgent = create<AgentState>()((set, get) => {
         if (get().sessionId === id) {
           // a run another page started goes on: show it as working, the engine says when it ends
           const going = get().sessions.find((x) => x.sessionId === id)?.running === true && !inflight.has(id)
-          set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []), running: going })
+          const done = msgsFromRuns(r.runs ?? [])
+          // the run that is going has no record yet: its message and a bubble for the stream to fill,
+          // shaped as a run of this page would be, so the thread does not read them as another branch
+          if (going && r.inflight) {
+            liveId = uid("live")
+            done.push({ id: uid("m"), role: "user", parts: [{ kind: "text", text: r.inflight }] }, { id: liveId, role: "assistant", parts: [], streaming: true })
+          }
+          set({ msgs: done, spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []), running: going })
         }
         // a run of this chat may be waiting for an answer (a reloaded page does not know)
         void syncPendingAsk(true)

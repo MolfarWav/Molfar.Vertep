@@ -182,7 +182,7 @@ export async function api<T>(method: string, p: string, body?: unknown): Promise
 
 export const sessionsApi = {
   list: () => api<{ sessions: EngineSession[] }>("GET", "/v1/agent/sessions").then((r) => r.sessions ?? []),
-  get: (id: string) => api<{ runs: EngineRun[] }>("GET", `/v1/agent/sessions/${encodeURIComponent(id)}`),
+  get: (id: string) => api<{ runs: EngineRun[]; inflight?: string }>("GET", `/v1/agent/sessions/${encodeURIComponent(id)}`),
   remove: (id: string) => api("DELETE", `/v1/agent/sessions/${encodeURIComponent(id)}`),
   rename: (id: string, title: string) =>
     api<{ ok: boolean }>("POST", `/v1/agent/sessions/${encodeURIComponent(id)}/rename`, { title }),

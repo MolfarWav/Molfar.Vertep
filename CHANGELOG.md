@@ -8,6 +8,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 ## Unreleased
 
 - Molfar works in several chats at once (#69). New chat, or opening another chat, no longer stops the run: it goes on, and opening the chat again shows its live text. A chat that is not open shows in the list a spinner (working), an amber question mark (waits for your answer) or a green check (finished while you were elsewhere), and a strip under the header lists those chats, so a question that waits is not missed on a phone. The engine lists `running` and `waiting` per chat, announces a run's start and end (`agent_run`), refuses a second run in a chat that is already working (409; a message there is a correction) and refuses to delete a working chat. A new chat gets its id when you press Send. No limit on parallel runs: a rate-limited model reports its own error in that chat.
+- Chats that run at once know about each other's files: when `edit_file`, `write_file` or `json_set` changes a file that another chat, still working, changed too, the tool result says so (which task, how long ago, and the `git log` to look at). Nothing is added to the prompt, so the prompt cache is untouched; files changed through shell commands are not tracked. A page opened while a chat is running (a reload, another tab) shows the message of that run.
 
 ## 1.3.2 (2026-10-23)
 

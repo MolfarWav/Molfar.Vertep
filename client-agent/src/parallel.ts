@@ -2,9 +2,9 @@
 // is left keeps going on the engine, and these helpers keep what the page
 // needs to show it again: the messages the stream built so far, the marks
 // the chat list and the strip under the header show.
-import type { EngineSession } from "./api"
-import { applyStreamEvent, type Msg } from "./runs"
-import type { StreamEvent } from "./streaming"
+import type { EngineSession } from "./api.js"
+import { applyStreamEvent, type Msg } from "./runs.js"
+import type { StreamEvent } from "./streaming.js"
 
 /** A run the page keeps while its chat is not the open one. The stream goes on
  *  filling it, so opening the chat again shows the live progress. */
@@ -55,7 +55,7 @@ export type RowMark = "waiting" | "running" | "finished" | null
 
 /** What the chat list shows beside a chat that is not the open one. A question
  *  that waits beats a run in progress, and both beat a finished run nobody opened. */
-export function rowMark(row: Pick<EngineSession, "sessionId" | "running" | "waiting">, openId: string | null, unseen: Readonly<Record<string, true>>): RowMark {
+export function rowMark(row: Pick<EngineSession, "sessionId"> & Partial<Pick<EngineSession, "running" | "waiting">>, openId: string | null, unseen: Readonly<Record<string, true>>): RowMark {
   if (row.sessionId === openId) return null
   if (row.waiting) return "waiting"
   if (row.running) return "running"

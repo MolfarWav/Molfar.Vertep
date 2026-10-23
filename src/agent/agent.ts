@@ -4,6 +4,7 @@
  * Sessions persist as JSONL run records (agent can read its own history);
  * resume reconstructs dialogue from past runs.
  */
+import { beginWork, endWork } from "./neighbours.js";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -468,6 +469,7 @@ export class UserAgent {
       ...buildUserTools(username, paths, {
         ...(opts.notify ? { notify: opts.notify } : {}),
         dataDir: paths.root,
+        sessionId,
         packageDownloads: () => cfg.apps.packageDownloads,
         ...(opts.ask ? { ask: opts.ask } : {}),
         ...(opts.sandbox ? { sandbox: opts.sandbox } : {}),
@@ -726,7 +728,22 @@ export class UserAgent {
     this.agent.steer({ role: "user", content: [{ type: "text", text }], timestamp: Date.now() } as unknown as Parameters<typeof this.agent.steer>[0]);
   }
 
-  async run(
+  /** The message of the run that is going now, null between runs: a page opened mid-run shows it. */
+  inflight: string | null = null;
+
+  /** One run. While it goes, other chats' write tools can see which files it changed (neighbours.ts). */
+  async run(userMessage: string, opts: Parameters<UserAgent["runNow"]>[1] = {}): Promise<AgentRunResult> {
+    this.inflight = userMessage;
+    beginWork(this.runState.username, this.sessionId, userMessage.replace(/\s+/g, " ").trim().slice(0, 60) || "a request");
+    try {
+      return await this.runNow(userMessage, opts);
+    } finally {
+      this.inflight = null;
+      endWork(this.runState.username, this.sessionId);
+    }
+  }
+
+  private async runNow(
     userMessage: string,
     opts: {
       onDelta?: (delta: string) => void;

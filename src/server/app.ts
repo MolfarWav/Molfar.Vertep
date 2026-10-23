@@ -2518,7 +2518,9 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       .filter((l) => l.trim())
       .map((l) => JSON.parse(l) as Record<string, unknown>)
       .filter((r) => r.type === "run" || r.type === "compact");
-    return c.json({ sessionId: id, runs });
+    // a page opened mid-run (a reload, another tab) has no record of the run that is going: name its message
+    const inflight = activeRuns.get(`${c.get("user").username}:${id}`)?.inflight;
+    return c.json({ sessionId: id, runs, ...(inflight ? { inflight } : {}) });
   });
 
   app.post("/v1/agent", async (c) => {

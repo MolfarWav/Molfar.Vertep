@@ -42,10 +42,10 @@ export function OtherChatsStrip(): ReactNode {
   const unseen = useAgent((s) => s.unseen)
   const chats = useMemo(() => otherChats(sessions, sessionId, unseen), [sessions, sessionId, unseen])
   if (!chats.length) return null
-  const waiting = chats.filter((c) => c.mark === "waiting").length
+  const label = chats.some((c) => c.mark === "waiting") ? "Waiting for you:" : chats.some((c) => c.mark === "running") ? "Other chats:" : "Finished while you were away:"
   return (
     <div role="status" aria-label="Other chats" className="flex min-h-9 shrink-0 flex-wrap items-center gap-1.5 border-b px-3 py-1 text-xs">
-      <span className="text-muted-foreground shrink-0">{waiting ? "Waiting for you:" : "Other chats:"}</span>
+      <span className="text-muted-foreground shrink-0">{label}</span>
       {chats.slice(0, SHOWN).map((c) => (
         <Chip key={c.id} chat={c} />
       ))}

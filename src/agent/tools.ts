@@ -3,6 +3,7 @@
  * to the owning user's directory, with the write denylist from paths.ts
  * (auth.json, .git, chats/, assets-store/ are never agent-writable).
  */
+import { neighbourNote, noteWrite } from "./neighbours.js";
 import fs from "node:fs";
 import path from "node:path";
 import { Type } from "typebox";
@@ -41,6 +42,8 @@ export interface AgentToolOptions {
   packageDownloads?: () => boolean;
   /** Plan mode tools keep their read paths only (git refuses commit/restore). */
   mode?: "normal" | "accept" | "plan";
+  /** The chat these tools serve: write results name another working chat that changed the same file. */
+  sessionId?: string;
 }
 
 /** Tools that mutate state — stripped in plan mode (read-only investigation). */
@@ -273,6 +276,9 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
       `Refused: the user did not allow changes to ${area.label}.${answer && answer !== "Don't allow" && answer !== "(no answer)" ? ` They said: ${answer}.` : ""} If the change can live in the app's data/ or in a plugin of your own, put it there; otherwise explain why these files must change and wait for the user.`,
     );
   };
+  /** After a write: the note about another working chat that changed the file too ("" when none). */
+  const neighbours = (rel: string, replaced: boolean): string =>
+    opts.sessionId ? neighbourNote(noteWrite(username, opts.sessionId, rel), rel, replaced) : "";
   const protectedFor = (rel: string): ProtectedArea | null => protectedArea(rel, readProtectedPaths(p.settings));
 
   const askUser: AgentTool = {
@@ -470,7 +476,7 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
         committed = `. Commit failed: ${(e as Error).message} — retry with the git tool: "commit -m <message>"`;
       }
       const diff = fileDiff(rel, content, next);
-      return textResult(`Edited ${rel} (${oldText.length}→${newText.length} chars)${committed}.`, {
+      return textResult(`Edited ${rel} (${oldText.length}→${newText.length} chars)${committed}.${neighbours(rel, false)}`, {
         path: rel,
         ...(diff ? { diff } : {}),
       });
@@ -572,7 +578,7 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
         committed = `. Commit failed: ${(e as Error).message} — retry with the git tool: "commit -m <message>"`;
       }
       const diff = fileDiff(rel, before, content);
-      return textResult(`Wrote ${rel} (${content.length} bytes)${committed}.`, {
+      return textResult(`Wrote ${rel} (${content.length} bytes)${committed}.${neighbours(rel, true)}`, {
         path: rel,
         ...(diff ? { diff } : {}),
       });
@@ -675,7 +681,7 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
       } catch (e) {
         committed = `. Commit failed: ${(e as Error).message} — retry with the git tool: "commit -m <message>"`;
       }
-      return textResult(`${lines.join("\n")}\n${rel}: ${raw.length} → ${out.length} bytes, format kept${committed}.`, { path: rel, ...(diff ? { diff } : {}) });
+      return textResult(`${lines.join("\n")}\n${rel}: ${raw.length} → ${out.length} bytes, format kept${committed}.${neighbours(rel, false)}`, { path: rel, ...(diff ? { diff } : {}) });
     },
   };
 

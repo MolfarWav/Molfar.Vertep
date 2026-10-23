@@ -37,7 +37,7 @@ describe("a left chat's run", () => {
     expect(run.msgs[0]?.parts).toEqual([{ kind: "text", text: "hi" }]);
     const parts = run.msgs[1]?.parts ?? [];
     expect(parts[0]).toEqual({ kind: "text", text: "Hello" });
-    expect(parts.some((p) => p.kind === "tool")).toBe(true);
+    expect(parts.some((part) => part.kind === "tool")).toBe(true);
   });
 
   it("starts a message when the first event arrives before the page drew one", () => {
