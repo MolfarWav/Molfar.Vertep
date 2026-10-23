@@ -19,6 +19,8 @@ import type { LaunchInfo, Me, StoreApp } from "./types"
 import { StoreDialog, WelcomeApps, useStore } from "./store"
 import { getLocale, tr, useLocale } from "./i18n/index"
 import { GuideHost } from "./guide/guide-host"
+import { NOTICE_KINDS, type NoticeKind } from "./notice-rules"
+import { askPermissionOnFirstGesture, closeNotices, showNotice } from "./notice"
 import { GUIDE_MENU_EVENT, GUIDE_STORE_EVENT, openHelp } from "./guide/events"
 import { GuidePlace, useGuidePlace } from "./guide/place"
 import { DEFAULT_THEME, THEME_KEY, applyStoredTheme, applyTheme, isBuiltinTheme, storedThemeId, themeSwatch, type ShellTheme } from "./theme"
@@ -329,9 +331,29 @@ function Shell(props: { theme: ThemeControl }) {
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== location.origin || e.source !== agentFrame.current?.contentWindow) return
-      const d = e.data as { __chrysalisAgent?: unknown; appId?: unknown; open?: unknown; id?: unknown; question?: unknown } | null
+      const d = e.data as { __chrysalisAgent?: unknown; appId?: unknown; open?: unknown; id?: unknown; question?: unknown; chatId?: unknown; kind?: unknown; text?: unknown } | null
+      const tell = (kind: NoticeKind, chatId: unknown, text: unknown) => {
+        if (typeof chatId !== "string" || !chatId) return
+        const now = shellNow.current
+        showNotice({
+          kind,
+          chatId,
+          text: typeof text === "string" ? text : "",
+          agentOnScreen: now.active?.kind === "agent" || !!now.pinned,
+          onOpen: (id) => {
+            now.openAgent()
+            agentFrame.current?.contentWindow?.postMessage({ __chrysalisAgent: "open-chat", id }, location.origin)
+          },
+        })
+      }
       if (d?.__chrysalisAgent === "ask") {
         setAgentAsk(d.open === true && typeof d.id === "string" ? { id: d.id, question: typeof d.question === "string" ? d.question.slice(0, 300) : "" } : null)
+        if (d.open === true) tell("ask", d.chatId, d.question)
+        return
+      }
+      // a run finished or failed, or a chat that is not open began to wait: said when the user is not looking
+      if (d?.__chrysalisAgent === "notice") {
+        if (typeof d.kind === "string" && (NOTICE_KINDS as readonly string[]).includes(d.kind)) tell(d.kind as NoticeKind, d.chatId, d.text)
         return
       }
       // the project pane's "Open app": only an installed app, by its id
@@ -349,6 +371,16 @@ function Shell(props: { theme: ThemeControl }) {
     window.addEventListener("message", onMessage)
     return () => window.removeEventListener("message", onMessage)
   }, [])
+  // system notifications: the browser's permission is asked at the first click, and what was said
+  // to a user who was away is withdrawn when they come back
+  useEffect(() => {
+    const off = askPermissionOnFirstGesture()
+    window.addEventListener("focus", closeNotices)
+    return () => {
+      off()
+      window.removeEventListener("focus", closeNotices)
+    }
+  }, [])
   /** Open the agent on a fresh chat that starts with `prompt`. */
   function askAgent(prompt: string, kind: "start" | "draft" = "start") {
     pendingAgentPrompt.current = { kind, text: prompt }
@@ -358,8 +390,8 @@ function Shell(props: { theme: ThemeControl }) {
   // Apps ask the shell for a few things over the bridge (the allowlist is
   // shellRequest in app-bridge-host.js: trusted apps only). Heard only from
   // the app on screen, and Molfar gets an unsent draft, never a sent message.
-  const shellNow = useRef({ active, pinned, launch, openApp, askAgent, openSettings })
-  shellNow.current = { active, pinned, launch, openApp, askAgent, openSettings }
+  const shellNow = useRef({ active, pinned, launch, openApp, openAgent, askAgent, openSettings })
+  shellNow.current = { active, pinned, launch, openApp, openAgent, askAgent, openSettings }
   const lastShellDraft = useRef(0)
   useEffect(() => {
     const host = window.ChrysalisBridgeHost

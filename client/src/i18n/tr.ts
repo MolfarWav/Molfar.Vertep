@@ -860,6 +860,17 @@ const dict = {
   "Never ask (off)": "Asla sorma (kapalı)",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "Yalnızca bu bağlantının modelleri için. “Asla sorma” seçeneği, ajan sayfasında bu modellerin fiyatlarını da gizler.",
   "{files} files · ~{kb} KB": "{files} dosya · ~{kb} KB",
+  "Notifications": "Bildirimler",
+  "Molfar finished": "Molfar bitirdi",
+  "Molfar stopped with an error": "Molfar bir hatayla durdu",
+  "This is how Molfar will tell you.": "Molfar size böyle haber verecek.",
+  "Tell me on this device when Molfar asks something, finishes or stops with an error": "Molfar bir şey sorduğunda, bitirdiğinde veya hatayla durduğunda bu cihazda bana bildir",
+  "Shown in the corner of the screen when you are in another window, tab or app of Molfar Vertep, and the chat is not in front of you.": "Başka bir pencerede, sekmede veya Molfar Vertep’in başka bir uygulamasındayken ve sohbet önünüzde değilken ekranın köşesinde görünür.",
+  "Allowed in this browser.": "Bu tarayıcıda izin verildi.",
+  "Blocked in this browser. Allow notifications for this site in the browser's site settings.": "Bu tarayıcıda engellendi. Tarayıcının site ayarlarından bu site için bildirimlere izin verin.",
+  "This browser cannot show notifications.": "Bu tarayıcı bildirim gösteremiyor.",
+  "Not allowed yet. Press Send a test and allow it when the browser asks.": "Henüz izin verilmedi. “Test gönder”e basın ve tarayıcı sorduğunda izin verin.",
+  "Send a test": "Test gönder",
 }
 
 export default dict

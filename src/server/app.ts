@@ -2593,6 +2593,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     }
     activeRuns.set(runKey, agent);
     bus.emit(u.username, "agent_run", { sessionId: agent.sessionId, state: "start" });
+    let failed = false;
     try {
       const result = await agent.run(body.message, {
         onDelta: (d) => bus.emit(u.username, "agent_delta", { sessionId: agent.sessionId, delta: d }),
@@ -2614,6 +2615,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
             ? autoCompact
             : 0;
       // count cached tokens too — they're part of the context the model re-reads
+      failed = !!result.error;
       const nextContext = result.usage ? result.usage.input + result.usage.cacheRead + result.usage.output : 0;
       // an overflow the in-run retry could not absorb: without compacting,
       // every next message in this session would be refused the same way
@@ -2628,10 +2630,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       }
       return c.json({ sessionId: agent.sessionId, ...result, ...(autoCompacted ? { autoCompacted: true } : {}) });
     } catch (e) {
+      failed = true;
       return c.json({ error: (e as Error).message }, 500);
     } finally {
       activeRuns.delete(runKey);
-      bus.emit(u.username, "agent_run", { sessionId: agent.sessionId, state: "end" });
+      // `failed`: the run ended with an error, so a page that is not looking can say so
+      bus.emit(u.username, "agent_run", { sessionId: agent.sessionId, state: "end", ...(failed ? { failed: true } : {}) });
     }
   });
 

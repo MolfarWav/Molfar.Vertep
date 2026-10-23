@@ -860,6 +860,17 @@ const dict = {
   "Never ask (off)": "Nunca perguntar (desligado)",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "Somente para os modelos desta conexão. «Nunca perguntar» também oculta os preços deles na página do agente.",
   "{files} files · ~{kb} KB": "{files} arquivos · ~{kb} KB",
+  "Notifications": "Notificações",
+  "Molfar finished": "O Molfar terminou",
+  "Molfar stopped with an error": "O Molfar parou com um erro",
+  "This is how Molfar will tell you.": "É assim que o Molfar vai avisar você.",
+  "Tell me on this device when Molfar asks something, finishes or stops with an error": "Avisar-me neste dispositivo quando o Molfar perguntar, terminar ou parar com um erro",
+  "Shown in the corner of the screen when you are in another window, tab or app of Molfar Vertep, and the chat is not in front of you.": "Aparece no canto da tela quando você está em outra janela, aba ou aplicativo do Molfar Vertep e o chat não está à sua frente.",
+  "Allowed in this browser.": "Permitido neste navegador.",
+  "Blocked in this browser. Allow notifications for this site in the browser's site settings.": "Bloqueado neste navegador. Permita as notificações deste site nas configurações do site do navegador.",
+  "This browser cannot show notifications.": "Este navegador não consegue mostrar notificações.",
+  "Not allowed yet. Press Send a test and allow it when the browser asks.": "Ainda não permitido. Pressione “Enviar um teste” e permita quando o navegador perguntar.",
+  "Send a test": "Enviar um teste",
 }
 
 export default dict

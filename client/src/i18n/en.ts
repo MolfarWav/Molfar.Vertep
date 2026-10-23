@@ -862,6 +862,17 @@ const en = {
   "Never ask (off)": "",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "",
   "{files} files · ~{kb} KB": "",
+  "Notifications": "",
+  "Molfar finished": "",
+  "Molfar stopped with an error": "",
+  "This is how Molfar will tell you.": "",
+  "Tell me on this device when Molfar asks something, finishes or stops with an error": "",
+  "Shown in the corner of the screen when you are in another window, tab or app of Molfar Vertep, and the chat is not in front of you.": "",
+  "Allowed in this browser.": "",
+  "Blocked in this browser. Allow notifications for this site in the browser's site settings.": "",
+  "This browser cannot show notifications.": "",
+  "Not allowed yet. Press Send a test and allow it when the browser asks.": "",
+  "Send a test": "",
 } as const
 
 export default en

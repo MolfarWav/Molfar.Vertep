@@ -860,6 +860,17 @@ const dict = {
   "Never ask (off)": "Nooit vragen (uit)",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "Alleen voor de modellen van deze verbinding. ‘Nooit vragen’ verbergt ook hun prijzen op de agentpagina.",
   "{files} files · ~{kb} KB": "{files} bestanden · ~{kb} KB",
+  "Notifications": "Meldingen",
+  "Molfar finished": "Molfar is klaar",
+  "Molfar stopped with an error": "Molfar is gestopt met een fout",
+  "This is how Molfar will tell you.": "Zo laat Molfar het je weten.",
+  "Tell me on this device when Molfar asks something, finishes or stops with an error": "Meld het op dit apparaat als Molfar iets vraagt, klaar is of met een fout stopt",
+  "Shown in the corner of the screen when you are in another window, tab or app of Molfar Vertep, and the chat is not in front of you.": "Verschijnt in de hoek van het scherm als je in een ander venster, tabblad of andere app van Molfar Vertep zit en de chat niet voor je staat.",
+  "Allowed in this browser.": "Toegestaan in deze browser.",
+  "Blocked in this browser. Allow notifications for this site in the browser's site settings.": "Geblokkeerd in deze browser. Sta meldingen voor deze site toe in de site-instellingen van de browser.",
+  "This browser cannot show notifications.": "Deze browser kan geen meldingen tonen.",
+  "Not allowed yet. Press Send a test and allow it when the browser asks.": "Nog niet toegestaan. Druk op ‘Test sturen’ en sta het toe als de browser erom vraagt.",
+  "Send a test": "Test sturen",
 }
 
 export default dict

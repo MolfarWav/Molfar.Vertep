@@ -860,6 +860,17 @@ const dict = {
   "Never ask (off)": "確認しない（オフ）",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "この接続のモデルだけに適用されます。「確認しない」にすると、エージェントページでそれらの料金も非表示になります。",
   "{files} files · ~{kb} KB": "{files} ファイル · 約 {kb} KB",
+  "Notifications": "通知",
+  "Molfar finished": "Molfar が完了しました",
+  "Molfar stopped with an error": "Molfar がエラーで停止しました",
+  "This is how Molfar will tell you.": "Molfar はこのようにお知らせします。",
+  "Tell me on this device when Molfar asks something, finishes or stops with an error": "Molfar が質問したとき、完了したとき、エラーで止まったときに、このデバイスで知らせる",
+  "Shown in the corner of the screen when you are in another window, tab or app of Molfar Vertep, and the chat is not in front of you.": "別のウィンドウ、タブ、または Molfar Vertep の別のアプリを見ていて、チャットが目の前にないとき、画面の隅に表示されます。",
+  "Allowed in this browser.": "このブラウザーで許可されています。",
+  "Blocked in this browser. Allow notifications for this site in the browser's site settings.": "このブラウザーでブロックされています。ブラウザーのサイト設定で、このサイトの通知を許可してください。",
+  "This browser cannot show notifications.": "このブラウザーは通知を表示できません。",
+  "Not allowed yet. Press Send a test and allow it when the browser asks.": "まだ許可されていません。「テストを送信」を押し、ブラウザーが尋ねたら許可してください。",
+  "Send a test": "テストを送信",
 }
 
 export default dict

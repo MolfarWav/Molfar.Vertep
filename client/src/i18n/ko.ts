@@ -860,6 +860,17 @@ const dict = {
   "Never ask (off)": "묻지 않음(꺼짐)",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "이 연결의 모델에만 적용됩니다. ‘묻지 않음’은 에이전트 페이지에서 해당 모델의 가격도 숨깁니다.",
   "{files} files · ~{kb} KB": "파일 {files}개 · ~{kb} KB",
+  "Notifications": "알림",
+  "Molfar finished": "Molfar가 끝냈습니다",
+  "Molfar stopped with an error": "Molfar가 오류로 멈췄습니다",
+  "This is how Molfar will tell you.": "Molfar가 이렇게 알려 드립니다.",
+  "Tell me on this device when Molfar asks something, finishes or stops with an error": "Molfar가 질문하거나, 끝나거나, 오류로 멈추면 이 기기에서 알려 주기",
+  "Shown in the corner of the screen when you are in another window, tab or app of Molfar Vertep, and the chat is not in front of you.": "다른 창, 탭 또는 Molfar Vertep의 다른 앱을 보고 있고 채팅이 눈앞에 없을 때 화면 모서리에 표시됩니다.",
+  "Allowed in this browser.": "이 브라우저에서 허용되었습니다.",
+  "Blocked in this browser. Allow notifications for this site in the browser's site settings.": "이 브라우저에서 차단되었습니다. 브라우저의 사이트 설정에서 이 사이트의 알림을 허용하세요.",
+  "This browser cannot show notifications.": "이 브라우저는 알림을 표시할 수 없습니다.",
+  "Not allowed yet. Press Send a test and allow it when the browser asks.": "아직 허용되지 않았습니다. “테스트 보내기”를 누르고 브라우저가 물으면 허용하세요.",
+  "Send a test": "테스트 보내기",
 }
 
 export default dict

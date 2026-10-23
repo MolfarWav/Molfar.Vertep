@@ -860,6 +860,17 @@ const dict = {
   "Never ask (off)": "从不询问（关）",
   "For this connection's models only. Never ask also hides their prices on the agent page.": "仅适用于此连接的模型。选择“从不询问”还会在智能体页面隐藏这些模型的价格。",
   "{files} files · ~{kb} KB": "{files} 个文件 · 约 {kb} KB",
+  "Notifications": "通知",
+  "Molfar finished": "Molfar 已完成",
+  "Molfar stopped with an error": "Molfar 因错误而停止",
+  "This is how Molfar will tell you.": "Molfar 会这样通知你。",
+  "Tell me on this device when Molfar asks something, finishes or stops with an error": "当 Molfar 提问、完成或因错误停止时，在此设备上通知我",
+  "Shown in the corner of the screen when you are in another window, tab or app of Molfar Vertep, and the chat is not in front of you.": "当你在其他窗口、标签页或 Molfar Vertep 的其他应用中，且聊天不在你眼前时，会显示在屏幕角落。",
+  "Allowed in this browser.": "已在此浏览器中允许。",
+  "Blocked in this browser. Allow notifications for this site in the browser's site settings.": "已在此浏览器中被阻止。请在浏览器的网站设置中允许此网站发送通知。",
+  "This browser cannot show notifications.": "此浏览器无法显示通知。",
+  "Not allowed yet. Press Send a test and allow it when the browser asks.": "尚未允许。请点击“发送测试”，并在浏览器询问时允许。",
+  "Send a test": "发送测试",
 }
 
 export default dict

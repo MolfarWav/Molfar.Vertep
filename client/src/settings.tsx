@@ -49,6 +49,7 @@ import { GuideSection } from "./guide/guide-settings"
 import { useGuidePlace } from "./guide/place"
 import { SyncTab } from "./sync-settings"
 import { ImagesTab } from "./image-settings"
+import { notifyEnabled, notifyPermission, requestNotifyPermission, setNotifyEnabled, showTestNotice, type NotifyPermission } from "./notice"
 
 export const inputClass =
   "min-w-0 flex-1 rounded-lg border border-line bg-panel px-3 py-1.5 text-13 text-ink outline-none placeholder:text-ink-faint focus:border-line-focus"
@@ -790,6 +791,7 @@ function AgentTab() {
         <AutoCompactSection />
         <SmallModelSection />
         <CostChecksSection />
+        <NotificationsSection />
         <div className="flex flex-col gap-2">
           <h3 className="text-13 font-medium text-ink">{tr("Molfar's instructions")}</h3>
           <p className="text-12 text-ink-muted">
@@ -995,6 +997,54 @@ function CostChecksSection() {
         {saved ? <span className="text-12 text-success">{tr("Saved")}</span> : null}
       </div>
       {err ? <div className="text-12 text-danger">{err}</div> : null}
+    </div>
+  )
+}
+
+/** System notifications for what Molfar reports while the user is away (notice.ts). The switch and
+ *  the browser's permission belong to this browser, so they are kept here, not on the engine. */
+function NotificationsSection() {
+  const [on, setOn] = useState(notifyEnabled)
+  const [permission, setPermission] = useState<NotifyPermission>(notifyPermission)
+
+  const ask = async () => setPermission(await requestNotifyPermission())
+  const change = (next: boolean) => {
+    setOn(next)
+    setNotifyEnabled(next)
+    // the click is the gesture the browser wants before it asks
+    if (next && permission === "default") void ask()
+  }
+  const test = async () => {
+    if (permission !== "granted") await ask()
+    if (notifyPermission() === "granted") showTestNotice()
+  }
+  const status =
+    permission === "granted"
+      ? tr("Allowed in this browser.")
+      : permission === "denied"
+        ? tr("Blocked in this browser. Allow notifications for this site in the browser's site settings.")
+        : permission === "unsupported"
+          ? tr("This browser cannot show notifications.")
+          : tr("Not allowed yet. Press Send a test and allow it when the browser asks.")
+
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className="text-13 font-medium text-ink">{tr("Notifications")}</h3>
+      <label className="flex items-center gap-2 text-13 text-ink">
+        <input type="checkbox" className="size-4 accent-[var(--c-contrast)]" checked={on} disabled={permission === "unsupported"} onChange={(e) => change(e.currentTarget.checked)} />
+        {tr("Tell me on this device when Molfar asks something, finishes or stops with an error")}
+      </label>
+      <p className="pl-6 text-12 leading-4 text-ink-muted">
+        {tr("Shown in the corner of the screen when you are in another window, tab or app of Molfar Vertep, and the chat is not in front of you.")}
+      </p>
+      <div className="flex flex-wrap items-center gap-2 pl-6">
+        <span className={`text-12 ${permission === "denied" ? "text-danger" : "text-ink-muted"}`} role="status">
+          {status}
+        </span>
+        <Button variant="neutral" size="normal" disabled={permission === "unsupported" || permission === "denied"} onClick={() => void test()}>
+          {tr("Send a test")}
+        </Button>
+      </div>
     </div>
   )
 }

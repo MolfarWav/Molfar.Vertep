@@ -26,7 +26,7 @@ import {
 } from "./api"
 import { foldParked, newSessionId, type ParkedRun } from "./parallel"
 import { applyStreamEvent, keepShownIds, msgsFromRuns, partsFromResponse, runInfo, uid, type Msg, type PartData } from "./runs"
-import { announceAsk } from "./shell"
+import { announceAsk, announceNotice } from "./shell"
 import { createStreamDeltaBatcher, type AskOption, type AskQuestion, type StreamEvent } from "./streaming"
 
 export interface PendingAsk {
@@ -309,6 +309,8 @@ let liveId: string | null = null
 /** Runs of chats the user left while they went on (#69), kept so opening the chat again
  *  shows the live progress. Not reactive: only the chat list's marks come from the engine. */
 const parked = new Map<string, ParkedRun>()
+/** The chat list has been read once: later lists can tell what changed. */
+let seenList = false
 /** Chats this page holds a POST /v1/agent open for: it settles their run itself. */
 const inflight = new Set<string>()
 
@@ -408,6 +410,16 @@ export const useAgent = create<AgentState>()((set, get) => {
     refreshSessions: async () => {
       try {
         const sessions = await sessionsApi.list()
+        // a chat that is not open began to wait for an answer: the shell may tell the user
+        if (seenList) {
+          const open = get().sessionId
+          for (const row of sessions) {
+            if (row.waiting && row.sessionId !== open && !get().sessions.find((x) => x.sessionId === row.sessionId)?.waiting) {
+              announceNotice({ kind: "ask", chatId: row.sessionId, text: row.title?.trim() ?? "" })
+            }
+          }
+        }
+        seenList = true
         set({ sessions })
         // the open chat shows a run another page started: it is over when the engine says so
         const st = get()
@@ -900,7 +912,7 @@ export function connectWs(): void {
     setTimeout(connectWs, wait)
   }
   ws.onmessage = (ev) => {
-    let msg: { type?: string; build?: number; payload?: { sessionId?: string; delta?: string; ev?: StreamEvent; state?: string } }
+    let msg: { type?: string; build?: number; payload?: { sessionId?: string; delta?: string; ev?: StreamEvent; state?: string; failed?: boolean } }
     try {
       msg = JSON.parse(ev.data as string)
     } catch {
@@ -938,8 +950,15 @@ export function connectWs(): void {
     if (!payload) return
     if (msg.type === "agent_run") {
       // a run of any chat began or ended: the chat list's marks come from the engine
-      if (payload.sessionId && payload.state === "end") runEnded(payload.sessionId)
-      else void st.refreshSessions()
+      if (payload.sessionId && payload.state === "end") {
+        runEnded(payload.sessionId)
+        // the shell tells the user when they are not looking
+        announceNotice({
+          kind: payload.failed ? "error" : "done",
+          chatId: payload.sessionId,
+          text: st.sessions.find((x) => x.sessionId === payload.sessionId)?.title?.trim() ?? "",
+        })
+      } else void st.refreshSessions()
       return
     }
     if (payload.sessionId !== st.sessionId) {
@@ -1049,5 +1068,5 @@ useAgent.subscribe((st) => {
   const id = st.ask?.id ?? null
   if (id === announcedAsk) return
   announcedAsk = id
-  announceAsk(st.ask ? { id: st.ask.id, question: st.ask.question } : null)
+  announceAsk(st.ask ? { id: st.ask.id, question: st.ask.question, chatId: st.ask.sessionId } : null)
 })

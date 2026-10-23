@@ -66,7 +66,9 @@ createRoot(document.getElementById("root")!).render(
 // last thread, so the restore cannot swap the new chat out from under it.
 window.addEventListener("message", (e) => {
   if (e.origin !== location.origin || e.source !== window.parent) return
-  const d = e.data as { __chrysalisAgent?: unknown; text?: unknown } | null
+  const d = e.data as { __chrysalisAgent?: unknown; text?: unknown; id?: unknown } | null
+  // a system notification was clicked: show that chat
+  if (d?.__chrysalisAgent === "open-chat" && typeof d.id === "string") return void useAgent.getState().open(d.id)
   if (typeof d?.text !== "string" || !d.text.trim()) return
   const agent = useAgent.getState()
   // "draft": text an app proposed, left in a new chat's composer for the user
