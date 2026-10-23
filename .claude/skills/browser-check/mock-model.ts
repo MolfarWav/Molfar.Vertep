@@ -5,7 +5,10 @@
 // rewinds, POST /__reset only rewinds. Usage is reported, so the composer,
 // spend and the prompt inspector have numbers to show.
 // a turn may wait `delayMs` before answering (a slow model)
-type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number; wordMs?: number };
+// a turn may set `drop`: the connection breaks after the first words (a provider that closes the socket mid-stream);
+// `dropTimes` breaks only that many requests, then the turn answers normally
+type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number; wordMs?: number; drop?: boolean; dropTimes?: number };
+const dropped = new Map<number, number>();
 const DEFAULT: Turn[] = [
   { tool: "read_file", args: { path: "AGENTS.md" } },
   { text: "I read AGENTS.md. It describes the workspace." },
@@ -36,6 +39,15 @@ Bun.serve({
         } else {
           // wordMs: stream the text a word at a time, to watch a reply being written
           const parts = turn.wordMs ? turn.text.split(/(?<= )/) : [turn.text];
+          const at = (next - 1) % turns.length;
+          const seen = dropped.get(at) ?? 0;
+          if (turn.drop && seen < (turn.dropTimes ?? Infinity)) {
+            dropped.set(at, seen + 1);
+            c.enqueue(chunk({ ...base, choices: [{ index: 0, delta: { role: "assistant", content: parts[0] ?? "" }, finish_reason: null }] }));
+            await Bun.sleep(50);
+            c.error(new Error("socket closed"));
+            return;
+          }
           for (const [i, part] of parts.entries()) {
             if (i && turn.wordMs) await Bun.sleep(turn.wordMs);
             c.enqueue(chunk({ ...base, choices: [{ index: 0, delta: { ...(i ? {} : { role: "assistant" }), content: part }, finish_reason: null }] }));

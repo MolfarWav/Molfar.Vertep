@@ -21,8 +21,7 @@ export function askPermissionOnFirstGesture(): () => void {
   if (!notifyEnabled() || notifyPermission() !== "default" || prefs.get(ASKED)) return () => undefined
   const ask = () => {
     off()
-    prefs.set(ASKED, "1")
-    void Notification.requestPermission().catch(() => undefined)
+    askPermissionOnce()
   }
   const off = () => {
     window.removeEventListener("pointerdown", ask, true)
@@ -31,6 +30,15 @@ export function askPermissionOnFirstGesture(): () => void {
   window.addEventListener("pointerdown", ask, true)
   window.addEventListener("keydown", ask, true)
   return off
+}
+
+/** Ask the browser for its permission, once per browser. Called inside a user gesture: the shell's
+ *  own click, or the agent page's first click or key, which it reports here (a click in the frame
+ *  counts for the page that holds the frame). */
+export function askPermissionOnce(): void {
+  if (!notifyEnabled() || notifyPermission() !== "default" || prefs.get(ASKED)) return
+  prefs.set(ASKED, "1")
+  void Notification.requestPermission().catch(() => undefined)
 }
 
 /** Settings' own request, from a click. */

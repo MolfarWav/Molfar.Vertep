@@ -309,6 +309,10 @@ let liveId: string | null = null
 /** Runs of chats the user left while they went on (#69), kept so opening the chat again
  *  shows the live progress. Not reactive: only the chat list's marks come from the engine. */
 const parked = new Map<string, ParkedRun>()
+/** The banner while a dropped model call is asked again; the run's end takes it away. */
+const RETRY_NOTE = "The model's connection dropped. Trying again"
+const isRetryNote = (b: Banner | null): boolean => !!b && b.text.startsWith(RETRY_NOTE)
+
 /** The chat list has been read once: later lists can tell what changed. */
 let seenList = false
 /** Chats this page holds a POST /v1/agent open for: it settles their run itself. */
@@ -666,7 +670,9 @@ export const useAgent = create<AgentState>()((set, get) => {
               ? { kind: "error", text: res.error }
               : res.autoCompacted
                 ? { kind: "info", text: "Context auto-compacted" }
-                : st.banner,
+                : isRetryNote(st.banner)
+                  ? null
+                  : st.banner,
           }))
           liveId = null
           void get().refreshSessions()
@@ -956,12 +962,12 @@ export function connectWs(): void {
     if (msg.type === "agent_run") {
       // a run of any chat began or ended: the chat list's marks come from the engine
       if (payload.sessionId && payload.state === "end") {
-        runEnded(payload.sessionId)
-        // the shell tells the user when they are not looking
-        announceNotice({
-          kind: payload.failed ? "error" : "done",
-          chatId: payload.sessionId,
-          text: st.sessions.find((x) => x.sessionId === payload.sessionId)?.title?.trim() ?? "",
+        const sid = payload.sessionId
+        const kind = payload.failed ? "error" : "done"
+        runEnded(sid)
+        // the shell tells the user when they are not looking; a new chat has no title in the list until it is read again
+        void useAgent.getState().refreshSessions().then(() => {
+          announceNotice({ kind, chatId: sid, text: useAgent.getState().sessions.find((x) => x.sessionId === sid)?.title?.trim() ?? "" })
         })
       } else void st.refreshSessions()
       return
@@ -986,7 +992,7 @@ export function connectWs(): void {
       } else {
         streamDeltaBatcher.flush()
       }
-      if (e.type === "thinking_end" || e.type === "tool_start" || e.type === "tool_end" || e.type === "ask_user" || e.type === "ask_user_done" || e.type === "steer_landed") {
+      if (e.type === "thinking_end" || e.type === "tool_start" || e.type === "tool_end" || e.type === "ask_user" || e.type === "ask_user_done" || e.type === "steer_landed" || e.type === "retry") {
         foldStream(e)
       }
     }
@@ -1008,8 +1014,11 @@ function foldStreamBatch(events: StreamEvent[]): void {
   useAgent.setState((st) => {
     const exists = st.msgs.some((m) => m.id === target)
     const msgs = exists ? st.msgs : [...st.msgs, { id: target, role: "assistant" as const, parts: [], streaming: true }]
+    // words or a tool after a retry note: the model answers again, so the note is done
+    const answering = events.some((e) => e.type === "text" || e.type === "tool_start")
     return {
       msgs: patchLive(msgs, target, (parts) => events.reduce((next, event) => applyStreamEvent(next, event), parts)),
+      ...(answering && isRetryNote(st.banner) ? { banner: null } : {}),
     }
   })
 }
@@ -1050,6 +1059,12 @@ export async function syncPendingAsk(anyTime = false): Promise<void> {
 
 function foldStream(ev: StreamEvent): void {
   const store = useAgent.getState()
+  if (ev.type === "retry") {
+    // the words of the broken call go; a note says why the page waits
+    foldStreamBatch([ev])
+    useAgent.setState({ banner: { kind: "info", text: `${RETRY_NOTE} (${ev.attempt ?? 1} of ${ev.of ?? 1}): ${ev.error ?? ""}`.trim() } })
+    return
+  }
   if (ev.type === "steer_landed") {
     const at = store.steerPending.findIndex((p) => p.text === ev.text)
     if (at >= 0) useAgent.setState({ steerPending: store.steerPending.filter((_, i) => i !== at) })

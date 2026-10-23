@@ -5,6 +5,7 @@ import "@fontsource/ibm-plex-mono/400.css"
 import "@fontsource/ibm-plex-mono/600.css"
 import "@/globals.css"
 import App from "./App"
+import { relayFirstGesture } from "./shell"
 import { connectWs, useAgent } from "./store"
 
 // The theme comes from the shell (same-origin localStorage; the shell writes
@@ -78,6 +79,7 @@ window.addEventListener("message", (e) => {
   void agent.send(d.text)
 })
 
+relayFirstGesture()
 connectWs()
 void useAgent.getState().init().finally(() => {
   if (window.parent !== window) window.parent.postMessage({ __chrysalisAgent: "ready" }, location.origin)

@@ -38,7 +38,7 @@ export function foldParked(run: ParkedRun, ev: StreamEvent): void {
     if (at >= 0) run.steerPending = run.steerPending.filter((_, i) => i !== at)
     return
   }
-  if (ev.type !== "text" && ev.type !== "thinking" && ev.type !== "thinking_end" && ev.type !== "tool_start" && ev.type !== "tool_end") return
+  if (ev.type !== "text" && ev.type !== "thinking" && ev.type !== "thinking_end" && ev.type !== "tool_start" && ev.type !== "tool_end" && ev.type !== "retry") return
   let at = -1
   for (let i = run.msgs.length - 1; i >= 0 && at < 0; i--) if (run.msgs[i]?.id === run.liveId) at = i
   if (at < 0) {

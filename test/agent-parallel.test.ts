@@ -5,6 +5,7 @@ import { describe, expect, it } from "bun:test";
 import { foldParked, newSessionId, otherChats, rowMark, type ParkedRun } from "../client-agent/src/parallel.js";
 import { canApplyProposal } from "../client-agent/src/reply-actions.js";
 import type { EngineSession } from "../client-agent/src/api.js";
+import type { PartData } from "../client-agent/src/runs.js";
 
 const row = (sessionId: string, extra: Partial<EngineSession> = {}): EngineSession => ({ sessionId, runs: 1, lastAt: 1, title: sessionId, ...extra });
 
@@ -91,5 +92,15 @@ describe("Apply proposal", () => {
     expect(canApplyProposal("plan")).toBe(true);
     expect(canApplyProposal("normal")).toBe(false);
     expect(canApplyProposal("accept")).toBe(false);
+  });
+});
+
+describe("a model call that broke and is asked again", () => {
+  it("drops what the broken call had written, back to the last tool", async () => {
+    const { dropBrokenCall } = await import("../client-agent/src/runs.js");
+    const tool: PartData = { kind: "tool", callId: "t", name: "read_file", args: {}, state: "ok" };
+    expect(dropBrokenCall([{ kind: "think", text: "hm", done: true }, { kind: "text", text: "Hel" }])).toEqual([]);
+    expect(dropBrokenCall([{ kind: "text", text: "first" }, tool, { kind: "think", text: "hm", done: false }, { kind: "text", text: "Hel" }])).toEqual([{ kind: "text", text: "first" }, tool]);
+    expect(dropBrokenCall([tool])).toEqual([tool]);
   });
 });

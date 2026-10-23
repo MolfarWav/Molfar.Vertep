@@ -20,7 +20,7 @@ import { StoreDialog, WelcomeApps, useStore } from "./store"
 import { getLocale, tr, useLocale } from "./i18n/index"
 import { GuideHost } from "./guide/guide-host"
 import { NOTICE_KINDS, type NoticeKind } from "./notice-rules"
-import { askPermissionOnFirstGesture, closeNotices, showNotice } from "./notice"
+import { askPermissionOnce, askPermissionOnFirstGesture, closeNotices, showNotice } from "./notice"
 import { GUIDE_MENU_EVENT, GUIDE_STORE_EVENT, openHelp } from "./guide/events"
 import { GuidePlace, useGuidePlace } from "./guide/place"
 import { DEFAULT_THEME, THEME_KEY, applyStoredTheme, applyTheme, isBuiltinTheme, storedThemeId, themeSwatch, type ShellTheme } from "./theme"
@@ -349,6 +349,11 @@ function Shell(props: { theme: ThemeControl }) {
       if (d?.__chrysalisAgent === "ask") {
         setAgentAsk(d.open === true && typeof d.id === "string" ? { id: d.id, question: typeof d.question === "string" ? d.question.slice(0, 300) : "" } : null)
         if (d.open === true) tell("ask", d.chatId, d.question)
+        return
+      }
+      // the user's first click or key inside the agent page: the moment to ask the browser for its permission
+      if (d?.__chrysalisAgent === "gesture") {
+        askPermissionOnce()
         return
       }
       // a run finished or failed, or a chat that is not open began to wait: said when the user is not looking

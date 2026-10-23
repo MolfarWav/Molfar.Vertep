@@ -12,10 +12,14 @@ export interface AskQuestion {
 }
 
 export interface StreamEvent {
-  type: "text" | "thinking" | "thinking_end" | "tool_start" | "tool_end" | "ask_user" | "ask_user_done" | "autocompact" | "steer_landed"
+  type: "text" | "thinking" | "thinking_end" | "tool_start" | "tool_end" | "ask_user" | "ask_user_done" | "autocompact" | "steer_landed" | "retry"
   id?: string
   /** steer_landed: the correction the model has now read */
   text?: string
+  /** retry: which attempt of how many, and why the call dropped */
+  attempt?: number
+  of?: number
+  error?: string
   name?: string
   args?: Record<string, unknown>
   delta?: string

@@ -20,6 +20,19 @@ export function announceNotice(n: { kind: "ask" | "done" | "error"; chatId: stri
   window.parent.postMessage({ __chrysalisAgent: "notice", kind: n.kind, chatId: n.chatId, text: n.text.slice(0, 200) }, location.origin)
 }
 
+/** The user's first click or key in this page: the shell may ask the browser for its permission to
+ *  show notifications now (a click in a frame counts as a gesture for the page that holds it). */
+export function relayFirstGesture(): void {
+  if (!inShell()) return
+  const tell = () => {
+    window.removeEventListener("pointerdown", tell, true)
+    window.removeEventListener("keydown", tell, true)
+    window.parent.postMessage({ __chrysalisAgent: "gesture" }, location.origin)
+  }
+  window.addEventListener("pointerdown", tell, true)
+  window.addEventListener("keydown", tell, true)
+}
+
 /** Switch the shell to an app's tab (the project pane's "Open app"). */
 export function openShellApp(appId: string): void {
   if (inShell()) window.parent.postMessage({ __chrysalisAgent: "open-app", appId }, location.origin)

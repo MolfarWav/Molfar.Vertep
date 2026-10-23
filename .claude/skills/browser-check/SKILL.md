@@ -43,6 +43,7 @@ await close()
 Run it with `cd $W && bun t.mjs`.
 - The mock answers each request with the next turn of its script, cycling. A turn is `{text}` or `{tool, args}`. The default script reads AGENTS.md, then answers.
 - An `ask_user` turn opens the card: click it in the page.
+- A turn with `drop: true` breaks the connection after its first words (a provider that closes the socket mid-stream); `dropTimes: 2` breaks only the first two requests, then answers.
 - Native `confirm()` dialogs: `page.on("dialog", (d) => d.accept())`.
 - Controlled checkboxes: `.click()` and wait, not `.check()`.
 

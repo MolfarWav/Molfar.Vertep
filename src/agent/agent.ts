@@ -20,7 +20,7 @@ import type { UserService } from "../users.js";
 import type { McpRegistry, McpToolInfo } from "../mcp/registry.js";
 import { Type } from "typebox";
 import { log } from "../logger.js";
-import { clampThinkingLevel, getCurrentSystemPrompt, getCurrentTools, isContextOverflow, toToolDeclaration, type AssistantMessage, type SystemMessage } from "@earendil-works/pi-ai";
+import { clampThinkingLevel, getCurrentSystemPrompt, getCurrentTools, isContextOverflow, isRetryableAssistantError, toToolDeclaration, type AssistantMessage, type SystemMessage } from "@earendil-works/pi-ai";
 import { clampMaxTokens, estimateMessageTokens, estimateTextTokens, fitContext, newTrimState, toolsTokens } from "./context-budget.js";
 import { buildRunTools, newAppRefusal, newPlanState, planGate, type PlanState, type RunToolOptions } from "./run-tools.js";
 import { costChecksApply, effectiveCostChecksMode } from "./cost-checks.js";
@@ -61,6 +61,10 @@ export interface AgentRunTurn {
 /** Tools whose first touch of an app in a run takes an automatic checkpoint. */
 /** Retries of a model call the provider refused for now (429, 5xx): about 15 s of backoff in all. */
 const AGENT_RETRIES = 5;
+/** A model call that broke on a dropped connection or a busy server is asked again this many times,
+ *  after these waits. The provider layer retries a call that fails before its answer starts; this
+ *  covers the stream that breaks in the middle (a free provider closing the socket on a long prompt). */
+const TRANSIENT_DELAYS_MS = [2_000, 6_000, 15_000];
 const AUTO_CHECKPOINT_TOOLS = new Set(["write_file", "edit_file", "json_set", "bash", "app_deps"]);
 
 interface RunState {
@@ -122,7 +126,9 @@ export type AgentStreamEvent =
   | { type: "tool_start"; id: string; name: string; args: Record<string, unknown> }
   | { type: "tool_end"; id: string; name: string; ok: boolean; summary: string; output?: string; diff?: string }
   /** a correction sent during the run (steer) has reached the model */
-  | { type: "steer_landed"; text: string };
+  | { type: "steer_landed"; text: string }
+  /** the model's connection dropped; the call is asked again, so what it had said so far is void */
+  | { type: "retry"; attempt: number; of: number; error: string };
 
 /** `summary` is what a resumed session replays to the model, so it stays short;
  *  `output` carries the result for the reader, up to this many characters, and
@@ -743,7 +749,30 @@ export class UserAgent {
   /** Abort the active run; partial output settles with stopReason "aborted". */
   stop(): void {
     log.info(`[agent:${this.sessionId}] stop requested`);
+    this.stopRequested = true;
     this.agent.abort();
+  }
+
+  private stopRequested = false;
+
+  /** Wait, in short steps so Stop ends the wait. False: Stop was pressed. */
+  private async pause(ms: number): Promise<boolean> {
+    for (let left = ms; left > 0 && !this.stopRequested; left -= 200) await new Promise((r) => setTimeout(r, Math.min(200, left)));
+    return !this.stopRequested;
+  }
+
+  /** The last model call ended on a dropped connection or a busy server: forget it and ask again, a few times. */
+  private async retryDroppedCalls(onEvent?: (ev: AgentStreamEvent) => void): Promise<void> {
+    for (const [i, wait] of TRANSIENT_DELAYS_MS.entries()) {
+      const last = this.agent.state.messages.at(-1) as AssistantMessage | undefined;
+      if (last?.role !== "assistant" || last.stopReason !== "error" || isOverflow(last) || !isRetryableAssistantError(last)) return;
+      log.warn(`[agent:${this.sessionId}] model call dropped (${last.errorMessage}); asking again in ${wait / 1000}s (${i + 1}/${TRANSIENT_DELAYS_MS.length})`);
+      onEvent?.({ type: "retry", attempt: i + 1, of: TRANSIENT_DELAYS_MS.length, error: humanizeProviderError(last.errorMessage).split(". ")[0] ?? "" });
+      // an errored message is left out of the context anyway; its partial words are void
+      this.agent.state.messages = this.agent.state.messages.slice(0, -1);
+      if (!(await this.pause(wait))) return;
+      await this.agent.continue();
+    }
   }
 
   /** Texts sent with steer() during the current run: found again in the transcript to record where they landed. */
@@ -785,6 +814,7 @@ export class UserAgent {
     } = {},
   ): Promise<AgentRunResult> {
     this.markStarted(userMessage);
+    this.stopRequested = false;
     this.runState.label = userMessage.replace(/\s+/g, " ").trim().slice(0, 60) || "a request";
     this.runState.checkpoints.clear();
     this.runState.plan.answer = "none";
@@ -879,6 +909,7 @@ export class UserAgent {
     try {
       const images = (opts.images ?? []).map((img) => ({ type: "image" as const, data: img.data, mimeType: img.mimeType }));
       await this.agent.prompt(promptText, images.length ? images : undefined);
+      await this.retryDroppedCalls(opts.onEvent);
       // The provider refused the context as too long: our estimate missed.
       // Drop the refusal and retry once with a deep trim instead of stopping.
       const last = this.agent.state.messages.at(-1) as AssistantMessage | undefined;
@@ -1366,6 +1397,10 @@ function agentText(m: AgentMessage | undefined): string {
 
 /** Provider errors arrive as nested JSON strings — dig out the human message. */
 function humanizeProviderError(raw: string | undefined): string {
+  // a stream that broke in the middle: the runtime's own text points at a fetch option nobody can set
+  if (raw && /socket connection was closed|other side closed|socket hang up|connection (?:was )?(?:lost|reset)|terminated/i.test(raw) && raw.length < 400) {
+    return "The connection to the model closed while it was answering. Send the message again; if it keeps happening, compact the chat or pick another model.";
+  }
   let value: unknown = raw ?? "model error";
   for (let depth = 0; depth < 6; depth++) {
     if (typeof value !== "string") break;

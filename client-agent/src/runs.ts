@@ -162,7 +162,16 @@ export function msgsFromRuns(runs: EngineRun[]): Msg[] {
 }
 
 /** Fold a streamed delta/event into the live message's parts. */
+/** A model call broke and is asked again: what it had written so far (the thought and text after
+ *  the last tool) is void, or the new answer would start in the middle of the old one. */
+export function dropBrokenCall(parts: PartData[]): PartData[] {
+  const out = [...parts]
+  while (out.length && (out[out.length - 1]?.kind === "text" || out[out.length - 1]?.kind === "think")) out.pop()
+  return out
+}
+
 export function applyStreamEvent(parts: PartData[], ev: StreamEvent): PartData[] {
+  if (ev.type === "retry") return dropBrokenCall(parts)
   const out = [...parts]
   const last = out[out.length - 1]
   if (ev.type === "text") {
