@@ -24,6 +24,7 @@ import {
   type ProjectSummary,
   type ModelFavorite,
 } from "./api"
+import { foldParked, newSessionId, type ParkedRun } from "./parallel"
 import { applyStreamEvent, keepShownIds, msgsFromRuns, partsFromResponse, runInfo, uid, type Msg, type PartData } from "./runs"
 import { announceAsk } from "./shell"
 import { createStreamDeltaBatcher, type AskOption, type AskQuestion, type StreamEvent } from "./streaming"
@@ -114,7 +115,10 @@ export interface AgentState {
   sessions: EngineSession[]
   sessionId: string | null
   msgs: Msg[]
+  /** the open chat has a run going (several chats can run at once; the others are in `sessions`) */
   running: boolean
+  /** chats whose run finished while another chat was open, until opened */
+  unseen: Record<string, true>
   banner: Banner | null
   ask: PendingAsk | null
   /** corrections sent during a run that the model has not read yet (message id + text) */
@@ -249,7 +253,7 @@ function readMap(key: string): Record<string, string> {
 
 const writeMap = (key: string, map: Record<string, string>): void => prefs.set(key, JSON.stringify(map))
 
-const without = (map: Record<string, string>, key: string): Record<string, string> => {
+const without = <V>(map: Record<string, V>, key: string): Record<string, V> => {
   if (!(key in map)) return map
   const { [key]: _gone, ...rest } = map
   return rest
@@ -302,6 +306,53 @@ export function effectiveReasoning(s: ModelView): string {
 
 let liveId: string | null = null
 
+/** Runs of chats the user left while they went on (#69), kept so opening the chat again
+ *  shows the live progress. Not reactive: only the chat list's marks come from the engine. */
+const parked = new Map<string, ParkedRun>()
+/** Chats this page holds a POST /v1/agent open for: it settles their run itself. */
+const inflight = new Set<string>()
+
+const UNSEEN_KEY = "agent-ui-unseen"
+function storedUnseen(): Record<string, true> {
+  try {
+    const v: unknown = JSON.parse(prefs.get(UNSEEN_KEY) ?? "[]")
+    return Array.isArray(v) ? Object.fromEntries(v.filter((x): x is string => typeof x === "string").map((id) => [id, true as const])) : {}
+  } catch {
+    return {}
+  }
+}
+const saveUnseen = (map: Record<string, true>): void => prefs.set(UNSEEN_KEY, JSON.stringify(Object.keys(map).slice(-50)))
+
+/** The chat being left keeps its run: the stream goes on filling a parked copy. */
+function parkOpenRun(): void {
+  const s = useAgent.getState()
+  if (s.running && s.sessionId && inflight.has(s.sessionId)) {
+    streamDeltaBatcher.flush()
+    const now = useAgent.getState()
+    parked.set(s.sessionId, { msgs: now.msgs, liveId, steerPending: now.steerPending, spend: now.spend, usage: now.usage })
+  }
+  liveId = null
+}
+
+/** A run ended in a chat: the open one settles, any other waits to be looked at. */
+function runEnded(sid: string): void {
+  const st = useAgent.getState()
+  if (st.sessionId === sid) {
+    // a run this page did not start (a reload, another tab): nothing here settles it
+    if (st.running && !inflight.has(sid)) {
+      streamDeltaBatcher.flush()
+      useAgent.setState({ running: false, steerPending: [] })
+      liveId = null
+      void st.reloadCurrent()
+    }
+  } else if (!st.unseen[sid]) {
+    const unseen = { ...st.unseen, [sid]: true as const }
+    saveUnseen(unseen)
+    useAgent.setState({ unseen })
+  }
+  void st.refreshSessions()
+}
+
 export const useAgent = create<AgentState>()((set, get) => {
   return {
     sessions: [],
@@ -310,6 +361,7 @@ export const useAgent = create<AgentState>()((set, get) => {
     running: false,
     banner: null,
     ask: null, steerPending: [],
+    unseen: storedUnseen(),
     models: [],
     modelsFiltered: false,
     favorites: [],
@@ -355,7 +407,12 @@ export const useAgent = create<AgentState>()((set, get) => {
 
     refreshSessions: async () => {
       try {
-        set({ sessions: await sessionsApi.list() })
+        const sessions = await sessionsApi.list()
+        set({ sessions })
+        // the open chat shows a run another page started: it is over when the engine says so
+        const st = get()
+        const row = st.sessions.find((x) => x.sessionId === st.sessionId)
+        if (st.running && st.sessionId && !inflight.has(st.sessionId) && row && !row.running) runEnded(st.sessionId)
       } catch {
         // an unauthed or down engine keeps the list it had; the banner says why
       }
@@ -395,13 +452,41 @@ export const useAgent = create<AgentState>()((set, get) => {
     },
 
     open: async (id) => {
-      if (get().running) await get().stop()
+      // the chat being left keeps working; its run is parked until it is opened again
+      parkOpenRun()
       streamDeltaBatcher.reset()
       rememberSession(id)
-      set({ sessionId: id, draftProject: null, view: { kind: "chat" }, msgs: [], banner: null, ask: null, steerPending: [], sidebarOpen: false })
+      const unseen = without(get().unseen, id)
+      if (unseen !== get().unseen) saveUnseen(unseen)
+      const back = parked.get(id)
+      if (back) {
+        parked.delete(id)
+        liveId = back.liveId
+        set({
+          sessionId: id,
+          draftProject: null,
+          view: { kind: "chat" },
+          msgs: back.msgs.slice(),
+          running: true,
+          steerPending: back.steerPending,
+          spend: back.spend as SessionSpend | null,
+          usage: back.usage as EngineUsage | null,
+          unseen,
+          banner: null,
+          ask: null,
+          sidebarOpen: false,
+        })
+        void syncPendingAsk(true)
+        return
+      }
+      set({ sessionId: id, draftProject: null, view: { kind: "chat" }, msgs: [], running: false, usage: null, unseen, banner: null, ask: null, steerPending: [], sidebarOpen: false })
       try {
-        const r = await sessionsApi.get(id)
-        if (get().sessionId === id) set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []) })
+        const [r] = await Promise.all([sessionsApi.get(id), get().refreshSessions()])
+        if (get().sessionId === id) {
+          // a run another page started goes on: show it as working, the engine says when it ends
+          const going = get().sessions.find((x) => x.sessionId === id)?.running === true && !inflight.has(id)
+          set({ msgs: msgsFromRuns(r.runs ?? []), spend: sessionSpend(r.runs ?? []), usage: lastUsage(r.runs ?? []), running: going })
+        }
         // a run of this chat may be waiting for an answer (a reloaded page does not know)
         void syncPendingAsk(true)
       } catch (e) {
@@ -467,7 +552,7 @@ export const useAgent = create<AgentState>()((set, get) => {
     },
 
     newChat: (project) => {
-      if (get().running) void get().stop()
+      parkOpenRun()
       streamDeltaBatcher.reset()
       rememberSession(null)
       const sessionModels = without(get().sessionModels, NEW_KEY)
@@ -482,6 +567,8 @@ export const useAgent = create<AgentState>()((set, get) => {
         sessionReasoning,
         msgs: [],
         spend: null,
+        usage: null,
+        running: false,
         banner: null,
         ask: null, steerPending: [],
         sidebarOpen: false,
@@ -510,6 +597,13 @@ export const useAgent = create<AgentState>()((set, get) => {
         return
       }
       streamDeltaBatcher.reset()
+      // a new chat gets its id now, so the run can go on after the user leaves the chat
+      const fresh = !s.sessionId
+      const sid = s.sessionId ?? newSessionId()
+      const project = fresh ? currentProjectId(s) : null
+      // none picked: the model the header shows (the first shown), so what runs is what it says
+      const model = effectiveModel(s) ?? firstShownRef(s.models) ?? undefined
+      const reasoning = effectiveReasoning(s) || undefined
       const userMsg: Msg = {
         id: uid("m"),
         role: "user",
@@ -518,56 +612,71 @@ export const useAgent = create<AgentState>()((set, get) => {
       }
       const id = uid("live")
       liveId = id
+      inflight.add(sid)
+      if (fresh) {
+        rememberSession(sid)
+        adoptSessionKey(sid)
+      }
       set({
+        sessionId: sid,
         msgs: [...s.msgs, userMsg, { id, role: "assistant", parts: [], streaming: true }],
         running: true,
         banner: null,
         usage: null,
       })
       try {
-        const project = s.sessionId ? null : currentProjectId(s)
         const res: AgentResponse = await sendAgent({
           message: text,
-          sessionId: s.sessionId ?? undefined,
+          sessionId: sid,
           ...(project ? { project } : {}),
-          // none picked: the model the header shows (the first shown), so what runs is what it says
-          model: effectiveModel(s) ?? firstShownRef(s.models) ?? undefined,
-          reasoning: effectiveReasoning(s) || undefined,
+          model,
+          reasoning,
           mode: s.mode,
           images: images?.length ? images : undefined,
         })
-        streamDeltaBatcher.reset()
-        rememberSession(res.sessionId)
-        adoptSessionKey(res.sessionId)
-        const finalParts = partsFromResponse(res)
-        set((st) => ({
-          msgs: st.msgs.map((m) => (m.id === id ? { ...m, parts: finalParts, streaming: false, ...(res.checkpoints?.length ? { checkpoints: res.checkpoints } : {}), ...runInfo(res) } : m)),
-          running: false,
-          steerPending: [],
-          sessionId: res.sessionId,
-          usage: res.usage ?? null,
-          banner: res.error
-            ? { kind: "error", text: res.error }
-            : res.autoCompacted
-              ? { kind: "info", text: "Context auto-compacted" }
-              : st.banner,
-        }))
-        liveId = null
-        void get().refreshSessions()
-        void get().reloadCurrent()
+        inflight.delete(sid)
+        if (get().sessionId === sid) {
+          streamDeltaBatcher.reset()
+          const finalParts = partsFromResponse(res)
+          set((st) => ({
+            msgs: st.msgs.map((m) => (m.id === id ? { ...m, parts: finalParts, streaming: false, ...(res.checkpoints?.length ? { checkpoints: res.checkpoints } : {}), ...runInfo(res) } : m)),
+            running: false,
+            steerPending: [],
+            usage: res.usage ?? null,
+            banner: res.error
+              ? { kind: "error", text: res.error }
+              : res.autoCompacted
+                ? { kind: "info", text: "Context auto-compacted" }
+                : st.banner,
+          }))
+          liveId = null
+          void get().refreshSessions()
+          void get().reloadCurrent()
+        } else {
+          // the user went to another chat: the run record on disk is the whole answer
+          parked.delete(sid)
+          runEnded(sid)
+        }
       } catch (e) {
-        streamDeltaBatcher.flush()
+        inflight.delete(sid)
         const msg = e instanceof Error ? e.message : String(e)
-        set((st) => ({
-          msgs: patchLive(st.msgs, id, () => {
-            const partial = st.msgs.find((m) => m.id === id)?.parts ?? []
-            return [...partial, { kind: "text", text: `\n\n**Failed:** ${msg}` } satisfies PartData]
-          }),
-          running: false,
-          steerPending: [],
-          banner: { kind: "error", text: msg },
-        }))
-        liveId = null
+        if (get().sessionId === sid) {
+          streamDeltaBatcher.flush()
+          set((st) => ({
+            msgs: patchLive(st.msgs, id, () => {
+              const partial = st.msgs.find((m) => m.id === id)?.parts ?? []
+              return [...partial, { kind: "text", text: `\n\n**Failed:** ${msg}` } satisfies PartData]
+            }),
+            running: false,
+            steerPending: [],
+            banner: { kind: "error", text: msg },
+          }))
+          liveId = null
+          void get().refreshSessions()
+        } else {
+          parked.delete(sid)
+          runEnded(sid)
+        }
       }
     },
 
@@ -635,7 +744,10 @@ export const useAgent = create<AgentState>()((set, get) => {
         const sessionReasoning = without(get().sessionReasoning, id)
         writeMap("agent-ui-session-models", sessionModels)
         writeMap("agent-ui-session-reasoning", sessionReasoning)
-        set({ sessions: rest, sessionModels, sessionReasoning })
+        parked.delete(id)
+        const unseen = without(get().unseen, id)
+        if (unseen !== get().unseen) saveUnseen(unseen)
+        set({ sessions: rest, sessionModels, sessionReasoning, unseen })
         if (get().sessionId === id) {
           rememberSession(null)
           set({ sessionId: null, msgs: [], spend: null })
@@ -757,7 +869,11 @@ let askPoll: number | undefined
 export function connectWs(): void {
   if (askPoll === undefined) {
     // cheap while nothing runs (syncPendingAsk returns before any request)
-    askPoll = window.setInterval(() => void syncPendingAsk(), 5000)
+    askPoll = window.setInterval(() => {
+      void syncPendingAsk()
+      // a socket that dropped a run's last event must not leave a chat "working" for good
+      if (useAgent.getState().sessions.some((x) => x.running)) void useAgent.getState().refreshSessions()
+    }, 5000)
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") void syncPendingAsk(true)
     })
@@ -777,7 +893,7 @@ export function connectWs(): void {
     setTimeout(connectWs, wait)
   }
   ws.onmessage = (ev) => {
-    let msg: { type?: string; build?: number; payload?: { sessionId?: string; delta?: string; ev?: StreamEvent } }
+    let msg: { type?: string; build?: number; payload?: { sessionId?: string; delta?: string; ev?: StreamEvent; state?: string } }
     try {
       msg = JSON.parse(ev.data as string)
     } catch {
@@ -813,22 +929,22 @@ export function connectWs(): void {
     const st = useAgent.getState()
     const payload = msg.payload
     if (!payload) return
+    if (msg.type === "agent_run") {
+      // a run of any chat began or ended: the chat list's marks come from the engine
+      if (payload.sessionId && payload.state === "end") runEnded(payload.sessionId)
+      else void st.refreshSessions()
+      return
+    }
     if (payload.sessionId !== st.sessionId) {
-      // First message of a new thread: the engine assigns the session id only
-      // when POST /v1/agent resolves, but deltas stream long before that.
-      // Adopt the id from the run's first delta or every token would be
-      // dropped and the reply would land all at once at the end.
-      if (st.sessionId === null && st.running) {
-        rememberSession(payload.sessionId ?? null)
-        // the chat's project and picks must already follow the new id when the
-        // state flips, or the model would fall back to the global one mid-run
-        if (payload.sessionId) adoptSessionKey(payload.sessionId)
-        useAgent.setState({ sessionId: payload.sessionId })
-        // the thread now exists engine-side — pull it into the sidebar now
-        // rather than at the end of the run, which for a long agent turn is
-        // minutes of the list looking like nothing was created
-        void useAgent.getState().refreshSessions()
-      } else return
+      // a chat the user left keeps its run: the stream goes on filling the parked copy
+      const left = payload.sessionId ? parked.get(payload.sessionId) : undefined
+      if (left) {
+        if (msg.type === "agent_delta" && payload.delta) foldParked(left, { type: "text", delta: payload.delta })
+        else if (msg.type === "agent_event" && payload.ev) foldParked(left, payload.ev)
+      }
+      // a question appeared or was answered there: the list's "needs you" mark follows
+      if (msg.type === "agent_event" && (payload.ev?.type === "ask_user" || payload.ev?.type === "ask_user_done")) void st.refreshSessions()
+      return
     }
     if (msg.type === "agent_delta" && payload.delta) {
       streamDeltaBatcher.enqueue({ type: "text", delta: payload.delta })

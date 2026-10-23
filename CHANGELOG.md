@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Molfar works in several chats at once (#69). New chat, or opening another chat, no longer stops the run: it goes on, and opening the chat again shows its live text. A chat that is not open shows in the list a spinner (working), an amber question mark (waits for your answer) or a green check (finished while you were elsewhere), and a strip under the header lists those chats, so a question that waits is not missed on a phone. The engine lists `running` and `waiting` per chat, announces a run's start and end (`agent_run`), refuses a second run in a chat that is already working (409; a message there is a correction) and refuses to delete a working chat. A new chat gets its id when you press Send. No limit on parallel runs: a rate-limited model reports its own error in that chat.
+
 ## 1.3.2 (2026-10-23)
 
 - Roleplay 4.63.0 through an app update; the engine has no code change in this release. The chat header carries the story tools (Note, Lore, Record, World, what the chat carries) as coloured buttons with their state, and the strip under it is gone (#109). Lorebooks have an icon per kind, a wider list, import and export buttons (#63). The card editor header on a phone is three rows, with the chats count opening the Chats list of that card (#63). The Litopys settings are seven titled blocks. "Show me" in What's new and Help no longer promises a place it cannot open (#87). New character on Home is the ordinary primary colour.

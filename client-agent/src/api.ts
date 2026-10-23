@@ -13,6 +13,10 @@ export interface EngineSession {
   /** project id ("app:<id>" | "project:<name>") the chat belongs to (where it
    *  started, or where it was last moved) */
   project?: string | null
+  /** a run holds the chat right now (the engine knows, so a reloaded page or another tab sees it too) */
+  running?: boolean
+  /** the run waits for the user's answer to a question card */
+  waiting?: boolean
 }
 
 export interface EngineTool {

@@ -2491,9 +2491,18 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     return c.json({ commands: out });
   });
 
+  // Chats that are working right now (a run holds the chat) and chats whose run waits for the
+  // user's answer: the sidebar shows both, also for a chat the page is not looking at (#69).
   app.get("/v1/agent/sessions", (c) => {
     const p = c.get("paths");
-    return c.json({ sessions: listSessions(p) });
+    const username = c.get("user").username;
+    const waiting = new Set<string>();
+    for (const q of pendingQuestions.values()) if (q.username === username) waiting.add(q.sessionId);
+    const sessions = listSessions(p).map((row) => {
+      const running = activeRuns.has(`${username}:${row.sessionId}`);
+      return running ? { ...row, running: true, ...(waiting.has(row.sessionId) ? { waiting: true } : {}) } : row;
+    });
+    return c.json({ sessions });
   });
 
   // session history for client replay (runs: user/assistant/tools per turn)
@@ -2575,7 +2584,13 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const contextFiles = mentionedFiles(paths.root, body.message);
     bus.emit(u.username, "agent_session", { sessionId: agent.sessionId });
     const runKey = `${u.username}:${agent.sessionId}`;
+    // One run per chat: a second one would write the same session file and answer the same
+    // cards. Other chats run beside it; a message for a working chat is a correction (/steer).
+    if (activeRuns.has(runKey)) {
+      return c.json({ error: "this chat is already working: send your message as a correction, or wait for it to finish" }, 409);
+    }
     activeRuns.set(runKey, agent);
+    bus.emit(u.username, "agent_run", { sessionId: agent.sessionId, state: "start" });
     try {
       const result = await agent.run(body.message, {
         onDelta: (d) => bus.emit(u.username, "agent_delta", { sessionId: agent.sessionId, delta: d }),
@@ -2614,6 +2629,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return c.json({ error: (e as Error).message }, 500);
     } finally {
       activeRuns.delete(runKey);
+      bus.emit(u.username, "agent_run", { sessionId: agent.sessionId, state: "end" });
     }
   });
 
@@ -2707,6 +2723,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) return c.json({ error: "invalid session id" }, 400);
     const file = path.join(sessionDir(p), `${id}.jsonl`);
     if (!fs.existsSync(file)) return c.json({ error: "session not found" }, 404);
+    // a working chat would write its run back into the file we just removed
+    if (activeRuns.has(`${c.get("user").username}:${id}`)) return c.json({ error: "this chat is still working: press Stop first" }, 409);
     fs.rmSync(file);
     evictAgents(c.get("user").username);
     return c.json({ ok: true });

@@ -12,7 +12,7 @@ import {
   useAui,
   useAuiState,
 } from "@assistant-ui/react";
-import { AppWindow, Archive, ArrowCounterClockwise, CaretRight, Check, CircleNotch, DotsThree, Folder, PencilSimple, Plus, MagnifyingGlass, Trash } from "@phosphor-icons/react";
+import { AppWindow, Archive, ArrowCounterClockwise, CaretRight, Check, CheckCircle, CircleNotch, DotsThree, Folder, PencilSimple, Plus, MagnifyingGlass, Question, Trash } from "@phosphor-icons/react";
 import { useAgent } from "@/store";
 import { whenLabel } from "@/lib/format";
 import type { ProjectSummary } from "@/api";
@@ -301,6 +301,8 @@ export const ThreadListItem: FC = () => {
   const isRunning = useAuiState((s) => s.threadListItem.isRunning);
   // the engine's last-use time rides in `custom` (App.tsx), so the day groups of the list stay as they are
   const lastAt = useAuiState((s) => s.threadListItem.custom?.lastAt);
+  // a chat that is not open can still be working, wait for an answer or have finished (App.tsx)
+  const mark = useAuiState((s) => s.threadListItem.custom?.mark);
   const [isRenaming, setIsRenaming] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const restoreFocusRef = useRef(false);
@@ -334,12 +336,18 @@ export const ThreadListItem: FC = () => {
           data-slot="aui_thread-list-item-trigger"
           className="focus-visible:ring-ring/50 flex min-h-8 min-w-0 flex-1 items-center self-stretch rounded-md px-2.5 py-1 text-start text-sm outline-none group-hover:pe-9 pointer-coarse:pe-9 group-has-focus-visible:pe-9 group-has-data-[state=open]:pe-9 group-data-active:pe-9 focus-visible:ring-1"
         >
-          {isRunning && (
+          {(isRunning || mark === "running") && (
             <CircleNotch
               aria-hidden
               data-slot="aui_thread-list-item-running"
               className="text-muted-foreground me-1.5 size-3.5 shrink-0 animate-spin"
             />
+          )}
+          {mark === "waiting" && (
+            <Question aria-hidden weight="bold" data-slot="aui_thread-list-item-waiting" className="me-1.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+          )}
+          {mark === "finished" && (
+            <CheckCircle aria-hidden weight="fill" data-slot="aui_thread-list-item-finished" className="me-1.5 size-3.5 shrink-0 text-emerald-500" />
           )}
           <span className="flex min-w-0 flex-1 flex-col">
             <span
@@ -354,7 +362,9 @@ export const ThreadListItem: FC = () => {
               </span>
             ) : null}
           </span>
-          {isRunning && <span className="sr-only">Running</span>}
+          {(isRunning || mark === "running") && <span className="sr-only">Running</span>}
+          {mark === "waiting" && <span className="sr-only">Needs your answer</span>}
+          {mark === "finished" && <span className="sr-only">Finished</span>}
         </ThreadListItemPrimitive.Trigger>
       )}
       <ThreadListItemMore onRename={() => setIsRenaming(true)} />

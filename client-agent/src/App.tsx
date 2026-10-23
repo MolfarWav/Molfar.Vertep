@@ -23,6 +23,8 @@ import { MemoryPanel } from "./MemoryPanel"
 import { ProjectPane } from "./ProjectPage"
 import { Sidebar, SidebarRail } from "./Sidebar"
 import { MolfarAvatar } from "./MolfarAvatar"
+import { OtherChatsStrip } from "./OtherChats"
+import { rowMark } from "./parallel"
 import { currentProjectId, PANE_DEFAULT, PANE_MAX, PANE_MIN, useAgent } from "./store"
 import { AgentToolFallback, toolConfig } from "./tools"
 import { visibleParts, type Msg } from "./runs"
@@ -167,6 +169,7 @@ export default function App(): ReactNode {
   const running = useAgent((s) => s.running)
   const sessionId = useAgent((s) => s.sessionId)
   const sessions = useAgent((s) => s.sessions)
+  const unseen = useAgent((s) => s.unseen)
   const sidebarOpen = useAgent((s) => s.sidebarOpen)
   const setSidebar = useAgent((s) => s.setSidebar)
   const sidebarPinned = useAgent((s) => s.sidebarPinned)
@@ -181,8 +184,8 @@ export default function App(): ReactNode {
 
   const messages = useMemo(() => msgs.map(toThreadMessage), [msgs])
   const threads = useMemo(
-    () => sessions.filter((s) => !s.archived).map((s) => ({ status: "regular" as const, id: s.sessionId, title: s.title?.trim() || "Untitled", custom: { lastAt: s.lastAt } })),
-    [sessions],
+    () => sessions.filter((s) => !s.archived).map((s) => ({ status: "regular" as const, id: s.sessionId, title: s.title?.trim() || "Untitled", custom: { lastAt: s.lastAt, mark: rowMark(s, sessionId, unseen) } })),
+    [sessions, sessionId, unseen],
   )
   const archivedThreads = useMemo(
     () => sessions.filter((s) => s.archived).map((s) => ({ status: "archived" as const, id: s.sessionId, title: s.title?.trim() || "Untitled", custom: { lastAt: s.lastAt } })),
@@ -311,6 +314,7 @@ export default function App(): ReactNode {
             <PhoneProjectBar />
           )}
           <BannerStrip />
+          <OtherChatsStrip />
           {fullPage ? (
             <ProjectPane key={view.id} id={view.id} layout={desktop ? "page" : "phone"} />
           ) : !desktop ? (
