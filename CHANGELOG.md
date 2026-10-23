@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.3.2 (2026-10-23)
+
+- Roleplay 4.63.0 through an app update; the engine has no code change in this release. The chat header carries the story tools (Note, Lore, Record, World, what the chat carries) as coloured buttons with their state, and the strip under it is gone (#109). Lorebooks have an icon per kind, a wider list, import and export buttons (#63). The card editor header on a phone is three rows, with the chats count opening the Chats list of that card (#63). The Litopys settings are seven titled blocks. "Show me" in What's new and Help no longer promises a place it cannot open (#87). New character on Home is the ordinary primary colour.
+
 ## 1.3.1 (2026-10-22)
 
 - Roleplay 4.62.0 through an app update; the engine has no code change in this release. A narrator card with several characters is split by Structure it, and Fill empty works on every character (#115). The Dashboard blocks have tinted title bars by kind and marks coloured by meaning. Every import (characters, presets, lorebooks, personas, regex, chats, backups, links) shows a progress card with Cancel between files (#116).
