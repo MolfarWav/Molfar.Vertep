@@ -63,8 +63,8 @@ export const AGENT_TIPS: Tip[] = [
     },
     title: { en: "Quick actions", uk: "Швидкі дії" },
     body: {
-      en: "A new chat shows Start something new cards (a 2x2 grid on a phone) when their skill is installed, and Continue reopens your latest chat. In a chat with messages, the chips above the box do the same while the box is empty (computer only). Under the last reply, Shorter, Simpler and Apply proposal (unless that reply changed an app) send a ready message.",
-      uk: "Новий чат показує картки «Start something new» (на телефоні — сітка 2x2), якщо встановлено їхню навичку, а «Continue» знову відкриває ваш останній чат. У чаті з повідомленнями чипи над полем роблять те саме, поки поле порожнє (лише на комп’ютері). Під останньою відповіддю «Shorter», «Simpler» і «Apply proposal» (якщо ця відповідь не змінювала застосунок) надсилають готове повідомлення.",
+      en: "A new chat shows Start something new cards (a 2x2 grid on a phone) when their skill is installed, and Continue reopens your latest chat. In a chat with messages, the chips above the box do the same while the box is empty (computer only). Under the last reply, Shorter and Simpler send a ready message; in Plan mode Apply proposal leaves the mode and carries the plan out.",
+      uk: "Новий чат показує картки «Start something new» (на телефоні — сітка 2x2), якщо встановлено їхню навичку, а «Continue» знову відкриває ваш останній чат. У чаті з повідомленнями чипи над полем роблять те саме, поки поле порожнє (лише на комп’ютері). Під останньою відповіддю «Shorter» і «Simpler» надсилають готове повідомлення; у режимі Plan «Apply proposal» виходить із режиму й виконує план.",
     },
   },
   {

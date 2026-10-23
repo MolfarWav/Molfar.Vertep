@@ -4,6 +4,7 @@ import { unstable_useComposerInput, useAuiState } from "@assistant-ui/react"
 import type { Icon } from "@phosphor-icons/react"
 import type { ReactNode } from "react"
 import { memoryApi, type AgentSkill } from "./api"
+import { canApplyProposal } from "./reply-actions"
 import { useAgent } from "./store"
 import { availableTemplates, type TaskTemplate } from "./templates"
 
@@ -122,15 +123,17 @@ const BTN = "border-brand-line bg-brand-soft text-brand hover:bg-brand hover:tex
 const BTN_MAIN = "bg-brand text-brand-foreground hover:bg-brand/90 inline-flex h-6 items-center gap-1 rounded-full px-2.5 text-xs font-medium whitespace-nowrap transition-colors"
 
 /**
- * Quick actions in the action bar of the last reply: shorter, simpler, and
- * apply (when it only proposed). Each is a plain message to Molfar. Undoing a
- * reply that changed an app is the "Changed … · Undo" line under it.
+ * Quick actions in the action bar of the last reply: shorter, simpler, and, in plan mode,
+ * apply the plan. Each is a plain message to Molfar. Undoing a reply that changed an app
+ * is the "Changed … · Undo" line under it.
  */
 export function ReplyQuickActions(): ReactNode {
   const id = useAuiState((s) => s.message.id)
   const msgs = useAgent((s) => s.msgs)
   const running = useAgent((s) => s.running)
   const send = useAgent((s) => s.send)
+  const mode = useAgent((s) => s.mode)
+  const setMode = useAgent((s) => s.setMode)
   const at = msgs.findIndex((m) => m.id === id)
   const msg = msgs[at]
   if (!msg || at !== msgs.length - 1 || running || msg.streaming) return null
@@ -144,8 +147,18 @@ export function ReplyQuickActions(): ReactNode {
         <Feather size={13} weight="bold" aria-hidden />
         Simpler
       </button>
-      {!msg.checkpoints?.length ? (
-        <button type="button" className={BTN_MAIN} title="Carry out what Molfar proposed in this reply" aria-label="Apply proposal: carry out what Molfar proposed in this reply" onClick={() => void send("Apply what you proposed.")}>
+      {canApplyProposal(mode) && !msg.checkpoints?.length ? (
+        <button
+          type="button"
+          className={BTN_MAIN}
+          title="Leave plan mode and carry out the plan in this reply"
+          aria-label="Apply proposal: leave plan mode and carry out the plan in this reply"
+          onClick={() => {
+            // plan mode cannot change anything: the message goes out in Full mode
+            setMode("normal")
+            void send("Apply what you proposed.")
+          }}
+        >
           <Check size={13} weight="bold" aria-hidden />
           Apply proposal
         </button>

@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from "bun:test";
 import { foldParked, newSessionId, otherChats, rowMark, type ParkedRun } from "../client-agent/src/parallel.js";
+import { canApplyProposal } from "../client-agent/src/reply-actions.js";
 import type { EngineSession } from "../client-agent/src/api.js";
 
 const row = (sessionId: string, extra: Partial<EngineSession> = {}): EngineSession => ({ sessionId, runs: 1, lastAt: 1, title: sessionId, ...extra });
@@ -82,5 +83,13 @@ describe("the chat list marks", () => {
       ["Work", "running"],
       ["Done", "finished"],
     ]);
+  });
+});
+
+describe("Apply proposal", () => {
+  it("is offered in plan mode only, where Molfar proposes and changes nothing", () => {
+    expect(canApplyProposal("plan")).toBe(true);
+    expect(canApplyProposal("normal")).toBe(false);
+    expect(canApplyProposal("accept")).toBe(false);
   });
 });
