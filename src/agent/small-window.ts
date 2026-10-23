@@ -41,7 +41,7 @@ export function isSmallWindow(mode: SmallModelMode, contextWindow: number | null
 
 // ---------- tool groups ----------
 
-export type ToolGroup = "app" | "skills" | "shell" | "web" | "image" | "admin" | "mcp";
+export type ToolGroup = "app" | "skills" | "shell" | "web" | "image" | "admin" | "mcp" | "chats";
 
 /** Always sent in small mode. */
 export const CORE_TOOLS: ReadonlySet<string> = new Set(["read_file", "write_file", "edit_file", "json_get", "json_set", "grep", "git", "ask_user", "skill_load", "memory_propose", "memory_search", "tools_enable"]);
@@ -59,6 +59,7 @@ const GROUP_OF: Record<string, ToolGroup> = {
   model_try: "app",
   web_fetch: "web",
   image_generate: "image",
+  chats: "chats",
   // small mode: big runs are app work, and the core set has no room for it
   run_budget: "app",
   skill_propose: "skills",
@@ -83,6 +84,7 @@ const GROUP_LINES: Record<ToolGroup, string> = {
   image: "image: draw a picture (avatar, background) with the user's image models",
   admin: "admin: accounts and server settings",
   mcp: "mcp: the tools of the user's MCP servers",
+  chats: "chats: list, archive, rename, move or delete chats",
 };
 
 /** Shorter descriptions, same parameters. Tools not named here keep theirs. */
@@ -111,15 +113,27 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
   memory_propose:
     "Propose a memory entry (scope global, app:<id> or project:<name>); the user confirms. topic: a lowercase-dashes topic file; omit for core facts. replaces: a phrase from the outdated entry.",
   memory_search: "Search all memory entries by words (inflections match). scope narrows it.",
+  chats: 'The user\'s chats: action list (query, olderThanDays), archive, unarchive, rename, move (project id/title or "none"), delete (the user confirms). ids come from list.',
 };
 
 /** In the app group for small mode only: full mode always sends these. */
 const FULL_ALWAYS: ReadonlySet<string> = new Set(["run_budget"]);
 
+/** Groups full mode hides until they are asked for: the app tools (~1k tokens a call) until an app's
+ *  code is in play, and the chats tool, which is rare. Every other group is always sent in full mode. */
+export const FULL_HIDDEN: ReadonlySet<ToolGroup> = new Set<ToolGroup>(["app", "chats"]);
+
 /** The tools the model is sent this step. */
 export function visibleTools(all: AgentTool[], small: boolean, unlocked: ReadonlySet<ToolGroup>): AgentTool[] {
-  // full mode hides only the app tools, until an app's code is in play
-  if (!small) return all.filter((t) => (t.name === "tools_enable" ? !unlocked.has("app") : groupOf(t.name) !== "app" || unlocked.has("app") || FULL_ALWAYS.has(t.name)));
+  // full mode hides only FULL_HIDDEN groups, until they are unlocked
+  if (!small) {
+    const locked = availableGroups(all).some((g) => FULL_HIDDEN.has(g) && !unlocked.has(g));
+    return all.filter((t) => {
+      if (t.name === "tools_enable") return locked;
+      const g = groupOf(t.name);
+      return g === null || !FULL_HIDDEN.has(g) || unlocked.has(g) || FULL_ALWAYS.has(t.name);
+    });
+  }
   return all
     // a tool in no group is core (or new and unclassified: better sent than lost)
     .filter((t) => {

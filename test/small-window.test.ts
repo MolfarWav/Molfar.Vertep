@@ -112,7 +112,8 @@ describe("what a small model is sent", () => {
     // bug dialog runs on small free models too
     // 1.2.11: the new-app rule (+~30 tokens): a model that builds an app by
     // hand never registers it (#78)
-    expect(size(s!)).toBeLessThan(3_800);
+    // 1.3.3: the chats group line in tools_enable (+~20 tokens): "delete my old chats" has a tool now
+    expect(size(s!)).toBeLessThan(3_850);
   });
 
   it("a large model keeps the full prompt and every tool but the app tools, which tools_enable shows", async () => {
@@ -165,7 +166,8 @@ describe("hidden tools", () => {
     });
     expect(names(seen[1]!)).not.toContain("app_check");
     expect(names(seen[2]!)).toEqual(expect.arrayContaining(["app_check", "checkpoint"]));
-    expect(names(seen[2]!)).not.toContain("tools_enable");
+    // the chats tool stays hidden, so tools_enable stays to show it
+    expect(names(seen[2]!)).toContain("tools_enable");
   });
 
   it("a chat in an app's project starts with them", async () => {

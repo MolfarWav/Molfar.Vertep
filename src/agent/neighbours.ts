@@ -26,6 +26,9 @@ export function endWork(username: string, sessionId: string): void {
   if (mine && !mine.size) runs.delete(username);
 }
 
+/** A run holds this chat right now. */
+export const isWorking = (username: string, sessionId: string): boolean => runs.get(username)?.has(sessionId) ?? false;
+
 /** The key a file goes under: the same file reached as `./a//b` and `a/b` is one. */
 const keyOf = (rel: string): string => rel.replace(/\\/g, "/").replace(/\/{2,}/g, "/").replace(/^(\.\/)+/, "");
 

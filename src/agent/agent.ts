@@ -4,7 +4,8 @@
  * Sessions persist as JSONL run records (agent can read its own history);
  * resume reconstructs dialogue from past runs.
  */
-import { beginWork, endWork } from "./neighbours.js";
+import { buildChatsTool, removeTranscript } from "./chats.js";
+import { beginWork, endWork, isWorking } from "./neighbours.js";
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -30,6 +31,7 @@ import {
   availableGroups,
   buildToolsEnable,
   compactSystemPrompt,
+  FULL_HIDDEN,
   groupsFromHistory,
   isSmallWindow,
   readSmallModelMode,
@@ -42,7 +44,7 @@ import { LANGUAGE_RULE, PRECEDENCE_RULE } from "./prompt-rules.js";
 import { resetAllowed } from "./protect.js";
 import { readSandboxSettings } from "../sandbox/network.js";
 import { putAsset } from "../assets/store.js";
-import { projectLayout, projectPromptSection, readSettings } from "./projects.js";
+import { listProjects, projectLayout, projectPromptSection, readSettings } from "./projects.js";
 import { rememberSystemParts, type SourceKind, type SourcePart } from "../prompt-sources.js";
 
 const ADMIN_TOOLS_PROMPT = `You are also the ADMIN agent for this instance: create users with admin_create_user, list them with admin_list_users. New user tokens are shown exactly once.`;
@@ -431,6 +433,8 @@ export class UserAgent {
     opts: {
       sessionId?: string
       notify?: AgentToolOptions["notify"]
+      /** Chats were deleted by the chats tool: drop what the engine keeps for them. */
+      forgetSessions?: (ids: string[]) => void
       mcp?: McpRegistry
       model?: string
       reasoning?: ReasoningLevel
@@ -488,6 +492,26 @@ export class UserAgent {
         readOnly: opts.mode === "plan",
       }));
     }
+    // the user's chats: list, archive, rename, move, delete (confirmed). Hidden until asked for (small-window.ts)
+    tools.push(
+      buildChatsTool({
+        sessionId,
+        isWorking: (id) => isWorking(username, id),
+        ...(opts.ask ? { ask: opts.ask } : {}),
+        ops: {
+          list: () => listSessions(paths),
+          rename: (id, title) => void renameSession(paths, id, title),
+          archive: (id, archived) => archiveSession(paths, id, archived),
+          move: (id, project) => moveSession(paths, id, project),
+          remove: (id) => removeTranscript(sessionFile(paths, id)),
+          projects: () => listProjects(paths.root).map((x) => ({ id: x.id, title: x.title })),
+        },
+        forgotten: (ids) => {
+          if (ids.length) opts.forgetSessions?.(ids);
+          opts.notify?.("agent_sessions", {});
+        },
+      }),
+    );
     // MCP tools from the user's mcp.json (SPEC §5.5) — namespaced mcp_<server>_<tool>
     if (opts.mcp) tools.push(...(await buildMcpTools(opts.mcp)));
     // plan mode: read-only — strip every mutating tool, keep reads + MCP + ask_user
@@ -586,8 +610,11 @@ export class UserAgent {
     } else {
       // full mode hides only the app tools (~1k tokens a call) until an app's
       // code is in play: a card edit in data/ does not need them
-      if (groupsFromHistory(messages, (n, a) => (appCodeTouched(n, a) ? "code" : undefined)).has("app") || project?.startsWith("app:")) unlocked.add("app");
-      if (availableGroups(tools).includes("app")) tools.push(buildToolsEnable(["app"], (g) => unlocked.add(g)));
+      const used = groupsFromHistory(messages, (n, a) => (appCodeTouched(n, a) ? "code" : undefined));
+      if (used.has("app") || project?.startsWith("app:")) unlocked.add("app");
+      if (used.has("chats")) unlocked.add("chats");
+      const hidden = availableGroups(tools).filter((g) => FULL_HIDDEN.has(g));
+      if (hidden.length) tools.push(buildToolsEnable(hidden, (g) => unlocked.add(g)));
     }
     // request level → user default → medium for reasoning-capable models,
     // clamped by pi-ai's clampThinkingLevel (walks the ladder to a supported one)
@@ -1584,7 +1611,7 @@ const FULL_LAYOUT = `# Workspace layout (your whole world)
 - uploads/<day>/            — files the user attached in chat (an @uploads/… path in their message); outside git and read-only for you.
 (User-managed config is NOT here: MCP servers, model connections, speech endpoints and settings all live outside this workspace with the credentials; the Settings UI owns them and you do not read or edit them. Asking the user to change one there is the right move when something is missing.)
 - providers.json            — custom model providers { providers: { id: { api: openai-completions|anthropic-messages, baseUrl, models: [...] | "auto" } } }
-- agent/sessions/           — your own session transcripts (readable)`;
+- agent/sessions/           — your own session transcripts (readable; to archive, rename, move or delete chats use the chats tool, never edit these files)`;
 
 /** What the system prompt adds when the inlined AGENTS.md maps the folders
  *  itself: the two used to say the same thing twice, every request. */
@@ -1592,7 +1619,7 @@ const SHORT_LAYOUT = `# Workspace layout (your whole world)
 The workspace contract below (AGENTS.md) maps the folders. Beyond it:
 - apps/<app-id>/manifest.json is { name, version, kind, origin }; apps/<app-id>/plugins/<id>/ holds manifest.json {permissions} + plugin.js; dist/.chrysalis-build.json holds the last build's errors.
 - providers.json: { providers: { id: { api: openai-completions|anthropic-messages, baseUrl, models: [...] | "auto" } } }
-- agent/sessions/: your own session transcripts (readable).
+- agent/sessions/: your own session transcripts (readable; archive, rename, move or delete chats with the chats tool, never edit them).
 - MCP servers, model connections, speech endpoints and settings live outside this workspace; ask the user to change them in Settings.`;
 
 function workspaceLayout(paths: UserPaths): string {

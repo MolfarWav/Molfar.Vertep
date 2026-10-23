@@ -644,6 +644,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       a = await UserAgent.create(u.username, getModels(u), userPaths(dataDir, u.username), users, config, {
         ...(sessionId ? { sessionId } : {}),
         notify: (type, payload) => bus.emit(u.username, type, payload),
+        // the chats tool deleted chats: their cached agents go (the sidebar's delete evicts too)
+        forgetSessions: (ids) => {
+          for (const key of agentInstances.keys()) if (ids.some((id) => key.startsWith(`${u.username}:${id}:`))) agentInstances.delete(key);
+        },
         mcp: getMcp(u),
         ...(deps.settings && u.role === "admin" ? { settings: deps.settings } : {}),
         ...(u.role === "admin" ? { provisionAccount } : {}),

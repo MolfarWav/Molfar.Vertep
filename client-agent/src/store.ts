@@ -946,6 +946,11 @@ export function connectWs(): void {
       return
     }
     const st = useAgent.getState()
+    // the chats tool archived, renamed, moved or deleted chats: the list follows
+    if (msg.type === "agent_sessions") {
+      void st.refreshSessions()
+      return
+    }
     const payload = msg.payload
     if (!payload) return
     if (msg.type === "agent_run") {

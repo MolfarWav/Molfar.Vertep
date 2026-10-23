@@ -69,6 +69,9 @@ export const AGENT_WRITE_DENYLIST: readonly { pattern: RegExp; reason: string }[
   // project files are the user's uploads and live outside git, so a write
   // here could not be undone: the agent reads them, the project page changes them
   { pattern: PROJECT_FILES, reason: "project files are the user's uploads (outside git, so a change could not be undone); read them, and ask the user to change them on the project page" },
+  // the chats: transcripts live outside git, so a change could not be undone, and the sidebar and the
+  // chats tool keep the list, the titles and the deletes in order
+  { pattern: /^agent(\/|$)/i, reason: "agent/ holds the user's chat transcripts (outside git, so a change could not be undone); read them, and use the chats tool to archive, rename, move or delete a chat" },
   { pattern: CHAT_UPLOADS, reason: "uploads/ holds files the user attached in chat (outside git, so a change could not be undone); read them, and write what you make from them where it belongs" },
 ];
 

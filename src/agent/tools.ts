@@ -58,6 +58,7 @@ export const WRITE_TOOLS = new Set([
   "skill_propose",
   "skill_edit",
   "checkpoint",
+  "chats",
 ]);
 
 const parsesAsJson = (text: string): boolean => {
