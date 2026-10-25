@@ -878,6 +878,17 @@ const dict = {
   "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "Tarayıcılar uygulamaları yalnızca güvenli bir adresten (https) yükler. Bu sayfa {address} adresinde açık, bu yüzden tarayıcı yükleme önermiyor.",
   "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Molfar Vertep’i bir https adresinde aç. Rehberde iki yol var: Tailscale ya da kendi sertifikan.",
   "How to get https": "https nasıl alınır",
+  "{who} refused the API key: check it in Settings": "{who} API anahtarını reddetti: Ayarlar'da kontrol edin",
+  "{who} says the account has no credit left": "{who} hesapta bakiye kalmadığını bildiriyor",
+  "{who} is limiting requests: wait a moment and try again": "{who} istekleri sınırlıyor: biraz bekleyip tekrar deneyin",
+  "{who} does not know this model or address": "{who} bu modeli veya adresi tanımıyor",
+  "{who} refused the request": "{who} isteği reddetti",
+  "{who} failed ({status})": "{who} başarısız oldu ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} {seconds} saniye içinde yanıt vermedi",
+  "could not reach {who} at {origin}: is it running?": "{origin} adresindeki {who} sunucusuna ulaşılamadı: çalışıyor mu?",
+  "could not find {who} at {host}: check the address": "{host} adresindeki {who} bulunamadı: adresi kontrol edin",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} isteği başka yere yönlendirdi: son adresi Ayarlar'a girin",
+  "{who} answered without a picture": "{who} görsel olmadan yanıt verdi",
 }
 
 export default dict

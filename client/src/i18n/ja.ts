@@ -878,6 +878,17 @@ const dict = {
   "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "ブラウザは安全なアドレス（https）からのみアプリをインストールします。このページは {address} で開かれているため、インストールは表示されません。",
   "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Molfar Vertep を https のアドレスで開いてください。ガイドでは Tailscale と自分の証明書の 2 つの方法を説明しています。",
   "How to get https": "https を使う方法",
+  "{who} refused the API key: check it in Settings": "{who} が API キーを拒否しました。設定で確認してください",
+  "{who} says the account has no credit left": "{who} はアカウントに残高がないと伝えています",
+  "{who} is limiting requests: wait a moment and try again": "{who} がリクエストを制限しています。少し待ってからやり直してください",
+  "{who} does not know this model or address": "{who} はこのモデルまたはアドレスを知りません",
+  "{who} refused the request": "{who} がリクエストを拒否しました",
+  "{who} failed ({status})": "{who} が失敗しました ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} が {seconds} 秒以内に応答しませんでした",
+  "could not reach {who} at {origin}: is it running?": "{origin} の {who} に接続できませんでした。起動していますか?",
+  "could not find {who} at {host}: check the address": "{host} に {who} が見つかりません。アドレスを確認してください",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} がリクエストを別の場所へ転送しました。最終アドレスを設定に入力してください",
+  "{who} answered without a picture": "{who} が画像なしで応答しました",
 }
 
 export default dict

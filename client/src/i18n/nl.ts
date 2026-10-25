@@ -878,6 +878,17 @@ const dict = {
   "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "Browsers installeren apps alleen vanaf een veilig adres (https). Deze pagina is geopend op {address}, dus de browser biedt geen installatie aan.",
   "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Open Molfar Vertep op een https-adres. De handleiding toont twee manieren: Tailscale of een eigen certificaat.",
   "How to get https": "Zo krijg je https",
+  "{who} refused the API key: check it in Settings": "{who} heeft de API-sleutel geweigerd: controleer hem in Instellingen",
+  "{who} says the account has no credit left": "{who} meldt dat het account geen tegoed meer heeft",
+  "{who} is limiting requests: wait a moment and try again": "{who} beperkt verzoeken: wacht even en probeer opnieuw",
+  "{who} does not know this model or address": "{who} kent dit model of dit adres niet",
+  "{who} refused the request": "{who} heeft het verzoek geweigerd",
+  "{who} failed ({status})": "{who} is mislukt ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} antwoordde niet binnen {seconds} seconden",
+  "could not reach {who} at {origin}: is it running?": "kon {who} op {origin} niet bereiken: draait het?",
+  "could not find {who} at {host}: check the address": "kon {who} op {host} niet vinden: controleer het adres",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} heeft het verzoek elders heen gestuurd: zet het uiteindelijke adres in Instellingen",
+  "{who} answered without a picture": "{who} antwoordde zonder afbeelding",
 }
 
 export default dict

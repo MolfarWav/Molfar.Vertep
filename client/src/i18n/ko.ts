@@ -878,6 +878,17 @@ const dict = {
   "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "브라우저는 보안 주소(https)에서만 앱을 설치합니다. 이 페이지는 {address}에서 열려 있어 브라우저가 설치를 제안하지 않습니다.",
   "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "https 주소로 Molfar Vertep을 여세요. 안내서에 Tailscale과 직접 만든 인증서, 두 가지 방법이 있습니다.",
   "How to get https": "https 사용 방법",
+  "{who} refused the API key: check it in Settings": "{who}이(가) API 키를 거부했습니다. 설정에서 확인하세요",
+  "{who} says the account has no credit left": "{who}이(가) 계정에 크레딧이 없다고 알려 왔습니다",
+  "{who} is limiting requests: wait a moment and try again": "{who}이(가) 요청을 제한하고 있습니다. 잠시 기다렸다가 다시 시도하세요",
+  "{who} does not know this model or address": "{who}이(가) 이 모델이나 주소를 알지 못합니다",
+  "{who} refused the request": "{who}이(가) 요청을 거부했습니다",
+  "{who} failed ({status})": "{who}이(가) 실패했습니다 ({status})",
+  "{who} did not answer within {seconds} seconds": "{who}이(가) {seconds}초 안에 응답하지 않았습니다",
+  "could not reach {who} at {origin}: is it running?": "{origin}의 {who}에 연결할 수 없습니다. 실행 중인가요?",
+  "could not find {who} at {host}: check the address": "{host}에서 {who}을(를) 찾을 수 없습니다. 주소를 확인하세요",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who}이(가) 요청을 다른 곳으로 리디렉션했습니다. 최종 주소를 설정에 입력하세요",
+  "{who} answered without a picture": "{who}이(가) 이미지 없이 응답했습니다",
 }
 
 export default dict

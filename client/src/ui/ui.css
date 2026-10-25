@@ -29,6 +29,7 @@
 /* a tap target on phones: 40 px, in px because the shell scales rem */
 @media (max-width: 767px) {
   [data-component="icon-button"][data-touch="true"] { height: 40px; width: 40px; }
+  [data-component="button"][data-touch="true"] { height: 40px; }
 }
 
 [data-component="button"]:disabled,

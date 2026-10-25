@@ -878,6 +878,17 @@ const dict = {
   "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "Browser installieren Apps nur von einer sicheren Adresse (https). Diese Seite ist unter {address} geöffnet, daher bietet der Browser keine Installation an.",
   "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Öffne Molfar Vertep unter einer https-Adresse. Die Anleitung zeigt zwei Wege: Tailscale oder ein eigenes Zertifikat.",
   "How to get https": "So bekommst du https",
+  "{who} refused the API key: check it in Settings": "{who} hat den API-Schlüssel abgelehnt: in den Einstellungen prüfen",
+  "{who} says the account has no credit left": "{who} meldet, dass das Konto kein Guthaben mehr hat",
+  "{who} is limiting requests: wait a moment and try again": "{who} begrenzt Anfragen: kurz warten und erneut versuchen",
+  "{who} does not know this model or address": "{who} kennt dieses Modell oder diese Adresse nicht",
+  "{who} refused the request": "{who} hat die Anfrage abgelehnt",
+  "{who} failed ({status})": "{who} ist fehlgeschlagen ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} hat nicht innerhalb von {seconds} Sekunden geantwortet",
+  "could not reach {who} at {origin}: is it running?": "{who} unter {origin} nicht erreichbar: läuft es?",
+  "could not find {who} at {host}: check the address": "{who} unter {host} nicht gefunden: Adresse prüfen",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} hat die Anfrage umgeleitet: die endgültige Adresse in den Einstellungen eintragen",
+  "{who} answered without a picture": "{who} hat ohne Bild geantwortet",
 }
 
 export default dict

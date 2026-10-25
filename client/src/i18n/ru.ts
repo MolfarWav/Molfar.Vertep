@@ -878,6 +878,17 @@ const dict = {
   "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "Браузеры устанавливают приложения только с защищённого адреса (https). Эта страница открыта по адресу {address}, поэтому браузер не предлагает установку.",
   "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Откройте Molfar Vertep по адресу https. В инструкции два способа: Tailscale или собственный сертификат.",
   "How to get https": "Как получить https",
+  "{who} refused the API key: check it in Settings": "{who} отклонил API-ключ: проверьте его в Настройках",
+  "{who} says the account has no credit left": "{who} сообщает, что на счёте нет средств",
+  "{who} is limiting requests: wait a moment and try again": "{who} ограничивает запросы: подождите немного и повторите",
+  "{who} does not know this model or address": "{who} не знает эту модель или адрес",
+  "{who} refused the request": "{who} отклонил запрос",
+  "{who} failed ({status})": "{who} не справился ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} не ответил за {seconds} с",
+  "could not reach {who} at {origin}: is it running?": "не удалось связаться с {who} по адресу {origin}: он запущен?",
+  "could not find {who} at {host}: check the address": "не удалось найти {who} по адресу {host}: проверьте адрес",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} перенаправил запрос в другое место: укажите конечный адрес в Настройках",
+  "{who} answered without a picture": "{who} ответил без картинки",
 }
 
 export default dict

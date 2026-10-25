@@ -64,6 +64,29 @@ const imagesApi = {
   check: (id: string) => api<{ models: { id: string }[] }>("GET", `/v1/images/endpoints/${encodeURIComponent(id)}/models`).then((r) => r.models ?? []),
 }
 
+/** An image route's error in the user's language: the engine sends `code` + `vars`
+ *  with its English text (src/images.ts), and the text stays the fallback. */
+const imageErrorText = (e: unknown): string => {
+  const err = e as { message?: string; code?: string; vars?: Record<string, string | number> }
+  const vars = err.vars ?? {}
+  const text =
+    err.code === "key" ? tr("{who} refused the API key: check it in Settings", vars)
+    : err.code === "credit" ? tr("{who} says the account has no credit left", vars)
+    : err.code === "rate" ? tr("{who} is limiting requests: wait a moment and try again", vars)
+    : err.code === "unknown_model" ? tr("{who} does not know this model or address", vars)
+    : err.code === "refused" ? tr("{who} refused the request", vars)
+    : err.code === "failed" ? tr("{who} failed ({status})", vars)
+    : err.code === "timeout" ? tr("{who} did not answer within {seconds} seconds", vars)
+    : err.code === "unreachable" ? tr("could not reach {who} at {origin}: is it running?", vars)
+    : err.code === "not_found" ? tr("could not find {who} at {host}: check the address", vars)
+    : err.code === "redirect" ? tr("{who} redirected the request elsewhere: put the final address in Settings", vars)
+    : err.code === "no_picture" ? tr("{who} answered without a picture", vars)
+    : null
+  if (text === null) return err.message ?? String(e)
+  // what the provider itself said stays as it said it
+  return vars.detail ? `${text} (${vars.detail})` : text
+}
+
 const KINDS: Array<{ value: Kind; label: string; name: string; url: string }> = [
   { value: "comfyui", label: "ComfyUI", name: "ComfyUI", url: "http://127.0.0.1:8188" },
   { value: "a1111", label: "A1111 / Forge", name: "Forge", url: "http://127.0.0.1:7860" },
@@ -93,7 +116,7 @@ export function ImagesTab() {
       const r = await imagesApi.setFavorites(items)
       if (models.data) models.mutate({ ...models.data, favorites: r.favorites })
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e))
+      setErr(imageErrorText(e))
     } finally {
       setBusy(false)
     }
@@ -139,7 +162,7 @@ export function ImagesTab() {
         <section className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <h3 className="flex-1 text-13 font-medium text-ink">{tr("Your image servers")}</h3>
-            {!adding ? <Button variant="neutral" size="small" className="gap-1.5" onClick={() => { setErr(""); setEditing(null); setAdding(true) }}>
+            {!adding ? <Button touch variant="neutral" size="small" className="gap-1.5" onClick={() => { setErr(""); setEditing(null); setAdding(true) }}>
                 <IconSmall name="grid-plus" />
                 {tr("Add server")}
               </Button> : null}
@@ -175,7 +198,7 @@ function SourceModels(props: { models: ImageModel[]; starred: Set<string>; busy:
   if (!all.length) return null
   return (
     <div className="flex flex-col">
-      <button type="button" className="flex items-center gap-2 py-0.5 text-left text-12 text-ink-muted hover:text-ink" aria-expanded={open} onClick={() => setOpen(!open)}>
+      <button type="button" className="flex items-center gap-2 py-0.5 text-left text-12 text-ink-muted hover:text-ink max-md:min-h-[40px]" aria-expanded={open} onClick={() => setOpen(!open)}>
         <IconSmall name={open ? "chevron-down" : "chevron-right"} size="small" />
         <span className="flex-1">{tr("Models")}</span>
         <span className="text-11 text-ink-faint">{all.length}</span>
@@ -288,7 +311,7 @@ function EndpointRow(props: { ep: ImageEndpoint; onEdit: () => void; models: Ima
     setState({ busy: true })
     imagesApi.check(ep.id).then(
       (ms) => setState({ busy: false, count: ms.length }),
-      (e: Error) => setState({ busy: false, error: e.message ?? String(e) }),
+      (e: Error) => setState({ busy: false, error: imageErrorText(e) }),
     )
   }
   // biome-ignore lint/correctness/useExhaustiveDependencies: checked once per endpoint
@@ -303,17 +326,17 @@ function EndpointRow(props: { ep: ImageEndpoint; onEdit: () => void; models: Ima
             {kindLabel(ep.kind)} · {ep.baseUrl}{ep.hasKey ? ` · ${tr("key saved")}` : ""}
           </span>
         </span>
-        <Button variant="ghost-muted" size="small" disabled={state.busy} onClick={check}>
+        <Button touch variant="ghost-muted" size="small" disabled={state.busy} onClick={check}>
           {state.busy ? tr("Checking…") : tr("Check")}
         </Button>
-        <Button variant="ghost-muted" size="small" onClick={props.onEdit}>{tr("Edit")}</Button>
+        <Button touch variant="ghost-muted" size="small" onClick={props.onEdit}>{tr("Edit")}</Button>
         {confirming ? (
-          <Button variant="danger" size="small" onClick={async () => {
+          <Button touch variant="danger" size="small" onClick={async () => {
             try {
               await imagesApi.remove(ep.id)
               props.onRemoved()
             } catch (e: any) {
-              props.onError(e.message ?? String(e))
+              props.onError(imageErrorText(e))
             }
           }}>{tr("Delete")}</Button>
         ) : (
@@ -452,7 +475,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
       const names = Object.keys(from).map((k) => labels[k] ?? k)
       setTaken(names.length ? tr("Taken from the workflow: {list}. Change them in the fields above.", { list: names.join(", ") }) : tr("The workflow is ready; it had no settings for the fields above."))
     } catch (e: any) {
-      setErr(e.message ?? String(e))
+      setErr(imageErrorText(e))
     }
   }
   const pickFile = async (file: File | undefined) => {
@@ -467,7 +490,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
     let live = true
     imagesApi.options(ep.id).then(
       (data) => live && setOpts({ loading: false, data }),
-      (e: Error) => live && setOpts({ loading: false, error: e.message ?? String(e) }),
+      (e: Error) => live && setOpts({ loading: false, error: imageErrorText(e) }),
     )
     return () => { live = false }
   }, [ep?.id])
@@ -503,7 +526,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
       }
       props.onSaved()
     } catch (e: any) {
-      setErr(e.message ?? String(e))
+      setErr(imageErrorText(e))
     } finally {
       setBusy(false)
     }
@@ -626,7 +649,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
               </div>
             ))}
             <div className="flex items-center gap-2">
-              <Button variant="neutral" size="small" disabled={f.loras.length >= MAX_LORAS} onClick={() => set("loras", [...f.loras, { id: ++loraId, name: "", strength: "1" }])}>{tr("Add LoRA")}</Button>
+              <Button touch variant="neutral" size="small" disabled={f.loras.length >= MAX_LORAS} onClick={() => set("loras", [...f.loras, { id: ++loraId, name: "", strength: "1" }])}>{tr("Add LoRA")}</Button>
               <span className="text-11 text-ink-faint">{f.loras.length >= MAX_LORAS ? tr("Up to {n} LoRAs.", { n: MAX_LORAS }) : tr("Strength 1 is the usual; up to {n} LoRAs.", { n: MAX_LORAS })}</span>
             </div>
           </> : null}
@@ -635,9 +658,9 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
             {group(tr("Workflow"))}
             <div className="flex flex-wrap items-center gap-2">
               <input ref={fileInput} type="file" accept=".json,application/json" className="hidden" onChange={(e) => void pickFile(e.currentTarget.files?.[0])} />
-              <Button variant="neutral" size="small" onClick={() => fileInput.current?.click()}>{tr("Import workflow file…")}</Button>
+              <Button touch variant="neutral" size="small" onClick={() => fileInput.current?.click()}>{tr("Import workflow file…")}</Button>
               {f.workflow.trim() && !f.workflow.includes("%steps%") ? (
-                <Button variant="neutral" size="small" onClick={() => void importWorkflow(f.workflow)}>{tr("Take the settings from this workflow")}</Button>
+                <Button touch variant="neutral" size="small" onClick={() => void importWorkflow(f.workflow)}>{tr("Take the settings from this workflow")}</Button>
               ) : null}
             </div>
             {taken ? <div className="text-12 text-ink-muted" role="status">{taken}</div> : null}
@@ -650,7 +673,7 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
         </div>
       </details>
       {err ? <div className="text-12 text-danger">{err}</div> : null}
-      <Button variant="primary" size="small" className="self-start" disabled={busy || !f.name.trim() || !f.baseUrl.trim()} onClick={submit}>
+      <Button touch variant="primary" size="small" className="self-start" disabled={busy || !f.name.trim() || !f.baseUrl.trim()} onClick={submit}>
         {busy ? tr("Saving…") : ep ? tr("Save changes") : tr("Save server")}
       </Button>
     </section>

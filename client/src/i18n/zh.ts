@@ -878,6 +878,17 @@ const dict = {
   "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "浏览器只从安全地址（https）安装应用。此页面在 {address} 打开，因此浏览器不提供安装。",
   "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "请通过 https 地址打开 Molfar Vertep。指南介绍两种方法：Tailscale，或你自己的证书。",
   "How to get https": "如何获得 https",
+  "{who} refused the API key: check it in Settings": "{who} 拒绝了 API 密钥:请在设置中检查",
+  "{who} says the account has no credit left": "{who} 表示账户已没有余额",
+  "{who} is limiting requests: wait a moment and try again": "{who} 正在限制请求:请稍等片刻再试",
+  "{who} does not know this model or address": "{who} 不认识这个模型或地址",
+  "{who} refused the request": "{who} 拒绝了请求",
+  "{who} failed ({status})": "{who} 失败了 ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} 在 {seconds} 秒内没有响应",
+  "could not reach {who} at {origin}: is it running?": "无法连接到 {origin} 上的 {who}:它在运行吗?",
+  "could not find {who} at {host}: check the address": "在 {host} 上找不到 {who}:请检查地址",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} 把请求重定向到了别处:请在设置中填写最终地址",
+  "{who} answered without a picture": "{who} 返回了没有图片的响应",
 }
 
 export default dict

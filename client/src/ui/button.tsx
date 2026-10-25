@@ -9,15 +9,18 @@ export interface ButtonProps extends ComponentProps<"button"> {
   size?: Size
   variant?: Variant
   icon?: IconName
+  /** at least 40 px tall on phones (a tap target), whatever the size says; desktop keeps the size */
+  touch?: boolean
 }
 
-export function Button({ variant, size, icon, className, children, type, ...rest }: ButtonProps) {
+export function Button({ variant, size, icon, touch, className, children, type, ...rest }: ButtonProps) {
   return (
     <button
       type={type ?? "button"}
       data-component="button"
       data-size={size ?? "normal"}
       data-variant={variant ?? "neutral"}
+      data-touch={touch ? "true" : undefined}
       className={cn(className)}
       {...rest}
     >

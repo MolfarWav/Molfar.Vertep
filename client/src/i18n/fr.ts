@@ -878,6 +878,17 @@ const dict = {
   "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "Les navigateurs n’installent des apps que depuis une adresse sécurisée (https). Cette page est ouverte sur {address}, donc le navigateur ne propose pas l’installation.",
   "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Ouvre Molfar Vertep sur une adresse https. Le guide montre deux façons : Tailscale ou un certificat à toi.",
   "How to get https": "Comment obtenir https",
+  "{who} refused the API key: check it in Settings": "{who} a refusé la clé API : vérifiez-la dans les Paramètres",
+  "{who} says the account has no credit left": "{who} indique que le compte n’a plus de crédit",
+  "{who} is limiting requests: wait a moment and try again": "{who} limite les requêtes : patientez un instant et réessayez",
+  "{who} does not know this model or address": "{who} ne connaît pas ce modèle ou cette adresse",
+  "{who} refused the request": "{who} a refusé la requête",
+  "{who} failed ({status})": "{who} a échoué ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} n’a pas répondu en {seconds} secondes",
+  "could not reach {who} at {origin}: is it running?": "impossible de joindre {who} à {origin} : est-il lancé ?",
+  "could not find {who} at {host}: check the address": "impossible de trouver {who} à {host} : vérifiez l’adresse",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} a redirigé la requête ailleurs : indiquez l’adresse finale dans les Paramètres",
+  "{who} answered without a picture": "{who} a répondu sans image",
 }
 
 export default dict
