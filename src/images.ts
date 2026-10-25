@@ -84,10 +84,24 @@ export interface ImageEndpointInfo extends ImageEndpointDef {
 
 /** A failure with the HTTP status the image route should answer with. */
 export class ImageError extends Error {
-  constructor(message: string, readonly status: 400 | 401 | 402 | 404 | 429 | 502 | 504) {
+  /** `message` is the English text; `code` + `vars` let the shell show it in the user's language (client `imageErrorText`). */
+  constructor(
+    message: string,
+    readonly status: 400 | 401 | 402 | 404 | 429 | 502 | 504,
+    readonly code?: ImageErrorCode,
+    readonly vars?: Record<string, string | number>,
+  ) {
     super(message);
   }
 }
+
+/** The JSON an image route answers with: the English text, plus `code`/`vars` when the error has them. */
+export function imageErrorBody(e: unknown): { error: string; code?: ImageErrorCode; vars?: Record<string, string | number> } {
+  const error = (e as Error).message;
+  return e instanceof ImageError && e.code ? { error, code: e.code, vars: e.vars } : { error };
+}
+
+export type ImageErrorCode = "key" | "credit" | "rate" | "unknown_model" | "refused" | "failed" | "timeout" | "unreachable" | "not_found" | "redirect" | "no_picture";
 
 /** Fixed hosts. Tests point these at a mock server. */
 export const imageHosts = { nanogpt: "https://nano-gpt.com" };
@@ -489,12 +503,12 @@ function errorDetail(text: string): string {
 export function providerError(who: string, status: number, body: string): ImageError {
   const detail = errorDetail(body);
   const tail = detail ? ` (${detail})` : "";
-  if (status === 401 || status === 403) return new ImageError(`${who} refused the API key: check it in Settings${tail}`, 401);
-  if (status === 402) return new ImageError(`${who} says the account has no credit left${tail}`, 402);
-  if (status === 429) return new ImageError(`${who} is limiting requests: wait a moment and try again${tail}`, 429);
-  if (status === 404) return new ImageError(`${who} does not know this model or address${tail}`, 404);
-  if (status >= 400 && status < 500) return new ImageError(`${who} refused the request${tail}`, 400);
-  return new ImageError(`${who} failed (${status})${tail}`, 502);
+  if (status === 401 || status === 403) return new ImageError(`${who} refused the API key: check it in Settings${tail}`, 401, "key", { who, detail });
+  if (status === 402) return new ImageError(`${who} says the account has no credit left${tail}`, 402, "credit", { who, detail });
+  if (status === 429) return new ImageError(`${who} is limiting requests: wait a moment and try again${tail}`, 429, "rate", { who, detail });
+  if (status === 404) return new ImageError(`${who} does not know this model or address${tail}`, 404, "unknown_model", { who, detail });
+  if (status >= 400 && status < 500) return new ImageError(`${who} refused the request${tail}`, 400, "refused", { who, detail });
+  return new ImageError(`${who} failed (${status})${tail}`, 502, "failed", { who, status, detail });
 }
 
 /** fetch with a deadline and no silent redirects; network failures become
@@ -505,16 +519,16 @@ async function call(url: string, init: RequestInit & { timeout: number; keepRedi
     res = await fetch(url, { ...init, redirect: "manual", signal: AbortSignal.timeout(init.timeout) });
   } catch (e) {
     const err = e as Error & { code?: string; cause?: { code?: string } };
-    if (err.name === "TimeoutError" || err.name === "AbortError") throw new ImageError(`${who} did not answer within ${Math.round(init.timeout / 1000)} seconds`, 504);
+    if (err.name === "TimeoutError" || err.name === "AbortError") throw new ImageError(`${who} did not answer within ${Math.round(init.timeout / 1000)} seconds`, 504, "timeout", { who, seconds: Math.round(init.timeout / 1000) });
     // Bun puts the code on the error, Node on its cause
     const code = err.code ?? err.cause?.code ?? "";
-    if (code === "ECONNREFUSED" || code === "ConnectionRefused") throw new ImageError(`could not reach ${who} at ${new URL(url).origin}: is it running?`, 502);
-    if (code === "ENOTFOUND" || code === "EAI_AGAIN") throw new ImageError(`could not find ${who} at ${new URL(url).host}: check the address`, 502);
+    if (code === "ECONNREFUSED" || code === "ConnectionRefused") throw new ImageError(`could not reach ${who} at ${new URL(url).origin}: is it running?`, 502, "unreachable", { who, origin: new URL(url).origin });
+    if (code === "ENOTFOUND" || code === "EAI_AGAIN") throw new ImageError(`could not find ${who} at ${new URL(url).host}: check the address`, 502, "not_found", { who, host: new URL(url).host });
     throw new ImageError(`could not reach ${who}: ${err.message}`, 502);
   }
   if (res.status >= 300 && res.status < 400 && !init.keepRedirect) {
     await res.body?.cancel();
-    throw new ImageError(`${who} redirected the request elsewhere: put the final address in Settings`, 502);
+    throw new ImageError(`${who} redirected the request elsewhere: put the final address in Settings`, 502, "redirect", { who });
   }
   return res;
 }
@@ -635,7 +649,7 @@ async function readImagesAnswer(res: Response, who: string, ownOrigin: string | 
     if (first.url.startsWith("data:")) return fromBase64(first.url, who);
     return downloadResult(first.url, who, ownOrigin);
   }
-  throw new ImageError(`${who} answered without a picture`, 502);
+  throw new ImageError(`${who} answered without a picture`, 502, "no_picture", { who });
 }
 
 export async function nanoGptGenerate(key: string, model: string, prompt: string): Promise<{ data: Buffer; mimeType: string }> {
@@ -967,7 +981,7 @@ export async function endpointGenerate(def: ImageEndpointDef, key: string | unde
     await failUnlessOk(res, who);
     const body = (await readJson(res, who, MAX_IMAGE_JSON_BYTES)) as { images?: unknown[] };
     const first = body.images?.[0];
-    if (typeof first !== "string" || !first) throw new ImageError(`${who} answered without a picture`, 502);
+    if (typeof first !== "string" || !first) throw new ImageError(`${who} answered without a picture`, 502, "no_picture", { who });
     return fromBase64(first, who);
   }
 

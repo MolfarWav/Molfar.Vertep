@@ -871,6 +871,17 @@ const dict = {
   "This browser cannot show notifications.": "Этот браузер не умеет показывать уведомления.",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "Пока не разрешено. Нажмите «Отправить тест» и разрешите, когда браузер спросит.",
   "Send a test": "Отправить тест",
+  "{who} refused the API key: check it in Settings": "{who} отклонил API-ключ: проверьте его в Настройках",
+  "{who} says the account has no credit left": "{who} сообщает, что на счёте нет средств",
+  "{who} is limiting requests: wait a moment and try again": "{who} ограничивает запросы: подождите немного и повторите",
+  "{who} does not know this model or address": "{who} не знает эту модель или адрес",
+  "{who} refused the request": "{who} отклонил запрос",
+  "{who} failed ({status})": "{who} не справился ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} не ответил за {seconds} с",
+  "could not reach {who} at {origin}: is it running?": "не удалось связаться с {who} по адресу {origin}: он запущен?",
+  "could not find {who} at {host}: check the address": "не удалось найти {who} по адресу {host}: проверьте адрес",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} перенаправил запрос в другое место: укажите конечный адрес в Настройках",
+  "{who} answered without a picture": "{who} ответил без картинки",
 }
 
 export default dict

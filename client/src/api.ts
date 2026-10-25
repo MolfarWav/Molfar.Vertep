@@ -206,7 +206,7 @@ async function reply<T>(res: Response): Promise<T> {
   // stringifying an object directly would surface as "[object Object]"
   const errBody = json?.error
   const errMsg = typeof errBody === "string" ? errBody : (errBody?.message ?? (errBody ? JSON.stringify(errBody) : `HTTP ${res.status}`))
-  if (!res.ok) throw Object.assign(new Error(errMsg), { status: res.status })
+  if (!res.ok) throw Object.assign(new Error(errMsg), { status: res.status, ...(typeof json?.code === "string" ? { code: json.code, vars: json.vars } : {}) })
   return json as T
 }
 

@@ -873,6 +873,17 @@ const en = {
   "This browser cannot show notifications.": "",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "",
   "Send a test": "",
+  "{who} refused the API key: check it in Settings": "",
+  "{who} says the account has no credit left": "",
+  "{who} is limiting requests: wait a moment and try again": "",
+  "{who} does not know this model or address": "",
+  "{who} refused the request": "",
+  "{who} failed ({status})": "",
+  "{who} did not answer within {seconds} seconds": "",
+  "could not reach {who} at {origin}: is it running?": "",
+  "could not find {who} at {host}: check the address": "",
+  "{who} redirected the request elsewhere: put the final address in Settings": "",
+  "{who} answered without a picture": "",
 } as const
 
 export default en

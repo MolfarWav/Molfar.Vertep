@@ -57,7 +57,7 @@ import {
   EDGE_FORMATS, EDGE_VOICES, createSpeechEndpoint, deleteSpeechEndpoint, edgeSpeakFmt,
   endpointSpeak, listSpeechEndpoints, speechEndpointKey, updateSpeechEndpoint, validateSpeechEndpointInput,
 } from "../speech.js";
-import { ImageError, adaptComfyWorkflow, comfyWorkflowProblem, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
+import { ImageError, adaptComfyWorkflow, imageErrorBody, comfyWorkflowProblem, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
 import type { EdgeFormat } from "../speech.js";
 import * as assets from "../assets/store.js";
 import { createSandbox, type SandboxRunner } from "../sandbox/index.js";
@@ -1657,7 +1657,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     try {
       return c.json({ models: await c.get("models").endpointModels(c.req.param("id"), true) });
     } catch (e) {
-      return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
+      return c.json(imageErrorBody(e), e instanceof ImageError ? e.status : 500);
     }
   });
   // the server form's "Import workflow": an Export (API) file with its values
@@ -1681,7 +1681,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     try {
       return c.json(await c.get("models").endpointOptions(c.req.param("id")));
     } catch (e) {
-      return c.json({ error: (e as Error).message }, e instanceof ImageError ? e.status : 500);
+      return c.json(imageErrorBody(e), e instanceof ImageError ? e.status : 500);
     }
   });
   // the picture lands in the asset store and travels as a same-origin URL:
@@ -1700,7 +1700,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       return c.json({ url: `/v1/assets/${rec.id}`, mimeType: out.mimeType, model: out.model });
     } catch (e) {
       const status = e instanceof ModelNotConfiguredError ? 503 : e instanceof ImageError ? e.status : 500;
-      return c.json({ error: (e as Error).message }, status);
+      return c.json(imageErrorBody(e), status);
     }
   });
 

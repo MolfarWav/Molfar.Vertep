@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Settings > Images: the provider's error messages (wrong key, no credit, rate limit, unknown model, server not reachable, timeout and the rest) are shown in the interface language; the engine sends a `code` and the pieces beside its English text (#88). Check, Edit, Add server and the footer links (GitHub, Discord, Report a bug, Help) are 40 px tall on phones.
+
 ## 1.3.5 (2026-10-23)
 
 - Roleplay 4.65.0 through an app update: the Dashboard's threads become quests (main, side, everyday, with steps under a main quest). A quest that does not fit its limit, or that the story left alone for long, waits under Suggestions for your answer instead of being dropped or left open forever. Story, move can pick a quest or a step, or add a Twist (something outside the quests). Event ids the sensor makes up are matched to the nearest known event, and the ones nobody can place are listed under Not recognised in Dashboard settings. No engine code change.

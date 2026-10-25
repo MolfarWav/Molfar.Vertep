@@ -24,8 +24,10 @@ function chromePath() {
   const root = "/opt/pw-browsers"
   if (fs.existsSync(root)) {
     for (const d of fs.readdirSync(root).filter((n) => /^chromium-\d+$/.test(n)).sort().reverse()) {
-      const p = `${root}/${d}/chrome-linux/chrome`
-      if (fs.existsSync(p)) return p
+      for (const sub of ["chrome-linux64", "chrome-linux"]) {
+        const p = `${root}/${d}/${sub}/chrome`
+        if (fs.existsSync(p)) return p
+      }
     }
   }
   const installed = [

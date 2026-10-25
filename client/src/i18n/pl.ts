@@ -871,6 +871,17 @@ const dict = {
   "This browser cannot show notifications.": "Ta przeglądarka nie potrafi pokazywać powiadomień.",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "Jeszcze niedozwolone. Naciśnij „Wyślij test” i zezwól, gdy przeglądarka zapyta.",
   "Send a test": "Wyślij test",
+  "{who} refused the API key: check it in Settings": "{who} odrzucił klucz API: sprawdź go w Ustawieniach",
+  "{who} says the account has no credit left": "{who} podaje, że na koncie nie ma już środków",
+  "{who} is limiting requests: wait a moment and try again": "{who} ogranicza liczbę zapytań: poczekaj chwilę i spróbuj ponownie",
+  "{who} does not know this model or address": "{who} nie zna tego modelu ani adresu",
+  "{who} refused the request": "{who} odrzucił zapytanie",
+  "{who} failed ({status})": "{who} zawiódł ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} nie odpowiedział w ciągu {seconds} s",
+  "could not reach {who} at {origin}: is it running?": "nie udało się połączyć z {who} pod {origin}: czy jest uruchomiony?",
+  "could not find {who} at {host}: check the address": "nie znaleziono {who} pod {host}: sprawdź adres",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} przekierował zapytanie gdzie indziej: wpisz docelowy adres w Ustawieniach",
+  "{who} answered without a picture": "{who} odpowiedział bez obrazu",
 }
 
 export default dict

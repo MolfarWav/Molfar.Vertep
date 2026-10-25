@@ -11,7 +11,7 @@ import os from "node:os";
 import path from "node:path";
 import {
   ImageError, comfyVars, createImageEndpoint, endpointGenerate, endpointPromptStyle, listEndpointOptions, imageEndpoint, imageHosts, listEndpointModels, listImageEndpoints,
-  nanoGptGenerate, nanoGptImageModels, providerError, setComfyPollMs, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
+  nanoGptGenerate, nanoGptImageModels, providerError, imageErrorBody, setComfyPollMs, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
   type ImageEndpointDef,
 } from "../src/images.js";
 import { UserModelService, defaultImageModel, type ImageModelInfo } from "../src/models.js";
@@ -115,6 +115,20 @@ describe("provider errors in plain words", () => {
     expect(providerError("X", 429, "").status).toBe(429);
     expect(providerError("X", 422, "<html><b>bad</b></html>").message).toBe("X refused the request (bad)");
     expect(providerError("X", 500, "").status).toBe(502);
+  });
+
+  it("carries a code and the pieces, so the shell can say it in the user's language", () => {
+    expect(providerError("X", 401, '{"error":{"message":"User not found."}}')).toMatchObject({ code: "key", vars: { who: "X", detail: "User not found." } });
+    expect(providerError("X", 402, "").code).toBe("credit");
+    expect(providerError("X", 429, "").code).toBe("rate");
+    expect(providerError("X", 404, "").code).toBe("unknown_model");
+    expect(providerError("X", 422, "").code).toBe("refused");
+    expect(providerError("X", 503, "")).toMatchObject({ code: "failed", vars: { who: "X", status: 503 } });
+  });
+
+  it("answers with the English text, plus the code when there is one", () => {
+    expect(imageErrorBody(providerError("X", 402, ""))).toEqual({ error: "X says the account has no credit left", code: "credit", vars: { who: "X", detail: "" } });
+    expect(imageErrorBody(new Error("boom"))).toEqual({ error: "boom" });
   });
 });
 

@@ -1677,14 +1677,14 @@ function LaunchPicker(props: {
         </div>
       </div>
       {props.launch?.engine ? (
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 pb-1 pt-0.5 text-11 text-ink-faint [&>*]:whitespace-nowrap">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 pb-1 pt-0.5 text-11 text-ink-faint max-md:gap-y-0 [&>*]:whitespace-nowrap">
             <span data-guide="home.version">{tr("Molfar Vertep v{version}", { version: props.launch.engine.version })}</span>
             {props.launch.engine.admin ? <EngineUpdateButton release={props.engineRelease} /> : null}
             {props.launch.engine.repository ? <a
                 href={props.launch.engine.repository}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="flex items-center gap-1 text-ink-muted transition-colors hover:text-ink"
+                className="flex items-center gap-1 text-ink-muted transition-colors hover:text-ink max-md:min-h-[40px]"
                 title={props.launch.engine.repository}
               >
                 <svg viewBox="0 0 16 16" className="size-3.5 fill-current" aria-hidden="true">
@@ -1696,7 +1696,7 @@ function LaunchPicker(props: {
               href={DISCORD_INVITE}
               target="_blank"
               rel="noreferrer noopener"
-              className="flex items-center gap-1 text-ink-muted transition-colors hover:text-ink"
+              className="flex items-center gap-1 text-ink-muted transition-colors hover:text-ink max-md:min-h-[40px]"
               title={DISCORD_INVITE}
             >
               <svg viewBox="0 0 24 24" className="size-3.5 fill-current" aria-hidden="true">
@@ -1708,7 +1708,7 @@ function LaunchPicker(props: {
               type="button"
               data-guide="home.report-bug"
               onClick={props.onReportBug}
-              className="flex cursor-pointer items-center gap-1 text-ink-muted transition-colors hover:text-ink"
+              className="flex cursor-pointer items-center gap-1 text-ink-muted transition-colors hover:text-ink max-md:min-h-[40px]"
             >
               <IconSmall name="bug" size={14} />
               {tr("Report a bug")}
@@ -1717,7 +1717,7 @@ function LaunchPicker(props: {
               type="button"
               data-guide="home.help"
               onClick={openHelp}
-              className="flex cursor-pointer items-center gap-1 text-ink-muted transition-colors hover:text-ink"
+              className="flex cursor-pointer items-center gap-1 text-ink-muted transition-colors hover:text-ink max-md:min-h-[40px]"
             >
               <IconSmall name="info" size={14} />
               {tr("Help")}

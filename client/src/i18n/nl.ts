@@ -871,6 +871,17 @@ const dict = {
   "This browser cannot show notifications.": "Deze browser kan geen meldingen tonen.",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "Nog niet toegestaan. Druk op ‘Test sturen’ en sta het toe als de browser erom vraagt.",
   "Send a test": "Test sturen",
+  "{who} refused the API key: check it in Settings": "{who} heeft de API-sleutel geweigerd: controleer hem in Instellingen",
+  "{who} says the account has no credit left": "{who} meldt dat het account geen tegoed meer heeft",
+  "{who} is limiting requests: wait a moment and try again": "{who} beperkt verzoeken: wacht even en probeer opnieuw",
+  "{who} does not know this model or address": "{who} kent dit model of dit adres niet",
+  "{who} refused the request": "{who} heeft het verzoek geweigerd",
+  "{who} failed ({status})": "{who} is mislukt ({status})",
+  "{who} did not answer within {seconds} seconds": "{who} antwoordde niet binnen {seconds} seconden",
+  "could not reach {who} at {origin}: is it running?": "kon {who} op {origin} niet bereiken: draait het?",
+  "could not find {who} at {host}: check the address": "kon {who} op {host} niet vinden: controleer het adres",
+  "{who} redirected the request elsewhere: put the final address in Settings": "{who} heeft het verzoek elders heen gestuurd: zet het uiteindelijke adres in Instellingen",
+  "{who} answered without a picture": "{who} antwoordde zonder afbeelding",
 }
 
 export default dict
