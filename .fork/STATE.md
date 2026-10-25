@@ -5,7 +5,7 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## PERSONA SWITCH BEFORE THE FIRST REPLY (2026-10-25, Roleplay branch `claude/project-thread-dyww5x`, NOT released; bug #128, follow-up #129)
+## PERSONA SWITCH BEFORE THE FIRST REPLY (2026-10-25, Roleplay 4.68.1 = fork main 0587ba5, merged and shipped on the owner's word; bug #128 closed, follow-up #129)
 Roleplay only, the engine is untouched. A new chat expanded `{{user}}` in the greeting once and stored the text; `PATCH /chats/:id` with a new `personaId` changed only `meta.userName`. Now the PATCH re-reads the greeting while the chat is still only its opening (`pristineOpening`: every message an unedited greeting, no `tainted`), keeping the swipe, the message ids and `updatedAt`; group openings are rebuilt by `groupOpenings`, shared with chat creation. The client reloads the chat after a persona patch. Roleplay: typecheck, 1585 tests pass (8 new in `test/rp-persona-switch-greeting.test.ts`, 3 of them fail without the fix). No browser run: no new UI, only the greeting text changes. Left: persona rename on an untouched chat (#129).
 
 ## RELEASE 1.4.1 PREPARED (2026-10-25, on the owner's word "публікуй" for #89, #93, #95; engine branch `claude/project-thread-uiaz6u` fast-forwarded into main; Roleplay 4.68.0 = fork main 7055d32; the tag v1.4.1 is the owner's)
