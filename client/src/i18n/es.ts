@@ -871,6 +871,13 @@ const dict = {
   "This browser cannot show notifications.": "Este navegador no puede mostrar notificaciones.",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "Aún no permitido. Pulsa «Enviar una prueba» y permítelo cuando el navegador pregunte.",
   "Send a test": "Enviar una prueba",
+  "Install app": "Instalar app",
+  "Install Molfar Vertep": "Instalar Molfar Vertep",
+  "In Safari, tap Share, then Add to Home Screen. Molfar Vertep then opens from its icon, full screen, without the browser's bar.": "En Safari, toca Compartir y luego Añadir a pantalla de inicio. Molfar Vertep se abrirá desde su icono, a pantalla completa, sin la barra del navegador.",
+  "Open your browser's menu and choose Install app or Add to Home screen. If neither is there, Molfar Vertep is already installed or this browser cannot install apps.": "Abre el menú del navegador y elige Instalar app o Añadir a pantalla de inicio. Si no aparece ninguna, Molfar Vertep ya está instalado o este navegador no puede instalar apps.",
+  "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "Los navegadores solo instalan apps desde una dirección segura (https). Esta página está abierta en {address}, así que el navegador no ofrece instalarla.",
+  "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Abre Molfar Vertep en una dirección https. La guía muestra dos formas: Tailscale o un certificado propio.",
+  "How to get https": "Cómo conseguir https",
 }
 
 export default dict

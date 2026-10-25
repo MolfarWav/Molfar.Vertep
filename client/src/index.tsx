@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client"
 import "./theme" // first: paints the stored theme before anything renders
 import App from "./App"
 import { recordClientError } from "./bug-report"
+import { setupPwa } from "./pwa"
 import "./styles/shell.css"
 
 /** Host scripts the shell needs before it renders anything: the bridge host
@@ -30,6 +31,9 @@ const errPre = (label: string, text: string): HTMLPreElement => {
   pre.textContent = `${label}${text}`
   return pre
 }
+
+// before the first await: the browser may offer the install right away
+setupPwa()
 
 try {
   await Promise.all(HOST_SCRIPTS.map(loadScript))

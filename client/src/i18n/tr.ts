@@ -871,6 +871,13 @@ const dict = {
   "This browser cannot show notifications.": "Bu tarayıcı bildirim gösteremiyor.",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "Henüz izin verilmedi. “Test gönder”e basın ve tarayıcı sorduğunda izin verin.",
   "Send a test": "Test gönder",
+  "Install app": "Uygulamayı yükle",
+  "Install Molfar Vertep": "Molfar Vertep’i yükle",
+  "In Safari, tap Share, then Add to Home Screen. Molfar Vertep then opens from its icon, full screen, without the browser's bar.": "Safari’de Paylaş’a, sonra Ana Ekrana Ekle’ye dokun. Molfar Vertep bundan sonra simgesinden, tarayıcı çubuğu olmadan tam ekran açılır.",
+  "Open your browser's menu and choose Install app or Add to Home screen. If neither is there, Molfar Vertep is already installed or this browser cannot install apps.": "Tarayıcının menüsünü aç ve Uygulamayı yükle veya Ana ekrana ekle’yi seç. İkisi de yoksa Molfar Vertep zaten yüklü ya da bu tarayıcı uygulama yükleyemiyor.",
+  "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "Tarayıcılar uygulamaları yalnızca güvenli bir adresten (https) yükler. Bu sayfa {address} adresinde açık, bu yüzden tarayıcı yükleme önermiyor.",
+  "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Molfar Vertep’i bir https adresinde aç. Rehberde iki yol var: Tailscale ya da kendi sertifikan.",
+  "How to get https": "https nasıl alınır",
 }
 
 export default dict

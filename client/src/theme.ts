@@ -91,6 +91,7 @@ export function applyTheme(id: string, custom?: ShellTheme): void {
     prefs.remove(THEME_SCHEME_KEY)
   }
   prefs.set(THEME_KEY, id)
+  syncThemeColor()
 }
 
 /** Paint the stored choice without touching storage: a custom theme comes
@@ -101,6 +102,7 @@ export function applyStoredTheme(): void {
   clearInlineColors()
   if (isBuiltinTheme(id)) {
     root.setAttribute("data-color-scheme", id)
+    syncThemeColor()
     return
   }
   root.setAttribute("data-color-scheme", prefs.get(THEME_SCHEME_KEY) === "light" ? "light" : "dark")
@@ -110,6 +112,15 @@ export function applyStoredTheme(): void {
   } catch {
     // unreadable colours: the dark/light base stands until the list loads
   }
+  syncThemeColor()
+}
+
+/** Phones paint the status bar (and an installed app its title bar) in the
+ *  page's theme-color: keep it on the header's colour of the current theme. */
+function syncThemeColor(): void {
+  const meta = document.querySelector('meta[name="theme-color"]')
+  const panel = getComputedStyle(document.documentElement).getPropertyValue("--c-panel").trim()
+  if (meta && panel) meta.setAttribute("content", panel)
 }
 
 applyStoredTheme()

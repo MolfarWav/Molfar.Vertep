@@ -871,6 +871,13 @@ const dict = {
   "This browser cannot show notifications.": "이 브라우저는 알림을 표시할 수 없습니다.",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "아직 허용되지 않았습니다. “테스트 보내기”를 누르고 브라우저가 물으면 허용하세요.",
   "Send a test": "테스트 보내기",
+  "Install app": "앱 설치",
+  "Install Molfar Vertep": "Molfar Vertep 설치",
+  "In Safari, tap Share, then Add to Home Screen. Molfar Vertep then opens from its icon, full screen, without the browser's bar.": "Safari에서 공유를 누른 다음 홈 화면에 추가를 누르세요. 이후 Molfar Vertep은 아이콘에서 브라우저 막대 없이 전체 화면으로 열립니다.",
+  "Open your browser's menu and choose Install app or Add to Home screen. If neither is there, Molfar Vertep is already installed or this browser cannot install apps.": "브라우저 메뉴를 열고 앱 설치 또는 홈 화면에 추가를 고르세요. 둘 다 없다면 Molfar Vertep이 이미 설치되었거나 이 브라우저는 앱을 설치할 수 없습니다.",
+  "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "브라우저는 보안 주소(https)에서만 앱을 설치합니다. 이 페이지는 {address}에서 열려 있어 브라우저가 설치를 제안하지 않습니다.",
+  "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "https 주소로 Molfar Vertep을 여세요. 안내서에 Tailscale과 직접 만든 인증서, 두 가지 방법이 있습니다.",
+  "How to get https": "https 사용 방법",
 }
 
 export default dict

@@ -871,6 +871,13 @@ const dict = {
   "This browser cannot show notifications.": "このブラウザーは通知を表示できません。",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "まだ許可されていません。「テストを送信」を押し、ブラウザーが尋ねたら許可してください。",
   "Send a test": "テストを送信",
+  "Install app": "アプリをインストール",
+  "Install Molfar Vertep": "Molfar Vertep をインストール",
+  "In Safari, tap Share, then Add to Home Screen. Molfar Vertep then opens from its icon, full screen, without the browser's bar.": "Safari で共有をタップし、ホーム画面に追加を選びます。以後 Molfar Vertep はアイコンから、ブラウザのバーなしの全画面で開きます。",
+  "Open your browser's menu and choose Install app or Add to Home screen. If neither is there, Molfar Vertep is already installed or this browser cannot install apps.": "ブラウザのメニューを開き、「アプリをインストール」または「ホーム画面に追加」を選びます。どちらもない場合は、すでにインストール済みか、このブラウザはアプリをインストールできません。",
+  "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "ブラウザは安全なアドレス（https）からのみアプリをインストールします。このページは {address} で開かれているため、インストールは表示されません。",
+  "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Molfar Vertep を https のアドレスで開いてください。ガイドでは Tailscale と自分の証明書の 2 つの方法を説明しています。",
+  "How to get https": "https を使う方法",
 }
 
 export default dict

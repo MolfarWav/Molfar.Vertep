@@ -28,6 +28,22 @@ export const TIPS: Tip[] = [
     },
   },
   {
+    id: "new.install-app",
+    since: "1.4.0",
+    target: "menu.install",
+    open: { view: "home", menu: "account" },
+    help: "start",
+    keywords: {
+      en: "install app pwa home screen icon phone iphone android full screen standalone https tailscale offline",
+      uk: "встановити застосунок pwa головний екран іконка телефон iphone android на весь екран https tailscale офлайн",
+    },
+    title: { en: "Install Molfar Vertep as an app", uk: "Molfar Vertep як застосунок" },
+    body: {
+      en: "Install app in the account menu puts Molfar Vertep on your home screen or in your computer's app list: it opens in its own window, without the browser's bar. On an iPhone it shows where Safari keeps it (Share, then Add to Home Screen). A phone that opens your computer at an http address needs https first; the dialog links to the guide.",
+      uk: "«Встановити застосунок» у меню облікового запису ставить Molfar Vertep на головний екран телефона або в список програм комп’ютера: він відкривається у власному вікні, без панелі браузера. На iPhone пункт показує, де це в Safari («Поширити», потім «На початковий екран»). Телефону, що відкриває комп’ютер за адресою http, спершу потрібен https; вікно дає посилання на інструкцію.",
+    },
+  },
+  {
     id: "new.ask-molfar",
     since: "1.0.10",
     target: "menu.report-bug",

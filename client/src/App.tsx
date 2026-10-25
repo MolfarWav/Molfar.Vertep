@@ -15,6 +15,7 @@ import { EngineUpdateButton } from "./server-settings"
 import { AppUpdateBanner, useAppUpdate, useAppUpdates, type AppUpdates } from "./app-update"
 import { UpdatesDialog, useEngineRelease } from "./updates-panel"
 import { BugReportDialog, recordClientError } from "./bug-report"
+import { InstallDialog, promptInstall, useInstallWay } from "./pwa"
 import type { LaunchInfo, Me, StoreApp } from "./types"
 import { StoreDialog, WelcomeApps, useStore } from "./store"
 import { getLocale, tr, useLocale } from "./i18n/index"
@@ -143,6 +144,7 @@ function Shell(props: { theme: ThemeControl }) {
   const [settingsModel, setSettingsModel] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [bugOpen, setBugOpen] = useState(false)
+  const [installOpen, setInstallOpen] = useState(false)
   // update checks run once per shell start (and when the app list changes),
   // then on "Check now" or after an update: the launcher badges, the top-bar
   // badge and the Updates panel all read these
@@ -617,6 +619,7 @@ function Shell(props: { theme: ThemeControl }) {
                 onSettings={() => openSettings()}
                 onSync={() => openSettings("sync")}
                 onReportBug={() => setBugOpen(true)}
+                onInstall={() => void promptInstall().then((shown) => { if (!shown) setInstallOpen(true) })}
                 app={active?.kind === "app" ? { id: active.id, name: active.name, onPlugins: () => openPlugins(active.id) } : null}
               />
             </div>
@@ -727,6 +730,7 @@ function Shell(props: { theme: ThemeControl }) {
           onOpen={openAgent}
           onDismiss={() => setAskDismissed(agentAsk?.id ?? null)}
         />
+        <InstallDialog open={installOpen} onClose={() => setInstallOpen(false)} />
         <BugReportDialog
           onAskMolfar={(prompt) => askAgent(prompt, "start")}
           open={bugOpen}
@@ -799,9 +803,11 @@ function UserMenu(props: {
   onSettings: () => void
   onSync: () => void
   onReportBug: () => void
+  onInstall: () => void
   app: { id: string; name: string; onPlugins: () => void } | null
 }) {
   const [open, setOpen] = useState(false)
+  const installWay = useInstallWay()
   const [avatarOk, setAvatarOk] = useState(true)
   const app = props.app
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -937,6 +943,20 @@ function UserMenu(props: {
               </span>
               {tr("Sync devices")}
             </button>
+            {installWay !== "installed" ? <button
+                role="menuitem"
+                data-guide="menu.install"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 transition-colors hover:bg-hover"
+                onClick={() => {
+                  setOpen(false)
+                  props.onInstall()
+                }}
+              >
+                <span className="flex size-4 shrink-0 items-center justify-center">
+                  <IconSmall name="download" />
+                </span>
+                {tr("Install app")}
+              </button> : null}
             <button
               role="menuitem"
               data-guide="menu.help"

@@ -871,6 +871,13 @@ const dict = {
   "This browser cannot show notifications.": "Этот браузер не умеет показывать уведомления.",
   "Not allowed yet. Press Send a test and allow it when the browser asks.": "Пока не разрешено. Нажмите «Отправить тест» и разрешите, когда браузер спросит.",
   "Send a test": "Отправить тест",
+  "Install app": "Установить приложение",
+  "Install Molfar Vertep": "Установить Molfar Vertep",
+  "In Safari, tap Share, then Add to Home Screen. Molfar Vertep then opens from its icon, full screen, without the browser's bar.": "В Safari нажмите «Поделиться», затем «На экран „Домой“». После этого Molfar Vertep открывается со своей иконки, на весь экран, без панели браузера.",
+  "Open your browser's menu and choose Install app or Add to Home screen. If neither is there, Molfar Vertep is already installed or this browser cannot install apps.": "Откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран». Если такого пункта нет, Molfar Vertep уже установлен или этот браузер не умеет устанавливать приложения.",
+  "Browsers install apps only from a secure address (https). This page is open at {address}, so the browser offers no install.": "Браузеры устанавливают приложения только с защищённого адреса (https). Эта страница открыта по адресу {address}, поэтому браузер не предлагает установку.",
+  "Open Molfar Vertep at an https address. The guide shows two ways: Tailscale, or a certificate of your own.": "Откройте Molfar Vertep по адресу https. В инструкции два способа: Tailscale или собственный сертификат.",
+  "How to get https": "Как получить https",
 }
 
 export default dict

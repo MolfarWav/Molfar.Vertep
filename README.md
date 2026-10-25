@@ -219,8 +219,25 @@ The interface comes in 14 languages, including Ukrainian (Українська).
 - Molfar Vertep on your computer, phone on the same Wi-Fi: turn on *Allow other devices on my network* in Settings > Server and scan the QR code.
 - Molfar Vertep on the phone itself: install the Android app. It runs the server on the phone and opens it in your browser. Uninstalling the app deletes its data, so export backups from your apps first.
 - Away from home: put both devices on [Tailscale](https://tailscale.com) and use the computer's Tailscale address. `tailscale cert` gives you HTTPS files for `ssl.certPath` and `ssl.keyPath`.
+- On the home screen, without the browser's bar: see [Install as an app](#install-as-an-app).
 
 </details>
+
+### Install as an app
+
+Molfar Vertep installs to a phone's home screen or a computer's app list and then opens in its own window, without the browser's bar. Open the account menu and press **Install app**. Chrome, Edge and Samsung Internet show their install dialog; on iPhone and iPad the menu shows where Safari keeps it (**Share > Add to Home Screen**). An update reaches the installed app the same way it reaches a browser tab. When the engine is off, the app shows a page that waits for it and reloads by itself.
+
+Browsers install apps only from a secure address: `https://...`, or `localhost` on the same computer. The computer itself and the Android app (it opens `localhost`) need nothing more. A phone that opens the computer at `http://192.168.x.x` gets no install offer, so give it an https address in one of two ways.
+
+**Tailscale** (the easiest; it works away from home too). Install [Tailscale](https://tailscale.com) on the computer and on the phone, signed in to the same account, and turn on HTTPS certificates in its admin console (DNS page). On the computer run:
+
+```sh
+tailscale serve --bg 8788
+```
+
+with your port (Settings > Server shows it). Tailscale prints an address like `https://my-pc.tail1234.ts.net`. Add that name (`my-pc.tail1234.ts.net`) to **Host names** in Settings > Server (`allowedHosts` in `config.yaml`), open the address on the phone, and install. Tailscale renews the certificate itself, and *Allow other devices on my network* can stay off.
+
+**A certificate of your own.** Turn on **Use HTTPS** in Settings > Server (`ssl.enabled`, `ssl.certPath`, `ssl.keyPath`) with a certificate for the address the phone opens. `tailscale cert` makes one for the Tailscale name (renew it every 90 days); [mkcert](https://github.com/FiloSottile/mkcert) makes one for a LAN name or address, and then the phone has to trust mkcert's root certificate (install it in the phone's security settings; on an iPhone also turn on full trust for it in General > About > Certificate Trust Settings).
 
 <details><summary><b>Built on</b></summary>
 

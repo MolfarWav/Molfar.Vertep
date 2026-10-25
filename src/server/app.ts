@@ -196,6 +196,26 @@ const GUIDED_SIGNINS = new Set(["google-vertex", "amazon-bedrock", "cloudflare-w
  *  behind one of these names never change, so it caches forever. */
 const IMMUTABLE_NAME = /-[A-Za-z0-9_]{8,}\.[a-z0-9]+$/;
 
+/** The shell's web app manifest (#56): what a phone or a desktop browser
+ *  installs. Colours are the Vertep theme's panel (the header, so the status
+ *  bar runs into it) and deep (the splash behind the icon). */
+export const SHELL_MANIFEST = {
+  id: "/",
+  name: "Molfar Vertep",
+  short_name: "Vertep",
+  description: "Roleplay chats with AI characters, and an agent that reshapes the app when you ask.",
+  start_url: "/",
+  scope: "/",
+  display: "standalone",
+  background_color: "#07080b",
+  theme_color: "#0e1016",
+  icons: [
+    { src: "/client/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+    { src: "/client/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+    { src: "/client/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+  ],
+} as const;
+
 /** What a request relayed for an app frame may reach — the engine's copy of
  *  the bridge's allowedRequest (test/malicious-plugin.test.ts keeps the two
  *  in step). `path` is the router's decoded path. */
@@ -740,6 +760,24 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     return c.body(new Uint8Array(fs.readFileSync(full)), 200, { "content-type": mime });
   };
   app.get("/", (c) => serveClientFile("index.html", c));
+  // Installing the shell as an app (#56). Both live at the root: the
+  // manifest's scope and the worker's scope are "/", and a worker cannot
+  // control pages above its own path. Browsers fetch the manifest without the
+  // session cookie, so neither needs a session. The worker carries the engine
+  // version, so each release installs a new one; it caches only its offline
+  // page (client/public/sw.js).
+  app.get("/manifest.webmanifest", (c) =>
+    c.body(JSON.stringify(SHELL_MANIFEST), 200, { "content-type": "application/manifest+json", "cache-control": "no-cache" }),
+  );
+  app.get("/sw.js", (c) => {
+    const file = path.join(clientDir, "sw.js");
+    if (!fs.existsSync(file)) return c.body("not found", 404);
+    return c.body(fs.readFileSync(file, "utf8").replaceAll("__ENGINE_VERSION__", ENGINE_VERSION), 200, {
+      "content-type": "text/javascript; charset=utf-8",
+      "cache-control": "no-cache",
+      "x-content-type-options": "nosniff",
+    });
+  });
   // the in-browser builder's code (src/builder/browser), bundled on demand
   app.get("/client/builder/:file", async (c) => {
     const name = c.req.param("file");

@@ -73,6 +73,12 @@ body {
 
 #root {
   height: 100%;
+  /* viewport-fit=cover lets the page run under a notch and the home bar,
+     which an installed app (#56) and a phone held sideways both show: the
+     shell keeps its controls inside the safe area. Overlays positioned
+     against the viewport add their own inset. */
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 .no-scrollbar {

@@ -10,6 +10,13 @@
 <link rel="icon" type="image/svg+xml" href="./public/vertep-logo.svg" />
 <link rel="alternate icon" type="image/png" href="./public/favicon-64.png" />
 <link rel="apple-touch-icon" href="./public/apple-touch-icon.png" />
+<!-- Installable as an app (#56): the engine serves the manifest and the
+     service worker at the root; theme.ts keeps theme-color on the header's colour. -->
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#0e1016" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Vertep" />
 <title>Molfar Vertep</title>
 </head>
 <body>

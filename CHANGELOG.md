@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Molfar Vertep installs as an app (#56). The account menu has **Install app**: Chrome, Edge and Samsung Internet show their install dialog; on an iPhone the menu says where Safari keeps it (Share, Add to Home Screen); on a plain `http` address it explains why the browser offers nothing and links to the new README section "Install as an app" (Tailscale `tailscale serve`, or your own certificate). The installed app opens full screen without the browser's bar, keeps the controls inside the notch and home bar, and paints the status bar in the theme's colour. The engine serves a web app manifest (icons 192, 512 and maskable) and a small service worker that does one thing: when the engine is off, a page load shows a "not reachable" page that reloads by itself. It caches nothing else, so an engine update reaches an installed app like a browser tab. No engine data format changes.
+
 ## 1.3.5 (2026-10-23)
 
 - Roleplay 4.65.0 through an app update: the Dashboard's threads become quests (main, side, everyday, with steps under a main quest). A quest that does not fit its limit, or that the story left alone for long, waits under Suggestions for your answer instead of being dropped or left open forever. Story, move can pick a quest or a step, or add a Twist (something outside the quests). Event ids the sensor makes up are matched to the nearest known event, and the ones nobody can place are listed under Not recognised in Dashboard settings. No engine code change.

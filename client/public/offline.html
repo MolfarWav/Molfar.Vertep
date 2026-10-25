@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, viewport-fit=cover, initial-scale=1" />
+<meta name="theme-color" content="#0e1016" />
+<title>Molfar Vertep</title>
+<!-- Shown by /sw.js when the engine does not answer a page load. It is served
+     from the worker's cache, so everything it needs is in this file,
+     offline.js and the logo. The colours are the Vertep theme's. -->
+<style>
+  html, body { margin: 0; height: 100%; background: #07080b; color: #f0e9dc; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { box-sizing: border-box; min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center;
+    padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); }
+  h1 { margin: 6px 0 0; font-size: 19px; font-weight: 600; }
+  p { margin: 0; max-width: 34em; color: #a9b1c4; }
+  #status { font-size: 13px; color: #6f7689; min-height: 1.5em; }
+  button { margin-top: 6px; min-height: 44px; padding: 0 22px; border: 0; border-radius: 6px; background: #39d5ff; color: #07080b; font: inherit; font-weight: 600; cursor: pointer; }
+  button:focus-visible { outline: 2px solid #e2213a; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <img src="/client/vertep-logo.svg" alt="" width="64" height="64" />
+  <h1 id="title">Molfar Vertep is not reachable</h1>
+  <p id="body">The engine is not answering. Check that it is running on your computer and that this device is on the same network. This page tries again by itself.</p>
+  <button id="retry" type="button">Try again</button>
+  <div id="status" role="status" aria-live="polite"></div>
+</main>
+<script src="/client/offline.js"></script>
+</body>
+</html>
