@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.4.2 (2026-10-25)
+
+- Roleplay 4.69.0 comes with this release as an app update: dialogue set off by dashes is coloured like quoted speech and a Narrator card's voices are found when the story spells a name in another script (Ember as Эмбер), a speech paragraph that names nobody takes the speaker of the narration before it, the Dashboard scene keeps a rated character the story names again and again even when the sensor skipped them, and Vertep Lite asks the model to name the speaker (#93 follow-up, #130). No engine code change.
+- Roleplay 4.68.1 as an app update: a greeting follows the persona you switch to before the first reply (#128).
+
 ## 1.4.1 (2026-10-25)
 
 - Undo on the agent page now covers data the run changed (#89). When Molfar edits a card, a lorebook or another file under an app's `data/`, the line under the reply reads "Changed roleplay · 2 data files · Undo" (a run that changed only data now gets the line too). Undo names the files and puts them back with the code. A file you edited after the run is left as it is and the banner says so; chats and saves the run did not touch stay.
