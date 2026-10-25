@@ -7,8 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.4.1 (2026-10-25)
+
 - Undo on the agent page now covers data the run changed (#89). When Molfar edits a card, a lorebook or another file under an app's `data/`, the line under the reply reads "Changed roleplay · 2 data files · Undo" (a run that changed only data now gets the line too). Undo names the files and puts them back with the code. A file you edited after the run is left as it is and the banner says so; chats and saves the run did not touch stay.
 - A draft the shell refused to store (its storage is full) now survives a full reload of the shell while the tab stays open (#89): the shell keeps a spare copy in the tab's session storage and the app's frame starts from it, listed as unsaved. Closing the tab still loses it.
+- Roleplay 4.68.0 comes with this release as an app update (pictures in backups, safer reply HTML, Narrator voices, a World DM that invents); its own changelog is in the Roleplay fork.
 
 ## 1.4.0 (2026-10-25)
 
