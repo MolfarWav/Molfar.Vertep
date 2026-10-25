@@ -159,6 +159,56 @@ describe("checkpoints", () => {
     expect(read("apps/rp/src/App.tsx")).toBe("export const App = 1;");
   }, 30_000);
 
+  it("a run that only edits a card reports the data file; Undo puts it back, and keeps a file edited since", async () => {
+    put("settings.json", JSON.stringify({ agentProtectedPaths: [] }));
+    put("apps/rp/data/characters/kit/card.json", '{"name":"Kit"}');
+    put("apps/rp/data/characters/kit/notes.json", "{}");
+    await git.commitAll(p.root, "mia", "cards");
+    const users = new UserService(dataDir);
+    const { token } = users.create("mia", "user", { password: "test-pass-1" });
+    const svc = new UserModelService("mia", userPaths(dataDir, "mia"), defaultInstanceConfig());
+    const handle = fauxProvider({ models: [{ id: "faux-a" }] });
+    svc.models.setProvider(handle.provider);
+    const write = (id: string, file: string, content: string) =>
+      fauxAssistantMessage([{ type: "toolCall", id, name: "write_file", arguments: { path: `apps/rp/data/characters/kit/${file}`, content } }], { stopReason: "toolUse" });
+    handle.setResponses([write("tc1", "card.json", '{"name":"Kit","tags":"oops"}'), write("tc2", "notes.json", '{"x":1}'), fauxAssistantMessage("Edited.")]);
+    const agent = await UserAgent.create("mia", svc, userPaths(dataDir, "mia"), users, defaultInstanceConfig());
+    const run = await agent.run("fix Kit");
+    const cp = run.checkpoints?.[0];
+    expect(cp).toEqual(expect.objectContaining({ app: "rp", changed: 0, dataCount: 2 }));
+    expect(cp?.data).toEqual(["apps/rp/data/characters/kit/card.json", "apps/rp/data/characters/kit/notes.json"]);
+    expect(Object.keys(cp?.dataHash ?? {})).toEqual(cp!.data!);
+
+    // the user chats on and tweaks one of the two files by hand
+    put("apps/rp/data/chats.json", "[1,2,3]");
+    put("apps/rp/data/characters/kit/notes.json", '{"x":1,"mine":true}');
+
+    const { buildApp } = await import("../src/server/app.js");
+    const { SessionService } = await import("../src/sessions.js");
+    const { EventBus } = await import("../src/server/ws.js");
+    const app = buildApp({ users, sessions: new SessionService(dataDir), config: defaultInstanceConfig(), dataDir, bus: new EventBus() as never });
+    const res = await app.request(`/v1/projects/app:rp/checkpoints/${cp!.id}/restore`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ data: cp!.data, expect: cp!.dataHash }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { changed: string[]; keptData: string[] };
+    expect(body.changed).toEqual(["apps/rp/data/characters/kit/card.json"]);
+    expect(body.keptData).toEqual(["apps/rp/data/characters/kit/notes.json"]);
+    expect(read("apps/rp/data/characters/kit/card.json")).toBe('{"name":"Kit"}');
+    expect(read("apps/rp/data/characters/kit/notes.json")).toBe('{"x":1,"mine":true}');
+    expect(read("apps/rp/data/chats.json")).toBe("[1,2,3]");
+  }, 30_000);
+
+  it("a restore without a data list leaves data alone, as before", async () => {
+    const cp = await createCheckpoint(p.root, "mia", "rp", "x");
+    put("apps/rp/data/chats.json", "[9]");
+    const r = await restoreCheckpoint(p.root, "mia", cp.id);
+    expect(r.keptData).toEqual([]);
+    expect(read("apps/rp/data/chats.json")).toBe("[9]");
+  });
+
   it("routes: apps only, shell only", async () => {
     const { buildApp } = await import("../src/server/app.js");
     const { SessionService } = await import("../src/sessions.js");

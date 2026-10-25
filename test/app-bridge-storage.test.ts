@@ -23,8 +23,8 @@ function makeBus(): Bus {
 }
 
 /** The shell page: the bridge host over a Map-backed localStorage that can refuse writes. */
-function makeShell(bus: Bus) {
-  const store = new Map<string, string>();
+function makeShell(bus: Bus, kept: { local: Map<string, string>; session: Map<string, string> } = { local: new Map(), session: new Map() }) {
+  const store = kept.local;
   let quotaFull = false;
   const listeners: Listener[] = [];
   const opened: unknown[][] = [];
@@ -36,8 +36,13 @@ function makeShell(bus: Bus) {
       store.set(k, v);
     },
   };
+  const sessionStorage = {
+    getItem: (k: string) => (kept.session.has(k) ? kept.session.get(k)! : null),
+    setItem: (k: string, v: string) => { kept.session.set(k, v); },
+    removeItem: (k: string) => { kept.session.delete(k); },
+  };
   vm.runInContext(HOST_SRC, vm.createContext({
-    window: win, document: {}, localStorage, crypto: { getRandomValues: (b: Uint8Array) => b }, location: { origin: "http://localhost:8788" },
+    window: win, document: {}, localStorage, sessionStorage, crypto: { getRandomValues: (b: Uint8Array) => b }, location: { origin: "http://localhost:8788" },
     WebSocket: class {}, TextEncoder, TextDecoder, btoa, atob, Map, Set, URL, Uint8Array, JSON,
   }));
   const host = win.ChrysalisBridgeHost as { serve: (f: unknown, a: string, u: string) => () => void; frameSrc: (a: string, u: string) => string; storageKey: (u: string, a: string) => string };
@@ -47,6 +52,8 @@ function makeShell(bus: Bus) {
     deliver,
     opened,
     setQuotaFull: (v: boolean) => { quotaFull = v; },
+    /** What a full reload of the shell keeps: the browser's storages. */
+    kept,
     saved: (app = "rp", user = "u") => JSON.parse(store.get(host.storageKey(user, app)) ?? '{"local":{},"session":{}}') as { local: Record<string, string> },
   };
 }
@@ -283,6 +290,64 @@ describe("app storage: acknowledgements and catching up after a reload", () => {
     expect(f.ls.getItem("draft")).toBe("kept plus words the shell refused");
     expect(shell.saved().local.draft).toBe("kept plus words the shell refused");
     expect(f.win.chrysalisStorage.unsaved()).toEqual([]);
+  });
+
+  it("a draft the shell refused survives a full reload of the shell, listed unsaved, and saves once there is room", () => {
+    const bus = makeBus();
+    const shell = makeShell(bus);
+    const f = makeFrame(bus, shell);
+    bus.flush();
+    f.ls.setItem("draft", "kept");
+    bus.flush();
+    shell.setQuotaFull(true);
+    f.ls.setItem("draft", "kept plus words the shell refused");
+    bus.flush();
+    expect(shell.saved().local.draft).toBe("kept");
+    // the whole shell page reloads: a new host and a new frame, over the same browser storage
+    const bus2 = makeBus();
+    const shell2 = makeShell(bus2, shell.kept);
+    const f2 = makeFrame(bus2, shell2);
+    expect(f2.ls.getItem("draft")).toBe("kept plus words the shell refused");
+    expect(f2.win.chrysalisStorage.unsaved()).toEqual([{ storage: "local", key: "draft", reason: "browser-quota" }]);
+    bus2.flush();
+    // room again: the handshake offers the draft to the shell, which keeps it and drops its spare copy
+    expect(f2.ls.getItem("draft")).toBe("kept plus words the shell refused");
+    expect(shell2.saved().local.draft).toBe("kept plus words the shell refused");
+    expect(f2.win.chrysalisStorage.unsaved()).toEqual([]);
+    expect(shell2.kept.session.size).toBe(0);
+  });
+
+  it("the spare copy follows the draft: removed when the app saves, removes or clears it", () => {
+    const bus = makeBus();
+    const shell = makeShell(bus);
+    const f = makeFrame(bus, shell);
+    bus.flush();
+    const refuse = () => { shell.setQuotaFull(true); f.ls.setItem("draft", "refused " + Math.random()); bus.flush(); shell.setQuotaFull(false); };
+    refuse();
+    expect(shell.kept.session.size).toBe(1);
+    f.ls.setItem("draft", "saved now");
+    bus.flush();
+    expect(shell.kept.session.size).toBe(0);
+    refuse();
+    f.ls.removeItem("draft");
+    bus.flush();
+    expect(shell.kept.session.size).toBe(0);
+    refuse();
+    f.ls.clear();
+    bus.flush();
+    expect(shell.kept.session.size).toBe(0);
+  });
+
+  it("a refused draft too big for the frame's URL is not put in it", () => {
+    const bus = makeBus();
+    const shell = makeShell(bus);
+    const f = makeFrame(bus, shell);
+    bus.flush();
+    f.ls.setItem("draft", "x".repeat(2 * 1024 * 1024 + 10));
+    bus.flush();
+    expect(f.win.chrysalisStorage.unsaved().length).toBe(1);
+    const shell2 = makeShell(makeBus(), shell.kept);
+    expect(shell2.host.frameSrc("rp", "u").length).toBeLessThan(2 * 1024 * 1024);
   });
 
   it("an ordinary saved draft survives a reload with no catching up", () => {

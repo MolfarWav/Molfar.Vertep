@@ -287,10 +287,50 @@
       return false;
     }
   }
+  /** Writes the shell refused (the app's share or the browser's quota). The app's
+   *  frame keeps them in memory and in its URL hash, which a full reload of the
+   *  shell throws away; this copy lives in sessionStorage (its own quota, kept
+   *  across a reload of the tab, gone when the tab closes) and seeds the next
+   *  frame, which then lists them as unsaved again. */
+  function overflowKey(username, appId) {
+    return "chrysalis.app-unsaved." + username + "." + appId;
+  }
+  function readOverflow(username, appId) {
+    try {
+      var parsed = JSON.parse(sessionStorage.getItem(overflowKey(username, appId)) || "null");
+      if (parsed && typeof parsed === "object") {
+        if (!parsed.local || typeof parsed.local !== "object") parsed.local = {};
+        if (!parsed.session || typeof parsed.session !== "object") parsed.session = {};
+        return parsed;
+      }
+    } catch { /* no sessionStorage, or damaged: no copy */ }
+    return { local: {}, session: {} };
+  }
+  function writeOverflow(username, appId, overflow) {
+    try {
+      if (!Object.keys(overflow.local).length && !Object.keys(overflow.session).length) sessionStorage.removeItem(overflowKey(username, appId));
+      else sessionStorage.setItem(overflowKey(username, appId), JSON.stringify(overflow));
+    } catch { /* its quota is spent too: the frame's own copy is all there is */ }
+  }
+  /** Keep the shell's overflow copy in step with one storage op's outcome. */
+  function trackOverflow(record, d, result) {
+    var which = d.which === "session" ? "session" : "local";
+    var overflow = readOverflow(record.username, record.appId);
+    var before = JSON.stringify(overflow);
+    if (d.op === "set" && typeof d.key === "string") {
+      if (result.accepted) delete overflow[which][d.key];
+      else overflow[which][d.key] = { value: String(d.value), reason: result.reason };
+    } else if (d.op === "remove" && typeof d.key === "string") delete overflow[which][d.key];
+    else if (d.op === "clear" && result.accepted) overflow[which] = {};
+    if (JSON.stringify(overflow) !== before) writeOverflow(record.username, record.appId, overflow);
+  }
+
   /** One app's storage share of the shell origin's quota. localStorage is
    *  one budget for the shell and every app; an app filling it would break
    *  everyone else's saves (and its snapshot rides the frame URL). */
   var MAX_APP_STORAGE = 2 * 1024 * 1024;
+  /** The most the frame's URL snapshot may carry once refused drafts are added. */
+  var MAX_SEED = 1.5 * 1024 * 1024;
   /** Apply one storage write; the frame learns the outcome (storage-ack) so
    *  a refused draft is not shown as saved. */
   function handleStorage(record, source, d) {
@@ -308,6 +348,7 @@
     else if (d.op === "remove" && typeof d.key === "string") delete ns[d.key];
     else if (d.op === "clear") store[d.which === "session" ? "session" : "local"] = {};
     if (result.accepted && !writeStorage(record.username, record.appId, store)) result = { accepted: false, reason: "browser-quota" };
+    trackOverflow(record, d, result);
     // an older bridge (a page cached across an update) sends no opId and expects no answer
     if (typeof d.opId === "number") {
       send(source, {
@@ -355,6 +396,21 @@
    *  snapshot in the hash (the frame cannot read the shell's storage). */
   CH.frameSrc = function (appId, username) {
     var store = readStorage(username, appId);
+    // a draft the shell refused before a full reload of the shell comes back
+    // in the snapshot as the frame's own value, listed unsaved
+    var overflow = readOverflow(username, appId);
+    ["local", "session"].forEach(function (w) {
+      Object.keys(overflow[w]).forEach(function (k) {
+        var item = overflow[w][k];
+        if (!item || typeof item.value !== "string") return;
+        // the snapshot rides the frame's URL (browsers refuse ~2 MB): a draft
+        // that would not fit stays in the frame's memory only
+        if (JSON.stringify(store).length + item.value.length > MAX_SEED) return;
+        store[w][k] = item.value;
+        if (!store.unsaved) store.unsaved = { local: {}, session: {} };
+        store.unsaved[w][k] = typeof item.reason === "string" ? item.reason : "refused";
+      });
+    });
     var hash = "__storage=" + encodeURIComponent(textToB64(JSON.stringify(store)));
     return "/app/" + encodeURIComponent(username) + "/" + encodeURIComponent(appId) + "/#" + hash;
   };

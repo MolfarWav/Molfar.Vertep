@@ -3425,7 +3425,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   });
 
   // ---------- checkpoints: an app's code, back to a known point ----------
-  // App projects only; restore puts back code, never data/ (checkpoints.ts).
+  // App projects only; restore puts back code, and data/ files only when the request names them (checkpoints.ts).
   const appOfProject = (c: Context<AppEnv>): string => {
     const l = projectOf(c);
     if (l.kind !== "app") throw new projects.ProjectError("checkpoints exist for apps only");
@@ -3458,7 +3458,15 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       const root = c.get("paths").root;
       const cp = checkpoints.getCheckpoint(root, c.req.param("id"));
       if (!cp || cp.app !== appId) return c.json({ error: "no such checkpoint for this app" }, 404);
-      const r = await checkpoints.restoreCheckpoint(root, c.get("user").username, cp.id);
+      // `data`: data files to put back with the code (the Undo line names the run's own edits)
+      // `expect`: each file's content hash as the run left it; one edited since stays as it is
+      const body = await c.req.json<{ data?: unknown; expect?: unknown }>().catch(() => ({}) as { data?: unknown; expect?: unknown });
+      const data = Array.isArray(body.data) ? body.data.filter((d): d is string => typeof d === "string").slice(0, 200) : [];
+      const expect: Record<string, string> = {};
+      if (body.expect && typeof body.expect === "object" && !Array.isArray(body.expect)) {
+        for (const [k, v] of Object.entries(body.expect)) if (typeof v === "string") expect[checkpoints.dataPath(appId, k)] = v;
+      }
+      const r = await checkpoints.restoreCheckpoint(root, c.get("user").username, cp.id, data, expect);
       return c.json(r);
     } catch (e) {
       return projectError(c, e);

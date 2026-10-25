@@ -136,8 +136,8 @@ export const AGENT_TIPS: Tip[] = [
     },
     title: { en: "Undo what Molfar changed", uk: "Скасувати зміни Мольфара" },
     body: {
-      en: "When a run changes an app, the line “Changed <app> · N files · Undo” sits under the reply. Undo asks first (it says if later runs changed the same app, which are undone too), then puts the app’s code back to how it was before that run. Data, chats and uploads stay. The state you leave is saved too, so the undo can be undone.",
-      uk: "Коли запуск змінює застосунок, під відповіддю є рядок «Changed <app> · N files · Undo». «Undo» спершу питає (і каже, якщо пізніші запуски змінювали той самий застосунок, їх теж буде скасовано), а тоді повертає код застосунку до стану перед цим запуском. Дані, чати й завантаження лишаються. Стан, який ви залишаєте, теж зберігається, тож скасування можна скасувати.",
+      en: "When a run changes an app, the line “Changed <app> · N files · Undo” sits under the reply. Undo asks first (it says if later runs changed the same app, which are undone too), then puts the app’s code back to how it was before that run. Data, chats and uploads stay, except the data files the run itself changed (a card, a lorebook): the line counts them, Undo names them and puts them back too, unless you edited them since. The state you leave is saved too, so the undo can be undone.",
+      uk: "Коли запуск змінює застосунок, під відповіддю є рядок «Changed <app> · N files · Undo». «Undo» спершу питає (і каже, якщо пізніші запуски змінювали той самий застосунок, їх теж буде скасовано), а тоді повертає код застосунку до стану перед цим запуском. Дані, чати й завантаження лишаються, окрім файлів даних, які змінив сам запуск (картка, лорбук): рядок їх рахує, «Undo» називає їх і повертає разом із кодом, якщо ви не правили їх потім. Стан, який ви залишаєте, теж зберігається, тож скасування можна скасувати.",
     },
   },
   {

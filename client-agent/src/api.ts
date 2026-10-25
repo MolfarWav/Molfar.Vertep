@@ -120,8 +120,14 @@ export interface RunCheckpoint {
   id: string
   app: string
   label: string
-  /** files changed in the app by the run */
+  /** code files changed in the app by the run */
   changed: number
+  /** data files the run changed (git paths under apps/<id>/data/, a few of them); Undo puts them back too */
+  data?: string[]
+  /** how many data files changed in all */
+  dataCount?: number
+  /** each listed file's content hash as the run left it: Undo keeps a file edited since */
+  dataHash?: Record<string, string>
 }
 
 export interface EngineModel {
@@ -471,6 +477,8 @@ export interface RestoreResult {
   changed: string[]
   /** package.json differs: the app's dependencies need reinstalling */
   depsChanged: boolean
+  /** data files left as they are because they changed after the run */
+  keptData?: string[]
 }
 
 export interface ProjectUpdate {
@@ -525,7 +533,8 @@ export const projectsApi = {
   exportUrl: (pid: string) => `${pidPath(pid)}/export`,
   checkpoints: (pid: string) => api<{ checkpoints: Checkpoint[] }>("GET", `${pidPath(pid)}/checkpoints`).then((r) => r.checkpoints ?? []),
   createCheckpoint: (pid: string, label: string) => api<{ checkpoint: Checkpoint }>("POST", `${pidPath(pid)}/checkpoints`, { label }).then((r) => r.checkpoint),
-  restoreCheckpoint: (pid: string, id: string) => api<RestoreResult>("POST", `${pidPath(pid)}/checkpoints/${encodeURIComponent(id)}/restore`),
+  restoreCheckpoint: (pid: string, id: string, data?: { files: string[]; hashes?: Record<string, string> }) =>
+    api<RestoreResult>("POST", `${pidPath(pid)}/checkpoints/${encodeURIComponent(id)}/restore`, data?.files.length ? { data: data.files, expect: data.hashes } : undefined),
 }
 
 /** Files the chat composer takes besides pictures: text the agent reads, and

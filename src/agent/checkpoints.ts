@@ -12,6 +12,7 @@
  * would also throw away chats written since. It commits the current state
  * first and records it as a checkpoint too, so a restore is itself undoable.
  */
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { Type } from "typebox";
@@ -128,6 +129,16 @@ export function dataPath(app: string, raw: string): string {
   return p.startsWith("apps/") ? p : `apps/${app}/${p.startsWith("data/") ? p : `data/${p}`}`;
 }
 
+/** A data file's content hash now ("" when it is gone): a run records it for each data file it
+ *  changed, so a later Undo can tell a file nobody touched since from one edited afterwards. */
+export function dataFileHash(root: string, rel: string): string {
+  try {
+    return crypto.createHash("sha1").update(fs.readFileSync(path.join(root, rel))).digest("hex");
+  } catch {
+    return "";
+  }
+}
+
 export interface RestoreResult {
   checkpoint: Checkpoint;
   /** The state just before the restore, to undo it. */
@@ -135,12 +146,21 @@ export interface RestoreResult {
   changed: string[];
   /** package.json differs: the app's dependencies need reinstalling. */
   depsChanged: boolean;
+  /** Data files left as they are: they changed after the hash the caller expected. */
+  keptData: string[];
 }
 
 /** Put an app's code back to a checkpoint and commit it. `data` names data
  *  files (paths from dataChangedSince) to put back as well; any other data
- *  stays as it is. */
-export async function restoreCheckpoint(root: string, username: string, id: string, data: string[] = []): Promise<RestoreResult> {
+ *  stays as it is. `expect` maps a data path to the content hash the caller
+ *  saw (dataFileHash): a file that differs now was edited since, and stays. */
+export async function restoreCheckpoint(
+  root: string,
+  username: string,
+  id: string,
+  data: string[] = [],
+  expect: Record<string, string> = {},
+): Promise<RestoreResult> {
   const cp = getCheckpoint(root, id);
   if (!cp) throw new Error(`no checkpoint "${id}"`);
   assertApp(root, cp.app);
@@ -151,6 +171,7 @@ export async function restoreCheckpoint(root: string, username: string, id: stri
   if (!head) throw new Error("the workspace has no commits yet");
   const [then, now] = await Promise.all([codeAt(root, cp.oid, cp.app), codeAt(root, head, cp.app)]);
   const changed: string[] = [];
+  const keptData: string[] = [];
   for (const [p, oid] of then) {
     if (now.get(p) === oid) continue;
     const abs = path.join(root, p);
@@ -169,6 +190,10 @@ export async function restoreCheckpoint(root: string, username: string, id: stri
       // only paths git knows at either point: nothing outside the app's data
       const was = dataThen.get(p);
       if (was === dataNow.get(p)) continue;
+      if (typeof expect[p] === "string" && expect[p] !== dataFileHash(root, p)) {
+        keptData.push(p);
+        continue;
+      }
       const abs = path.join(root, p);
       if (was) {
         fs.mkdirSync(path.dirname(abs), { recursive: true });
@@ -179,7 +204,7 @@ export async function restoreCheckpoint(root: string, username: string, id: stri
   }
   if (changed.length) await git.commitAll(root, username, `restore: ${cp.app} to "${cp.label}"`, false);
   const pkg = `apps/${cp.app}/package.json`;
-  return { checkpoint: cp, before, changed: changed.sort(), depsChanged: then.get(pkg) !== now.get(pkg) };
+  return { checkpoint: cp, before, changed: changed.sort(), depsChanged: then.get(pkg) !== now.get(pkg), keptData: keptData.sort() };
 }
 
 // ---------- the agent's tool ----------

@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Undo on the agent page now covers data the run changed (#89). When Molfar edits a card, a lorebook or another file under an app's `data/`, the line under the reply reads "Changed roleplay · 2 data files · Undo" (a run that changed only data now gets the line too). Undo names the files and puts them back with the code. A file you edited after the run is left as it is and the banner says so; chats and saves the run did not touch stay.
+- A draft the shell refused to store (its storage is full) now survives a full reload of the shell while the tab stays open (#89): the shell keeps a spare copy in the tab's session storage and the app's frame starts from it, listed as unsaved. Closing the tab still loses it.
+
 ## 1.4.0 (2026-10-25)
 
 - Roleplay 4.67.0 through an app update: character skills are renamed habits, Write for me translates your own message in place, the Prompt board and Backgrounds fit a phone better. No engine code change for it.

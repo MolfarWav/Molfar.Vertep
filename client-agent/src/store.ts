@@ -181,7 +181,7 @@ export interface AgentState {
   /** checkpoint ids whose run was undone, to mark the line under the message */
   undone: Record<string, true>
   /** put an app's code back to a checkpoint, then say so in the banner with an Undo */
-  restoreCheckpoint: (app: string, id: string, markUndone?: string) => Promise<boolean>
+  restoreCheckpoint: (app: string, id: string, markUndone?: string, data?: { files: string[]; hashes?: Record<string, string> }) => Promise<boolean>
   /** bumps whenever a draft is put in the new chat's composer from outside it */
   draftSeed: number
   /** start a new chat with `text` already in its composer */
@@ -543,17 +543,18 @@ export const useAgent = create<AgentState>()((set, get) => {
       await get().send(text)
     },
 
-    restoreCheckpoint: async (app, id, markUndone) => {
+    restoreCheckpoint: async (app, id, markUndone, data) => {
       try {
-        const r = await projectsApi.restoreCheckpoint(`app:${app}`, id)
+        const r = await projectsApi.restoreCheckpoint(`app:${app}`, id, data)
         const files = r.changed.length === 1 ? "1 file" : `${r.changed.length} files`
         const deps = r.depsChanged ? ". Reinstall dependencies: ask Molfar to run app_deps" : ""
+        const kept = r.keptData?.length ? `. Left as they are, edited since the run: ${r.keptData.slice(0, 3).map((p) => p.replace(/^apps\/[^/]+\/data\//, "")).join(", ")}${r.keptData.length > 3 ? ` and ${r.keptData.length - 3} more` : ""}` : ""
         set((st) => ({
           checkpointsRev: st.checkpointsRev + 1,
           undone: markUndone ? { ...st.undone, [markUndone]: true } : st.undone,
           banner: {
             kind: "info",
-            text: `Restored ${files} of ${app} to "${r.checkpoint.label}"${deps}`,
+            text: `Restored ${files} of ${app} to "${r.checkpoint.label}"${deps}${kept}`,
             action: { label: "Undo", run: () => void get().restoreCheckpoint(app, r.before.id) },
           },
         }))

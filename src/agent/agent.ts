@@ -38,7 +38,7 @@ import {
   visibleTools,
   type ToolGroup,
 } from "./small-window.js";
-import { buildCheckpointTool, changedSince, createCheckpoint, type Checkpoint } from "./checkpoints.js";
+import { buildCheckpointTool, changedSince, createCheckpoint, dataChangedSince, dataFileHash, type Checkpoint } from "./checkpoints.js";
 import { buildBugSolutionTool } from "./bug-solution.js";
 import { LANGUAGE_RULE, PRECEDENCE_RULE } from "./prompt-rules.js";
 import { resetAllowed } from "./protect.js";
@@ -85,7 +85,16 @@ export interface RunCheckpoint {
   label: string;
   /** Code files changed since the checkpoint. */
   changed: number;
+  /** Data files (`apps/<id>/data/...`) changed since it, as git paths: the run's edits of cards, books, settings.
+   *  Undo puts these back with the code. Capped, `dataCount` is the true number. */
+  data?: string[];
+  dataCount?: number;
+  /** Each listed file's content hash when the run ended: Undo leaves a file edited since. */
+  dataHash?: Record<string, string>;
 }
+
+/** Data paths listed per run: the Undo line names a few, the rest only count. */
+const RUN_DATA_LISTED = 40;
 
 export interface AgentRunResult {
   finalText: string;
@@ -1055,8 +1064,13 @@ export class UserAgent {
     const out: RunCheckpoint[] = [];
     for (const cp of this.runState.checkpoints.values()) {
       try {
-        const changed = await changedSince(this.root, cp);
-        if (changed.length) out.push({ id: cp.id, app: cp.app, label: cp.label, changed: changed.length });
+        const [changed, data] = await Promise.all([changedSince(this.root, cp), dataChangedSince(this.root, cp)]);
+        if (changed.length || data.length) {
+          out.push({
+            id: cp.id, app: cp.app, label: cp.label, changed: changed.length,
+            ...(data.length ? { data: data.slice(0, RUN_DATA_LISTED), dataCount: data.length, dataHash: Object.fromEntries(data.slice(0, RUN_DATA_LISTED).map((p) => [p, dataFileHash(this.root, p)])) } : {}),
+          });
+        }
       } catch (e) {
         log.warn(`[agent:${this.sessionId}] checkpoint check failed: ${(e as Error).message}`);
       }
