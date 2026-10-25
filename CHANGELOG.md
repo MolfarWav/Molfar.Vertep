@@ -9,6 +9,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## 1.4.0 (2026-10-25)
 
+- Roleplay 4.67.0 through an app update: character skills are renamed habits, Write for me translates your own message in place, the Prompt board and Backgrounds fit a phone better. No engine code change for it.
 - Molfar Vertep installs as an app (#56). The account menu has **Install app**: Chrome, Edge and Samsung Internet show their install dialog; on an iPhone the menu says where Safari keeps it (Share, Add to Home Screen); on a plain `http` address it explains why the browser offers nothing and links to the new README section "Install as an app" (Tailscale `tailscale serve`, or your own certificate). The installed app opens full screen without the browser's bar, keeps the controls inside the notch and home bar, and paints the status bar in the theme's colour. The engine serves a web app manifest (icons 192, 512 and maskable) and a small service worker that does one thing: when the engine is off, a page load shows a "not reachable" page that reloads by itself. It caches nothing else, so an engine update reaches an installed app like a browser tab. No engine data format changes.
 - Settings > Images: the provider's error messages (wrong key, no credit, rate limit, unknown model, server not reachable, timeout and the rest) are shown in the interface language; the engine sends a `code` and the pieces beside its English text (#88). Check, Edit, Add server and the footer links (GitHub, Discord, Report a bug, Help) are 40 px tall on phones.
 
