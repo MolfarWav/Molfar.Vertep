@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { discoverPlugins, invalidatePluginCache, runPluginHook, runPluginRoute, runPluginTool, collectSiblingTools, collectSiblingLlmHooks, sanitizeTurn, syncSchedules, stopSchedules, type LoadedPlugin } from "../src/plugins/runtime.js";
+import { discoverPlugins, invalidatePluginCache, runPluginHook, runPluginRoute, runPluginTool, collectSiblingTools, collectSiblingLlmHooks, sanitizeTurn, SCAN_VEC_MAX, syncSchedules, stopSchedules, type LoadedPlugin } from "../src/plugins/runtime.js";
 import { log } from "../src/logger.js";
 import { PluginStoreService } from "../src/plugins/store.js";
 
@@ -618,6 +618,17 @@ export function uiPanel(ctx) {
     expect(sanitizeTurn([1])).toBeNull();
     expect(sanitizeTurn({ other: "x" })).toBeNull();
     expect(sanitizeTurn({ op: "send", swipe: Number.NaN, speakerId: "aria" })).toEqual({ op: "send", speakerId: "aria" });
+    expect(sanitizeTurn({ op: "send", contextTokens: 32768 })).toEqual({ op: "send", contextTokens: 32768 });
+  });
+
+  it("sanitizeTurn passes the scan vector only as a bounded list of finite numbers", () => {
+    expect(sanitizeTurn({ op: "send", scanVec: [0.1, -0.2, 3] })).toEqual({ op: "send", scanVec: [0.1, -0.2, 3] });
+    expect(sanitizeTurn({ scanVec: [] })).toBeNull();
+    expect(sanitizeTurn({ scanVec: [0.1, Number.NaN] })).toBeNull();
+    expect(sanitizeTurn({ scanVec: [0.1, "2"] })).toBeNull();
+    expect(sanitizeTurn({ scanVec: "0.1" })).toBeNull();
+    expect(sanitizeTurn({ op: "send", scanVec: new Array(SCAN_VEC_MAX + 1).fill(0.5) })).toEqual({ op: "send" });
+    expect(sanitizeTurn({ scanVec: new Array(SCAN_VEC_MAX).fill(0.5) })?.scanVec).toHaveLength(SCAN_VEC_MAX);
   });
 
   it("runPluginTool: a tool can make a two-phase net call", async () => {

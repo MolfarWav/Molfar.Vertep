@@ -364,14 +364,15 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
         list: (rel = ".") => { try { return fs.readdirSync(within(rel)).sort(); } catch (e) { scrub(e, rel); } },
         // size and change time without reading the file: lets an app keep a derived index and
         // re-read only what changed since (whoever changed it: the app, Molfar, a sync pull).
-        // A list of paths answers with a list, in one call: per path, the call into the sandbox
+        // A folder's size is 0 whatever the system says (Linux reports its table, 4096; Windows 0), so a plugin
+        // sees the same on every machine. A list of paths answers with a list, in one call: per path, the call into the sandbox
         // and the realpath walk cost ~3 ms, and an index of 2,000 cards spent 6 s on them alone.
         stat: (rel) => {
           const one = (r) => {
             const full = within(r);
             let st;
             try { st = fs.statSync(full); } catch (e) { if (e && e.code === "ENOENT") return null; scrub(e, r); }
-            return { size: st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
+            return { size: st.isDirectory() ? 0 : st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
           };
           if (!Array.isArray(rel)) return one(rel);
           if (rel.length > 100000) throw new Error("fs.stat: at most 100000 paths at once");
@@ -395,7 +396,7 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
             let st;
             try { st = fs.lstatSync(full); } catch (e) { if (e && e.code === "ENOENT") return null; return one(r); }
             if (st.isSymbolicLink()) return one(r);
-            return { size: st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
+            return { size: st.isDirectory() ? 0 : st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
           });
         },
         remove: (rel) => {
