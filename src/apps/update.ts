@@ -352,8 +352,12 @@ export function restoreWrites(appDir: string, rels: Iterable<string>, before: Tr
 }
 
 /** Underscore-prefixed files under an app's data/ are templates the app
- *  ships for the agent. Missing ones arrive with an update; the rest of
- *  data/ is the user's and is never written. */
+ *  ships for the agent and for its own data upgrades. The app owns them: an
+ *  update adds the missing ones and replaces those that differ, so a changed
+ *  template reaches users (an upgrade that reseeds a built-in copy reads the
+ *  template, so a stale one would reseed stale text). The rest of data/ is
+ *  the user's and is never written. The replaced text stays in the workspace
+ *  history: the update commits it before it writes. */
 export function seedDataTemplates(incomingDir: string, appDir: string): string[] {
   const added: string[] = [];
   const walk = (rel: string): void => {
@@ -368,9 +372,12 @@ export function seedDataTemplates(incomingDir: string, appDir: string): string[]
       if (e.isDirectory()) walk(child);
       else if (e.isFile() && e.name.startsWith("_")) {
         const to = path.join(appDir, "data", child);
-        if (fs.existsSync(to)) continue;
+        const body = fs.readFileSync(path.join(incomingDir, "data", child));
+        const kept = fs.lstatSync(to, { throwIfNoEntry: false });
+        if (kept?.isFile() && fs.readFileSync(to).equals(body)) continue;
+        if (kept && !kept.isFile()) continue;
         fs.mkdirSync(path.dirname(to), { recursive: true });
-        fs.copyFileSync(path.join(incomingDir, "data", child), to);
+        fs.writeFileSync(to, body);
         added.push(child);
       }
     }
