@@ -1,9 +1,15 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-23.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-26.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
+
+## #113 LEFTOVERS + DATE AND CLOCK (2026-10-26, Roleplay branch `claude/project-thread-ptxx9p`, PR MolfarWav/Molfar.Vertep-Roleplay#17, NOT merged, NOT released; engine untouched)
+Built in the Roleplay app (tests 1849 pass, typecheck clean, browser-checked on a throwaway engine in dark, light and 390 px): editable memory wording (`remembers`, `continues`, `cardMemory` prompt keys), the note for a continued chat that opens with the card greeting, habits in the card import dialog and a log row for "Accept now", **date and running clock in the Dashboard** (owner's request replacing the Day N question: `state.calendar {start, src: text|today|user, off?, inherited?}`, snapshots keep day numbers, the date is worked out when read, a time guessed from the part of the day is `clock.approx` and shows as `≈22:00`, `POST /dashboard/calendar`, the sensor reports a whole date in `date`), and a **model-written story summary** for the card memory (`POST /litopys/story-summary`, job `storySummary` on the chat's record, prompt key `summary`, the import takes `arcText`). Uses the Litopys worker model, not a separate card-tasks model (the plugin cannot see the app-level one).
+Not built: the sector panel (the carries panel already does it; suggest closing that item), inbox entry for habits and the sensor as a second habit detector (issue #134, waits for the owner).
+Found: Litopys ranks facts and chapters by words only and never reads the vectors it builds (issue #133, plan for #94 in the Claude Doc linked from #94). Next: owner reads the plan and answers its four questions; the user-feedback discussion comes first, no other issue is started before it.
+Browser-check recipe that worked for the Roleplay app: `start.sh`, copy the app into `$DATA/apps/roleplay` (tar, no rsync), seed `data/`, switch off the shell tour (`PUT /v1/settings {guide:{showTours:false,lastVersion:"99.0.0"}}`), open the shell, click the app card then Launch, drive the iframe `/app/<user>/roleplay/`. A seeded chat needs a user message or the boot sweep deletes it.
 
 ## RELEASE 1.4.2 PREPARED (2026-10-25, on the owner's word "давай реліз зі всім що зараз зібралося - 1.4.2"; engine branch `claude/project-thread-51q6of` fast-forwarded into main; the tag v1.4.2 is the owner's)
 Engine: version 1.4.2, CHANGELOG, `.fork/release-notes/1.4.2.md`; no engine code change. Carries two Roleplay app updates: 4.68.1 (greeting follows a persona switched before the first reply, #128) and 4.69.0 (voices with dashes and other scripts, a fuller Dashboard cast, the Vertep Lite speaker rule, #93 follow-up, issue #130). The agent forge (Roleplay 4.68.1 canvas-kit agent header, #127) is left out of the notes on the owner's word: "кузня агентів піде окремо". Roleplay tests 1682 pass, typecheck clean; engine checks run before this commit. Roleplay's browser check was not done.
