@@ -60,7 +60,7 @@ NOTHING; on the next pass read `host.llm.results[key]` and commit. `host.net`
 works the same way. Details and templates: skill `two-phase-llm`.
 
 ## Host API
-- `host.fs`: read, write (4 MB a file), readBase64, list, stat (`{ size, mtimeMs, dir }` or null; a list of paths answers a list in one call), remove. Scoped to the app's `data/` for bundled plugins. `data/.cache/` is local to the device (no git, backup or sync): put files there that the app can rebuild, such as an index checked against `stat`.
+- `host.fs`: read, write (4 MB a file), readBase64, list, stat (`{ size, mtimeMs, dir }` or null, size 0 for a folder on every system; a list of paths answers a list in one call), remove. Scoped to the app's `data/` for bundled plugins. `data/.cache/` is local to the device (no git, backup or sync): put files there that the app can rebuild, such as an index checked against `stat`.
 - `host.store`: get, put, delete, keys (persists).
 - `host.zip.build([{ name, text }])`: a zip of those texts as base64, built natively (use it for exports: a zip built in plugin JS runs out the route time limit at a few MB); no permission. `host.zip.entries()` reads an uploaded zip (permission `zip`).
 - `host.llm.request` / `host.llm.results`; `host.net` (permission `network`): method, headers, body, form, json, binary, timeout, maxBytes, redirects; results carry status, headers, json/text/base64. Optional manifest `networkHosts` allowlist.

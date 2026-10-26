@@ -207,6 +207,11 @@ const EDGE_TRUSTED_TOKEN = "6A5AA1D4EAFF4E9FB37E23D68491D6F4";
 const EDGE_WSS =
   "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1";
 const EDGE_CHROMIUM = "143.0.3650.75";
+/** Where the client connects; a test points it at a local fake of the service. */
+let edgeEndpoint = EDGE_WSS;
+export function setEdgeEndpointForTests(url: string | null): void {
+  edgeEndpoint = url ?? EDGE_WSS;
+}
 
 /** DRM token the endpoint requires since late 2024: SHA-256 of the
  *  5-minute-floored Windows filetime (100ns ticks) + the trusted client
@@ -238,7 +243,7 @@ function edgeSpeakOnce(opts: { text: string; voice: string; speed: number; skewS
   return new Promise((resolve, reject) => {
     const connectionId = randomUUID().replace(/-/g, "");
     const url =
-      `${EDGE_WSS}?TrustedClientToken=${EDGE_TRUSTED_TOKEN}&ConnectionId=${connectionId}` +
+      `${edgeEndpoint}?TrustedClientToken=${EDGE_TRUSTED_TOKEN}&ConnectionId=${connectionId}` +
       `&Sec-MS-GEC=${secMsgGec(opts.skewSeconds)}&Sec-MS-GEC-Version=1-${EDGE_CHROMIUM}`;
     const major = EDGE_CHROMIUM.split(".")[0];
     const ws = new WebSocket(url, {
