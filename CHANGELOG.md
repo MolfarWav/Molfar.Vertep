@@ -9,6 +9,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 - Plugins can ask for more room for model work. A plugin manifest may carry `limits: { passes, concurrency }`: `passes` (3 to 12) lets a hook or route take more rounds of model calls than the usual 3, for a chain of calls that depend on each other; `concurrency` (1 to 4) runs the requests of one round side by side, at least 250 ms apart, and tries a request again after the provider answers 429 (pauses of 2, 4 and 8 s, and every other request of the account waits the same pause). Plugins without `limits` behave as before. The first user is the Roleplay agents plugin (Agent forge, #127).
 
+- An `llmRequest` hook can read the embedding of the scan window. A route's `turn` labels may carry `scanVec`, a list of at most 4096 finite numbers (the embedding of the pending line and the last messages); a hook gets it as `ctx.turn.scanVec`, so it can rank by meaning without a second embedding call. Anything else in `scanVec` drops the whole list. `turn.contextTokens` carries the context window the prompt was budgeted against, so a hook can size what it adds. The first user is Roleplay's Litopys (memory wave 2).
+
 ## 1.4.2 (2026-10-25)
 
 - Roleplay 4.69.0 comes with this release as an app update: dialogue set off by dashes is coloured like quoted speech and a Narrator card's voices are found when the story spells a name in another script (Ember as Эмбер), a speech paragraph that names nobody takes the speaker of the narration before it, the Dashboard scene keeps a rated character the story names again and again even when the sensor skipped them, and Vertep Lite asks the model to name the speaker (#93 follow-up, #130). No engine code change.

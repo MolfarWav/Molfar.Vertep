@@ -354,15 +354,25 @@ const LLM_PATCH_FIELDS = [
  *  hooks only: it never reaches the model. Who speaks and what kind of
  *  generation it is (send, next, swipe, continue, impersonate), as plain
  *  labels: known keys, strings cut to 200 chars, finite numbers; anything
- *  else is dropped. */
-const TURN_KEYS = ["op", "chatId", "speakerId", "speakerName", "targetId", "swipe"] as const;
-export function sanitizeTurn(raw: unknown): Record<string, string | number> | null {
+ *  else is dropped. `contextTokens` is the context window the prompt was
+ *  budgeted against, so a hook can size what it adds. `scanVec` is the one list allowed: the embedding of the
+ *  scan window (the pending line and the last messages), so a memory hook can
+ *  rank by meaning without paying for a second embedding call. At most
+ *  SCAN_VEC_MAX finite numbers, or it is dropped whole. */
+const TURN_KEYS = ["op", "chatId", "speakerId", "speakerName", "targetId", "swipe", "contextTokens"] as const;
+export const SCAN_VEC_MAX = 4096;
+export type TurnLabels = Record<string, string | number | number[]>;
+export function sanitizeTurn(raw: unknown): TurnLabels | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  const out: Record<string, string | number> = {};
+  const out: TurnLabels = {};
   for (const key of TURN_KEYS) {
     const v = (raw as Record<string, unknown>)[key];
     if (typeof v === "string") out[key] = v.slice(0, 200);
     else if (typeof v === "number" && Number.isFinite(v)) out[key] = v;
+  }
+  const vec = (raw as Record<string, unknown>).scanVec;
+  if (Array.isArray(vec) && vec.length > 0 && vec.length <= SCAN_VEC_MAX && vec.every((n) => typeof n === "number" && Number.isFinite(n))) {
+    out.scanVec = vec as number[];
   }
   return Object.keys(out).length ? out : null;
 }
@@ -406,7 +416,7 @@ export async function applyLlmRequestHooks(
   key: string,
   req: GenerateRequest,
   deps: PluginRuntimeDeps,
-  turn: Record<string, string | number> | null = null,
+  turn: TurnLabels | null = null,
 ): Promise<GenerateRequest> {
   if (!deps.llmHooks) return req;
   const hooks = await deps.llmHooks(self).catch(() => [] as LlmRequestHook[]);
