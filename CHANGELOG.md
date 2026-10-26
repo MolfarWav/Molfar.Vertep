@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.5.0 (2026-10-26)
+
+- Roleplay 4.70.0 comes with this release as an app update: the agent forge (Canvas > Agents: build agents from cards on a board, try them on a made-up turn, panels, choices and notes in the chat, a model and a call limit for each agent, the cards Dice, Pick, Extract and Cut) and Litopys memory waves 1 and 2 (memory size up to 16000 or Auto, the whole record when it fits, quiet suggestions, ranking by meaning). Agents with several model calls in a row and ranking by meaning need this engine; its own changelog is in the Roleplay fork.
+- CI is green on `main` again (#114). A plugin's `fs.stat` of a folder now reports size 0 on every system (Linux used to report the folder's block size, 4096); the edge TTS tests run against a local fake of the service and are skipped where the runtime drops response headers. Nothing else in the shipped program changed.
+
 - Plugins can ask for more room for model work. A plugin manifest may carry `limits: { passes, concurrency }`: `passes` (3 to 12) lets a hook or route take more rounds of model calls than the usual 3, for a chain of calls that depend on each other; `concurrency` (1 to 4) runs the requests of one round side by side, at least 250 ms apart, and tries a request again after the provider answers 429 (pauses of 2, 4 and 8 s, and every other request of the account waits the same pause). Plugins without `limits` behave as before. The first user is the Roleplay agents plugin (Agent forge, #127).
 
 - An `llmRequest` hook can read the embedding of the scan window. A route's `turn` labels may carry `scanVec`, a list of at most 4096 finite numbers (the embedding of the pending line and the last messages); a hook gets it as `ctx.turn.scanVec`, so it can rank by meaning without a second embedding call. Anything else in `scanVec` drops the whole list. `turn.contextTokens` carries the context window the prompt was budgeted against, so a hook can size what it adds. The first user is Roleplay's Litopys (memory wave 2).
