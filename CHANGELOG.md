@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- App updates: a template an app ships (an underscore file under `data/`, like Roleplay's `_vertep-lite.json`) is now replaced when it changed; before, only a missing one was added, so a changed built-in preset never reached a workspace that already had the old template. The workspace is committed before the update writes, so the old text stays in its history.
+
 ## 1.5.0 (2026-10-26)
 
 - Roleplay 4.70.0 comes with this release as an app update: the agent forge (Canvas > Agents: build agents from cards on a board, try them on a made-up turn, panels, choices and notes in the chat, a model and a call limit for each agent, the cards Dice, Pick, Extract and Cut) and Litopys memory waves 1 and 2 (memory size up to 16000 or Auto, the whole record when it fits, quiet suggestions, ranking by meaning). Agents with several model calls in a row and ranking by meaning need this engine; its own changelog is in the Roleplay fork.
