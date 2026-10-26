@@ -174,6 +174,104 @@ export function uiPanel(ctx) {
     expect(out.systemPrompt).toContain("|beat:MOOD:set the mood");
   }, 30_000);
 
+  describe("limits: more passes and side-by-side requests", () => {
+    const usage = { input: 1, output: 1, cacheRead: 0, cacheWrite: 0, costTotal: 0 };
+    /** A route that asks for one model call per pass, five in a row, each in the pass after the last. */
+    const chain = `export function handleRoute(req, host) {
+      const n = (req.stash && req.stash.n) || 0;
+      if (n >= 5) return { status: 200, json: { n } };
+      host.llm.request("s" + n, { messages: [{ role: "user", content: "go" }] });
+      return { __llmPending: true, stash: { n: n + 1 } };
+    }`;
+    const route = { method: "POST", path: "/go", query: {}, body: {} } as const;
+
+    it("a chain of five dependent calls stops at three passes by default", async () => {
+      writePlugin("chain", { name: "C", version: "1", permissions: ["routes", "llm"], origin: "local" }, chain);
+      const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+      let calls = 0;
+      const res = await runPluginRoute(plugin, route, { ...deps(), models: { generate: async () => { calls++; return { text: "x", model: "m", usage }; } } as never });
+      expect(res).toBeNull();
+      expect(calls).toBe(2);
+    }, 30_000);
+
+    it("limits.passes lets the same chain finish", async () => {
+      writePlugin("chain", { name: "C", version: "1", permissions: ["routes", "llm"], origin: "local", limits: { passes: 8 } }, chain);
+      const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+      let calls = 0;
+      const res = await runPluginRoute(plugin, route, { ...deps(), models: { generate: async () => { calls++; return { text: "x", model: "m", usage }; } } as never });
+      expect((res?.json as { n?: number } | undefined)?.n).toBe(5);
+      expect(calls).toBe(5);
+    }, 30_000);
+
+    it("limits.passes counts for a hook too", async () => {
+      writePlugin(
+        "hook-chain",
+        { name: "H", version: "1", permissions: ["hooks", "llm"], origin: "local", limits: { passes: 6 } },
+        `export function uiPanel(ctx, host) {
+          const n = ctx.n || 0;
+          if (n >= 4) return ctx;
+          host.llm.request("h" + n, { messages: [{ role: "user", content: "go" }] });
+          return { ...ctx, n: n + 1 };
+        }`,
+      );
+      const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+      let calls = 0;
+      const out = (await runPluginHook(plugin, "uiPanel", baseCtx(), { ...deps(), models: { generate: async () => { calls++; return { text: "x", model: "m", usage }; } } as never })) as { n?: number };
+      expect(out.n).toBe(4);
+      expect(calls).toBe(4);
+    }, 30_000);
+
+    /** Four requests in one pass; the model takes 600 ms and records how many run together. */
+    const fan = `export function handleRoute(req, host) {
+      if (host.llm.results.a) return { status: 200, json: { texts: ["a", "b", "c", "d"].map((k) => host.llm.results[k].text) } };
+      for (const k of ["a", "b", "c", "d"]) host.llm.request(k, { messages: [{ role: "user", content: k }] });
+      return { __llmPending: true };
+    }`;
+    const slowModels = () => {
+      let inflight = 0;
+      const stat = { peak: 0, calls: 0 };
+      const generate = async (req: { messages: { content: string }[] }) => {
+        stat.calls++;
+        stat.peak = Math.max(stat.peak, ++inflight);
+        await new Promise((r) => setTimeout(r, 600));
+        inflight--;
+        return { text: "T" + req.messages[0]!.content, model: "m", usage };
+      };
+      return { stat, models: { generate } as never };
+    };
+
+    it("requests of one pass run one after another without limits.concurrency", async () => {
+      writePlugin("fan", { name: "F", version: "1", permissions: ["routes", "llm"], origin: "local" }, fan);
+      const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+      const { stat, models } = slowModels();
+      const res = await runPluginRoute(plugin, route, { ...deps(), models });
+      expect((res!.json as { texts: string[] }).texts).toEqual(["Ta", "Tb", "Tc", "Td"]);
+      expect(stat.peak).toBe(1);
+    }, 30_000);
+
+    it("limits.concurrency runs them side by side, never more than asked, and keeps every answer under its key", async () => {
+      writePlugin("fan", { name: "F", version: "1", permissions: ["routes", "llm"], origin: "local", limits: { concurrency: 3 } }, fan);
+      const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+      const { stat, models } = slowModels();
+      const res = await runPluginRoute(plugin, route, { ...deps(), models });
+      expect((res!.json as { texts: string[] }).texts).toEqual(["Ta", "Tb", "Tc", "Td"]);
+      expect(stat.calls).toBe(4);
+      expect(stat.peak).toBeGreaterThan(1);
+      expect(stat.peak).toBeLessThanOrEqual(3);
+    }, 30_000);
+
+    it("a request that fails does not take the others of its pass down", async () => {
+      writePlugin("fan", { name: "F", version: "1", permissions: ["routes", "llm"], origin: "local", limits: { concurrency: 2 } }, fan.replace('texts: ["a", "b", "c", "d"].map((k) => host.llm.results[k].text)', 'texts: ["a", "b", "c", "d"].map((k) => host.llm.results[k].text || "failed:" + host.llm.results[k].error)'));
+      const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+      const generate = async (req: { messages: { content: string }[] }) => {
+        if (req.messages[0]!.content === "b") throw new Error("model error: 401 bad key");
+        return { text: "T" + req.messages[0]!.content, model: "m", usage };
+      };
+      const res = await runPluginRoute(plugin, route, { ...deps(), models: { generate } as never });
+      expect((res!.json as { texts: string[] }).texts).toEqual(["Ta", "failed:model error: 401 bad key", "Tc", "Td"]);
+    }, 30_000);
+  });
+
   it("llm tool bridge: defs ride the request, the executor runs the plugin's handleTool", async () => {
     writePlugin(
       "tooler",

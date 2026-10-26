@@ -41,7 +41,7 @@ You cannot read the engine log, but `plugin_log` shows every plugin's `host.log`
 - While testing, lower `intervalMs` to 15000. Restore the original value after.
 
 ## 5. Two-phase traps that look like "nothing happened"
-- Each run has at most 3 passes, so at most 2 rounds of llm/net requests. A third round is dropped. Each pass has a 10 s execution limit.
+- Each run has at most 3 passes, so at most 2 rounds of llm/net requests. A third round is dropped, unless the manifest's `limits.passes` raises it (skill `two-phase-llm`). Each pass has a 10 s execution limit.
 - In a hook (onTick, uiPanel…), pass 2 gets as ctx whatever pass 1 returned, when that was an object. Return nothing from pass 1, or return the state you need next. Never return `{ __llmPending: true }` from onTick and then read `ctx.pluginId`.
 - `host.fs.write` happens immediately, it is not deferred. Writing on pass 1 writes stale data, then writes again. Write only once the results you need are present.
 - `host.llm.results[key]` is `{ text, error? }`. Empty text with an error means the model call failed: no model set, or a rate limit on a free OpenRouter model. Record the error; do not treat it as "no facts found".

@@ -15,7 +15,8 @@
  *   }
  *
  * The engine runs the export, executes requested llm calls host-side (keys
- * never enter the sandbox), then re-runs it with results. Max 3 passes.
+ * never enter the sandbox), then re-runs it with results. Max 3 passes, unless
+ * the manifest's `limits.passes` asks for more (up to 12) for a hook or route.
  *
  * Plugin shape on disk:
  *   plugins/<id>/manifest.json  { name, version, origin, permissions,
@@ -38,6 +39,7 @@ import { log } from "../logger.js";
 import { hookInsertions, mergePromptSources, sanitizePromptSources, uncovered } from "../prompt-sources.js";
 import { assertPublicHost } from "../net-guard.js";
 import { recordPluginLog } from "./plugin-log.js";
+import { pacerFor, readLimits, runLimited, type PluginLimits } from "./llm-pace.js";
 
 /** Exports the engine calls on its own (routes and tools are dispatched by
  *  request, not from here). Only these names fire — a plugin exporting
@@ -706,7 +708,8 @@ function emptyGeneration(error?: string): GenerateResult {
 
 /**
  * Run what one pass asked for, host-side (keys never enter the sandbox and
- * web requests carry no Chrysalis credentials), one request after another.
+ * web requests carry no Chrysalis credentials), one request after another
+ * (side by side and paced when the manifest's `limits.concurrency` says so).
  * Model requests get more the closer they are to an app route:
  *   route  sibling tools, other plugins' llmRequest hooks, live streaming
  *          and cancelling
@@ -743,7 +746,8 @@ async function runPassRequests(
     }
   }
   if (!caps.llm) return results;
-  for (const { key, req } of r.llmRequests ?? []) {
+  const paced = readLimits(plugin.manifest.limits).concurrency;
+  const oneRequest = async ({ key, req }: NonNullable<SandboxResponse["llmRequests"]>[number]): Promise<void> => {
     // `stream` is an app-level routing descriptor, not a GenerateRequest
     // field — strip it and use it to route live deltas when a sink exists.
     // `wantsTools` likewise: a marker asking for sibling-contributed tools.
@@ -755,7 +759,7 @@ async function runPassRequests(
     const pictures = sanitizePluginImages(images);
     if (pictures.error) {
       results.llm[key] = emptyGeneration(pictures.error);
-      continue;
+      return;
     }
     if (pictures.images) {
       (clean as GenerateRequest).images = pictures.images;
@@ -777,9 +781,13 @@ async function runPassRequests(
     const onThinking = streamTag && deps.onLlmThinking ? (d: string) => deps.onLlmThinking!(streamTag, d) : undefined;
     const onToolEvent = streamTag && deps.onLlmTool ? (ev: Parameters<NonNullable<PluginRuntimeDeps["onLlmTool"]>>[1]) => deps.onLlmTool!(streamTag, ev) : undefined;
     const abortSignal = streamTag && deps.abortCtlFor ? deps.abortCtlFor(streamTag) : null;
+    // a streamed reply that already sent text must not start over after a refusal
+    let sentText = false;
+    const delta = onDelta ? (d: string) => { sentText = true; onDelta(d); } : undefined;
     try {
       // source + paramsKey pick the model's parameter block (model-params.ts); set here, after the spread, so a plugin cannot pose as another
-      const out = await deps.models.generate({ ...request, ...toolBridge, ...(onToolEvent ? { onToolEvent } : {}), ...(abortSignal ? { signal: abortSignal } : {}), source: llmSourceOf(plugin), paramsKey: key }, onDelta, onThinking);
+      const call = () => deps.models.generate({ ...request, ...toolBridge, ...(onToolEvent ? { onToolEvent } : {}), ...(abortSignal ? { signal: abortSignal } : {}), source: llmSourceOf(plugin), paramsKey: key }, delta, onThinking);
+      const out = paced === null ? await call() : await pacerFor(deps.owner).run(call, () => !sentText);
       // cancelled generations never commit: the client owns what a cancel
       // keeps (it froze the exact on-screen bytes) and writes them itself
       results.llm[key] = streamTag && deps.consumeCancel?.(streamTag) ? emptyGeneration() : out;
@@ -790,7 +798,9 @@ async function runPassRequests(
     } finally {
       if (abortSignal && streamTag) deps.genDone?.(streamTag);
     }
-  }
+  };
+  // without `limits.concurrency` one request after another, as always
+  await runLimited((r.llmRequests ?? []).map((q) => () => oneRequest(q)), paced ?? 1);
   return results;
 }
 
@@ -800,7 +810,7 @@ export async function runPluginRoute(
   deps: PluginRuntimeDeps,
 ): Promise<PluginRouteResponse | null> {
   if (!hasCapAny(plugin, "routes", deps)) return null;
-  const MAX_ROUTE_PASSES = 3;
+  const MAX_ROUTE_PASSES = passLimit(plugin);
   const caps = passCaps(plugin, deps);
   let results = noResults();
   // pass-A carry-all: the sandbox module is re-evaluated fresh EVERY pass, so
@@ -940,11 +950,20 @@ export interface PluginManifest {
   /** Ids of sibling plugins (same plugins/ folder) this one takes over from,
    *  e.g. after a rename. A replaced sibling stays on disk but never runs. */
   replaces?: string[];
+  /** More room for model work. `passes`: how many rounds of model calls a hook or
+   *  route may take (3 to 12, default 3), for a chain of calls that depend on each
+   *  other. `concurrency`: the requests of one round run side by side, up to this
+   *  many (1 to 4), spaced out, and one the provider refused with a 429 is tried
+   *  again after a pause. Absent: one request after another, as before. */
+  limits?: PluginLimits;
 }
 
 // ---------- hook execution (two-phase llm exchange, worker-isolated) ----------
 
-const MAX_PASSES = 3;
+/** How many rounds of model calls this plugin's hook or route may take. */
+function passLimit(plugin: LoadedPlugin): number {
+  return readLimits(plugin.manifest.limits).passes;
+}
 
 /** Limits for a hook allowed to take long (an app's data upgrade). */
 export interface HookLimits {
@@ -995,8 +1014,9 @@ async function hookPasses(
 
   let results = noResults();
   let current: Record<string, unknown> = ctx;
+  const maxPasses = passLimit(plugin);
 
-  for (let pass = 0; pass < MAX_PASSES; pass++) {
+  for (let pass = 0; pass < maxPasses; pass++) {
     const r = await box.eval({
       source: plugin.source,
       hook,
@@ -1027,8 +1047,8 @@ async function hookPasses(
 
     const out = (r.out as Record<string, unknown> | null) ?? null;
     if (!passWants(r, caps)) return { ok: true, out };
-    if (pass === MAX_PASSES - 1) {
-      log.warn(`[plugin:${plugin.id}] ${hook}: exceeded ${MAX_PASSES} passes; using last good ctx`);
+    if (pass === maxPasses - 1) {
+      log.warn(`[plugin:${plugin.id}] ${hook}: exceeded ${maxPasses} passes; using last good ctx`);
       return { ok: true, out };
     }
     results = await runPassRequests(plugin, r, deps, caps, "hook");
