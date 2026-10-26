@@ -15,6 +15,7 @@ The engine runs the request, then runs your export **again from scratch**.
 - Tell the passes apart by the result: `const r = host.llm.results.myKey; if (!r) { /* pass A */ }`.
 - Pass A **writes nothing**. `host.fs.write` is immediate, and `host.store.put` is applied after **every** pass, pass A included. A write on pass A lands before the model has answered.
 - At most 3 passes, so at most 2 request rounds. A third round is dropped silently. Plan: ask everything you need in pass A, then use pass B. If you truly need two rounds, pass B asks and pass C commits.
+- A plugin whose work is a chain of dependent model calls can ask for more in `manifest.json`: `"limits": { "passes": 8, "concurrency": 3 }`. `passes` (3 to 12, default 3) is how many passes a hook or route may take. `concurrency` (1 to 4) runs the requests of one pass side by side, spaced out, and tries a request again after a rate-limit error (429) from the provider. Without it, requests run one after another and a refusal is not retried. Ask only for what the plugin needs: every pass runs the module again and every request costs the user's quota.
 - Up to 16 llm, 8 embed and 32 net requests per pass. Several keys in one pass run in the same round.
 - Each pass has a 10 s execution limit. Do heavy work (big parsing) once, on the pass that needs it.
 - A failed model call still returns a result: `{ text: "", model: "error", error: "…" }`. Always check `r.error || !r.text` before committing. Free OpenRouter models fail often (rate limits).
