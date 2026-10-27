@@ -36,6 +36,7 @@ import { writeStdioApproval, type McpServerConfig } from "./mcp/registry.js";
 import { bindLegacyKeys } from "./connections.js";
 import { readLock, releaseLock, runningEngine, writeLock } from "./lock.js";
 import { rollBack, snapshotOnVersionChange } from "./rollback.js";
+import { planRestore, restoreApp } from "./apps/restore.js";
 import { cleanUpAfterUpdate, programNames, runReplacement, SELF_UPDATE, updateState } from "./self-update.js";
 import { dataFormatProblem, recordDataFormat } from "./data-format.js";
 import { pruneUnchangedSkillCopies } from "./agent/memory.js";
@@ -84,6 +85,11 @@ Commands:
                            (Molfar Vertep must be stopped). A downloaded copy
                            swaps its program back; from source, the launcher
                            runs this, then checks out that version
+  restore-app <app> [--yes] [--user <u>]
+                           Put an app's code back to the version it shipped in
+                           (Molfar Vertep must be stopped). Without --yes it only
+                           lists what is wrong and what would change. Your data
+                           stays; the replaced files stay in the workspace history
   install-cli              Put chrysalis on your PATH so the two commands above
                            work from anywhere (uninstall-cli undoes it)
 
@@ -158,6 +164,8 @@ async function main(): Promise<void> {
       return callApi(dataDir, args, asUser);
     case "rollback":
       return rollbackCommand(dataDir, args[0]);
+    case "restore-app":
+      return restoreAppCommand(dataDir, args[0], asUser, args.includes("--yes"));
     case "install-cli":
       return installCli(dataDir, false);
     case "uninstall-cli":
@@ -517,6 +525,27 @@ async function rollbackCommand(dataDir: string, to: string | undefined): Promise
     fail(`cannot go back: ${(e as Error).message}`);
   }
   if (process.platform === "win32" && INSTALL_KIND === "binary" && process.stdin.isTTY) prompt("Press Enter to close.");
+}
+
+async function restoreAppCommand(dataDir: string, appId: string | undefined, asUser: string | undefined, apply: boolean): Promise<void> {
+  if (!appId) fail("usage: chrysalis restore-app <app> [--yes] [--user <name>]");
+  const live = await runningEngine(dataDir);
+  if (live) fail(`Molfar Vertep is running (${live.url}). Stop it first, then run this again.`);
+  const username = pickUser(dataDir, asUser);
+  try {
+    const plan = apply ? await restoreApp(dataDir, username, appId) : planRestore(dataDir, username, appId);
+    const list = (title: string, rows: string[]) => { if (rows.length) console.log(`${title}\n${rows.map((r) => `  ${r}`).join("\n")}`); };
+    console.log(`${plan.app} of ${plan.user}: back to the version it shipped in, v${plan.version}.`);
+    list("What keeps it from starting:", plan.problems.map((x) => `${x.file}: ${x.what}`));
+    if (!plan.problems.length) console.log("No broken file found; every file that differs from the shipped one would still be replaced.");
+    list("Files that change:", plan.changed);
+    list("Files that come back:", plan.added);
+    list("Files that go:", plan.removed);
+    if (!plan.changed.length && !plan.added.length && !plan.removed.length) console.log("The app already is the shipped version.");
+    console.log(apply ? "Done. Your data was not touched; the replaced files are in the workspace history." : "Nothing was changed yet.");
+  } catch (e) {
+    fail(`cannot restore: ${(e as Error).message}`);
+  }
 }
 
 async function resetPassword(dataDir: string, username: string | undefined): Promise<void> {

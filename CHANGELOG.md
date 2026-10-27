@@ -5,7 +5,11 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
-## Unreleased
+## 1.6.0 (2026-10-27)
+
+- Restore Roleplay from the launcher (#157): `Molfar-Vertep.bat restore`, or 8 in the menu, lists what keeps the app from starting (a merge conflict marker left by an update, a plugin that does not parse) and what would change, asks, then writes the version the app shipped in over its code. `data/`, the manifest and the packages are never touched, the built interface is dropped (it rebuilds on the next open), and one workspace commit keeps the replaced files in history. The same is `chrysalis restore-app <app> [--yes] [--user <name>]` (Molfar Vertep must be stopped). Without `--yes` it only lists. It stops where the saved copy of the shipped version is missing or broken itself.
+- Roleplay 4.73.0 comes with this release as an app update: the dice for the World DM, an Agents segment in the chat header bar. Details in the Roleplay changelog.
+
 
 ## 1.5.1 (2026-10-26)
 
