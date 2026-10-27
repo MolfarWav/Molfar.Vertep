@@ -11,6 +11,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 - Roleplay 4.73.0 comes with this release as an app update: the dice for the World DM, an Agents segment in the chat header bar. Details in the Roleplay changelog.
 
 
+## 1.5.2 (2026-10-27)
+
+- Roleplay 4.72.0 comes with this release as an app update: the context window is the model's alone (a preset carries none; an unknown window is 32768 and the chat says so), Litopys no longer cuts a chat that fits the window (the cut is a ceiling, the window decides; recent messages default 100), an optional cut by scenes, coloured dialogue of other characters in your own message, the Agents sheet lets you set how often an installed agent runs, the Input card gets a message count and a token cap, Try shows the prompt size, and replies can name eight bundled fonts in Latin and Cyrillic (#126). No engine code changed.
+
 ## 1.5.1 (2026-10-26)
 
 - App updates: a template an app ships (an underscore file under `data/`, like Roleplay's `_vertep-lite.json`) is now replaced when it changed; before, only a missing one was added, so a changed built-in preset never reached a workspace that already had the old template. The workspace is committed before the update writes, so the old text stays in its history.
