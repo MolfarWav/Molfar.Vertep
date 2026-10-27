@@ -10,6 +10,7 @@ rem   Molfar-Vertep.bat dev NAME   update to the work branch claude/NAME (anothe
 rem                                session's newer branch does not take its place)
 rem   Molfar-Vertep.bat nopull     start without checking for updates
 rem   Molfar-Vertep.bat previous   go back to the release before the one you have
+rem   Molfar-Vertep.bat restore    put Roleplay's code back to the version it shipped in
 rem   Molfar-Vertep.bat yes        do not ask: take the update
 rem   Molfar-Vertep.bat rebuild    reinstall packages and rebuild, then start
 rem   Molfar-Vertep.bat tools      also check Git and Bun for updates
@@ -86,6 +87,7 @@ set "MV_TOOLS="
 set "MV_SHORTCUT="
 set "MV_PICK="
 set "MV_PREV="
+set "MV_RESTORE="
 set "MV_ARGS="
 set "MV_TAKE="
 set "MV_CLONED="
@@ -94,7 +96,7 @@ if "%~1"=="" goto args_done
 set "MV_ARGS=1"
 rem a word that is no option names the work branch
 set "MV_KNOWN="
-for %%o in (dev nopull yes -y rebuild tools shortcut previous) do if /i "%~1"=="%%o" set "MV_KNOWN=1"
+for %%o in (dev nopull yes -y rebuild tools shortcut previous restore) do if /i "%~1"=="%%o" set "MV_KNOWN=1"
 if not defined MV_KNOWN set "MV_PICK=%~1"
 if /i "%~1"=="dev" set "MV_DEV=1"
 if /i "%~1"=="nopull" set "MV_NOPULL=1"
@@ -104,6 +106,7 @@ if /i "%~1"=="rebuild" set "MV_FULL=1"
 if /i "%~1"=="tools" set "MV_TOOLS=1"
 if /i "%~1"=="shortcut" set "MV_SHORTCUT=1"
 if /i "%~1"=="previous" set "MV_PREV=1"
+if /i "%~1"=="restore" set "MV_RESTORE=1"
 shift
 goto args_loop
 :args_done
@@ -244,6 +247,7 @@ echo %MV_C%%MV_R%4%MV_0%  Newest work branch (dev), then start
 echo %MV_C%%MV_R%5%MV_0%  Go back to the previous release
 echo %MV_C%%MV_R%6%MV_0%  Check the files
 echo %MV_C%%MV_R%7%MV_0%  Reinstall packages and rebuild, then start
+echo %MV_C%%MV_R%8%MV_0%  Restore Roleplay to the version it shipped in
 echo %MV_C%%MV_R%0%MV_0%  Quit
 echo.
 goto menu_ask
@@ -258,14 +262,15 @@ echo    4  Newest work branch (dev), then start
 echo    5  Go back to the previous release
 echo    6  Check the files
 echo    7  Reinstall packages and rebuild, then start
+echo    8  Restore Roleplay to the version it shipped in
 echo    0  Quit
 echo.
 :menu_ask
 if "%MV_MENU_WAIT%"=="0" goto menu_key
-choice /c 12345670 /n /t %MV_MENU_WAIT% /d 1 /m "Press a number. With none, 1 in %MV_MENU_WAIT% seconds: "
+choice /c 123456780 /n /t %MV_MENU_WAIT% /d 1 /m "Press a number. With none, 1 in %MV_MENU_WAIT% seconds: "
 goto menu_pick
 :menu_key
-choice /c 12345670 /n /m "Press a number: "
+choice /c 123456780 /n /m "Press a number: "
 :menu_pick
 set "MV_KEY=%errorlevel%"
 if "%MV_KEY%"=="2" set "MV_NOPULL=1"
@@ -276,11 +281,13 @@ if "%MV_KEY%"=="5" set "MV_PREV=1"
 if "%MV_KEY%"=="6" goto check
 if "%MV_KEY%"=="7" set "MV_FULL=1"
 if "%MV_KEY%"=="7" set "MV_NOPULL=1"
-rem errorlevel is the place in /c: 8 is the key 0
-if "%MV_KEY%"=="8" goto done
+if "%MV_KEY%"=="8" set "MV_RESTORE=1"
+rem errorlevel is the place in /c: 9 is the key 0
+if "%MV_KEY%"=="9" goto done
 :menu_done
 
 if defined MV_PREV goto previous
+if defined MV_RESTORE goto restore_app
 if defined MV_NOPULL goto deps
 
 rem ---------- updates ----------
@@ -429,6 +436,31 @@ echo %MV_H%=== Checking your data for %MV_TARGET%...%MV_0%
 call bun run src/index.ts rollback %MV_TARGET:~1%
 if errorlevel 1 goto fail
 goto checkout
+
+rem ---------- restore Roleplay (8 in the menu) ----------
+rem An app that does not start leaves no way into its own screens. This lists
+rem what is wrong and what would change, asks, then writes the version the app
+rem shipped in over its code. The data folder is never touched; the replaced
+rem files stay in the workspace history (chrysalis restore-app).
+:restore_app
+if not exist "src\apps\restore.ts" (
+  echo %MV_W%This version of Molfar Vertep has no restore step. Update it first.%MV_0%
+  goto fail
+)
+echo %MV_H%=== Roleplay: what is wrong, and what would change...%MV_0%
+call bun run src/index.ts restore-app roleplay
+if errorlevel 1 goto fail
+call :ask "Put Roleplay back to the version it shipped in"
+if errorlevel 2 (
+  echo %MV_W%Nothing was changed.%MV_0%
+  set "MV_RESTORE="
+  goto menu
+)
+call bun run src/index.ts restore-app roleplay --yes
+if errorlevel 1 goto fail
+set "MV_RESTORE="
+set "MV_NOPULL=1"
+goto deps
 
 rem ---------- check the files (C in the menu) ----------
 rem What a start needs, without changing anything: the engine's own files as
