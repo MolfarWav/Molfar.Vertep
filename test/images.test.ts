@@ -11,7 +11,7 @@ import os from "node:os";
 import path from "node:path";
 import {
   ImageError, comfyVars, createImageEndpoint, endpointGenerate, endpointPromptStyle, listEndpointOptions, imageEndpoint, imageHosts, listEndpointModels, listImageEndpoints,
-  nanoGptGenerate, nanoGptImageModels, providerError, imageErrorBody, setComfyPollMs, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
+  geminiGenerate, geminiImageModels, nanoGptGenerate, nanoGptImageModels, providerError, imageErrorBody, setComfyPollMs, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
   type ImageEndpointDef,
 } from "../src/images.js";
 import { UserModelService, defaultImageModel, type ImageModelInfo } from "../src/models.js";
@@ -375,6 +375,80 @@ describe("NanoGPT", () => {
     expect(call.auth).toBe("Bearer sk-nano");
     expect(call.body).toMatchObject({ model: "hidream", prompt: "a fox", size: "1024x1536", response_format: "b64_json" });
     expect(seen.find((s) => s.method === "GET")!.auth).toBeNull();
+  });
+});
+
+describe("Gemini API", () => {
+  const imagenAnswer = () => json({ predictions: [{ bytesBase64Encoded: PNG.toString("base64"), mimeType: "image/png" }] });
+  const geminiAnswer = () => json({ candidates: [{ content: { parts: [{ text: "Here you go" }, { inlineData: { mimeType: "image/png", data: PNG.toString("base64") } }] } }] });
+
+  it("lists only image models the key can call, and sends the key in a header", async () => {
+    imageHosts.gemini = base;
+    reset({
+      "GET /v1beta/models": () => json({ models: [
+        { name: "models/imagen-4.0-generate-001", displayName: "Imagen 4", supportedGenerationMethods: ["predict"] },
+        { name: "models/gemini-2.5-flash-image", displayName: "Nano Banana", supportedGenerationMethods: ["generateContent", "countTokens"] },
+        { name: "models/gemini-2.5-flash", displayName: "Gemini 2.5 Flash", supportedGenerationMethods: ["generateContent"] },
+        { name: "models/imagen-old", displayName: "No predict", supportedGenerationMethods: ["generateContent"] },
+        { name: "models/text-embedding-004", supportedGenerationMethods: ["embedContent"] },
+      ] }),
+    });
+    expect(await geminiImageModels("g-key")).toEqual([
+      { id: "imagen-4.0-generate-001", label: "Imagen 4" },
+      { id: "gemini-2.5-flash-image", label: "Nano Banana" },
+    ]);
+    expect(seen[0]!.path).toContain("pageSize");
+  });
+
+  it("draws with Imagen through :predict and with Gemini Image through :generateContent", async () => {
+    imageHosts.gemini = base;
+    reset({
+      "POST /v1beta/models/imagen-4.0-generate-001:predict": imagenAnswer,
+      "POST /v1beta/models/gemini-2.5-flash-image:generateContent": geminiAnswer,
+    });
+    const a = await geminiGenerate("g-key", "imagen-4.0-generate-001", "a fox");
+    expect(a.data.equals(PNG)).toBe(true);
+    expect(seen[0]!.body).toMatchObject({ instances: [{ prompt: "a fox" }], parameters: { sampleCount: 1 } });
+    const b = await geminiGenerate("g-key", "gemini-2.5-flash-image", "a fox");
+    expect(b.mimeType).toBe("image/png");
+    expect(seen[1]!.body).toMatchObject({ contents: [{ parts: [{ text: "a fox" }] }], generationConfig: { responseModalities: ["TEXT", "IMAGE"] } });
+  });
+
+  it("says why in plain words: a bad key, a refusal as text, a blocked prompt, a filtered Imagen picture", async () => {
+    imageHosts.gemini = base;
+    reset({
+      "POST /v1beta/models/bad:generateContent": () => json({ error: { code: 400, message: "API key not valid. Please pass a valid API key.", status: "INVALID_ARGUMENT" } }, 400),
+    });
+    const key = await rejects(geminiGenerate("nope", "bad", "x"));
+    expect([key.status, key.code]).toEqual([401, "key"]);
+    reset({
+      "POST /v1beta/models/gemini-x-image:generateContent": () => json({ candidates: [{ content: { parts: [{ text: "I cannot draw that." }] } }] }),
+      "POST /v1beta/models/gemini-y-image:generateContent": () => json({ promptFeedback: { blockReason: "SAFETY" } }),
+      "POST /v1beta/models/imagen-z:predict": () => json({ predictions: [{ raiFilteredReason: "Blocked by safety filter" }] }),
+    });
+    expect((await rejects(geminiGenerate("k", "gemini-x-image", "x"))).message).toContain("I cannot draw that.");
+    expect((await rejects(geminiGenerate("k", "gemini-y-image", "x"))).message).toContain("SAFETY");
+    const filtered = await rejects(geminiGenerate("k", "imagen-z", "x"));
+    expect([filtered.code, filtered.message]).toEqual(["refused", expect.stringContaining("safety filter")]);
+  });
+
+  it("joins the model service when the Google provider has a key", async () => {
+    imageHosts.gemini = base;
+    const p = bootstrapUserDir(dataDir, "gem");
+    fs.mkdirSync(path.dirname(p.auth), { recursive: true });
+    fs.writeFileSync(p.connections, JSON.stringify({ connections: { c_g: { name: "My Gemini", providerId: "google" } } }));
+    fs.writeFileSync(p.auth, JSON.stringify({ google: { type: "api_key", key: "g-key-svc" } }), { mode: 0o600 });
+    reset({
+      "GET /v1beta/models": () => json({ models: [{ name: "models/gemini-2.5-flash-image", displayName: "Nano Banana", supportedGenerationMethods: ["generateContent"] }] }),
+      "POST /v1beta/models/gemini-2.5-flash-image:generateContent": geminiAnswer,
+    });
+    const svc = new UserModelService("gem", p, defaultInstanceConfig());
+    const models = await svc.imageModels();
+    expect(models.find((m) => m.provider === "gemini")).toMatchObject({ id: "gemini-2.5-flash-image", api: "gemini-images", connectionName: "My Gemini" });
+    const out = await svc.generateImage({ prompt: "a fox", model: "gemini/gemini-2.5-flash-image" });
+    expect(out.data.equals(PNG)).toBe(true);
+    expect(out.model).toBe("gemini/gemini-2.5-flash-image");
+    expect(seen.find((s) => s.method === "POST")!.path).toBe("/v1beta/models/gemini-2.5-flash-image:generateContent");
   });
 });
 

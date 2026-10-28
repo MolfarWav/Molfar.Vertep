@@ -3,6 +3,7 @@
  * any app reaches them through POST /v1/images):
  *
  *  · NanoGPT — the user's NanoGPT connection key, endpoint fixed in code.
+ *  · Gemini — the user's Google (AI Studio) key, endpoint fixed in code.
  *  · Image endpoints — user-configured servers: a local ComfyUI, a local
  *    AUTOMATIC1111 / Forge, or any OpenAI-compatible /images/generations.
  *    Definitions live in images.json beside the credentials (outside the
@@ -104,7 +105,7 @@ export function imageErrorBody(e: unknown): { error: string; code?: ImageErrorCo
 export type ImageErrorCode = "key" | "credit" | "rate" | "unknown_model" | "refused" | "failed" | "timeout" | "unreachable" | "not_found" | "redirect" | "no_picture";
 
 /** Fixed hosts. Tests point these at a mock server. */
-export const imageHosts = { nanogpt: "https://nano-gpt.com" };
+export const imageHosts = { nanogpt: "https://nano-gpt.com", gemini: "https://generativelanguage.googleapis.com" };
 
 const MAX_IMAGE_BYTES = 30 * 1024 * 1024;
 const MAX_JSON_BYTES = 8 * 1024 * 1024;
@@ -666,6 +667,78 @@ export async function nanoGptGenerate(key: string, model: string, prompt: string
     who,
   );
   return readImagesAnswer(res, who, null);
+}
+
+// ---------- Google Gemini API (Imagen and Gemini Image, "Nano Banana") ----------
+
+let geminiCache: { at: number; base: string; key: string; models: ListedImageModel[] } | null = null;
+
+/** Imagen answers `:predict`; Gemini Image models answer `:generateContent`. */
+const isImagen = (model: string): boolean => /^imagen/i.test(model);
+
+/** Google answers a bad key with 400 "API key not valid", not 401. */
+async function geminiFailUnlessOk(res: Response, who: string): Promise<void> {
+  if (res.ok) return;
+  const body = (await readCapped(res, 64 * 1024, who).catch(() => Buffer.alloc(0))).toString("utf8");
+  throw providerError(who, res.status === 400 && /api key not valid|api_key_invalid/i.test(body) ? 401 : res.status, body);
+}
+
+/** The image models a Google AI Studio key can use (listed live, cached ten minutes). */
+export async function geminiImageModels(key: string): Promise<ListedImageModel[]> {
+  const base = imageHosts.gemini;
+  if (geminiCache && geminiCache.base === base && geminiCache.key === key && Date.now() - geminiCache.at < 10 * 60_000) return geminiCache.models;
+  const who = "Gemini";
+  const res = await call(`${base}/v1beta/models?pageSize=200`, { headers: { "x-goog-api-key": key }, timeout: 15_000 }, who);
+  await geminiFailUnlessOk(res, who);
+  const body = (await readJson(res, who)) as { models?: unknown };
+  const models: ListedImageModel[] = [];
+  for (const m of Array.isArray(body.models) ? body.models : []) {
+    const r = m as { name?: unknown; displayName?: unknown; supportedGenerationMethods?: unknown };
+    const id = typeof r.name === "string" ? r.name.replace(/^models\//, "") : "";
+    if (!id || !/^(imagen-|gemini-.*image)/i.test(id)) continue;
+    const methods = Array.isArray(r.supportedGenerationMethods) ? r.supportedGenerationMethods : [];
+    if (!methods.includes(isImagen(id) ? "predict" : "generateContent")) continue;
+    models.push({ id, label: typeof r.displayName === "string" && r.displayName ? r.displayName : id });
+  }
+  geminiCache = { at: Date.now(), base, key, models };
+  return models;
+}
+
+export async function geminiGenerate(key: string, model: string, prompt: string): Promise<{ data: Buffer; mimeType: string }> {
+  const who = "Gemini";
+  const imagen = isImagen(model);
+  const res = await call(
+    `${imageHosts.gemini}/v1beta/models/${encodeURIComponent(model)}:${imagen ? "predict" : "generateContent"}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify(imagen
+        ? { instances: [{ prompt }], parameters: { sampleCount: 1 } }
+        : { contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseModalities: ["TEXT", "IMAGE"] } }),
+      timeout: GENERATE_TIMEOUT,
+    },
+    who,
+  );
+  await geminiFailUnlessOk(res, who);
+  const body = (await readJson(res, who, MAX_IMAGE_JSON_BYTES)) as Record<string, unknown>;
+  if (imagen) {
+    const first = (Array.isArray(body.predictions) ? body.predictions[0] : undefined) as { bytesBase64Encoded?: unknown; raiFilteredReason?: unknown } | undefined;
+    if (typeof first?.bytesBase64Encoded === "string" && first.bytesBase64Encoded) return fromBase64(first.bytesBase64Encoded, who);
+    const why = typeof first?.raiFilteredReason === "string" ? first.raiFilteredReason : "";
+    throw new ImageError(why ? `${who} did not draw this: ${why}` : `${who} answered without a picture`, why ? 400 : 502, why ? "refused" : "no_picture", { who, detail: why });
+  }
+  const cand = (Array.isArray(body.candidates) ? body.candidates[0] : undefined) as { content?: { parts?: unknown } } | undefined;
+  const parts = (Array.isArray(cand?.content?.parts) ? cand.content.parts : []) as { text?: unknown; inlineData?: { data?: unknown }; inline_data?: { data?: unknown } }[];
+  for (const p of parts) {
+    const data = (p.inlineData ?? p.inline_data)?.data;
+    if (typeof data === "string" && data) return fromBase64(data, who);
+  }
+  // a refusal comes as text, or as a block reason on the prompt
+  const said = parts.map((p) => (typeof p.text === "string" ? p.text : "")).join(" ").replace(/\s+/g, " ").trim();
+  const block = (body.promptFeedback as { blockReason?: unknown } | undefined)?.blockReason;
+  const detail = said ? said.slice(0, 300) : typeof block === "string" ? block : "";
+  if (detail) throw new ImageError(`${who} did not draw this: ${detail}`, 400, "refused", { who, detail });
+  throw new ImageError(`${who} answered without a picture`, 502, "no_picture", { who });
 }
 
 // ---------- a workflow exported from ComfyUI ----------
