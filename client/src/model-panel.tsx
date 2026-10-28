@@ -11,7 +11,7 @@ import { inputClass } from "./settings"
 import { listPlugins, modelParamsApi, modelsApi, type CacheCheck, type ModelDetails, type ModelParamsEntry, type ParamBlock } from "./api"
 
 type Key = keyof ParamBlock
-type Kind = "number" | "int" | "reasoning" | "tags" | "json"
+type Kind = "number" | "int" | "reasoning" | "tier" | "tags" | "json"
 interface FieldDef {
   key: Key
   label: string
@@ -32,7 +32,7 @@ interface FieldState {
 }
 type Form = Partial<Record<Key, FieldState>>
 
-const SHORT: Key[] = ["temperature", "max_tokens", "reasoning", "thinkingBudget", "params"]
+const SHORT: Key[] = ["temperature", "max_tokens", "reasoning", "thinkingBudget", "serviceTier", "params"]
 const DEFAULTS: Record<Key, FieldState> = {
   temperature: { on: true, text: "1" },
   top_p: { on: true, text: "1" },
@@ -45,6 +45,7 @@ const DEFAULTS: Record<Key, FieldState> = {
   max_tokens: { on: true, text: "2048" },
   reasoning: { on: true, text: "medium" },
   thinkingBudget: { on: true, text: "2048" },
+  serviceTier: { on: true, text: "flex" },
   reasoningTags: { on: true, text: "<think>", text2: "</think>" },
   params: { on: true, text: "{}" },
   headers: { on: true, text: "{}" },
@@ -107,6 +108,7 @@ function fields(): FieldDef[] {
     { key: "max_tokens", label: tr("Max output tokens"), kind: "int", min: 1, max: 1000000 },
     { key: "reasoning", label: tr("Reasoning"), kind: "reasoning" },
     { key: "thinkingBudget", label: tr("Thinking budget, tokens"), kind: "int", min: 0, max: 1000000 },
+    { key: "serviceTier", label: tr("Service tier"), kind: "tier", hint: tr("The lane OpenRouter serves the request on. It bills by the lane that served it, so the cost Molfar Vertep shows can differ.") },
     { key: "reasoningTags", label: tr("Thinking tags"), kind: "tags", hint: tr("For models that write their thinking inside tags in the reply.") },
     { key: "params", label: tr("Custom parameters"), kind: "json", hint: tr("A JSON object, sent as it is (for example provider routing).") },
     { key: "headers", label: tr("Extra headers"), kind: "json", hint: tr("A JSON object of text values. No keys or passwords here: the connection carries those.") },
@@ -139,7 +141,7 @@ function fromForm(form: Form, defs: FieldDef[]): { block: ParamBlock; errors: Pa
       if (!f.text.trim() || !Number.isFinite(n) || (def.kind === "int" && !Number.isInteger(n)) || n < (def.min ?? -Infinity) || n > (def.max ?? Infinity)) {
         errors[def.key] = def.kind === "int" ? tr("A whole number from {min} to {max}", { min: def.min ?? "", max: def.max ?? "" }) : tr("A number from {min} to {max}", { min: def.min ?? "", max: def.max ?? "" })
       } else block[def.key] = n
-    } else if (def.kind === "reasoning") block[def.key] = f.text
+    } else if (def.kind === "reasoning" || def.kind === "tier") block[def.key] = f.text
     else if (def.kind === "tags") {
       if (!f.text.trim() || !f.text2?.trim()) errors[def.key] = tr("Both tags are needed")
       else block[def.key] = { open: f.text.trim(), close: f.text2.trim() }
@@ -154,6 +156,15 @@ function fromForm(form: Form, defs: FieldDef[]): { block: ParamBlock; errors: Pa
     }
   }
   return { block: block as ParamBlock, errors }
+}
+
+/** OpenRouter's service tiers, with what each one trades (the values are OpenRouter's own words). */
+const TIERS = ["default", "flex", "priority", "ultrafast"] as const
+function tierNote(tier: string): string {
+  if (tier === "flex") return tr("Flex: cheaper, slower; the reply may wait in a queue.")
+  if (tier === "priority") return tr("Priority: faster, costs more.")
+  if (tier === "ultrafast") return tr("Ultrafast: the fastest lane, costs the most.")
+  return tr("Default: OpenRouter's normal speed and price.")
 }
 
 /** The block name of a plugin from GET /v1/plugins: "roleplay__relations" from "app:roleplay" -> plugin:roleplay/relations. */
@@ -210,7 +221,9 @@ export function ModelPanel(props: { model: ModelDetails; onClose: () => void; on
   const dirty = stored !== null && JSON.stringify(forms) !== JSON.stringify(initial)
   const pluginNames = Object.keys(forms).filter((n) => n.startsWith("plugin:"))
   const labelOf = (name: string) => plugins.find((p) => p.block === name)?.name ?? name.slice(name.indexOf("/") + 1)
-  const blockDefs = block === "chat" || block === "molfar" ? defs : defs.filter((d) => SHORT.includes(d.key))
+  // the tier is OpenRouter's: no other model is offered it
+  const offered = (d: FieldDef) => d.key !== "serviceTier" || model.provider === "openrouter" || !!forms[block]?.serviceTier
+  const blockDefs = (block === "chat" || block === "molfar" ? defs : defs.filter((d) => SHORT.includes(d.key))).filter(offered)
   const form = forms[block] ?? {}
   const checked = fromForm(form, blockDefs)
   const anthropic = model.api === "anthropic-messages"
@@ -335,7 +348,7 @@ export function ModelPanel(props: { model: ModelDetails; onClose: () => void; on
         <div className="flex flex-col gap-2">
           {blockDefs.map((def) => {
             if (def.key === "thinkingBudget" && (!form.reasoning?.on || form.reasoning.text === "off")) return null
-            const notSent = anthropic && !!def.sampler
+            const notSent = anthropic && (!!def.sampler || def.key === "serviceTier")
             return (
               <FieldRow
                 key={def.key}
@@ -448,6 +461,9 @@ function FieldRow(props: { def: FieldDef; state: FieldState | undefined; error?:
         {on && def.kind === "reasoning" ? (
           <Select options={props.levels} current={state?.text ?? "medium"} label={(x) => x} appearance="inline" onSelect={(v) => v && props.onChange({ on: true, text: v })} />
         ) : null}
+        {on && def.kind === "tier" ? (
+          <Select options={[...TIERS]} current={state?.text ?? "flex"} label={(x) => x} appearance="inline" onSelect={(v) => v && props.onChange({ on: true, text: v })} />
+        ) : null}
       </div>
       {on && def.kind === "tags" ? (
         <div className="flex gap-2 pl-6">
@@ -464,6 +480,7 @@ function FieldRow(props: { def: FieldDef; state: FieldState | undefined; error?:
           onChange={(e) => props.onChange({ on: true, text: e.currentTarget.value })}
         />
       ) : null}
+      {on && def.kind === "tier" ? <div className="pl-6 text-12 text-ink-muted">{tierNote(state?.text ?? "flex")}</div> : null}
       {on && def.hint ? <div className="pl-6 text-11 text-ink-faint">{def.hint}</div> : null}
       {on && props.error ? <div className="pl-6 text-11 text-danger">{props.error}</div> : null}
     </div>

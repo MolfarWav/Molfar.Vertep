@@ -123,6 +123,8 @@ export interface ParamBlock {
   reasoning?: "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max"
   thinkingBudget?: number
   reasoningTags?: { open: string; close: string }
+  /** OpenRouter models only: the lane the request is served on. */
+  serviceTier?: "default" | "flex" | "priority" | "ultrafast"
   params?: Record<string, unknown>
   headers?: Record<string, string>
 }

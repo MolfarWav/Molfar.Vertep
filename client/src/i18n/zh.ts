@@ -889,6 +889,12 @@ const dict = {
   "could not find {who} at {host}: check the address": "在 {host} 上找不到 {who}:请检查地址",
   "{who} redirected the request elsewhere: put the final address in Settings": "{who} 把请求重定向到了别处:请在设置中填写最终地址",
   "{who} answered without a picture": "{who} 返回了没有图片的响应",
+  "Service tier": "服务层级",
+  "The lane OpenRouter serves the request on. It bills by the lane that served it, so the cost Molfar Vertep shows can differ.": "OpenRouter 处理该请求所用的通道。按实际处理请求的通道计费，因此 Molfar Vertep 显示的费用可能有所不同。",
+  "Flex: cheaper, slower; the reply may wait in a queue.": "Flex：更便宜、更慢；回复可能需要排队等待。",
+  "Priority: faster, costs more.": "Priority：更快，费用更高。",
+  "Ultrafast: the fastest lane, costs the most.": "Ultrafast：最快的通道，费用最高。",
+  "Default: OpenRouter's normal speed and price.": "Default：OpenRouter 的常规速度和价格。",
 }
 
 export default dict

@@ -22,7 +22,7 @@ import { type PromptSources, systemPartsFor } from "./prompt-sources.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
 import { ImageError, endpointGenerate, endpointPromptStyle, imageEndpoint, listEndpointOptions, type EndpointOptions, listEndpointModels, listImageEndpoints, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, readImageFavorites, type ImageFavorite, type ListedImageModel } from "./images.js";
-import { blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
+import { acceptsServiceTier, blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
 
 /** The modify running on each auth.json, so the next one waits for it. */
 const authFileQueue = new Map<string, Promise<void>>();
@@ -820,7 +820,9 @@ export class UserModelService {
     const pricing = this.pricingOverrides();
     const globalCost = readCostChecksMode(this.paths.settings);
     const conns = readConnections(this.paths).connections;
-    return (await this.models.getAvailable()).map((m) => ({
+    // `:batch` twins (OpenRouter, Nous and others list one per model) are served by the provider's batch API
+    // only; chat/completions answers 404, so they never go in the list, whatever catalog they came from
+    return (await this.models.getAvailable()).filter((m) => !m.id.endsWith(":batch")).map((m) => ({
       provider: m.provider,
       modelId: m.id,
       api: this.textCompletions.has(m.provider) ? "openai-text" : String(m.api),
@@ -1197,7 +1199,7 @@ export class UserModelService {
   private withModelParams(model: Model<Api>, req: GenerateRequest): { req: GenerateRequest; applied: AppliedParams } {
     const entry = readModelParams(this.paths.root).models[`${model.provider}/${model.id}`];
     const name = blockFor(entry, { source: req.source, key: req.paramsKey });
-    const applied = mergeParams(blockValues(entry, name), name, req);
+    const applied = mergeParams(blockValues(entry, name), name, req, { serviceTier: acceptsServiceTier(model) });
     const { modelHeaders: _ignored, ...rest } = req;
     if (!applied.block) return { req: rest, applied };
     const presetParams: NonNullable<GenerateRequest["presetParams"]> = {
@@ -1622,7 +1624,7 @@ export class UserModelService {
           reasoning: own?.reasoning,
           presetParams: { temperature: own?.temperature, max_tokens: own?.maxTokens },
           paramsSource: "request",
-        })
+        }, { serviceTier: acceptsServiceTier(model) })
       : null;
     const fromBlock = applied
       ? {

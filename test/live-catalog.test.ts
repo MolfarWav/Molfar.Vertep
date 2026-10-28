@@ -60,6 +60,11 @@ describe("live additions", () => {
     expect(liveAdditions(openrouter, listed, LIVE_SOURCES.openrouter!).map((m) => m.id)).toEqual(["x/talker"]);
   });
 
+  it("drops the :batch twins OpenRouter lists, which chat/completions refuses with a 404", () => {
+    const listed = { data: [{ id: "x/talker:batch", architecture: { output_modalities: ["text"] } }, { id: "x/talker", architecture: { output_modalities: ["text"] } }] };
+    expect(liveAdditions(openrouter, listed, LIVE_SOURCES.openrouter!).map((m) => m.id)).toEqual(["x/talker"]);
+  });
+
   it("a plain list leaves the window unknown and thinks like the closest id", () => {
     const deepseek = builtin("deepseek").getModels() as Model<Api>[];
     const near = deepseek[0]!;

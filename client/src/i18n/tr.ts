@@ -889,6 +889,12 @@ const dict = {
   "could not find {who} at {host}: check the address": "{host} adresindeki {who} bulunamadı: adresi kontrol edin",
   "{who} redirected the request elsewhere: put the final address in Settings": "{who} isteği başka yere yönlendirdi: son adresi Ayarlar'a girin",
   "{who} answered without a picture": "{who} görsel olmadan yanıt verdi",
+  "Service tier": "Hizmet katmanı",
+  "The lane OpenRouter serves the request on. It bills by the lane that served it, so the cost Molfar Vertep shows can differ.": "OpenRouter'ın isteği hangi hat üzerinden sunduğunu belirler. Ücretlendirme isteği sunan hatta göre yapılır, bu yüzden Molfar Vertep'in gösterdiği maliyet farklı olabilir.",
+  "Flex: cheaper, slower; the reply may wait in a queue.": "Flex: daha ucuz, daha yavaş; yanıt bir kuyrukta bekleyebilir.",
+  "Priority: faster, costs more.": "Priority: daha hızlı, daha pahalı.",
+  "Ultrafast: the fastest lane, costs the most.": "Ultrafast: en hızlı hat, en pahalısı.",
+  "Default: OpenRouter's normal speed and price.": "Default: OpenRouter'ın normal hızı ve fiyatı.",
 }
 
 export default dict

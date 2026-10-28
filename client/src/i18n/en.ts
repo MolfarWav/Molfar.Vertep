@@ -891,6 +891,12 @@ const en = {
   "could not find {who} at {host}: check the address": "",
   "{who} redirected the request elsewhere: put the final address in Settings": "",
   "{who} answered without a picture": "",
+  "Service tier": "",
+  "The lane OpenRouter serves the request on. It bills by the lane that served it, so the cost Molfar Vertep shows can differ.": "",
+  "Flex: cheaper, slower; the reply may wait in a queue.": "",
+  "Priority: faster, costs more.": "",
+  "Ultrafast: the fastest lane, costs the most.": "",
+  "Default: OpenRouter's normal speed and price.": "",
 } as const
 
 export default en

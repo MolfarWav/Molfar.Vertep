@@ -256,6 +256,17 @@ describe("spend reporting", () => {
   });
 });
 
+describe("batch twins", () => {
+  it("a :batch id, from any catalog, is not offered (chat/completions refuses it with a 404)", async () => {
+    const p = bootstrapUserDir(dataDir, "bea");
+    const svc = new UserModelService("bea", p, defaultInstanceConfig());
+    const handle = fauxProvider({ provider: "agg-batch", models: [{ id: "vendor/talker" }, { id: "vendor/talker:batch" }] });
+    svc.models.setProvider(handle.provider);
+    const ids = (await svc.available()).filter((m) => m.provider === "agg-batch").map((m) => m.modelId);
+    expect(ids).toEqual(["vendor/talker"]);
+  });
+});
+
 describe("context window overrides (the attached value beats the catalog)", () => {
   it("override wins in available(); null clears back to the catalog number", async () => {
     const p = bootstrapUserDir(dataDir, "dave");
