@@ -1,9 +1,11 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-27.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-28.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
+
+## RELEASE 1.6.1 PREPARED (2026-10-28, on the owner's word "готуй реліз того що вже зроблено"; engine branch `claude/openrouter-service-tiers`, carries Roleplay 4.73.1 = Roleplay branch `claude/large-library-bootstrap`; the tag v1.6.1 is the owner's; nothing merged). Order: merge the engine PR, push the tag, update the engine, then merge the Roleplay PR (merging publishes 4.73.1 to the Updates panel). The Roleplay update alone fixes the OOM, whatever the engine version. Version, CHANGELOG, `.fork/release-notes/1.6.1.md` done; #159, #160, #161 close with "How it was solved" comments after the tag. Contents below.
 
 ## BIG LIBRARY START-UP FIX + `:batch` MODELS (2026-10-28, engine and Roleplay branches `claude/large-library-bootstrap`; issues #159, #160; NOT released, the tag and the release are the owner's)
 Report from Discord and Reddit after a mass SillyTavern import (about 1300 cards): "Can't reach the engine ... GET /bootstrap failed: out of memory", "hook returned non-serializable result", imports failing with "POST /import/batch failed: worker exited (1)". Cause (reproduced on a throwaway engine with 1300 cards and 1300 books of 45 entries, 108 MB): Roleplay's `/bootstrap` returned every lorebook whole, about 100 KB each, past the plugin sandbox's 64 MB heap. The sandbox is ONE shared worker per engine, so the kill also failed unrelated in-flight calls, which is why imports died with "worker exited". Same family as #46 (cards), which was fixed the same way.
