@@ -13,6 +13,11 @@ export const MODEL_PARAMS_FILE = "model-params.json";
 export const REASONING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 export type ReasoningLevel = (typeof REASONING_LEVELS)[number];
 
+/** OpenRouter's service tiers: which serving lane a request takes (flex: cheaper and slower, priority and
+ *  ultrafast: dearer and quicker). Sent as the body field `service_tier`, to OpenRouter models only. */
+export const SERVICE_TIERS = ["default", "flex", "priority", "ultrafast"] as const;
+export type ServiceTier = (typeof SERVICE_TIERS)[number];
+
 export interface ParamBlock {
   temperature?: number;
   top_p?: number;
@@ -26,6 +31,7 @@ export interface ParamBlock {
   reasoning?: ReasoningLevel;
   thinkingBudget?: number;
   reasoningTags?: { open: string; close: string };
+  serviceTier?: ServiceTier;
   /** Custom JSON, merged last into the sampling params. */
   params?: Record<string, unknown>;
   /** Extra request headers (no credentials). */
@@ -54,7 +60,7 @@ const NUMERIC: Record<string, [number, number, boolean]> = {
 /** Sampler keys sent as sampling params (temperature and max_tokens have their own options). */
 export const SAMPLER_KEYS = ["top_p", "top_k", "min_p", "repetition_penalty", "frequency_penalty", "presence_penalty", "seed"] as const;
 /** What plugin blocks may hold: the short set. */
-const SHORT = new Set(["temperature", "max_tokens", "reasoning", "thinkingBudget", "params"]);
+const SHORT = new Set(["temperature", "max_tokens", "reasoning", "thinkingBudget", "serviceTier", "params"]);
 const BLOCK_NAME = /^(chat|plugins|molfar|plugin:[a-z0-9][a-z0-9_.-]{0,63}\/[a-z0-9][a-z0-9_.-]{0,63})$/;
 const HEADER_NAME = /^[A-Za-z0-9-]{1,64}$/;
 /** Headers that carry credentials or transport: never set from here. */
@@ -71,7 +77,7 @@ export function validateBlock(name: string, raw: unknown): ParamBlock {
   const out: ParamBlock = {};
   for (const [key, v] of Object.entries(raw as Record<string, unknown>)) {
     if (v === null || v === undefined) continue;
-    if (short && !SHORT.has(key)) throw new ModelParamsError(`"${key}" is not a plugin parameter (plugins take temperature, max_tokens, reasoning, thinkingBudget, params)`);
+    if (short && !SHORT.has(key)) throw new ModelParamsError(`"${key}" is not a plugin parameter (plugins take temperature, max_tokens, reasoning, thinkingBudget, serviceTier, params)`);
     const range = NUMERIC[key];
     if (range) {
       const n = Number(v);
@@ -83,6 +89,9 @@ export function validateBlock(name: string, raw: unknown): ParamBlock {
     } else if (key === "reasoning") {
       if (!REASONING_LEVELS.includes(v as ReasoningLevel)) throw new ModelParamsError(`reasoning must be one of ${REASONING_LEVELS.join(", ")}`);
       out.reasoning = v as ReasoningLevel;
+    } else if (key === "serviceTier") {
+      if (!SERVICE_TIERS.includes(v as ServiceTier)) throw new ModelParamsError(`serviceTier must be one of ${SERVICE_TIERS.join(", ")}`);
+      out.serviceTier = v as ServiceTier;
     } else if (key === "reasoningTags") {
       const t = v as { open?: unknown; close?: unknown };
       if (typeof t !== "object" || typeof t.open !== "string" || typeof t.close !== "string" || !t.open || !t.close || t.open.length > 64 || t.close.length > 64) {
@@ -204,6 +213,18 @@ export function blockValues(entry: ModelParamsEntry | undefined, name: string | 
   return entry[name];
 }
 
+/** A model that takes `service_tier`: OpenRouter's own provider, or a connection whose address is OpenRouter's, on a
+ *  wire pi-ai sends the sampling params on (openai-completions and openai-responses; its Anthropic wire does not). */
+export function acceptsServiceTier(model: { provider: string; api: string; baseUrl?: string }): boolean {
+  if (model.api !== "openai-completions" && model.api !== "openai-responses") return false;
+  if (model.provider === "openrouter") return true;
+  try {
+    return new URL(model.baseUrl ?? "").hostname === "openrouter.ai";
+  } catch {
+    return false;
+  }
+}
+
 export type ParamSource = "model" | "request";
 
 export interface AppliedParams {
@@ -215,6 +236,8 @@ export interface AppliedParams {
   params?: Record<string, unknown>;
   reasoningTags?: { open: string; close: string };
   headers?: Record<string, string>;
+  /** The tier that went into `params.service_tier` (only for a model that takes it). */
+  serviceTier?: ServiceTier;
   /** Where each applied value came from. */
   from: Record<string, ParamSource>;
 }
@@ -232,7 +255,7 @@ interface RequestSide {
  * says paramsSource "request"; the request fills what the block leaves out. Custom `params` merge
  * after the block's samplers, so a key the user typed there is the last word.
  */
-export function mergeParams(block: ParamBlock | undefined, blockName: string | null, req: RequestSide): AppliedParams {
+export function mergeParams(block: ParamBlock | undefined, blockName: string | null, req: RequestSide, opts: { serviceTier?: boolean } = {}): AppliedParams {
   const requestWins = req.paramsSource === "request";
   const from: Record<string, ParamSource> = {};
   const out: AppliedParams = { block: block ? blockName : null, from };
@@ -264,6 +287,11 @@ export function mergeParams(block: ParamBlock | undefined, blockName: string | n
 
   const blockSamplers: Record<string, unknown> = {};
   for (const k of SAMPLER_KEYS) if (b[k] !== undefined) blockSamplers[k] = b[k];
+  // a tier set for a model that does not take one is kept in the file and never sent
+  if (opts.serviceTier && b.serviceTier) {
+    blockSamplers.service_tier = b.serviceTier;
+    out.serviceTier = b.serviceTier;
+  }
   const mine = { ...blockSamplers, ...(b.params ?? {}) };
   const theirs = { ...(pp.params ?? {}) };
   const params = requestWins ? { ...mine, ...theirs } : { ...theirs, ...mine };
@@ -285,7 +313,7 @@ export interface EffectiveParams {
  * output, reasoning, paramsSource), the same way generation does. A query string is all a UI has, so
  * the request side arrives as strings; a value that does not parse is treated as absent.
  */
-export function effectiveParams(entry: ModelParamsEntry | undefined, caller: ParamsCaller, query: Record<string, string | undefined>): EffectiveParams {
+export function effectiveParams(entry: ModelParamsEntry | undefined, caller: ParamsCaller, query: Record<string, string | undefined>, opts: { serviceTier?: boolean } = {}): EffectiveParams {
   const block = blockFor(entry, caller);
   const values = blockValues(entry, block) ?? {};
   const num = (v: string | undefined) => {
@@ -305,7 +333,7 @@ export function effectiveParams(entry: ModelParamsEntry | undefined, caller: Par
     ...(reasoning ? { reasoning } : {}),
     ...(thinkingBudget !== undefined && thinkingBudget > 0 ? { thinkingBudget } : {}),
     ...(query.paramsSource === "request" ? { paramsSource: "request" } : {}),
-  });
+  }, opts);
   const { headers: _h, reasoningTags: _t, ...applied } = merged;
   return { block, values, applied };
 }

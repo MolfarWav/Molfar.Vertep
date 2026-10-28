@@ -889,6 +889,12 @@ const dict = {
   "could not find {who} at {host}: check the address": "{host} に {who} が見つかりません。アドレスを確認してください",
   "{who} redirected the request elsewhere: put the final address in Settings": "{who} がリクエストを別の場所へ転送しました。最終アドレスを設定に入力してください",
   "{who} answered without a picture": "{who} が画像なしで応答しました",
+  "Service tier": "サービスティア",
+  "The lane OpenRouter serves the request on. It bills by the lane that served it, so the cost Molfar Vertep shows can differ.": "OpenRouter がリクエストを処理するレーンです。実際に処理したレーンで課金されるため、Molfar Vertep に表示されるコストと異なる場合があります。",
+  "Flex: cheaper, slower; the reply may wait in a queue.": "Flex: 安価ですが低速で、返信がキューで待たされることがあります。",
+  "Priority: faster, costs more.": "Priority: 高速ですが、料金は高めです。",
+  "Ultrafast: the fastest lane, costs the most.": "Ultrafast: 最速のレーンで、料金は最も高くなります。",
+  "Default: OpenRouter's normal speed and price.": "Default: OpenRouter の通常の速度と価格です。",
 }
 
 export default dict

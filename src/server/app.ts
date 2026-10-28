@@ -1489,7 +1489,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const eff = effectiveParams(entry, { source: q("source") ?? "", key: q("key") }, {
       temperature: q("temperature"), max_tokens: q("max_tokens"), reasoning: q("reasoning"),
       thinkingBudget: q("thinkingBudget"), paramsSource: q("paramsSource"),
-    });
+    }, { serviceTier: ref.startsWith("openrouter/") });
     return c.json({ model: ref, ...eff });
   });
 

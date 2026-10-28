@@ -889,6 +889,12 @@ const dict = {
   "could not find {who} at {host}: check the address": "no se encontró {who} en {host}: revisa la dirección",
   "{who} redirected the request elsewhere: put the final address in Settings": "{who} redirigió la solicitud a otro sitio: pon la dirección final en Ajustes",
   "{who} answered without a picture": "{who} respondió sin imagen",
+  "Service tier": "Nivel de servicio",
+  "The lane OpenRouter serves the request on. It bills by the lane that served it, so the cost Molfar Vertep shows can differ.": "El carril por el que OpenRouter atiende la solicitud. Se factura según el carril que la atendió, así que el coste que muestra Molfar Vertep puede diferir.",
+  "Flex: cheaper, slower; the reply may wait in a queue.": "Flex: más barato, más lento; la respuesta puede esperar en una cola.",
+  "Priority: faster, costs more.": "Priority: más rápido, cuesta más.",
+  "Ultrafast: the fastest lane, costs the most.": "Ultrafast: el carril más rápido, el que más cuesta.",
+  "Default: OpenRouter's normal speed and price.": "Default: velocidad y precio normales de OpenRouter.",
 }
 
 export default dict

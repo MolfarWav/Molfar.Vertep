@@ -889,6 +889,12 @@ const dict = {
   "could not find {who} at {host}: check the address": "не вдалося знайти {who} за адресою {host}: перевірте адресу",
   "{who} redirected the request elsewhere: put the final address in Settings": "{who} перенаправив запит в інше місце: вкажіть кінцеву адресу в Налаштуваннях",
   "{who} answered without a picture": "{who} відповів без картинки",
+  "Service tier": "Рівень обслуговування",
+  "The lane OpenRouter serves the request on. It bills by the lane that served it, so the cost Molfar Vertep shows can differ.": "Лінія, якою OpenRouter обслуговує запит. Вартість рахується за лінією, яка обслужила запит, тож сума, яку показує Molfar Vertep, може відрізнятися.",
+  "Flex: cheaper, slower; the reply may wait in a queue.": "Flex: дешевше, повільніше; відповідь може чекати в черзі.",
+  "Priority: faster, costs more.": "Priority: швидше, коштує більше.",
+  "Ultrafast: the fastest lane, costs the most.": "Ultrafast: найшвидша лінія, коштує найдорожче.",
+  "Default: OpenRouter's normal speed and price.": "Default: звичайна швидкість і ціна OpenRouter.",
 }
 
 export default dict

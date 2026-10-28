@@ -889,6 +889,12 @@ const dict = {
   "could not find {who} at {host}: check the address": "{host}에서 {who}을(를) 찾을 수 없습니다. 주소를 확인하세요",
   "{who} redirected the request elsewhere: put the final address in Settings": "{who}이(가) 요청을 다른 곳으로 리디렉션했습니다. 최종 주소를 설정에 입력하세요",
   "{who} answered without a picture": "{who}이(가) 이미지 없이 응답했습니다",
+  "Service tier": "서비스 등급",
+  "The lane OpenRouter serves the request on. It bills by the lane that served it, so the cost Molfar Vertep shows can differ.": "OpenRouter가 요청을 처리하는 경로입니다. 실제로 처리한 경로 기준으로 과금되므로 Molfar Vertep에 표시되는 비용과 다를 수 있습니다.",
+  "Flex: cheaper, slower; the reply may wait in a queue.": "Flex: 더 저렴하지만 느리며, 응답이 대기열에서 기다릴 수 있습니다.",
+  "Priority: faster, costs more.": "Priority: 더 빠르지만 비용이 더 듭니다.",
+  "Ultrafast: the fastest lane, costs the most.": "Ultrafast: 가장 빠른 경로이며 비용이 가장 높습니다.",
+  "Default: OpenRouter's normal speed and price.": "Default: OpenRouter의 기본 속도와 가격입니다.",
 }
 
 export default dict

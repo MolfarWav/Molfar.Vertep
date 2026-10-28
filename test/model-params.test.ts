@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fauxProvider, fauxAssistantMessage } from "@earendil-works/pi-ai/providers/faux";
-import { blockFor, blockValues, effectiveParams, mergeParams, pluginBlockName, ModelParamsError, readModelParams, validateBlock, writeModelParams } from "../src/model-params.js";
+import { acceptsServiceTier, blockFor, blockValues, effectiveParams, mergeParams, pluginBlockName, ModelParamsError, readModelParams, validateBlock, writeModelParams } from "../src/model-params.js";
 import { cleanFavorites, UserModelService } from "../src/models.js";
 import { defaultInstanceConfig } from "../src/config.js";
 import { bootstrapUserDir } from "../src/paths.js";
@@ -32,6 +32,63 @@ describe("model params: validation", () => {
     expect(() => validateBlock("chat", { headers: { "X-A": "line\nbreak" } })).toThrow(/one-line/);
     expect(() => validateBlock("chat", { params: { big: "x".repeat(5000) } })).toThrow(/limited/);
   });
+});
+
+describe("model params: service tier (OpenRouter)", () => {
+  it("accepts the four tiers on every block and refuses anything else", () => {
+    for (const tier of ["default", "flex", "priority", "ultrafast"] as const) {
+      expect(validateBlock("chat", { serviceTier: tier })).toEqual({ serviceTier: tier });
+      expect(validateBlock("plugins", { serviceTier: tier })).toEqual({ serviceTier: tier });
+      expect(validateBlock("plugin:roleplay/relations", { serviceTier: tier })).toEqual({ serviceTier: tier });
+    }
+    expect(() => validateBlock("chat", { serviceTier: "fast" })).toThrow(/serviceTier/);
+    expect(() => validateBlock("chat", { serviceTier: 1 })).toThrow(/serviceTier/);
+    expect(validateBlock("chat", { serviceTier: null })).toEqual({});
+  });
+
+  it("only an OpenRouter model on a wire that carries sampling params takes one", () => {
+    expect(acceptsServiceTier({ provider: "openrouter", api: "openai-completions" })).toBe(true);
+    expect(acceptsServiceTier({ provider: "openrouter", api: "openai-responses" })).toBe(true);
+    // OpenRouter serves Claude over the Anthropic wire, which sends no sampling params
+    expect(acceptsServiceTier({ provider: "openrouter", api: "anthropic-messages" })).toBe(false);
+    expect(acceptsServiceTier({ provider: "c_mine", api: "openai-completions", baseUrl: "https://openrouter.ai/api/v1" })).toBe(true);
+    expect(acceptsServiceTier({ provider: "c_mine", api: "openai-completions", baseUrl: "https://openrouter.ai.evil.example/v1" })).toBe(false);
+    expect(acceptsServiceTier({ provider: "openai", api: "openai-completions", baseUrl: "https://api.openai.com/v1" })).toBe(false);
+    expect(acceptsServiceTier({ provider: "nanogpt", api: "openai-completions" })).toBe(false);
+  });
+
+  it("goes out as service_tier for a model that takes it, stays in the file for one that does not, and custom params win", () => {
+    const block = { temperature: 0.9, serviceTier: "flex" as const };
+    expect(mergeParams(block, "chat", {}, { serviceTier: true })).toMatchObject({ serviceTier: "flex", params: { service_tier: "flex" }, from: { service_tier: "model" } });
+    const other = mergeParams(block, "chat", {});
+    expect(other.params).toBeUndefined();
+    expect(other.serviceTier).toBeUndefined();
+    const typed = mergeParams({ serviceTier: "flex" as const, params: { service_tier: "priority" } }, "chat", {}, { serviceTier: true });
+    expect(typed.params).toEqual({ service_tier: "priority" });
+    const eff = effectiveParams({ chat: block }, { source: "api:x" }, {}, { serviceTier: true });
+    expect(eff.applied.params).toEqual({ service_tier: "flex" });
+    expect(eff.values.serviceTier).toBe("flex");
+  });
+
+  it("generate leaves the tier out for a provider that is not OpenRouter", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mparams-tier-"));
+    try {
+      new UserService(dir).create("dana", "user", { password: "test-pass-1" });
+      const p = bootstrapUserDir(dir, "dana");
+      const svc = new UserModelService("dana", p, defaultInstanceConfig());
+      const handle = fauxProvider({ models: [{ id: "faux-tier" }] });
+      svc.models.setProvider(handle.provider);
+      const ref = `${handle.provider.id}/faux-tier`;
+      writeModelParams(p.root, ref, { chat: { temperature: 0.9, serviceTier: "priority" } });
+      let seen: Record<string, unknown> = {};
+      handle.setResponses([(_ctx, opts) => { seen = { ...(opts as Record<string, unknown>) }; return fauxAssistantMessage("ok"); }]);
+      await svc.generate({ model: ref, messages: [{ role: "user", content: "hi" }], source: "api:x" });
+      expect(seen.temperature).toBe(0.9);
+      expect((seen as { samplingParams?: unknown }).samplingParams).toBeUndefined();
+    } finally {
+      try { fs.rmSync(dir, { recursive: true, force: true }); } catch { /* watcher races */ }
+    }
+  }, 30_000);
 });
 
 describe("model params: which block and who wins", () => {
