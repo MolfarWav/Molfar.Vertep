@@ -29,8 +29,10 @@ interface LiveSource {
   rich?: boolean;
 }
 
-/** Text in, text out: OpenRouter also lists image and audio generators. */
+/** Text in, text out: OpenRouter also lists image and audio generators, and a `:batch` twin of many models
+ *  that only its batch API serves (chat/completions answers 404 "cannot be used with the chat/completions endpoint"). */
 const openRouterChat = (item: Record<string, unknown>): boolean => {
+  if (typeof item.id === "string" && item.id.endsWith(":batch")) return false;
   const arch = (item.architecture ?? {}) as Record<string, unknown>;
   const out = arch.output_modalities;
   return !Array.isArray(out) || out.includes("text");

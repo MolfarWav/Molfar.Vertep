@@ -820,7 +820,9 @@ export class UserModelService {
     const pricing = this.pricingOverrides();
     const globalCost = readCostChecksMode(this.paths.settings);
     const conns = readConnections(this.paths).connections;
-    return (await this.models.getAvailable()).map((m) => ({
+    // `:batch` twins (OpenRouter, Nous and others list one per model) are served by the provider's batch API
+    // only; chat/completions answers 404, so they never go in the list, whatever catalog they came from
+    return (await this.models.getAvailable()).filter((m) => !m.id.endsWith(":batch")).map((m) => ({
       provider: m.provider,
       modelId: m.id,
       api: this.textCompletions.has(m.provider) ? "openai-text" : String(m.api),
