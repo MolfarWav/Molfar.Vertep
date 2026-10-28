@@ -5,6 +5,11 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## Unreleased
+
+- Images: Gemini API as an image backend (#62). With a Google (Gemini) key in Connections, the Imagen and Gemini Image ("Nano Banana") models the key can call join the image model list, so Molfar's `image_generate`, Roleplay and Settings > Images pick them up as they are. The list is read live from Google (cached ten minutes); the picture goes into the asset store like any other backend's. A bad key, a prompt the model refuses and a filtered Imagen picture each come back in plain words. Not tried against a real key yet.
+- Plugin sandbox: when one call takes the shared worker down (out of memory, a timeout), the other calls that were in flight no longer fail with a bare "worker exited (1)". Their error names the plugin, route and reason that did it, the log says so too, and a safe read (a GET) that was only a bystander is run again on the fresh worker even when the culprit timed out (#162).
+
 ## 1.6.1 (2026-10-28)
 
 - Roleplay 4.73.1 comes with this release as an app update: a big imported library no longer stops the app from starting (#159). `GET /bootstrap` sent every lorebook whole, and a SillyTavern import brings a book per character, so past roughly 1,000 characters the plugin ran out of memory ("Can't reach the engine ... out of memory") and an import running at the same time died with "worker exited". Books now come as summaries and a whole book loads when it is opened; sending a message no longer parses every book file either. The fix is in the app, so it reaches you with the Roleplay update whatever the engine version.

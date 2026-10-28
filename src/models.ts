@@ -21,7 +21,7 @@ import { inspectAssistantMessage, inspectRequest, inspectResult, type InspectorE
 import { type PromptSources, systemPartsFor } from "./prompt-sources.js";
 import type { UserPaths } from "./paths.js";
 import type { InstanceConfig } from "./config.js";
-import { ImageError, endpointGenerate, endpointPromptStyle, imageEndpoint, listEndpointOptions, type EndpointOptions, listEndpointModels, listImageEndpoints, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, readImageFavorites, type ImageFavorite, type ListedImageModel } from "./images.js";
+import { ImageError, endpointGenerate, endpointPromptStyle, imageEndpoint, listEndpointOptions, type EndpointOptions, listEndpointModels, listImageEndpoints, geminiGenerate, geminiImageModels, mapCatalogError, nanoGptGenerate, nanoGptImageModels, providerError, readImageFavorites, type ImageFavorite, type ListedImageModel } from "./images.js";
 import { acceptsServiceTier, blockFor, blockValues, mergeParams, readModelParams, type AppliedParams } from "./model-params.js";
 
 /** The modify running on each auth.json, so the next one waits for it. */
@@ -161,6 +161,10 @@ export const DEFAULT_OPENROUTER_EMBED_MODEL = "qwen/qwen3-embedding-4b";
 /** NanoGPT image models: provider id in refs, and their `api`. */
 const NANOGPT_IMAGES = "nanogpt";
 const NANOGPT_IMAGES_API = "nanogpt-images";
+/** Gemini API image models (Imagen, Gemini Image): the key is the Google provider's. */
+const GEMINI_IMAGES = "gemini";
+const GEMINI_IMAGES_API = "gemini-images";
+const GOOGLE_PROVIDER_ID = "google";
 
 /** Hosts whose chat endpoint serves a builtin image catalog. */
 const IMAGE_CATALOG_HOSTS: readonly { host: string; catalog: string }[] = [{ host: "openrouter.ai", catalog: "openrouter" }];
@@ -1729,6 +1733,14 @@ export class UserModelService {
         (e) => (log.warn(`[images] NanoGPT catalog: ${(e as Error).message}`), []),
       ));
     }
+    const gem = this.geminiKey();
+    if (gem) {
+      const connectionName = this.connectionNames.get(GOOGLE_PROVIDER_ID) ?? "Gemini";
+      lists.push(geminiImageModels(gem).then(
+        (ms) => ms.map((m) => ({ provider: GEMINI_IMAGES, id: m.id, label: m.label, api: GEMINI_IMAGES_API, connectionName })),
+        (e) => (log.warn(`[images] Gemini catalog: ${(e as Error).message}`), []),
+      ));
+    }
     for (const ep of listImageEndpoints(this.paths)) {
       lists.push(this.endpointModels(ep.id).then(
         (ms) => ms.map((m) => ({
@@ -1751,6 +1763,12 @@ export class UserModelService {
       if (cred?.type === "api_key" && typeof cred.key === "string" && cred.key) return { provider, key: cred.key };
     }
     return null;
+  }
+
+  /** The Google AI Studio key of the Gemini connection. */
+  private geminiKey(): string | null {
+    const cred = readAuth(this.paths)[GOOGLE_PROVIDER_ID];
+    return cred?.type === "api_key" && typeof cred.key === "string" && cred.key ? cred.key : null;
   }
 
   /** A configured endpoint's models; a good answer is kept a minute so the
@@ -1811,7 +1829,7 @@ export class UserModelService {
     if (!pick && this.imageModelList) pick = find((models = await this.imageModels()));
     if (!models.length) {
       throw new ModelNotConfiguredError(
-        "no image model available — add an OpenRouter or NanoGPT connection, or an image endpoint such as ComfyUI (Settings → Images)",
+        "no image model available — add an OpenRouter, NanoGPT or Gemini connection, or an image endpoint such as ComfyUI (Settings → Images)",
       );
     }
     if (!pick) throw new ImageError(`image model not found: ${req.model}`, 404);
@@ -1820,6 +1838,11 @@ export class UserModelService {
       const nano = this.nanoGptKey();
       if (!nano) throw new ModelNotConfiguredError("the NanoGPT connection has no key (Settings → API connections)");
       return { ...(await nanoGptGenerate(nano.key, pick.id, req.prompt)), model: ref };
+    }
+    if (pick.api === GEMINI_IMAGES_API) {
+      const key = this.geminiKey();
+      if (!key) throw new ModelNotConfiguredError("the Gemini connection has no key (Settings → API connections)");
+      return { ...(await geminiGenerate(key, pick.id, req.prompt)), model: ref };
     }
     const endpoint = imageEndpoint(this.paths, pick.provider);
     if (endpoint) {

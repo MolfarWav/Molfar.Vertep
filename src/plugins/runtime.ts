@@ -857,6 +857,7 @@ export async function runPluginRoute(
         ...zipLimits,
         source: plugin.source,
         hook: "__route",
+        label: `${plugin.id} route ${req.method} ${req.path}`,
         // zipBase64 already rides the message for the host-side zip service —
         // keep the multi-MB string OUT of the guest's ctx (64MB heap)
         ctx: { ...req, zipBase64: undefined, ...(stash ? { stash } : {}) } as unknown as Record<string, unknown>,

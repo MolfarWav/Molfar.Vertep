@@ -40,6 +40,9 @@ export interface SandboxRequest {
   zipBase64?: string;
   /** Safe reads may be repeated once when the WASM runtime aborts during teardown. */
   retryOnPoison?: boolean;
+  /** Who is calling ("plugin route GET /path"), named in the error the other
+   *  calls get when this one takes the shared worker down. */
+  label?: string;
   /** Execution and memory limits for this call, above the 10 s and 64 MB
    *  defaults. Only for work that is allowed to be long, on its own sandbox:
    *  a worker runs one call at a time. */
@@ -51,6 +54,8 @@ export interface SandboxResponse {
   ok: boolean;
   out?: unknown;
   error?: string;
+  /** The worker died because of another call; this one is innocent. */
+  bystander?: boolean;
   storeWrites?: Record<string, unknown>;
   llmRequests?: { key: string; req: unknown }[];
   netRequests?: { key: string; req: unknown }[];
@@ -73,6 +78,8 @@ class SandboxWorkerHandle {
   private nextId = 1;
   private pending = new Map<number, { resolve: (r: SandboxResponse) => void }>();
   private retiring = false;
+  /** The call that made this worker unfit; said to the calls it takes down. */
+  private culprit: string | null = null;
 
   constructor() {
     // execArgv: [] — don't inherit runner flags (loader flags break/hang workers)
@@ -86,8 +93,15 @@ class SandboxWorkerHandle {
     this.worker.on("exit", (code) => this.failAll(`worker exited (${code})`));
   }
 
+  /** Name the call that poisoned this worker, before it is terminated. */
+  condemn(who: string): void {
+    this.culprit ??= who;
+  }
+
   private failAll(reason: string): void {
-    for (const { resolve } of this.pending.values()) resolve({ ok: false, error: reason });
+    const bystander = this.culprit !== null;
+    if (this.culprit) reason = `${reason}: stopped because another call failed (${this.culprit})`;
+    for (const { resolve } of this.pending.values()) resolve({ ok: false, error: reason, ...(bystander ? { bystander } : {}) });
     this.pending.clear();
   }
 
@@ -149,10 +163,13 @@ export class PluginSandbox {
     }
     if (!res.ok && POISONED.test(res.error ?? "")) {
       if (!this.recovering.has(h)) {
-        log.warn(`[sandbox] worker poisoned (${res.error}) — terminating and respawning`);
+        const who = `${req.label ?? req.hook}: ${res.error}`;
+        log.warn(`[sandbox] worker poisoned by ${who} — terminating and respawning`);
+        h.condemn(who);
       }
       await this.recoverHandle(h);
-      if (mayRetry && !/timed out/.test(res.error ?? "")) return this.evalAttempt(req, false);
+      // a bystander of another call's failure did nothing wrong: retry it even when that call timed out
+      if (mayRetry && (res.bystander || !/timed out/.test(res.error ?? ""))) return this.evalAttempt(req, false);
     }
     return res;
   }

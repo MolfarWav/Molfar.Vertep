@@ -117,6 +117,28 @@ describe("plugin sandbox execution", () => {
     expect(out?.json).toEqual({ recovered: true });
   }, { timeout: 30_000 });
 
+  it("a call that runs out of memory is named to the calls it took down, and a safe read is retried", async () => {
+    const { sandbox } = await import("../src/plugins/sandbox.js");
+    const hog = `export function uiPanel() { const a = []; for (;;) a.push(new Array(100000).fill(1)); }`;
+    const quick = `export function uiPanel(ctx) { return ctx; }`;
+    const [culprit, plain, safe] = await Promise.all([
+      sandbox.eval({ source: hog, hook: "uiPanel", ctx: {}, storeSnapshot: {}, label: "big-plugin route GET /bootstrap" }),
+      sandbox.eval({ source: quick, hook: "uiPanel", ctx: { n: 1 }, storeSnapshot: {} }),
+      sandbox.eval({ source: quick, hook: "uiPanel", ctx: { n: 2 }, storeSnapshot: {}, retryOnPoison: true }),
+    ]);
+    expect(culprit.ok).toBe(false);
+    expect(culprit.bystander).toBeUndefined();
+    // the bystander without a retry says who did it
+    expect(plain.ok).toBe(false);
+    expect(plain.bystander).toBe(true);
+    expect(plain.error).toContain("big-plugin route GET /bootstrap");
+    // a safe read runs again on the fresh worker
+    expect(safe.ok).toBe(true);
+    // and the next call finds a healthy worker
+    const after = await sandbox.eval({ source: quick, hook: "uiPanel", ctx: { n: 3 }, storeSnapshot: {} });
+    expect(after.ok).toBe(true);
+  }, 40_000);
+
   it("every reply reports the worker's wasm heap, the number that retires a leaking worker", async () => {
     const { sandbox } = await import("../src/plugins/sandbox.js");
     const res = await sandbox.eval({ source: "export function uiPanel(ctx) { return ctx; }", hook: "uiPanel", ctx: {}, storeSnapshot: {} });
