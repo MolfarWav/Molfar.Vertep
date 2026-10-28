@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.7.0 (2026-10-29)
+
+- Roleplay 4.74.0 comes with this release as an app update: expression sprites keep their quality and the limit on how many a card holds is gone (#167), imported SillyTavern presets keep the card's post-history instructions, narrator groups no longer forbid writing the user outright, and the Dashboard sensor and Litopys read replies without the blocks a preset hides (#85).
 - Images: Gemini API as an image backend (#62). With a Google (Gemini) key in Connections, the Imagen and Gemini Image ("Nano Banana") models the key can call join the image model list, so Molfar's `image_generate`, Roleplay and Settings > Images pick them up as they are. The list is read live from Google (cached ten minutes); the picture goes into the asset store like any other backend's. A bad key, a prompt the model refuses and a filtered Imagen picture each come back in plain words. Not tried against a real key yet.
 - Plugin sandbox: when one call takes the shared worker down (out of memory, a timeout), the other calls that were in flight no longer fail with a bare "worker exited (1)". Their error names the plugin, route and reason that did it, the log says so too, and a safe read (a GET) that was only a bystander is run again on the fresh worker even when the culprit timed out (#162).
 

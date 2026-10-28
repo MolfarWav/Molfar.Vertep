@@ -119,10 +119,10 @@ describe("plugin sandbox execution", () => {
 
   it("a call that runs out of memory is named to the calls it took down, and a safe read is retried", async () => {
     const { sandbox } = await import("../src/plugins/sandbox.js");
-    const hog = `export function uiPanel() { const a = []; for (;;) a.push(new Array(100000).fill(1)); }`;
+    const hog = `export function uiPanel() { return new Array(200000000).fill(1).length; }`;
     const quick = `export function uiPanel(ctx) { return ctx; }`;
     const [culprit, plain, safe] = await Promise.all([
-      sandbox.eval({ source: hog, hook: "uiPanel", ctx: {}, storeSnapshot: {}, label: "big-plugin route GET /bootstrap" }),
+      sandbox.eval({ source: hog, hook: "uiPanel", ctx: {}, storeSnapshot: {}, label: "big-plugin route GET /bootstrap", memoryLimitBytes: 8 * 1024 * 1024 }),
       sandbox.eval({ source: quick, hook: "uiPanel", ctx: { n: 1 }, storeSnapshot: {} }),
       sandbox.eval({ source: quick, hook: "uiPanel", ctx: { n: 2 }, storeSnapshot: {}, retryOnPoison: true }),
     ]);
