@@ -1,9 +1,19 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-28.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-29.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
+
+## ISSUES #108, #96, #116, #146 (2026-10-29, Roleplay branch `claude/issues-108-96-116-146` 766caf3, engine branch only carries this note; NOT released, no version bump, CHANGELOG Unreleased)
+Owner's picks: #134 closed without building (neither the inbox entry nor the sensor as a second detector); #116 clean run keeps closing itself after 7 s, per-file error toasts go; #108 saved boards remember positions and shown chats only, links stay real.
+- **#108:** `src/canvas-kit/boards/saved-boards.ts` (pure), `components/canvas/board-menu.tsx` (popover beside Tidy, desktop only). The board on screen is `settings.canvasBoard` (+ `id`, `name`, `seq`), the others `settings.canvasBoards`; an old install keeps its one board as "Main board". Edits always go to the board on screen, nothing to save. Max 20 boards. Tests `rp-saved-boards.test.ts` (7).
+- **#96:** `plugins/studio-import/plugin.js`: `isMarinaraWrapper` (card and book), V2 entry names in `normalizeBook` via `embeddedBookToWorld`, `depthPromptOf` (ST/Marinara `extensions.depth_prompt` to `studio.depthPrompt`, card's own studio text wins). A Marinara book inside a card stays the card's embedded book as before. Tests in `rp-studio.test.ts` (3). The Marinara lorebook wrapper name `marinara_lorebook` is a guess from the character one (tested with that shape only); a bare V2 book works either way.
+- **#116:** Regex page import and the card Memory dialog use the progress card (`imp.title.memory`, `imp.memory.done`); per-file error toasts removed in card, lorebook, preset, regex and chat imports (a failed file throws, the card lists the reason). Single-unit jobs (backup, link, one preset) still toast their error. Not wired: agent file install/open in the Forge (single file with its own dialog), Data Bank upload.
+- **#146:** all six items. Checker `W_LIMIT` warning (`agent-check.js`, plugin block regenerated with `bun scripts/sync-agents-plugin.ts`); unwired inputs show once (red select under Wires); dialog Close tap area via `::after`, `ui.close` and `nav.moreSections` strings; switch 24x40 on a phone; Add card popover controlled; new agents "My agent", "My agent 2".
+- **Found on the way (store.ts):** a hydrate could read `settings.json` before the 500 ms debounced write landed and bring the older settings back. The browser check saw a new board show "0 on it" twice, which fits this; not reproduced afterwards. Now `uiDirty` makes hydrate skip `settings.ui` while an edit is unsaved. The fix is a hypothesis, no test.
+- **Checks:** Roleplay typecheck clean; `bun test test/` 1851 pass, 28 fail, 16 errors, the same as clean main (engine.ts reads `location` at import; `rp-agent-block`, `rp-dice-note`, `rp-world-stage2` fail alone on main too); related files 257 pass. Browser check (subagent, throwaway engine, mock model, 1280 dark/light, 390): board menu (new, switch, rename, delete, reload, links.json untouched), dialog Close 44 px and uk labels, switch sizes, Forge items, lorebook/Marinara/regex/memory imports with the progress card and no per-file toast: pass. Not checked: dragging from the shelf, a real phone, Ukrainian text of the board menu, the store fix.
+- **Side findings, not changed:** the Characters importer accepts a world-info file as a card ("ST sample" junk characters); several Settings sections stay English in uk.
 
 ## ISSUES #162, #62, #85, #89 (2026-10-28, engine branch `claude/issues-162-62-85-89`, Roleplay branch `claude/issues-85` e4cd8ff; NOT released; both on top of main after 1.6.1)
 Owner's picks: #85b soften the line; #162 name the culprit and retry; #62 key = the Google provider's; #89 close.
