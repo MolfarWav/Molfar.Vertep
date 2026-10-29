@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Molfar: the run's token chip on the agent page shows where the input went (prompt, tools, earlier tasks, this task's steps, tool results) in its tooltip, and every run record keeps the split (#101).
+- Molfar: tool descriptions are shorter in every mode, not only for small windows: the tool list is about 23% smaller (7,033 to 5,395 tokens with every group shown) on every model call. Parameters are unchanged; the facts the model acts on stay in the text. The small-window text for `checkpoint` wrongly said data/ is never touched; it now says it is left alone unless files are passed in `data` (#101).
+
 ## 1.7.1 (2026-10-29)
 
 - Roleplay 4.75.0 comes with this release as an app update: named boards for the Chat links canvas (#108), Marinara exports import (#96), the shared progress card for the Regex and Memory imports (#116), small phone fixes (#146). Details in the Roleplay changelog.

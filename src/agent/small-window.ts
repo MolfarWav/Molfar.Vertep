@@ -106,7 +106,7 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
   web_fetch: "Read a public web page as plain text (internet must be on in Settings).",
   image_generate: "Draw a picture, get its /v1/assets/<id> URL for a card avatar or background. list: true lists models; prompt in English; paid models ask the user.",
   run_budget: "Before a big task (app code or 4+ files): steps, one-line plan, files; writes wait for the user's go.",
-  checkpoint: "Save or restore an app's code: create before risky work, list, restore (asks the user). data/ is never touched.",
+  checkpoint: "Save or restore an app's code: create before risky work, list, restore (asks the user). data/ is left alone unless you pass files in `data`.",
   bug_solution: "Close a reported bug (skill fix-bug): solved, problem, cause, fix, app + the checkpoint taken before the fix; the user gets a card to send it.",
   skill_propose: "Propose a new skill or a full rewrite; the user saves or skips it. Load skill-authoring first.",
   skill_edit: "Change part of a skill: exact old text to new text; the user saves or skips it.",
@@ -114,6 +114,36 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
     "Propose a memory entry (scope global, app:<id> or project:<name>); the user confirms. topic: a lowercase-dashes topic file; omit for core facts. replaces: a phrase from the outdated entry.",
   memory_search: "Search all memory entries by words (inflections match). scope narrows it.",
   chats: 'The user\'s chats: action list (query, olderThanDays), archive, unarchive, rename, move (project id/title or "none"), delete (the user confirms). ids come from list.',
+};
+
+/** Full mode sends the short descriptions above too (they cut the tool list by about 30%, issue #101),
+ *  except where the long text carries a fact the model acts on: those get a slightly longer one here.
+ *  Parameters are never touched. */
+const FULL_DESCRIPTIONS: Record<string, string> = {
+  json_get:
+    'Read fields of a JSON file (card, lorebook) without loading it all. pointer "/data/description" or pointers [...]; "" = the shape (keys, types, sizes). A value too big to show comes back as its shape or head.',
+  json_set:
+    'Change JSON fields in place, several per call, format kept, commits like write_file: edits [{pointer, value}] (a missing key or object is created), op "delete" or "append" (to an array; a missing array is created).',
+  git:
+    'Git for the workspace; args as typed after "git" (no leading "git"): status, diff, log, show, ls-tree, ls-files, rm, commit, restore --source <commit> -- <path>, revert <commit>, clone <https-url> [repos/<name>] (files only, no .git, needs internet on). add does nothing: no staging area. One history (main), no branches or remotes. File tools commit on their own; commit after bash changes.',
+  app_create:
+    "Create a new app in apps/<id>/ (id: lowercase letters, digits, - _). kind 'web' (default): React + tailwind UI, edit src/, then app_deps after adding dependencies to package.json. kind 'app' or 'skin': backend only (manifest, plugins/, data/), no page.",
+  app_check:
+    "Wait for an app's browser build; returns ok or the errors with file and line, plus runtime errors the open page caught (a build that crashes on open shows). Call after editing src/ or package.json.",
+  app_rebuild: "Force a fresh build of an app now, even if its last build is current. Use when the app looks stale or an app_check result cannot be trusted.",
+  app_console: "Read console output captured from an open app page (newest last). Nothing is captured unless a Molfar Vertep page with the app open is running.",
+  plugin_log: "Read plugin (backend) output and failures, newest last. Plugin output never reaches app_console. app/plugin/errors narrow it.",
+  image_generate:
+    "Draw a picture, get its /v1/assets/<id> URL for a card avatar, background or gallery item. list: true lists the image models with what each is for; pass the fitting one as model. prompt: a full visual description in English; for models marked tags (ComfyUI, Forge) comma-separated Danbooru tags, things to leave out at the end as (Avoid: ...). Paid models ask the user.",
+  checkpoint:
+    "Save or restore an app's code: create before a feature or risky change, list, restore (asks the user). data/ is left alone unless you pass files in `data` (to undo your own edit of a card or settings file). The engine also takes one automatically before your first change to an app in each request.",
+  bug_solution:
+    "Close a reported bug (skill fix-bug) once the user has tried the fix: solved, problem, cause, fix, app + the checkpoint taken before the fix. The user gets a card to send it as a GitHub issue. Write the texts in English.",
+  skill_propose: "Propose a new skill or a new version (same name and scope; a small fix is skill_edit); the user saves or skips it. Load skill-authoring first.",
+  skill_edit: "Change part of a skill's SKILL.md: exact old text to new text, copied from skill_load; the user saves or skips it. A built-in skill is saved as a workspace copy.",
+  memory_propose:
+    "Propose one self-contained, specific memory entry (scope global, app:<id> or project:<name>); the user confirms. topic: a lowercase-dashes topic file; omit for core facts. replaces: a phrase from the outdated entry.",
+  chats: "The user's chats: action list (query, olderThanDays), archive, unarchive, rename, move (project id/title or \"none\"), delete (the user confirms; list first). ids come from list. Never delete this chat or a working one.",
 };
 
 /** In the app group for small mode only: full mode always sends these. */
@@ -128,11 +158,16 @@ export function visibleTools(all: AgentTool[], small: boolean, unlocked: Readonl
   // full mode hides only FULL_HIDDEN groups, until they are unlocked
   if (!small) {
     const locked = availableGroups(all).some((g) => FULL_HIDDEN.has(g) && !unlocked.has(g));
-    return all.filter((t) => {
-      if (t.name === "tools_enable") return locked;
-      const g = groupOf(t.name);
-      return g === null || !FULL_HIDDEN.has(g) || unlocked.has(g) || FULL_ALWAYS.has(t.name);
-    });
+    return all
+      .filter((t) => {
+        if (t.name === "tools_enable") return locked;
+        const g = groupOf(t.name);
+        return g === null || !FULL_HIDDEN.has(g) || unlocked.has(g) || FULL_ALWAYS.has(t.name);
+      })
+      .map((t) => {
+        const short = FULL_DESCRIPTIONS[t.name] ?? COMPACT_DESCRIPTIONS[t.name];
+        return short ? { ...t, description: short } : t;
+      });
   }
   return all
     // a tool in no group is core (or new and unclassified: better sent than lost)
