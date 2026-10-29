@@ -9,6 +9,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 - Molfar: the run's token chip on the agent page shows where the input went (prompt, tools, earlier tasks, this task's steps, tool results) in its tooltip, and every run record keeps the split (#101).
 - Molfar: tool descriptions are shorter in every mode, not only for small windows: the tool list is about 23% smaller (7,033 to 5,395 tokens with every group shown) on every model call. Parameters are unchanged; the facts the model acts on stay in the text. The small-window text for `checkpoint` wrongly said data/ is never touched; it now says it is left alone unless files are passed in `data` (#101).
+- Molfar: `edit_file` takes `edits: [{oldText, newText}]` for several changes to one file in one call (up to 20, applied in order, all or nothing, one commit); before, each change was its own model step (132 of 2,208 steps in one workspace). The replacement text is now literal: `$&` or `$1` in it were treated as patterns before (#101).
+- Molfar: after two single lookup steps in a row (read_file, grep, json_get, a looking bash command), and again every third step of such a streak, a one-line reminder rides on the newest tool result: ask for independent lookups in one reply. Only the copy sent to the model changes (#101).
 
 ## 1.7.1 (2026-10-29)
 

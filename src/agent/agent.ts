@@ -25,6 +25,7 @@ import { clampMaxTokens, estimateMessageTokens, estimateTextTokens, fitContext, 
 import { buildRunTools, newAppRefusal, newPlanState, planGate, type PlanState, type RunToolOptions } from "./run-tools.js";
 import { costChecksApply, effectiveCostChecksMode } from "./cost-checks.js";
 import { foldToolResults } from "./context-fold.js";
+import { nudgeBatching } from "./batch-nudge.js";
 import { addCallToSplit, newRunSplit, type RunSplit } from "./context-split.js";
 import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
@@ -674,9 +675,10 @@ export class UserAgent {
           const { messages: lean } = foldToolResults(dialogue, runState.startedAt);
           const fit = fitContext(st.model, { systemPrompt: st.systemPrompt, messages: lean, tools: shown }, { force: budget.force, state: trim });
           if (fit.advanced) log.info(`[agent:${sessionId}] context trimmed ~${fit.before} → ~${fit.after} tokens (window ${st.model.contextWindow})`);
-          addCallToSplit(runState.split, { systemPrompt: st.systemPrompt, tools: shown, messages: fit.messages }, runState.startedAt);
+          const sent = nudgeBatching(fit.messages, runState.startedAt);
+          addCallToSplit(runState.split, { systemPrompt: st.systemPrompt, tools: shown, messages: sent }, runState.startedAt);
           const lead: SystemMessage = { role: "system", content: st.systemPrompt, ...(shown.length ? { toolsAdded: shown.map(toToolDeclaration) } : {}), timestamp: 0 };
-          return [lead, ...fit.messages];
+          return [lead, ...sent];
         } catch (e) {
           log.warn(`[agent:${sessionId}] context trim failed, sending as is: ${(e as Error).message}`);
           return msgs;

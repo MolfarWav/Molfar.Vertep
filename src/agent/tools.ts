@@ -90,6 +90,9 @@ export function keepJsonValid(rel: string, before: string, after: string): void 
   }
 }
 
+/** Most replacements one edit_file call may carry. */
+const EDIT_BATCH_MAX = 20;
+
 /** Above this read_file refuses: the file would be read into memory whole. */
 const MAX_READ_BYTES = 8 * 1024 * 1024;
 /** A read_file result over this many characters comes back cut: every later
@@ -433,30 +436,45 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
     name: "edit_file",
     label: "Edit file",
     description:
-      "Replace an exact, unique text region in a file (oldText must match exactly once). Prefer over write_file for surgical edits. Each edit commits to the user's repo immediately (author: you).",
+      "Replace an exact, unique text region in a file (oldText must match exactly once). Prefer over write_file for surgical edits. Several changes to one file: pass edits [{oldText, newText}] instead, in ONE call (applied in order, all or nothing, one commit). Each call commits to the user's repo immediately (author: you).",
     parameters: Type.Object({
       path: Type.String(),
-      oldText: Type.String({ description: "Exact text to replace — must be unique in the file" }),
-      newText: Type.String(),
+      oldText: Type.Optional(Type.String({ description: "Exact text to replace — must be unique in the file" })),
+      newText: Type.Optional(Type.String()),
+      edits: Type.Optional(
+        Type.Array(Type.Object({ oldText: Type.String(), newText: Type.String() }), {
+          description: `Several replacements in this file, in order, instead of oldText/newText (up to ${EDIT_BATCH_MAX}); each oldText must match exactly once in the text as the earlier ones left it`,
+        }),
+      ),
     }),
     async execute(_id, params) {
-      const { path: rel, oldText, newText } = params as { path: string; oldText: string; newText: string };
+      const { path: rel, oldText, newText, edits } = params as { path: string; oldText?: string; newText?: string; edits?: { oldText: string; newText: string }[] };
+      const batch = Array.isArray(edits) && edits.length > 0;
+      if (batch && (oldText !== undefined || newText !== undefined)) throw new Error("Pass either oldText and newText, or edits, not both.");
+      if (!batch && (typeof oldText !== "string" || typeof newText !== "string")) throw new Error("oldText and newText are required (or edits for several changes).");
+      if (batch && edits.length > EDIT_BATCH_MAX) throw new Error(`At most ${EDIT_BATCH_MAX} edits per call; send the rest in another call.`);
+      const list = batch ? edits : [{ oldText: oldText as string, newText: newText as string }];
       const denied = agentWriteDenied(rel);
       if (denied) throw new Error(`Refused: ${rel} is not agent-writable.`);
       const abs = safeResolve(p.root, rel);
       guard.assertReadable(abs, rel);
       guard.assertWritable(abs, rel);
       if (!fs.existsSync(abs)) throw new Error(`File not found: ${rel}`);
-      const replaceOnce = (text: string): string => {
-        const count = text.split(oldText).length - 1;
-        if (count === 0) throw new Error("oldText not found in file.");
-        if (count > 1) throw new Error(`oldText matches ${count} times — include more surrounding lines to make it unique.`);
-        const out = text.replace(oldText, newText);
+      // every replacement is checked against the text the earlier ones left; nothing is written unless all apply
+      const applyAll = (text: string): string => {
+        let out = text;
+        list.forEach((e, i) => {
+          const where = batch ? `edit ${i + 1} of ${list.length}: ` : "";
+          const count = out.split(e.oldText).length - 1;
+          if (count === 0) throw new Error(`${where}oldText not found in file.${batch ? " Nothing was changed." : ""}`);
+          if (count > 1) throw new Error(`${where}oldText matches ${count} times — include more surrounding lines to make it unique.${batch ? " Nothing was changed." : ""}`);
+          out = out.replace(e.oldText, () => e.newText);
+        });
         keepJsonValid(rel, text, out);
         return out;
       };
       let content = fs.readFileSync(abs, "utf8");
-      let next = replaceOnce(content);
+      let next = applyAll(content);
       const area = protectedFor(rel);
       if (area) {
         await askToChange(area, fileDiff(rel, content, next) ?? rel, true);
@@ -465,7 +483,7 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
         const fresh = fs.readFileSync(abs, "utf8");
         if (fresh !== content) {
           content = fresh;
-          next = replaceOnce(fresh);
+          next = applyAll(fresh);
         }
       }
       fs.writeFileSync(abs, next, "utf8");
@@ -477,7 +495,9 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
         committed = `. Commit failed: ${(e as Error).message} — retry with the git tool: "commit -m <message>"`;
       }
       const diff = fileDiff(rel, content, next);
-      return textResult(`Edited ${rel} (${oldText.length}→${newText.length} chars)${committed}.${neighbours(rel, false)}`, {
+      const only = list[0];
+      const what = batch || !only ? `${list.length} edits, ${content.length}→${next.length} chars` : `${only.oldText.length}→${only.newText.length} chars`;
+      return textResult(`Edited ${rel} (${what})${committed}.${neighbours(rel, false)}`, {
         path: rel,
         ...(diff ? { diff } : {}),
       });
