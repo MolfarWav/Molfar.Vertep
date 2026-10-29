@@ -10,7 +10,7 @@ dist/
 /config.yaml
 /certs/
 /out/
-/chrysalis-data/
+/molfar-vertep-data/
 
 # signing keys and certificates (the APK keystore lives outside the repo)
 *.jks

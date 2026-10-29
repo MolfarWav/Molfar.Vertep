@@ -362,7 +362,7 @@ const dict = {
   "Update all": "Обновить все",
   "Update available": "Доступно обновление",
   "Update plugin": "Обновить плагин",
-  "Update with bun add -g chrysalis-engine@latest, then restart Molfar Vertep.": "Обновите командой bun add -g chrysalis-engine@latest и перезапустите Molfar Vertep.",
+  "Update with bun add -g molfar-vertep@latest, then restart Molfar Vertep.": "Обновите командой bun add -g molfar-vertep@latest и перезапустите Molfar Vertep.",
   "Update with git pull, bun install and bun run build:client, then restart Molfar Vertep.": "Обновите через git pull, bun install и bun run build:client, затем перезапустите Molfar Vertep.",
   "Updated to v{version}.": "Обновлено до v{version}.",
   "Updates": "Обновления",

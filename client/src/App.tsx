@@ -1,4 +1,4 @@
-// Chrysalis shell: logo, tabs, theme toggle, auth, launch picker.
+// Molfar Vertep shell: logo, tabs, theme toggle, auth, launch picker.
 import { Fragment, useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import { createPortal } from "react-dom"
 import { ModalDialog } from "./ui/dialog"
@@ -39,7 +39,7 @@ const newTab = (): Tab => ({ id: `__new:${Date.now().toString(36)}${newTabSeq++}
 const isNewTabId = (id: string) => id.startsWith("__new")
 /** the open strip + active tab + pinned pane, so a refresh lands back where
  * you were instead of the picker (cleared by logout) */
-const SESSION_TABS_KEY = "chrysalis-session-tabs"
+const SESSION_TABS_KEY = "molfar-session-tabs"
 
 function Logo(props: { size?: number }) {
   return (
@@ -133,7 +133,7 @@ function Shell(props: { theme: ThemeControl }) {
   /** split-screen: an app tab pinned to the RIGHT half (agent left) — the
    * iframe keeps its DOM node, only the grid column changes (no reload) */
   const [pinned, setPinned] = useState<Tab | null>(null)
-  const [splitPct, setSplitPct] = useState(Number(prefs.get("chrysalis-split-pct")) || 50)
+  const [splitPct, setSplitPct] = useState(Number(prefs.get("molfar-split-pct")) || 50)
   const [splitActive, setSplitActive] = useState(false)
   const [dragIdx, setDragIdx] = useState<number | null>(null)
   /** flipped once enter() has restored the stored strip — the write-through
@@ -324,7 +324,7 @@ function Shell(props: { theme: ThemeControl }) {
     const target = agentFrame.current?.contentWindow
     if (!pending || !target || !agentReady.current) return
     pendingAgentPrompt.current = null
-    target.postMessage({ __chrysalisAgent: pending.kind, text: pending.text }, location.origin)
+    target.postMessage({ __molfarAgent: pending.kind, text: pending.text }, location.origin)
   }
   // Molfar's question waiting for an answer: the agent page tells the shell, which shows it
   // beside whatever the user is looking at (the agent tab stays mounted, hidden)
@@ -333,7 +333,7 @@ function Shell(props: { theme: ThemeControl }) {
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.origin !== location.origin || e.source !== agentFrame.current?.contentWindow) return
-      const d = e.data as { __chrysalisAgent?: unknown; appId?: unknown; open?: unknown; id?: unknown; question?: unknown; chatId?: unknown; kind?: unknown; text?: unknown } | null
+      const d = e.data as { __molfarAgent?: unknown; appId?: unknown; open?: unknown; id?: unknown; question?: unknown; chatId?: unknown; kind?: unknown; text?: unknown } | null
       const tell = (kind: NoticeKind, chatId: unknown, text: unknown) => {
         if (typeof chatId !== "string" || !chatId) return
         const now = shellNow.current
@@ -344,32 +344,32 @@ function Shell(props: { theme: ThemeControl }) {
           agentOnScreen: now.active?.kind === "agent" || !!now.pinned,
           onOpen: (id) => {
             now.openAgent()
-            agentFrame.current?.contentWindow?.postMessage({ __chrysalisAgent: "open-chat", id }, location.origin)
+            agentFrame.current?.contentWindow?.postMessage({ __molfarAgent: "open-chat", id }, location.origin)
           },
         })
       }
-      if (d?.__chrysalisAgent === "ask") {
+      if (d?.__molfarAgent === "ask") {
         setAgentAsk(d.open === true && typeof d.id === "string" ? { id: d.id, question: typeof d.question === "string" ? d.question.slice(0, 300) : "" } : null)
         if (d.open === true) tell("ask", d.chatId, d.question)
         return
       }
       // the user's first click or key inside the agent page: the moment to ask the browser for its permission
-      if (d?.__chrysalisAgent === "gesture") {
+      if (d?.__molfarAgent === "gesture") {
         askPermissionOnce()
         return
       }
       // a run finished or failed, or a chat that is not open began to wait: said when the user is not looking
-      if (d?.__chrysalisAgent === "notice") {
+      if (d?.__molfarAgent === "notice") {
         if (typeof d.kind === "string" && (NOTICE_KINDS as readonly string[]).includes(d.kind)) tell(d.kind as NoticeKind, d.chatId, d.text)
         return
       }
       // the project pane's "Open app": only an installed app, by its id
-      if (d?.__chrysalisAgent === "open-app") {
+      if (d?.__molfarAgent === "open-app") {
         const id = d.appId
         if (typeof id === "string" && shellNow.current.launch?.apps.some((a) => a.id === id)) shellNow.current.openApp(id)
         return
       }
-      if (d?.__chrysalisAgent !== "ready") return
+      if (d?.__molfarAgent !== "ready") return
       // a (re)loaded agent page: whatever it asked before is gone, it announces a waiting one again
       setAgentAsk(null)
       agentReady.current = true
@@ -401,7 +401,7 @@ function Shell(props: { theme: ThemeControl }) {
   shellNow.current = { active, pinned, launch, openApp, openAgent, askAgent, openSettings }
   const lastShellDraft = useRef(0)
   useEffect(() => {
-    const host = window.ChrysalisBridgeHost
+    const host = window.MolfarBridgeHost
     if (!host) return
     host.onShellRequest = (appId, req) => {
       // a read that changes nothing: apps ask for it while they boot, often in a tab not on screen
@@ -494,7 +494,7 @@ function Shell(props: { theme: ThemeControl }) {
       window.removeEventListener("pointermove", move)
       window.removeEventListener("pointerup", up)
       setSplitActive(false)
-      prefs.set("chrysalis-split-pct", String(latest))
+      prefs.set("molfar-split-pct", String(latest))
     }
     window.addEventListener("pointermove", move)
     window.addEventListener("pointerup", up)
@@ -858,7 +858,7 @@ function UserMenu(props: {
         onClick={toggle}
       >
         {avatarOk && props.hasAvatar ? <img
-            src={`/v1/auth/avatar/${encodeURIComponent(props.username)}?v=${prefs.get("chrysalis-avatar-v") ?? "0"}`}
+            src={`/v1/auth/avatar/${encodeURIComponent(props.username)}?v=${prefs.get("molfar-avatar-v") ?? "0"}`}
             alt=""
             className="size-5 shrink-0 rounded-[3px] object-cover"
             onError={() => setAvatarOk(false)}
@@ -908,7 +908,7 @@ function UserMenu(props: {
                   className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 transition-colors hover:bg-hover"
                   onClick={() => {
                     setOpen(false)
-                    void window.ChrysalisBuilder?.rebuild(app.id).catch(() => undefined)
+                    void window.MolfarBuilder?.rebuild(app.id).catch(() => undefined)
                   }}
                 >
                   <Icon name="rebuild" size="small" />
@@ -1057,7 +1057,7 @@ function AppCanvas(props: {
     const frame = frameRef.current
     if (!frame) return
     setLoaded(false)
-    const unserve = window.ChrysalisBridgeHost.serve(frame, props.tab.id, props.username, props.trusted === true)
+    const unserve = window.MolfarBridgeHost.serve(frame, props.tab.id, props.username, props.trusted === true)
     let alive = true
     let w: { ready: Promise<void>; dispose: () => void } | undefined
     let readyTimer: number | undefined
@@ -1067,12 +1067,12 @@ function AppCanvas(props: {
     const load = () => {
       setLoaded(false)
       setRuntimeError(null)
-      frame.src = window.ChrysalisBridgeHost.frameSrc(props.tab.id, props.username)
+      frame.src = window.MolfarBridgeHost.frameSrc(props.tab.id, props.username)
     }
     const onMessage = (e: MessageEvent) => {
       if (e.source !== frame.contentWindow) return
-      const d = e.data as { __chrysalisRuntime?: unknown; t?: unknown; text?: unknown; events?: unknown }
-      if (!d || d.__chrysalisRuntime !== 1) return
+      const d = e.data as { __molfarRuntime?: unknown; t?: unknown; text?: unknown; events?: unknown }
+      if (!d || d.__molfarRuntime !== 1) return
       if (d.t === "ready") {
         if (readyTimer !== undefined) window.clearTimeout(readyTimer)
         setLoaded(true)
@@ -1101,10 +1101,10 @@ function AppCanvas(props: {
     }
     window.addEventListener("message", onMessage)
     frame.addEventListener("load", onFrameLoad)
-    if (window.ChrysalisBuilder) {
+    if (window.MolfarBuilder) {
       // the app is built in this browser (a sandboxed builder frame) before
       // it first shows, and kept up to date while it is on screen
-      w = window.ChrysalisBuilder.watch(
+      w = window.MolfarBuilder.watch(
         props.tab.id,
         (s) => {
           setBuild(s)
@@ -1170,7 +1170,7 @@ function AppCanvas(props: {
             className={BAR_BUTTON}
             title={tr("Rebuild this app now")}
             disabled={build.phase === "building" || build.phase === "checking"}
-            onClick={() => void window.ChrysalisBuilder?.rebuild(props.tab.id).catch(() => undefined)}
+            onClick={() => void window.MolfarBuilder?.rebuild(props.tab.id).catch(() => undefined)}
           >
             <Icon name="rebuild" size="small" />
             <span className="max-lg:hidden">{build.phase === "building" || build.phase === "checking" ? tr("Building…") : tr("Rebuild")}</span>
@@ -1271,7 +1271,7 @@ function setupTokenFromUrl(): string {
   return m?.[1] ?? ""
 }
 
-/** First run: nobody has an account yet. The person who started Chrysalis
+/** First run: nobody has an account yet. The person who started Molfar Vertep
  *  got a link carrying a one-time token; it creates the admin account. */
 function SetupForm(props: { onDone: () => Promise<void> }) {
   const fromUrl = setupTokenFromUrl()

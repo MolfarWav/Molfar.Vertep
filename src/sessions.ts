@@ -30,7 +30,7 @@ export class SessionService {
   }
 
   /** Re-read the file. More than one process writes it — the engine, and a
-   *  `chrysalis api` call on the same machine minting one for itself — so a
+   *  `molfar-vertep api` call on the same machine minting one for itself — so a
    *  long-running engine cannot treat what it read at boot as the whole
    *  truth, and a short-lived command must not save over what it never saw. */
   private load(): void {

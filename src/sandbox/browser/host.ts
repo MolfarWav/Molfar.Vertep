@@ -100,8 +100,8 @@ class Frame {
     });
     this.onMessage = (e: MessageEvent) => {
       if (e.source !== this.iframe.contentWindow) return;
-      const d = e.data as FrameReply & { __chrysalisSandbox?: number };
-      if (!d || d.__chrysalisSandbox !== 1) return;
+      const d = e.data as FrameReply & { __molfarSandbox?: number };
+      if (!d || d.__molfarSandbox !== 1) return;
       if (d.t === "hello") this.post({ t: "config", config });
       else if (d.t === "ready") readyOk();
       else if (d.t === "fatal") readyFail(new Error(d.error));
@@ -121,7 +121,7 @@ class Frame {
   }
 
   private post(m: Record<string, unknown>): void {
-    this.iframe.contentWindow?.postMessage({ __chrysalisSandbox: 1, ...m }, "*");
+    this.iframe.contentWindow?.postMessage({ __molfarSandbox: 1, ...m }, "*");
   }
 
   call(m: Record<string, unknown>, timeoutMs: number): Promise<FrameReply> {
@@ -469,4 +469,4 @@ busListeners.add((type) => {
 });
 ensureBus();
 
-(window as unknown as { ChrysalisSandbox: unknown }).ChrysalisSandbox = { version: VERSION, host: HOST_ID };
+(window as unknown as { MolfarSandbox: unknown }).MolfarSandbox = { version: VERSION, host: HOST_ID };

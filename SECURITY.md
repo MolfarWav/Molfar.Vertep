@@ -33,7 +33,7 @@ of these on every push.
 
 Please report privately through
 [GitHub's security advisories](https://github.com/MolfarWav/Molfar.Vertep/security/advisories/new),
-not in a public issue. Include the version (`chrysalis --version`), how you run
+not in a public issue. Include the version (`molfar-vertep --version`), how you run
 it (download, Android, Docker, source) and the steps to reproduce.
 
 ## Supported versions

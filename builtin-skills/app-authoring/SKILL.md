@@ -22,7 +22,7 @@ gotchas.
 - `package.json`, `index.html`, `src/`: the UI, built in the user's browser on save; the open tab hot-updates.
 - `plugins/<id>/`: `manifest.json` `{ permissions, schedule?, priority?, networkHosts? }` + `plugin.js`.
 - `data/`: the app's files (git-tracked). `_name.json` files are AI-only templates: copy one to a real name with the same field shape.
-- `node_modules/`, `dist/`: derived, outside git. `dist/.chrysalis-build.json` holds the last build's errors.
+- `node_modules/`, `dist/`: derived, outside git. `dist/.molfar-build.json` holds the last build's errors.
 - New app: `app_create` (UI scaffolded), `app_deps`, then plugins, `src/` and seed data. `app_create` is what registers the app (its `manifest.json`): a folder made by hand, or a page run with node or a dev server, never shows in the app switcher and nothing serves it. Tell the user to pick the app in the app switcher (or New Tab), not to open a localhost address.
 
 ## Plugin contract

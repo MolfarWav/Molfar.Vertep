@@ -1,5 +1,5 @@
 /**
- * A downloaded copy of Chrysalis (Windows, macOS, Linux, portable or not)
+ * A downloaded copy of Molfar Vertep (Windows, macOS, Linux, portable or not)
  * updates itself: an admin presses Update, the engine downloads its release
  * archive, checks it, swaps its own program file and resources/ for the new
  * ones, and restarts. config.yaml and data/ are never replaced, so a portable
@@ -11,7 +11,7 @@
  *
  * The swap renames rather than overwrites: a running program can be renamed
  * on every platform (Windows included) but not replaced. The old files stay
- * as *.old until the next update, so `chrysalis rollback` (src/rollback.ts)
+ * as *.old until the next update, so `molfar-vertep rollback` (src/rollback.ts)
  * can still go back to them days later.
  *
  * The restart keeps this process as a thin parent: it stops serving, runs the
@@ -70,13 +70,18 @@ export interface UpdateState {
 }
 
 /** Set by the parent when it had to go back to this version. */
-const FAILED_ENV = "CHRYSALIS_UPDATE_FAILED";
+const FAILED_ENV = "MOLFAR_VERTEP_UPDATE_FAILED";
 /** Set on the new version's first run, while the parent can still undo it. */
-const UPDATED_ENV = "CHRYSALIS_UPDATED";
+const UPDATED_ENV = "MOLFAR_VERTEP_UPDATED";
+/** The names up to 1.7.x. A parent that goes back to such a version passes
+ *  them too: that version knows no other. */
+const LEGACY_FAILED_ENV = "CHRYSALIS_UPDATE_FAILED";
+const LEGACY_UPDATED_ENV = "CHRYSALIS_UPDATED";
 
 function initialState(): UpdateState {
-  const raw = process.env[FAILED_ENV];
+  const raw = process.env[FAILED_ENV] || process.env[LEGACY_FAILED_ENV];
   delete process.env[FAILED_ENV];
+  delete process.env[LEGACY_FAILED_ENV];
   if (!raw) return { phase: "idle" };
   try {
     const failed = JSON.parse(raw) as { version?: unknown; error?: unknown };
@@ -531,7 +536,7 @@ export function runReplacement(options: ReplacementOptions): void {
   }
   let proven = false;
   let answeringSince = 0;
-  const child = mirror(opts, { ...process.env, [UPDATED_ENV]: "1" }, (code, signal, stopRequested) => {
+  const child = mirror(opts, { ...process.env, [UPDATED_ENV]: "1", [LEGACY_UPDATED_ENV]: "1" }, (code, signal, stopRequested) => {
     clearInterval(watch);
     if (proven || stopRequested) return exitWith(code, signal);
     const reason = signal ? `stopped by ${signal}` : `exited with code ${code}`;
@@ -553,7 +558,8 @@ export function runReplacement(options: ReplacementOptions): void {
         log.error(`[update] could not restore account files: ${(e as Error).message}`);
       }
     }
-    mirror(opts, { ...process.env, [UPDATED_ENV]: "", [FAILED_ENV]: JSON.stringify({ version: target, error }) }, exitWith);
+    const failed = JSON.stringify({ version: target, error });
+    mirror(opts, { ...process.env, [UPDATED_ENV]: "", [LEGACY_UPDATED_ENV]: "", [FAILED_ENV]: failed, [LEGACY_FAILED_ENV]: failed }, exitWith);
   });
   const watch = setInterval(() => {
     void (async () => {

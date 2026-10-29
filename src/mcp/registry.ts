@@ -289,7 +289,7 @@ export class McpRegistry {
   }
 
   private async connect(id: string, cfg: McpServerConfig): Promise<ConnectedServer | null> {
-    const client = new Client({ name: "chrysalis-engine", version: ENGINE_VERSION }, { capabilities: {} });
+    const client = new Client({ name: "molfar-vertep", version: ENGINE_VERSION }, { capabilities: {} });
     try {
       if (cfg.type === "stdio") {
         if (!cfg.command) throw new Error("stdio server requires command");

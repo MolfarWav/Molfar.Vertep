@@ -278,7 +278,7 @@ export class UserService {
 
   /** Legacy accounts created before passwords were mandatory get a generated
    *  one at boot (printed once). Forgotten: the reset code flow
-   *  (/v1/auth/forgot) or `chrysalis reset-password`. */
+   *  (/v1/auth/forgot) or `molfar-vertep reset-password`. */
   ensurePasswords(): { username: string; password: string }[] {
     const out: { username: string; password: string }[] = [];
     for (const u of this.users) {

@@ -115,7 +115,11 @@ export interface AppDeps {
   restart?: () => Promise<void>;
 }
 
-const SESSION_COOKIE = "chrysalis_session";
+/** The session cookie, and its name up to 1.7.x: a browser signed in under the
+ *  old one stays signed in (#66). */
+const SESSION_COOKIE = "molfar_vertep_session";
+const LEGACY_SESSION_COOKIE = "chrysalis_session";
+const sessionTokenOf = (cookies: Record<string, string>): string => cookies[SESSION_COOKIE] ?? cookies[LEGACY_SESSION_COOKIE] ?? "";
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60;
 
 /** CSP connect-src for pages that only ever need this engine: self, plus the
@@ -1008,12 +1012,14 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   };
   const cookieFlags = (c: Context): string =>
     `Path=/; HttpOnly; SameSite=Lax${requestIsHttps(c) ? "; Secure" : ""}`;
-  const sessionCookie = (c: Context, token: string) =>
+  const sessionCookie = (c: Context, token: string) => {
     c.header("set-cookie", `${SESSION_COOKIE}=${token}; ${cookieFlags(c)}; Max-Age=${SESSION_MAX_AGE}`);
+    c.header("set-cookie", `${LEGACY_SESSION_COOKIE}=; ${cookieFlags(c)}; Max-Age=0`, { append: true });
+  };
   /** End an account's sessions and live sockets; `keepCurrent` spares the
    *  session this request came in on. */
   const signOutEverywhere = (c: Context, username: string, keepCurrent: boolean) => {
-    sessions.destroyUser(username, keepCurrent ? parseCookies(c.req.header("cookie") ?? "")[SESSION_COOKIE] : undefined);
+    sessions.destroyUser(username, keepCurrent ? sessionTokenOf(parseCookies(c.req.header("cookie") ?? "")) || undefined : undefined);
     bus.dropUser(username);
   };
 
@@ -1042,7 +1048,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
 
   // first run: whoever holds the setup link creates the admin account. The
   // token was printed where the engine started (and written to its log file),
-  // so only the person who started Chrysalis has it.
+  // so only the person who started Molfar Vertep has it.
   app.post("/v1/auth/setup", async (c) => {
     const ip = clientIp(c);
     const ipFail = loginIpFails.get(ip);
@@ -1165,7 +1171,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     // garbage tokens cannot lock out a genuine headless client
     let user = token ? users.verify(token, clientIp(c)) : null;
     if (!user) {
-      const cookie = parseCookies(c.req.header("cookie") ?? "")[SESSION_COOKIE] ?? "";
+      const cookie = sessionTokenOf(parseCookies(c.req.header("cookie") ?? ""));
       const sess = cookie ? sessions.verify(cookie) : null;
       const bySession = sess ? (users.get(sess.username) ?? null) : null;
       user = bySession && bySession.enabled !== false ? bySession : null;
@@ -1184,11 +1190,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
 
   // ---------- app bridge: second lock ----------
   // The shell's bridge (client/public/app-bridge-host.js) stamps every request
-  // it relays for an app frame with x-chrysalis-app; the frame can neither set
+  // it relays for an app frame with x-molfar-app (x-chrysalis-app up to 1.7.x, still
+  // honoured); the frame can neither set
   // nor drop it. The same allowlist is enforced here, so a gap in the bridge's
   // copy (it once compared the raw %-encoded path) is not a way in.
   app.use("/v1/*", async (c, next) => {
-    const appId = c.req.header("x-chrysalis-app");
+    const appId = c.req.header("x-molfar-app") ?? c.req.header("x-chrysalis-app");
     if (appId === undefined) return next();
     const p = c.get("paths") as UserPaths | undefined;
     const info = p ? readApp(p.apps, appId) : null;
@@ -1240,9 +1247,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   });
 
   app.post("/v1/auth/logout", (c) => {
-    const token = parseCookies(c.req.header("cookie") ?? "")[SESSION_COOKIE] ?? "";
+    const token = sessionTokenOf(parseCookies(c.req.header("cookie") ?? ""));
     if (token) sessions.destroy(token);
     c.header("set-cookie", `${SESSION_COOKIE}=; ${cookieFlags(c)}; Max-Age=0`);
+    c.header("set-cookie", `${LEGACY_SESSION_COOKIE}=; ${cookieFlags(c)}; Max-Age=0`, { append: true });
     return c.json({ ok: true });
   });
 
@@ -1918,7 +1926,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (catalog?.url !== url) {
       catalog = {
         url,
-        list: createCatalog({ url, cacheFile: path.join(dataDir, "store-catalog.json"), fetcher: deps.storeFetch, userAgent: `Chrysalis/${ENGINE_VERSION}` }),
+        list: createCatalog({ url, cacheFile: path.join(dataDir, "store-catalog.json"), fetcher: deps.storeFetch, userAgent: `MolfarVertep/${ENGINE_VERSION}` }),
       };
     }
     const result = await catalog.list.get({ fresh: c.req.query("fresh") === "1" });
@@ -5496,18 +5504,18 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
   var loaded = false;
   var hide = function () { if (!loaded) { loaded = true; boot.style.display = "none"; } };
   var fail = function () { bootmsg.textContent = "The build failed. This window shows the app's last good build."; };
-  ChrysalisBridgeHost.serve(frame, appId, username, ${officialApp(c.get("paths"), app)});
-  var load = function () { boot.style.display = "flex"; loaded = false; frame.src = ChrysalisBridgeHost.frameSrc(appId, username); };
+  MolfarBridgeHost.serve(frame, appId, username, ${officialApp(c.get("paths"), app)});
+  var load = function () { boot.style.display = "flex"; loaded = false; frame.src = MolfarBridgeHost.frameSrc(appId, username); };
   // the same signal the shell's app pane waits for, plus a load fallback
   window.addEventListener("message", function (e) {
     var d = e.data;
-    if (d && d.__chrysalisRuntime === 1 && d.t === "ready") hide();
+    if (d && d.__molfarRuntime === 1 && d.t === "ready") hide();
   });
   frame.addEventListener("load", function () { setTimeout(hide, 250); });
-  if (window.ChrysalisBuilder) {
+  if (window.MolfarBuilder) {
     // the app is built in this browser before it first shows (same builder the
     // shell uses, lease and all); the overlay reports the build's progress
-    var w = ChrysalisBuilder.watch(appId, function (s) {
+    var w = MolfarBuilder.watch(appId, function (s) {
       if (s.phase === "building") bootmsg.textContent = "Building the app…";
       else if (s.phase === "waiting") bootmsg.textContent = s.message || "Waiting for the build…";
       else if (s.phase === "error") fail();

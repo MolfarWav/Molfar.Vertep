@@ -1,9 +1,10 @@
 /**
- * Environment variables were CHRYSALIS_* up to 1.2.x and are MOLFAR_VERTEP_*
+ * Environment variables were CHRYSALIS_* up to 1.7.x and are MOLFAR_VERTEP_*
  * now (#66). Both names are read, the new one first, so scripts, shortcuts
- * and container setups written for the old ones keep working. Variables the
- * engine sets for a process it starts keep the old name: that process may be
- * an older version (after a failed update), which knows no other.
+ * and container setups written for the old ones keep working. The update
+ * variables are the one thing the engine still sets under both names: the
+ * process it starts may be an older version (after a failed update), which
+ * knows no other (src/self-update.ts).
  */
 export const ENV_PREFIX = "MOLFAR_VERTEP_";
 export const LEGACY_ENV_PREFIX = "CHRYSALIS_";

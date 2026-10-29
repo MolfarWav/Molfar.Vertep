@@ -76,7 +76,7 @@ describe("app client errors", () => {
   it("ring-trims the log so a console loop cannot grow it without bound", () => {
     const rev = sourceRev(appDir);
     writeClientErrors(appDir, Array.from({ length: 210 }, (_, i) => ({ kind: "console", text: `t${i}`, at: i, rev })));
-    const lines = fs.readFileSync(path.join(appDir, "dist", ".chrysalis-client-errors.jsonl"), "utf8").split("\n").filter(Boolean);
+    const lines = fs.readFileSync(path.join(appDir, "dist", ".molfar-client-errors.jsonl"), "utf8").split("\n").filter(Boolean);
     expect(lines.length).toBe(200);
     expect(readClientErrors(appDir, rev, 1)[0]!.text).toBe("t209");
   });
@@ -87,7 +87,7 @@ describe("app client errors", () => {
     fs.mkdirSync(path.join(appDir, "dist"), { recursive: true });
     fs.writeFileSync(path.join(appDir, "dist", "index.html"), "<!doctype html>");
     // the frame route serves dist files publicly, but dot-files are internal
-    const res = await app.request("/app/alice/demo/.chrysalis-client-logs.jsonl");
+    const res = await app.request("/app/alice/demo/.molfar-client-logs.jsonl");
     expect(res.status).toBe(404);
   });
 
@@ -129,7 +129,7 @@ describe("app client errors", () => {
   it("ring-trims the print log and refuses anonymous callers", async () => {
     const rev = sourceRev(appDir);
     writeClientLogs(appDir, Array.from({ length: 310 }, (_, i) => ({ kind: "log", text: `t${i}`, at: i, rev })));
-    const lines = fs.readFileSync(path.join(appDir, "dist", ".chrysalis-client-logs.jsonl"), "utf8").split("\n").filter(Boolean);
+    const lines = fs.readFileSync(path.join(appDir, "dist", ".molfar-client-logs.jsonl"), "utf8").split("\n").filter(Boolean);
     expect(lines.length).toBe(300);
     expect((await app.request("/v1/apps/demo/client-logs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ events: [] }) })).status).toBe(401);
   });

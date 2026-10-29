@@ -514,14 +514,15 @@ describe("the command line an outside agent uses", () => {
     expect(src).not.toContain("'setx'");
   });
 
-  it("says how to run itself per install, not just 'chrysalis'", () => {
+  it("says how to run itself per install, not just 'molfar-vertep'", () => {
     // a downloaded build is not on PATH: the examples have to be pasteable
-    expect(src).toContain('if (INSTALL_KIND === "npm") return "chrysalis"');
+    expect(src).toContain('const CLI_NAME = "molfar-vertep"');
+    expect(src).toContain('if (INSTALL_KIND === "npm") return CLI_NAME');
     expect(src).toContain("process.execPath");
   });
 });
 
-describe("chrysalis makes itself a command", () => {
+describe("molfar-vertep makes itself a command", () => {
   const src = fs.readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
 
   it("links on first start, so nobody has to find install-cli", () => {
@@ -542,8 +543,9 @@ describe("chrysalis makes itself a command", () => {
 
   it("only ever finds, and so only ever removes, a link pointing at us", () => {
     const block = src.slice(src.indexOf("function existingCliLink"), src.indexOf("function existingCliLink") + 800);
-    expect(block).toContain("readlinkSync");
+    expect(block).toContain("readLink(");
     expect(block).toContain("process.execPath");
+    expect(src).toContain("fs.readlinkSync(file)");
     // and uninstall acts on exactly what that found
     const unlink = src.slice(src.indexOf("async function unlinkCli"), src.indexOf("async function unlinkCli") + 400);
     expect(unlink).toContain("existingCliLink(dataDir)");

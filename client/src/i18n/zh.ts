@@ -362,7 +362,7 @@ const dict = {
   "Update all": "全部更新",
   "Update available": "有可用更新",
   "Update plugin": "更新插件",
-  "Update with bun add -g chrysalis-engine@latest, then restart Molfar Vertep.": "运行 bun add -g chrysalis-engine@latest 更新，然后重启 Molfar Vertep。",
+  "Update with bun add -g molfar-vertep@latest, then restart Molfar Vertep.": "运行 bun add -g molfar-vertep@latest 更新，然后重启 Molfar Vertep。",
   "Update with git pull, bun install and bun run build:client, then restart Molfar Vertep.": "运行 git pull、bun install 和 bun run build:client 更新，然后重启 Molfar Vertep。",
   "Updated to v{version}.": "已更新到 v{version}。",
   "Updates": "更新",

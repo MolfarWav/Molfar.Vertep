@@ -23,7 +23,7 @@ type Msg =
   | { t: "build"; id: number; kind: "full" | "warm" | "update" | "production"; changed?: string[] }
   | { t: "fs-result"; rid: number; results: FsResult[] };
 
-const post = (m: unknown, transfer: Transferable[] = []) => parent.postMessage({ __chrysalisBuilder: 1, ...(m as object) }, "*", transfer);
+const post = (m: unknown, transfer: Transferable[] = []) => parent.postMessage({ __molfarBuilder: 1, ...(m as object) }, "*", transfer);
 
 let rid = 0;
 const waiting = new Map<number, (r: FsResult[]) => void>();
@@ -87,8 +87,8 @@ async function build(kind: Extract<Msg, { t: "build" }>["kind"], changed: string
 
 addEventListener("message", (e: MessageEvent) => {
   if (e.source !== parent) return;
-  const d = e.data as Msg & { __chrysalisBuilder?: number };
-  if (!d || d.__chrysalisBuilder !== 1) return;
+  const d = e.data as Msg & { __molfarBuilder?: number };
+  if (!d || d.__molfarBuilder !== 1) return;
   if (d.t === "fs-result") {
     waiting.get(d.rid)?.(d.results);
     waiting.delete(d.rid);

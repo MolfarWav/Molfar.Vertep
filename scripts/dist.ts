@@ -1,5 +1,5 @@
 /**
- * Release builds: everything a person downloads to run Chrysalis without a
+ * Release builds: everything a person downloads to run Molfar Vertep without a
  * checkout, Bun, git or Node.
  *
  *   bun run dist                         every target
@@ -8,12 +8,12 @@
  *   bun run dist ... --no-archive        leave folders, skip .zip/.tar.gz
  *   bun run dist ... --skip-frontends    reuse client/dist and client-agent/dist
  *
- * CHRYSALIS_VERSION overrides package.json's version (CI labels staging
+ * MOLFAR_VERTEP_VERSION overrides package.json's version (CI labels staging
  * builds 1.0.0-staging.<date>.<commit>; the APK then installs as its own
- * "Chrysalis Staging" app beside the stable one).
+ * "Molfar Vertep Staging" app beside the stable one).
  *
  * Output in out/dist/:
- *   Molfar-Vertep-<version>-<target>/        chrysalis[.exe] + resources/
+ *   Molfar-Vertep-<version>-<target>/        molfar-vertep[.exe] + resources/
  *   Molfar-Vertep-<version>-<target>.tar.gz  (.zip for Windows; Chrysalis-* up to 0.9.0)
  *   npm/                                 package for `bun install -g`
  *   android/                             server + resources for the Android launcher
@@ -35,9 +35,9 @@ import { buildSandboxForRelease } from "../src/sandbox/assets.js";
 
 const repo = path.resolve(import.meta.dir, "..");
 const pkg = JSON.parse(fs.readFileSync(path.join(repo, "package.json"), "utf8")) as { version: string; repository?: string };
-const version = process.env.CHRYSALIS_VERSION || pkg.version;
+const version = process.env.MOLFAR_VERTEP_VERSION || process.env.CHRYSALIS_VERSION || pkg.version;
 if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$/.test(version)) {
-  console.error(`CHRYSALIS_VERSION "${version}" is not a version like 1.2.3 or 1.2.3-staging.4`);
+  console.error(`MOLFAR_VERTEP_VERSION "${version}" is not a version like 1.2.3 or 1.2.3-staging.4`);
   process.exit(1);
 }
 const outRoot = path.join(repo, "out", "dist");
@@ -45,12 +45,12 @@ const outRoot = path.join(repo, "out", "dist");
 /** Download name → Bun compile target. x64 builds use Bun's baseline
  *  runtime, which also runs on CPUs without AVX2. */
 const TARGETS: Record<string, { bun: string; exe: string; archive: "zip" | "tar" | null; kind: "binary" | "android" }> = {
-  "windows-x64": { bun: "bun-windows-x64-baseline", exe: "chrysalis.exe", archive: "zip", kind: "binary" },
-  "macos-arm64": { bun: "bun-darwin-arm64", exe: "chrysalis", archive: "tar", kind: "binary" },
-  "macos-x64": { bun: "bun-darwin-x64", exe: "chrysalis", archive: "tar", kind: "binary" },
-  "linux-x64": { bun: "bun-linux-x64-baseline", exe: "chrysalis", archive: "tar", kind: "binary" },
-  "linux-arm64": { bun: "bun-linux-arm64", exe: "chrysalis", archive: "tar", kind: "binary" },
-  "android-arm64": { bun: "bun-linux-arm64-android", exe: "libchrysalis.so", archive: null, kind: "android" },
+  "windows-x64": { bun: "bun-windows-x64-baseline", exe: "molfar-vertep.exe", archive: "zip", kind: "binary" },
+  "macos-arm64": { bun: "bun-darwin-arm64", exe: "molfar-vertep", archive: "tar", kind: "binary" },
+  "macos-x64": { bun: "bun-darwin-x64", exe: "molfar-vertep", archive: "tar", kind: "binary" },
+  "linux-x64": { bun: "bun-linux-x64-baseline", exe: "molfar-vertep", archive: "tar", kind: "binary" },
+  "linux-arm64": { bun: "bun-linux-arm64", exe: "molfar-vertep", archive: "tar", kind: "binary" },
+  "android-arm64": { bun: "bun-linux-arm64-android", exe: "libmolfar-vertep.so", archive: null, kind: "android" },
 };
 /** Builds android-arm64 first, then the launcher APK around it. */
 const APK = "android-apk";
@@ -119,10 +119,10 @@ console.log(`builder ${builder.version}, sandbox ${sandbox.version}`);
 // ---------- engine bundles ----------
 
 const defines = (kind: string): string[] => [
-  "--define", `CHRYSALIS_BUILD=${JSON.stringify({ version, repository: pkg.repository ?? null, kind })}`,
+  "--define", `MOLFAR_VERTEP_BUILD=${JSON.stringify({ version, repository: pkg.repository ?? null, kind })}`,
   // compiled: the worker's source path, mapped to the embedded copy;
   // bundled: the file the worker entry lands in beside the engine bundle
-  "--define", `CHRYSALIS_SANDBOX_WORKER=${JSON.stringify(kind === "npm" ? "plugins/sandbox-worker.js" : "./plugins/sandbox-worker.mjs")}`,
+  "--define", `MOLFAR_VERTEP_SANDBOX_WORKER=${JSON.stringify(kind === "npm" ? "plugins/sandbox-worker.js" : "./plugins/sandbox-worker.mjs")}`,
   // only reached from a source checkout; packaged copies serve prebuilt bundles
   "--external", "esbuild",
 ];
@@ -136,19 +136,19 @@ cd "$(dirname "$0")"
 
 xattr -dr com.apple.quarantine . 2>/dev/null || true
 
-if ! codesign --verify --quiet ./chrysalis 2>/dev/null; then
+if ! codesign --verify --quiet ./molfar-vertep 2>/dev/null; then
   echo "Preparing Molfar Vertep for macOS (once per download)..."
-  codesign --remove-signature ./chrysalis 2>/dev/null || true
-  codesign --force --sign - ./chrysalis
+  codesign --remove-signature ./molfar-vertep 2>/dev/null || true
+  codesign --force --sign - ./molfar-vertep
 fi
 
-exec ./chrysalis "$@"
+exec ./molfar-vertep "$@"
 `;
 
 const MAC_README = `
-macOS: double-click start.command, not chrysalis.
+macOS: double-click start.command, not molfar-vertep.
 
-These builds do not carry a signature macOS accepts, so opening chrysalis
+These builds do not carry a signature macOS accepts, so opening molfar-vertep
 directly is blocked or closes straight away with "killed".
 start.command clears the download flag, signs the program for your Mac and
 starts it. Use it again after each update: every download is a new folder.
@@ -156,9 +156,9 @@ starts it. Use it again after each update: every download is a new folder.
 By hand, in Terminal in this folder:
 
   xattr -dr com.apple.quarantine .
-  codesign --remove-signature chrysalis
-  codesign --force --sign - chrysalis
-  ./chrysalis
+  codesign --remove-signature molfar-vertep
+  codesign --force --sign - molfar-vertep
+  ./molfar-vertep
 `;
 
 /** A double-click way back for Windows, where the command line is not where
@@ -166,13 +166,13 @@ By hand, in Terminal in this folder:
 const RESTORE_CMD = `@echo off\r
 rem Goes back to the Molfar Vertep version from before the last update.\r
 rem Stop Molfar Vertep first. Your workspaces and chats are not touched.\r
-rem The program is chrysalis.exe up to 1.2.x and molfar-vertep.exe later.\r
+rem The program is chrysalis.exe up to 1.7.x and molfar-vertep.exe later.\r
 if exist "%~dp0molfar-vertep.exe" ("%~dp0molfar-vertep.exe" rollback) else ("%~dp0chrysalis.exe" rollback)\r
 `;
 
 const README = (exe: string) => `Molfar Vertep ${version}
 
-Start:     ${exe === "chrysalis.exe" ? "double-click chrysalis.exe" : "./chrysalis"}
+Start:     ${exe === "molfar-vertep.exe" ? "double-click molfar-vertep.exe" : "./molfar-vertep"}
 Help:      ${exe} --help
 Settings:  config.yaml in your app-data folder (${exe} paths shows where).
            Put a config.yaml next to ${exe} to keep everything in this folder.
@@ -183,13 +183,13 @@ Keep the resources folder next to ${exe}.
 Using your own editor or coding agent? Everything Molfar Vertep stores is plain
 files under git. Once Molfar Vertep has started once, in any terminal:
 
-  chrysalis workspace
+  molfar-vertep workspace
 
 prints where they are and how to reach the running engine. The first start
-makes "chrysalis" a command for you; open a new terminal to pick it up.
-Undo that with "chrysalis uninstall-cli".
+makes "molfar-vertep" a command for you; open a new terminal to pick it up.
+Undo that with "molfar-vertep uninstall-cli".
 
-An update went wrong? Stop Molfar Vertep, then ${exe === "chrysalis.exe" ? "double-click Restore-previous-version.cmd" : "run ./chrysalis rollback"}.
+An update went wrong? Stop Molfar Vertep, then ${exe === "molfar-vertep.exe" ? "double-click Restore-previous-version.cmd" : "run ./molfar-vertep rollback"}.
 It brings back the version from before the last update (kept until the next one).
 `;
 
@@ -207,7 +207,7 @@ for (const name of targets) {
   if (t.kind === "android") continue;
   const isMac = name.startsWith("macos-");
   fs.writeFileSync(path.join(folder, "README.txt"), README(t.exe) + (isMac ? MAC_README : ""));
-  if (t.exe === "chrysalis.exe") fs.writeFileSync(path.join(folder, "Restore-previous-version.cmd"), RESTORE_CMD);
+  if (t.exe === "molfar-vertep.exe") fs.writeFileSync(path.join(folder, "Restore-previous-version.cmd"), RESTORE_CMD);
   if (isMac) {
     // .command so Finder runs it on a double-click, like the .exe on Windows
     const launcher = path.join(folder, "start.command");
@@ -242,7 +242,7 @@ if (wantApk) {
   fs.rmSync(path.join(main, "assets"), { recursive: true, force: true });
   fs.mkdirSync(path.join(main, "jniLibs", "arm64-v8a"), { recursive: true });
   fs.mkdirSync(path.join(main, "assets"), { recursive: true });
-  fs.copyFileSync(path.join(payload, "libchrysalis.so"), path.join(main, "jniLibs", "arm64-v8a", "libchrysalis.so"));
+  fs.copyFileSync(path.join(payload, "libmolfar-vertep.so"), path.join(main, "jniLibs", "arm64-v8a", "libmolfar-vertep.so"));
   // Bun calls system calls Android before 14 traps (close_range at startup):
   // the shim turns those traps into ENOSYS. Without it the server dies at once
   // on such phones, so a missing NDK fails the build.
@@ -279,10 +279,10 @@ if (wantNpm) {
   const npm = path.join(outRoot, "npm");
   fs.rmSync(npm, { recursive: true, force: true });
   run(process.execPath, ["build", "--target=bun", ...defines("npm"), ...ENTRIES, "--outdir", npm]);
-  fs.renameSync(path.join(npm, "index.js"), path.join(npm, "chrysalis.js"));
-  const body = fs.readFileSync(path.join(npm, "chrysalis.js"), "utf8");
-  fs.writeFileSync(path.join(npm, "chrysalis.js"), `#!/usr/bin/env bun\n${body.replace(/^#!.*\n/, "")}`);
-  fs.chmodSync(path.join(npm, "chrysalis.js"), 0o755);
+  fs.renameSync(path.join(npm, "index.js"), path.join(npm, "molfar-vertep.js"));
+  const body = fs.readFileSync(path.join(npm, "molfar-vertep.js"), "utf8");
+  fs.writeFileSync(path.join(npm, "molfar-vertep.js"), `#!/usr/bin/env bun\n${body.replace(/^#!.*\n/, "")}`);
+  fs.chmodSync(path.join(npm, "molfar-vertep.js"), 0o755);
   fs.cpSync(resources, path.join(npm, "resources"), { recursive: true });
   fs.copyFileSync(path.join(repo, "LICENSE"), path.join(npm, "LICENSE"));
   // the registry page shows this README away from the repo, so relative
@@ -298,15 +298,15 @@ if (wantNpm) {
     path.join(npm, "package.json"),
     JSON.stringify(
       {
-        name: "chrysalis-engine",
+        name: "molfar-vertep",
         version,
         description: "The AI frontend you can reshape just by asking.",
         license: "AGPL-3.0-only",
         repository: pkg.repository,
         type: "module",
-        bin: { chrysalis: "chrysalis.js", "molfar-vertep": "chrysalis.js" },
+        bin: { "molfar-vertep": "molfar-vertep.js" },
         engines: { bun: ">=1.4.0" },
-        files: ["chrysalis.js", "plugins", "resources", "*.wasm", "LICENSE", "README.md"],
+        files: ["molfar-vertep.js", "plugins", "resources", "*.wasm", "LICENSE", "README.md"],
       },
       null,
       2,

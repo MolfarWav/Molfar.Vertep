@@ -1,5 +1,5 @@
 /**
- * Chrysalis app bridge host — runs in the shell (and the standalone app
+ * Molfar Vertep app bridge host — runs in the shell (and the standalone app
  * page). Owns the session, embeds app iframes as `sandbox="allow-scripts ..."`
  * (opaque origin), and answers their bridge messages. Every request is
  * validated here: an app may reach its own API and a fixed set of product
@@ -8,7 +8,7 @@
  */
 (function () {
   "use strict";
-  var CH = (window.ChrysalisBridgeHost = window.ChrysalisBridgeHost || {});
+  var CH = (window.MolfarBridgeHost = window.MolfarBridgeHost || {});
 
   var frames = new Map(); // contentWindow -> { appId, username, nonce }
   var wsClients = new Map(); // "<appId>\n<wsId>" -> WebSocket
@@ -127,7 +127,7 @@
     var url;
     try { url = new URL(d.url, location.origin); } catch { url = null; }
     if (!url || url.origin !== location.origin || !allowedRequest(record.appId, method, url.pathname, record.trusted)) {
-      send(source, { __chrysalis: 1, type: "fetch-error", id: d.id, error: "blocked by the app sandbox: " + String(d.url) });
+      send(source, { __molfar: 1, type: "fetch-error", id: d.id, error: "blocked by the app sandbox: " + String(d.url) });
       return;
     }
     var headers = {};
@@ -138,10 +138,10 @@
     });
     // the engine refuses app-management routes to anything carrying this
     // (a second lock behind allowedRequest); frames cannot set or drop it
-    headers["x-chrysalis-app"] = record.appId;
+    headers["x-molfar-app"] = record.appId;
     var body = typeof d.body === "string" ? b64ToBytes(d.body) : undefined;
     if (body && body.byteLength > MAX_BODY) {
-      send(source, { __chrysalis: 1, type: "fetch-error", id: d.id, error: "request body too large" });
+      send(source, { __molfar: 1, type: "fetch-error", id: d.id, error: "request body too large" });
       return;
     }
     fetch(url.toString(), {
@@ -162,7 +162,7 @@
         // the bytes themselves, transferred (no copy, no base64): a large
         // file (a card with an image pack) would otherwise be held three times
         send(source, {
-          __chrysalis: 1,
+          __molfar: 1,
           type: "fetch-result",
           id: d.id,
           status: res.status,
@@ -172,11 +172,11 @@
         }, buf.byteLength ? [buf] : []);
       });
     }).catch(function (e) {
-      send(source, { __chrysalis: 1, type: "fetch-error", id: d.id, error: String((e && e.message) || e) });
+      send(source, { __molfar: 1, type: "fetch-error", id: d.id, error: String((e && e.message) || e) });
     });
   }
 
-  /** Shell actions an app may ask for (`window.chrysalisShell` in the frame).
+  /** Shell actions an app may ask for (`window.molfarShell` in the frame).
    *  Trusted apps only; returns the cleaned request or null. The shell's
    *  handler (CH.onShellRequest) adds the rest: the app's tab must be the one
    *  on screen, and Molfar only gets an unsent draft. */
@@ -204,8 +204,8 @@
 
   function handleShell(record, source, d) {
     function reply(ok, data) {
-      send(source, ok ? { __chrysalis: 1, type: "shell-result", id: d.id, data: data === undefined ? null : data }
-        : { __chrysalis: 1, type: "shell-error", id: d.id, error: String(data) });
+      send(source, ok ? { __molfar: 1, type: "shell-result", id: d.id, data: data === undefined ? null : data }
+        : { __molfar: 1, type: "shell-error", id: d.id, error: String(data) });
     }
     var req = shellRequest(record.trusted, d);
     if (!req) return reply(false, "not allowed for this app");
@@ -234,41 +234,47 @@
     var url;
     try { url = new URL(d.url, location.origin); } catch { url = null; }
     if (!url || url.origin !== location.origin || !wsAllowed(url.pathname + url.search)) {
-      send(source, { __chrysalis: 1, type: "ws-event", wsId: d.wsId, event: "error" });
+      send(source, { __molfar: 1, type: "ws-event", wsId: d.wsId, event: "error" });
       return;
     }
     var ws;
     try { ws = new WebSocket(url.toString(), d.protocols && d.protocols.length ? d.protocols : undefined); }
     catch {
-      send(source, { __chrysalis: 1, type: "ws-event", wsId: d.wsId, event: "error" });
+      send(source, { __molfar: 1, type: "ws-event", wsId: d.wsId, event: "error" });
       return;
     }
     var ownKey = wsKey(record.appId, d.wsId);
     wsClients.set(ownKey, ws);
     ws.binaryType = "arraybuffer";
     ws.onopen = function () {
-      send(source, { __chrysalis: 1, type: "ws-event", wsId: d.wsId, event: "open", protocol: ws.protocol });
+      send(source, { __molfar: 1, type: "ws-event", wsId: d.wsId, event: "open", protocol: ws.protocol });
     };
     // /v1/ws carries the whole user event bus: only this app's events pass
     ws.onmessage = function (ev) {
       if (typeof ev.data !== "string" || !eventAllowed(record.appId, record.trusted === true, ev.data)) return;
-      send(source, { __chrysalis: 1, type: "ws-event", wsId: d.wsId, event: "message", data: ev.data, binary: false });
+      send(source, { __molfar: 1, type: "ws-event", wsId: d.wsId, event: "message", data: ev.data, binary: false });
     };
     ws.onclose = function (ev) {
       wsClients.delete(ownKey);
-      send(source, { __chrysalis: 1, type: "ws-event", wsId: d.wsId, event: "close", code: ev.code, reason: ev.reason });
+      send(source, { __molfar: 1, type: "ws-event", wsId: d.wsId, event: "close", code: ev.code, reason: ev.reason });
     };
     ws.onerror = function () {
-      send(source, { __chrysalis: 1, type: "ws-event", wsId: d.wsId, event: "error" });
+      send(source, { __molfar: 1, type: "ws-event", wsId: d.wsId, event: "error" });
     };
   }
 
   function storageKey(username, appId) {
+    return "molfar.app-storage." + username + "." + appId;
+  }
+  /** Where 1.7.x and older kept an app's storage. It is read when the new
+   *  key is empty and removed on the first write under the new one, so no
+   *  app loses what it saved (#66). */
+  function legacyStorageKey(username, appId) {
     return "chrysalis.app-storage." + username + "." + appId;
   }
   function readStorage(username, appId) {
     try {
-      var raw = localStorage.getItem(storageKey(username, appId));
+      var raw = localStorage.getItem(storageKey(username, appId)) || localStorage.getItem(legacyStorageKey(username, appId));
       var parsed = raw ? JSON.parse(raw) : null;
       if (parsed && typeof parsed === "object") {
         if (!parsed.local) parsed.local = {};
@@ -282,6 +288,7 @@
   function writeStorage(username, appId, store) {
     try {
       localStorage.setItem(storageKey(username, appId), JSON.stringify(store));
+      try { localStorage.removeItem(legacyStorageKey(username, appId)); } catch { /* keep it */ }
       return true;
     } catch {
       return false;
@@ -293,7 +300,7 @@
    *  across a reload of the tab, gone when the tab closes) and seeds the next
    *  frame, which then lists them as unsaved again. */
   function overflowKey(username, appId) {
-    return "chrysalis.app-unsaved." + username + "." + appId;
+    return "molfar.app-unsaved." + username + "." + appId;
   }
   function readOverflow(username, appId) {
     try {
@@ -352,7 +359,7 @@
     // an older bridge (a page cached across an update) sends no opId and expects no answer
     if (typeof d.opId === "number") {
       send(source, {
-        __chrysalis: 1, type: "storage-ack", opId: d.opId, op: d.op,
+        __molfar: 1, type: "storage-ack", opId: d.opId, op: d.op,
         which: d.which === "session" ? "session" : "local",
         key: typeof d.key === "string" ? d.key : null, accepted: result.accepted, reason: result.reason,
       });
@@ -363,11 +370,11 @@
     var record = frames.get(e.source);
     if (!record) return;
     var d = e.data;
-    if (!d || d.__chrysalis !== 1) return;
+    if (!d || (d.__molfar !== 1 && d.__chrysalis !== 1)) return;
     if (d.type === "hello") {
       // the shell's copy of the app's storage rides along: a frame that
       // reloaded itself from an older hash snapshot catches up with it
-      send(e.source, { __chrysalis: 1, type: "init", nonce: record.nonce, storage: readStorage(record.username, record.appId) });
+      send(e.source, { __molfar: 1, type: "init", nonce: record.nonce, storage: readStorage(record.username, record.appId) });
       return;
     }
     // storage is accepted BEFORE the handshake: a write followed immediately

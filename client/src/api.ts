@@ -1,6 +1,6 @@
 import { tr } from "./i18n/index"
 import type { AppUpdate, StoreList } from "./types"
-// Chrysalis engine HTTP client for the launcher shell (auth, settings,
+// Molfar Vertep engine HTTP client for the launcher shell (auth, settings,
 // connections, apps). The agent chat lives in its own app (client-agent/).
 export interface EngineConnection {
   id: string

@@ -1,5 +1,5 @@
 /**
- * Is there a newer Chrysalis? Asked of the project's GitHub releases only
+ * Is there a newer Molfar Vertep? Asked of the project's GitHub releases only
  * when an admin looks (Settings > Server), never in the background, and
  * remembered for an hour so reopening the page does not ask again.
  *
@@ -69,7 +69,7 @@ export async function latestRelease(fetcher: typeof fetch = fetch, current: stri
   let value: ReleaseInfo | null = null;
   try {
     const res = await fetcher(`https://api.github.com/repos/${slug}/releases/${staging ? "tags/staging-latest" : "latest"}`, {
-      headers: { accept: "application/vnd.github+json", "user-agent": `Chrysalis/${current}` },
+      headers: { accept: "application/vnd.github+json", "user-agent": `MolfarVertep/${current}` },
       signal: AbortSignal.timeout(8000),
     });
     if (res.ok) {

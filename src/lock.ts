@@ -49,7 +49,7 @@ export async function runningEngine(dataDir: string): Promise<EngineLock | null>
 }
 
 /** Write the lock. A launcher that started the engine (the Android app) can
- *  ask for the same record at a path of its own with CHRYSALIS_STATUS_FILE,
+ *  ask for the same record at a path of its own with MOLFAR_VERTEP_STATUS_FILE,
  *  so it finds the engine without knowing its data folder or port. */
 export function writeLock(dataDir: string, lock: EngineLock): void {
   const body = `${JSON.stringify(lock, null, 2)}\n`;

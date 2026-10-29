@@ -5,7 +5,7 @@
 # Optional repository secrets:
 #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS,
 #   ANDROID_KEY_PASSWORD   sign the APK (base64 of the .jks file)
-#   NPM_TOKEN              publish chrysalis-engine to npm
+#   NPM_TOKEN              publish molfar-vertep to npm
 name: Release
 
 on:

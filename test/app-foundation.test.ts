@@ -412,7 +412,7 @@ afterEach(() => {
     const after = (await (await app.request(base, { headers: h() })).json()) as { needsBuild: boolean; status: { ok: boolean } };
     expect(after.needsBuild).toBe(false);
     // the builder's bookkeeping is not served
-    expect((await app.request("/app/alice/notes/.chrysalis-build.json")).status).toBe(404);
+    expect((await app.request("/app/alice/notes/.molfar-build.json")).status).toBe(404);
     // a failed build keeps dist and records why
     const failed = { ...output, ok: false, files: [], errors: [{ text: "Expected \";\"", file: "src/app.tsx", line: 3 }] };
     expect((await put("tabaaaaaaaa1", failed)).status).toBe(200);

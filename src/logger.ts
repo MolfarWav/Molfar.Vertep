@@ -1,6 +1,6 @@
 /** Minimal timestamped logger. No dependency.
  *
- *  Once the data folder is known, lines also go to <data>/logs/chrysalis.log:
+ *  Once the data folder is known, lines also go to <data>/logs/molfar-vertep.log:
  *  installed copies and the Android launcher have no terminal, and one-time
  *  secrets (setup link, password reset codes) must still reach the owner. The
  *  file is private to the account running the engine and rolls over at 5 MB. */
@@ -44,11 +44,18 @@ export const log = {
   },
 };
 
-/** Start copying log lines to <dataDir>/logs/chrysalis.log. */
+/** Start copying log lines to <dataDir>/logs/molfar-vertep.log. The log of
+ *  1.7.x and older, chrysalis.log, is carried over under the new name. */
 export function logToFile(dataDir: string): string {
   const dir = path.join(dataDir, "logs");
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-  logFile = path.join(dir, "chrysalis.log");
+  logFile = path.join(dir, "molfar-vertep.log");
+  for (const suffix of ["", ".1"]) {
+    const legacy = path.join(dir, `chrysalis.log${suffix}`);
+    try {
+      if (fs.existsSync(legacy) && !fs.existsSync(logFile + suffix)) fs.renameSync(legacy, logFile + suffix);
+    } catch { /* the old file stays where it is */ }
+  }
   try {
     written = fs.statSync(logFile).size;
   } catch {

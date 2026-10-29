@@ -9,7 +9,7 @@ android
 test
 config.yaml
 certs
-chrysalis-data
+molfar-vertep-data
 AGENTS.md
 .env*
 *.jks

@@ -5,16 +5,16 @@ plugins {
 }
 
 // version and repository come from the engine's package.json (or the
-// CHRYSALIS_VERSION a CI build sets), so the APK always matches the server it carries
+// MOLFAR_VERTEP_VERSION a CI build sets), so the APK always matches the server it carries
 def engine = new JsonSlurper().parse(file("../../package.json"))
-def engineVersion = System.getenv("CHRYSALIS_VERSION") ?: engine.version
+def engineVersion = System.getenv("MOLFAR_VERTEP_VERSION") ?: engine.version
 // staging builds are a separate app, so they install beside the stable one
 def staging = engineVersion.contains("-staging")
 def parts = engineVersion.tokenize(".-").take(3).collect { it.isInteger() ? it.toInteger() : 0 }
 def code = parts[0] * 10000 + parts[1] * 100 + parts[2]
 
 android {
-    namespace "org.projectchrysalis.chrysalis"
+    namespace "io.github.molfarwav.vertep"
     compileSdk 36
 
     defaultConfig {
@@ -37,12 +37,12 @@ android {
     // signed differently cannot update it in place)
     signingConfigs {
         release {
-            def keystore = System.getenv("CHRYSALIS_ANDROID_KEYSTORE")
+            def keystore = System.getenv("MOLFAR_VERTEP_ANDROID_KEYSTORE")
             if (keystore) {
                 storeFile file(keystore)
-                storePassword System.getenv("CHRYSALIS_ANDROID_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("CHRYSALIS_ANDROID_KEY_ALIAS")
-                keyPassword System.getenv("CHRYSALIS_ANDROID_KEY_PASSWORD")
+                storePassword System.getenv("MOLFAR_VERTEP_ANDROID_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("MOLFAR_VERTEP_ANDROID_KEY_ALIAS")
+                keyPassword System.getenv("MOLFAR_VERTEP_ANDROID_KEY_PASSWORD")
             }
         }
     }
@@ -50,7 +50,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            signingConfig System.getenv("CHRYSALIS_ANDROID_KEYSTORE") ? signingConfigs.release : signingConfigs.debug
+            signingConfig System.getenv("MOLFAR_VERTEP_ANDROID_KEYSTORE") ? signingConfigs.release : signingConfigs.debug
         }
     }
 

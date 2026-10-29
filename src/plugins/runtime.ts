@@ -491,7 +491,7 @@ export interface PluginRouteResponse {
 }
 // ---------- network service (permission "network", SPEC-v2 §3) ----------
 // Two-phase like llm: the sandbox registers requests, the HOST executes them
-// (no Chrysalis credentials are ever attached), results land in host.net.results.
+// (no Molfar Vertep credentials are ever attached), results land in host.net.results.
 // Request shape is fetch-class:
 //   { url, method?, headers?, body?, form?, timeoutMs?, maxBytes?,
 //     followRedirects?, json?, binary? }
@@ -718,7 +718,7 @@ function emptyGeneration(error?: string): GenerateResult {
 
 /**
  * Run what one pass asked for, host-side (keys never enter the sandbox and
- * web requests carry no Chrysalis credentials), one request after another
+ * web requests carry no Molfar Vertep credentials), one request after another
  * (side by side and paced when the manifest's `limits.concurrency` says so).
  * Model requests get more the closer they are to an app route:
  *   route  sibling tools, other plugins' llmRequest hooks, live streaming

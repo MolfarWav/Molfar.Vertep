@@ -348,22 +348,33 @@ describe("what a coding agent of your own can reach", () => {
   });
 
   it("a session minted by another process on this machine is accepted", async () => {
-    // this is what `chrysalis api` does: it can read the data folder, so it
+    // this is what `molfar-vertep api` does: it can read the data folder, so it
     // writes itself a session rather than needing a token it cannot recover
     const t = await createUser("cli-user");
     expect((await app.request("/v1/apps", { headers: userH(t) })).status).toBe(200);
     const outside = new SessionService(dataDir);
     const token = outside.create("cli-user");
-    const res = await app.request("/v1/apps", { headers: { cookie: `chrysalis_session=${token}` } });
+    const res = await app.request("/v1/apps", { headers: { cookie: `molfar_vertep_session=${token}` } });
     expect(res.status).toBe(200);
     // and a write, which is where a stale in-memory session list used to bite
     const put = await app.request("/v1/settings/persona", {
       method: "PUT",
-      headers: { cookie: `chrysalis_session=${token}`, "content-type": "application/json" },
+      headers: { cookie: `molfar_vertep_session=${token}`, "content-type": "application/json" },
       body: JSON.stringify({ persona: "Prefer small diffs." }),
     });
     expect(put.status).toBe(200);
     outside.destroy(token);
+    expect((await app.request("/v1/apps", { headers: { cookie: `molfar_vertep_session=${token}` } })).status).toBe(401);
+  });
+
+  it("a browser still signed in under the 1.7.x cookie name stays signed in (#66)", async () => {
+    await createUser("old-cookie");
+    const token = new SessionService(dataDir).create("old-cookie");
+    expect((await app.request("/v1/apps", { headers: { cookie: `chrysalis_session=${token}` } })).status).toBe(200);
+    const out = await app.request("/v1/auth/logout", { method: "POST", headers: { cookie: `chrysalis_session=${token}` } });
+    const cleared = out.headers.get("set-cookie") ?? "";
+    expect(cleared).toContain("molfar_vertep_session=; ");
+    expect(cleared).toContain("chrysalis_session=; ");
     expect((await app.request("/v1/apps", { headers: { cookie: `chrysalis_session=${token}` } })).status).toBe(401);
   });
 });

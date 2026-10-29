@@ -1,11 +1,11 @@
 /**
- * Entrypoint: `chrysalis [command] [--setting value ...]`.
+ * Entrypoint: `molfar-vertep [command] [--setting value ...]`.
  *
  *   start (default)          run the engine
  *   reset-password <user>    set a new password for an account
  *   paths                    print where config and data live
  *
- * Settings come from <home>/config.yaml, then CHRYSALIS_* environment
+ * Settings come from <home>/config.yaml, then MOLFAR_VERTEP_* environment
  * variables, then flags (see src/config.ts).
  */
 import fs from "node:fs";
@@ -68,7 +68,7 @@ const runCmd = promisify(execFile);
 
 const HELP = `Molfar Vertep ${ENGINE_VERSION}
 
-Usage: chrysalis [command] [options]
+Usage: molfar-vertep [command] [options]
 
 Commands:
   start                    Run Molfar Vertep (the default)
@@ -90,7 +90,7 @@ Commands:
                            (Molfar Vertep must be stopped). Without --yes it only
                            lists what is wrong and what would change. Your data
                            stays; the replaced files stay in the workspace history
-  install-cli              Put chrysalis on your PATH so the two commands above
+  install-cli              Put molfar-vertep on your PATH so the two commands above
                            work from anywhere (uninstall-cli undoes it)
 
 Options:
@@ -103,8 +103,8 @@ Every option is also a setting in config.yaml. Options and environment
 variables apply to one run only.`;
 
 function fail(message: string): never {
-  console.error(`chrysalis: ${message}`);
-  // a double-clicked chrysalis.exe gets its own console window, which closes
+  console.error(`molfar-vertep: ${message}`);
+  // a double-clicked molfar-vertep.exe gets its own console window, which closes
   // the moment the process ends: hold it open so the reason can be read
   if (process.platform === "win32" && INSTALL_KIND === "binary" && process.stdin.isTTY) prompt("Press Enter to close.");
   process.exit(1);
@@ -137,7 +137,7 @@ async function main(): Promise<void> {
     break;
   }
   const unknown = flags.rest.find((a) => a.startsWith("-"));
-  if (unknown) fail(`unknown option ${unknown} (see chrysalis --help)`);
+  if (unknown) fail(`unknown option ${unknown} (see molfar-vertep --help)`);
   const [command = "start", ...args] = flags.rest;
 
   const homeDir = resolveHomeDir(flags.home);
@@ -154,7 +154,7 @@ async function main(): Promise<void> {
     case "start":
       return start(homeDir, dataDir, loaded);
     case "paths":
-      console.log(`config: ${loaded.path}\ndata:   ${dataDir}\nlog:    ${path.join(dataDir, "logs", "chrysalis.log")}`);
+      console.log(`config: ${loaded.path}\ndata:   ${dataDir}\nlog:    ${path.join(dataDir, "logs", "molfar-vertep.log")}`);
       return;
     case "reset-password":
       return resetPassword(dataDir, args[0]);
@@ -171,7 +171,7 @@ async function main(): Promise<void> {
     case "uninstall-cli":
       return installCli(dataDir, true);
     default:
-      fail(`unknown command "${command}" (see chrysalis --help)`);
+      fail(`unknown command "${command}" (see molfar-vertep --help)`);
   }
 }
 
@@ -191,7 +191,7 @@ function pickUser(dataDir: string, asked: unknown): string {
 }
 
 /**
- * Put `chrysalis` on the PATH, so the workspace and api commands are usable
+ * Put `molfar-vertep` on the PATH, so the workspace and api commands are usable
  * from wherever someone's editor or agent happens to be working — a download
  * is a folder you unpacked, and typing its name in a terminal does nothing.
  *
@@ -206,7 +206,7 @@ function pickUser(dataDir: string, asked: unknown): string {
  */
 async function installCli(dataDir: string, remove: boolean): Promise<void> {
   if (INSTALL_KIND === "npm") {
-    console.log("Installed with bun/npm — `chrysalis` is already on your PATH.");
+    console.log("Installed with bun/npm — `molfar-vertep` is already on your PATH.");
     return;
   }
   if (INSTALL_KIND === "source") {
@@ -228,19 +228,19 @@ async function installCli(dataDir: string, remove: boolean): Promise<void> {
   const made = existingCliLink(dataDir) ?? link;
   console.log(`Wrote ${made}.`);
   console.log(onPath(path.dirname(made))
-    ? "It is on your PATH: `chrysalis workspace` works anywhere."
+    ? "It is on your PATH: `molfar-vertep workspace` works anywhere."
     : process.platform === "win32"
-      ? "Its folder is on your PATH. Open a NEW terminal, then `chrysalis workspace` works anywhere."
+      ? "Its folder is on your PATH. Open a NEW terminal, then `molfar-vertep workspace` works anywhere."
       : `Your PATH does not include ${path.dirname(made)} yet. Add this to your shell's startup file:\n\n  export PATH="${path.dirname(made).replace(os.homedir(), "$HOME")}:$PATH"`);
 }
 
 /**
- * Make `chrysalis` resolve on this account's PATH. Returns whether anything
+ * Make `molfar-vertep` resolve on this account's PATH. Returns whether anything
  * was written.
  *
  * On macOS and Linux that is a symlink in ~/.local/bin, which is on the PATH
  * of every current shell and needs no privileges. On Windows it is a small
- * .cmd beside this Chrysalis's data, in a folder added to the account's PATH
+ * .cmd beside this Molfar Vertep's data, in a folder added to the account's PATH
  * through the registry — never `setx`, which silently truncates a PATH over
  * 1024 characters and has eaten many.
  *
@@ -252,20 +252,25 @@ async function linkCli(dataDir: string): Promise<boolean> {
   const link = cliLinkPath(dataDir);
   const dir = path.dirname(link);
   fs.mkdirSync(dir, { recursive: true });
-  // the new name beside the old one (#66): same folder, same program
-  const alias = path.join(dir, process.platform === "win32" ? `${CLI_ALIAS}.cmd` : CLI_ALIAS);
   if (process.platform === "win32") {
-    for (const file of [link, alias]) fs.writeFileSync(file, `@echo off\r\n"${process.execPath}" %*\r\n`, "utf8");
-    // read-modify-write the account's PATH through the registry
-    const ps = `$d='${dir.replace(/'/g, "''")}'; $p=[Environment]::GetEnvironmentVariable('Path','User'); if (($p -split ';') -notcontains $d) { [Environment]::SetEnvironmentVariable('Path', (($p.TrimEnd(';') + ';' + $d).TrimStart(';')), 'User') }`;
-    await runCmd("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps]);
-    return true;
+    fs.writeFileSync(link, shimBody(), "utf8");
+    await addToUserPath(dir);
+  } else {
+    fs.rmSync(link, { force: true });
+    fs.symlinkSync(process.execPath, link);
   }
-  for (const file of [link, alias]) {
-    fs.rmSync(file, { force: true });
-    fs.symlinkSync(process.execPath, file);
-  }
+  removeLegacyLinks(dataDir);
   return true;
+}
+
+/** The .cmd a Windows shim holds: run this program with the same arguments. */
+const shimBody = (): string => `@echo off\r\n"${process.execPath}" %*\r\n`;
+
+/** Add a folder to the account's PATH, read-modify-write through the
+ *  registry. */
+async function addToUserPath(dir: string): Promise<void> {
+  const ps = `$d='${dir.replace(/'/g, "''")}'; $p=[Environment]::GetEnvironmentVariable('Path','User'); if (($p -split ';') -notcontains $d) { [Environment]::SetEnvironmentVariable('Path', (($p.TrimEnd(';') + ';' + $d).TrimStart(';')), 'User') }`;
+  await runCmd("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps]);
 }
 
 /** Undo linkCli — but only our own link, never something else answering to
@@ -274,68 +279,95 @@ async function unlinkCli(dataDir: string): Promise<boolean> {
   const link = existingCliLink(dataDir);
   if (!link) return false;
   fs.rmSync(link, { force: true });
-  const alias = path.join(path.dirname(link), process.platform === "win32" ? `${CLI_ALIAS}.cmd` : CLI_ALIAS);
-  try {
-    if (process.platform === "win32" || fs.readlinkSync(alias) === process.execPath) fs.rmSync(alias, { force: true });
-  } catch { /* not ours */ }
+  removeLegacyLinks(dataDir);
   return true;
 }
 
-/** The command's new name (#66), linked beside `chrysalis` until the program
- *  itself is renamed. */
-const CLI_ALIAS = "molfar-vertep";
+/** The command's name, and the one it had up to 1.7.x (#66). */
+const CLI_NAME = "molfar-vertep";
+const LEGACY_CLI_NAME = "chrysalis";
+
+const cliFile = (dir: string, name: string): string => path.join(dir, process.platform === "win32" ? `${name}.cmd` : name);
+
+/** Does this symlink target belong to this program's folder, under any of
+ *  the names the program has had? */
+function isOurTarget(target: string | null): boolean {
+  return target !== null && path.dirname(target) === path.dirname(process.execPath) && programNames(path.basename(process.execPath)).includes(path.basename(target));
+}
+
+function readLink(file: string): string | null {
+  try {
+    return fs.readlinkSync(file);
+  } catch {
+    return null;
+  }
+}
+
+/** Remove the `chrysalis` command of 1.7.x and older, where it is ours: the
+ *  .cmd in this data folder, or a symlink into this program's own folder. */
+function removeLegacyLinks(dataDir: string): void {
+  if (process.platform === "win32") {
+    fs.rmSync(cliFile(path.join(dataDir, "bin"), LEGACY_CLI_NAME), { force: true });
+    return;
+  }
+  for (const dir of cliCandidates()) {
+    const file = cliFile(dir, LEGACY_CLI_NAME);
+    if (isOurTarget(readLink(file))) fs.rmSync(file, { force: true });
+  }
+}
 
 /**
- * Links made by an earlier version point at the program by its file name, and
- * know only `chrysalis`. After an update that renamed the program, or one that
- * added the new command name, point both names at this program again. Only
- * links of ours: the .cmd files in this data folder, or symlinks into this
- * program's own folder. Never adds a link nobody asked for.
+ * Links made by an earlier version point at the program by its file name and
+ * are called `chrysalis`. After an update that renamed the program, point the
+ * new command at this program and drop the old one. Only links of ours: the
+ * .cmd files in this data folder, or symlinks into this program's own folder.
+ * Never adds a link nobody asked for.
+ *
+ * On Windows the data folder itself may have been renamed (MolfarVertep, was
+ * Chrysalis), which leaves the folder on the account's PATH pointing nowhere:
+ * the new folder is put on it.
  */
-function refreshCliLinks(dataDir: string): void {
+async function refreshCliLinks(dataDir: string): Promise<void> {
   if (INSTALL_KIND !== "binary") return;
-  const here = path.dirname(process.execPath);
   if (process.platform === "win32") {
     const bin = path.join(dataDir, "bin");
-    if (!fs.existsSync(path.join(bin, "chrysalis.cmd"))) return;
-    const body = `@echo off\r\n"${process.execPath}" %*\r\n`;
-    for (const file of [path.join(bin, "chrysalis.cmd"), path.join(bin, `${CLI_ALIAS}.cmd`)]) {
-      if (!fs.existsSync(file) || fs.readFileSync(file, "utf8") !== body) fs.writeFileSync(file, body, "utf8");
+    const shim = cliFile(bin, CLI_NAME);
+    const hadLegacy = fs.existsSync(cliFile(bin, LEGACY_CLI_NAME));
+    if (!hadLegacy && !fs.existsSync(shim)) return;
+    const body = shimBody();
+    const current = fs.existsSync(shim) && fs.readFileSync(shim, "utf8") === body;
+    if (!current) fs.writeFileSync(shim, body, "utf8");
+    if (hadLegacy) {
+      removeLegacyLinks(dataDir);
+      await addToUserPath(bin);
     }
     return;
   }
-  const ours = (target: string | null) => target !== null && path.dirname(target) === here && programNames(path.basename(process.execPath)).includes(path.basename(target));
-  const linkOf = (file: string): string | null => {
-    try {
-      return fs.readlinkSync(file);
-    } catch {
-      return null;
-    }
-  };
   for (const dir of cliCandidates()) {
-    if (!ours(linkOf(path.join(dir, "chrysalis")))) continue;
-    for (const file of [path.join(dir, "chrysalis"), path.join(dir, CLI_ALIAS)]) {
-      const target = linkOf(file);
-      if (target === process.execPath) continue;
+    const legacy = cliFile(dir, LEGACY_CLI_NAME);
+    const file = cliFile(dir, CLI_NAME);
+    const hadLegacy = isOurTarget(readLink(legacy));
+    if (!hadLegacy && !isOurTarget(readLink(file))) continue;
+    if (readLink(file) !== process.execPath) {
       // something else answering to the name is not ours to replace
-      if (target === null ? fs.existsSync(file) : !ours(target)) continue;
+      if (readLink(file) === null && fs.existsSync(file)) continue;
       fs.rmSync(file, { force: true });
       fs.symlinkSync(process.execPath, file);
     }
+    if (hadLegacy) fs.rmSync(legacy, { force: true });
   }
 }
 
 const onPath = (dir: string): boolean =>
   (process.env.PATH ?? "").split(process.platform === "win32" ? ";" : ":").filter(Boolean).includes(dir);
 
-/** Where `chrysalis` lives once it is on PATH. NOT next to the program: on
- *  Windows the launcher goes beside the data folder, and on macOS and Linux
- *  the link goes in ~/.local/bin, so the program's own directory says nothing
- *  about whether the name resolves. */
 /** Somewhere a link could go, best first. ~/.local/bin is the Linux
  *  convention and usually on PATH there; on macOS it is NOT on the default
  *  PATH and /usr/local/bin is, so a link placed by convention alone would sit
- *  in a folder the shell never looks in and the name still would not resolve. */
+ *  in a folder the shell never looks in and the name still would not resolve.
+ *  The program's own directory says nothing about whether the name resolves:
+ *  on Windows the launcher goes beside the data folder, and on macOS and Linux
+ *  the link goes in one of these. */
 function cliCandidates(): string[] {
   const home = os.homedir();
   return process.platform === "darwin"
@@ -354,46 +386,44 @@ function writableDir(dir: string): boolean {
 }
 
 function cliLinkPath(dataDir: string): string {
-  if (process.platform === "win32") return path.join(dataDir, "bin", "chrysalis.cmd");
+  if (process.platform === "win32") return cliFile(path.join(dataDir, "bin"), CLI_NAME);
   const candidates = cliCandidates();
   // a folder the shell already searches AND we can write to beats convention:
   // a link nothing looks at is the same as no link
   const usable = candidates.find((d) => onPath(d) && writableDir(d));
-  return path.join(usable ?? candidates.find((d) => writableDir(d)) ?? candidates[0]!, "chrysalis");
+  return cliFile(usable ?? candidates.find((d) => writableDir(d)) ?? candidates[0]!, CLI_NAME);
 }
 
 /** A link of ours that already exists, wherever a past run put it. */
 function existingCliLink(dataDir: string): string | null {
   if (process.platform === "win32") {
-    const shim = path.join(dataDir, "bin", "chrysalis.cmd");
+    const shim = cliFile(path.join(dataDir, "bin"), CLI_NAME);
     return fs.existsSync(shim) ? shim : null;
   }
   for (const dir of cliCandidates()) {
-    const link = path.join(dir, "chrysalis");
-    try {
-      if (fs.readlinkSync(link) === process.execPath) return link;
-    } catch { /* absent, or not a link of ours */ }
+    const link = cliFile(dir, CLI_NAME);
+    if (readLink(link) === process.execPath) return link;
   }
   return null;
 }
 
-/** Does typing `chrysalis` reach us right now? */
+/** Does typing `molfar-vertep` reach us right now? */
 function cliOnPath(dataDir: string): boolean {
   const link = existingCliLink(dataDir);
   return link !== null && onPath(path.dirname(link));
 }
 
 function selfCommand(dataDir: string): string {
-  if (INSTALL_KIND === "npm") return "chrysalis";
+  if (INSTALL_KIND === "npm") return CLI_NAME;
   if (INSTALL_KIND === "source") return "bun run src/index.ts";
-  if (cliOnPath(dataDir)) return "chrysalis";
+  if (cliOnPath(dataDir)) return CLI_NAME;
   const exe = process.execPath;
   // a path with a space has to survive being pasted into a shell
   return /\s/.test(exe) ? `"${exe}"` : exe;
 }
 
 /**
- * Everything a coding agent needs to work on this Chrysalis, in one command.
+ * Everything a coding agent needs to work on this Molfar Vertep, in one command.
  *
  * The workspace is the same plain files and the same git repository on every
  * install — a downloaded build keeps it in the app-data folder rather than
@@ -411,7 +441,7 @@ function printWorkspace(dataDir: string, asUser: string | undefined): void {
     `account:   ${username}`,
     `workspace: ${p.root}`,
     `contract:  ${path.join(p.root, "AGENTS.md")}`,
-    `engine:    ${lock ? `${lock.url}  (running)` : "not running — start Molfar Vertep to use `chrysalis api`"}`,
+    `engine:    ${lock ? `${lock.url}  (running)` : "not running — start Molfar Vertep to use `molfar-vertep api`"}`,
   ];
   let apps: { id: string; name: string }[] = [];
   try {
@@ -447,7 +477,7 @@ which models are connected — call the API of the Molfar Vertep running here:
   ${me} api POST /v1/apps/${apps[0]?.id ?? "<app>"}/build '{}'
 ${INSTALL_KIND === "binary" && !cliOnPath(dataDir) ? `
 That is this program's own path, because a downloaded Molfar Vertep is not on your
-PATH — plain \`chrysalis\` would not be recognized. To fix that once:
+PATH — plain \`molfar-vertep\` would not be recognized. To fix that once:
 
   ${me} install-cli` : ""}`);
 }
@@ -462,11 +492,11 @@ PATH — plain \`chrysalis\` would not be recognized. To fix that once:
 async function callApi(dataDir: string, args: string[], asUser: string | undefined): Promise<void> {
   const [rawMethod, rawPath, ...rest] = args;
   if (!rawMethod || !rawPath) {
-    fail("usage: chrysalis api <METHOD> <path> [json]\n       chrysalis api GET /v1/apps");
+    fail("usage: molfar-vertep api <METHOD> <path> [json]\n       molfar-vertep api GET /v1/apps");
   }
   const method = rawMethod.toUpperCase();
   if (!["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"].includes(method)) {
-    fail(`"${rawMethod}" is not an HTTP method. Try: chrysalis api GET /v1/apps`);
+    fail(`"${rawMethod}" is not an HTTP method. Try: molfar-vertep api GET /v1/apps`);
   }
   const apiPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
   const live = await runningEngine(dataDir);
@@ -495,7 +525,7 @@ async function callApi(dataDir: string, args: string[], asUser: string | undefin
     const res = await fetch(`${live.url}${apiPath}`, {
       method,
       headers: {
-        cookie: `chrysalis_session=${token}`,
+        cookie: `molfar_vertep_session=${token}`,
         ...(body ? { "content-type": "application/json" } : {}),
       },
       ...(body ? { body } : {}),
@@ -528,7 +558,7 @@ async function rollbackCommand(dataDir: string, to: string | undefined): Promise
 }
 
 async function restoreAppCommand(dataDir: string, appId: string | undefined, asUser: string | undefined, apply: boolean): Promise<void> {
-  if (!appId) fail("usage: chrysalis restore-app <app> [--yes] [--user <name>]");
+  if (!appId) fail("usage: molfar-vertep restore-app <app> [--yes] [--user <name>]");
   const live = await runningEngine(dataDir);
   if (live) fail(`Molfar Vertep is running (${live.url}). Stop it first, then run this again.`);
   const username = pickUser(dataDir, asUser);
@@ -549,7 +579,7 @@ async function restoreAppCommand(dataDir: string, appId: string | undefined, asU
 }
 
 async function resetPassword(dataDir: string, username: string | undefined): Promise<void> {
-  if (!username) fail("usage: chrysalis reset-password <user>");
+  if (!username) fail("usage: molfar-vertep reset-password <user>");
   const live = await runningEngine(dataDir);
   if (live) fail(`Molfar Vertep is running (${live.url}). Stop it first, then run this again.`);
   const newer = dataFormatProblem(dataDir);
@@ -564,7 +594,7 @@ async function resetPassword(dataDir: string, username: string | undefined): Pro
 }
 
 /** Open a URL in the desktop's browser: packaged copies, and a source
- *  checkout started by its launcher (CHRYSALIS_LAUNCHER=1). */
+ *  checkout started by its launcher (MOLFAR_VERTEP_LAUNCHER=1). */
 function openBrowser(url: string): void {
   const [cmd, args] =
     process.platform === "win32" ? ["rundll32", ["url.dll,FileProtocolHandler", url]] :
@@ -704,13 +734,13 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
   if (newer) fail(newer);
 
   log.info(`Molfar Vertep ${ENGINE_VERSION} (${INSTALL_KIND})`);
-  // before anything migrates: what `chrysalis rollback` puts back
+  // before anything migrates: what `molfar-vertep rollback` puts back
   try {
     if (snapshotOnVersionChange(dataDir, ENGINE_VERSION)) log.info("[update] saved the account files from the previous version, for a rollback");
   } catch (e) {
     log.warn(`[update] could not save the account files for a rollback: ${(e as Error).message}`);
   }
-  // A downloaded build is a folder someone unpacked, so `chrysalis` is not a
+  // A downloaded build is a folder someone unpacked, so `molfar-vertep` is not a
   // command until something makes it one. Asking people to run install-cli
   // first means the command line is only found by those who read far enough,
   // so the first start does it for them. Once: the marker is written before
@@ -725,15 +755,15 @@ async function start(homeDir: string, dataDir: string, loaded: LoadedConfig): Pr
       fs.writeFileSync(cliMarker, `${new Date().toISOString()}\n`, "utf8");
       const done = await linkCli(dataDir);
       // ASCII only: the Windows console log mangles anything else
-      if (done) log.info('"chrysalis" and "molfar-vertep" are now commands in a new terminal. Try: molfar-vertep workspace  (undo: molfar-vertep uninstall-cli)');
+      if (done) log.info('"molfar-vertep" is now a command in a new terminal. Try: molfar-vertep workspace  (undo: molfar-vertep uninstall-cli)');
     } catch (e) {
-      log.warn(`could not put chrysalis on your PATH: ${(e as Error).message}`);
+      log.warn(`could not put molfar-vertep on your PATH: ${(e as Error).message}`);
     }
   } else if (INSTALL_KIND === "binary" && !IN_CONTAINER) {
     try {
-      refreshCliLinks(dataDir);
+      await refreshCliLinks(dataDir);
     } catch (e) {
-      log.warn(`could not update the chrysalis command on your PATH: ${(e as Error).message}`);
+      log.warn(`could not update the molfar-vertep command on your PATH: ${(e as Error).message}`);
     }
   }
   // what undoing the last update needs (the old program, the saved account

@@ -373,7 +373,7 @@ const en = {
   "Update available": "",
   "Update plugin": "",
   "Update to {version}": "",
-  "Update with bun add -g chrysalis-engine@latest, then restart Molfar Vertep.": "",
+  "Update with bun add -g molfar-vertep@latest, then restart Molfar Vertep.": "",
   "Update with git pull, bun install and bun run build:client, then restart Molfar Vertep.": "",
   "Updated to v{version}.": "",
   "Updates": "",

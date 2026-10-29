@@ -58,7 +58,7 @@ type Request =
   | { t: "rm"; id: number; paths: string[] }
   | { t: "reset"; id: number; config?: SandboxConfig };
 
-const post = (m: Record<string, unknown>) => parent.postMessage({ __chrysalisSandbox: 1, ...m }, "*");
+const post = (m: Record<string, unknown>) => parent.postMessage({ __molfarSandbox: 1, ...m }, "*");
 const b64ToBytes = (b64: string): Uint8Array => {
   const bin = atob(b64);
   const out = new Uint8Array(bin.length);
@@ -219,8 +219,8 @@ async function handle(req: Request): Promise<void> {
 
 addEventListener("message", (e: MessageEvent) => {
   if (e.source !== parent) return;
-  const d = e.data as Request & { __chrysalisSandbox?: number };
-  if (!d || d.__chrysalisSandbox !== 1) return;
+  const d = e.data as Request & { __molfarSandbox?: number };
+  if (!d || d.__molfarSandbox !== 1) return;
   void handle(d).catch((err) => post({ t: "error", id: "id" in d ? d.id : undefined, error: String((err as Error)?.message ?? err) }));
 });
 

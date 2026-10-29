@@ -1,4 +1,4 @@
-// Playwright helpers for a Chrysalis started by start.sh. start.sh copies this
+// Playwright helpers for a Molfar Vertep started by start.sh. start.sh copies this
 // file into $WORK next to playwright-core: write your script in $WORK and
 //   import { open, send, shot } from "./pw.mjs"
 import fs from "node:fs"
@@ -46,7 +46,7 @@ function chromePath() {
 
 let browser
 /** A logged-in page. path: "/agent/" (agent page) or "/" (shell).
- *  theme: the agent page reads localStorage["chrysalis-theme"], not the OS. */
+ *  theme: the agent page reads localStorage["molfar-theme"], not the OS. */
 export async function open({ path = "/agent/", width = 1280, height = 800, theme = "dark", lang } = {}) {
   browser ??= await chromium.launch({ executablePath: chromePath() })
   const page = await browser.newPage({ viewport: { width, height } })
@@ -55,9 +55,9 @@ export async function open({ path = "/agent/", width = 1280, height = 800, theme
   await page.evaluate(async ({ theme, model, lang }) => {
     const r = await fetch("/v1/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ username: "molfar", password: "test1234" }) })
     if (!r.ok) throw new Error(`login ${r.status}`)
-    localStorage.setItem("chrysalis-theme", theme)
+    localStorage.setItem("molfar-theme", theme)
     localStorage.setItem("agent-ui-model", model)
-    if (lang) localStorage.setItem("chrysalis-lang", lang)
+    if (lang) localStorage.setItem("molfar-lang", lang)
   }, { theme, model: MODEL_REF, lang })
   await page.goto(ENGINE_URL + path)
   return page

@@ -28,7 +28,7 @@ permissions:
 
 env:
   BUN_VERSION: 1.4.0
-  CHRYSALIS_VERSION: ${{ inputs.version }}
+  MOLFAR_VERTEP_VERSION: ${{ inputs.version }}
 
 jobs:
   binaries:
@@ -85,16 +85,16 @@ jobs:
         run: |
           if [ -n "$KEYSTORE" ]; then
             echo "$KEYSTORE" | base64 -d > "$RUNNER_TEMP/release.jks"
-            echo "CHRYSALIS_ANDROID_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "MOLFAR_VERTEP_ANDROID_KEYSTORE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
             echo "APK signed with the release key"
           else
             echo "::warning::No ANDROID_KEYSTORE_BASE64 secret: the APK is debug-signed and cannot update an installed release"
           fi
       - run: bun run dist android-apk
         env:
-          CHRYSALIS_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          CHRYSALIS_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          CHRYSALIS_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          MOLFAR_VERTEP_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MOLFAR_VERTEP_ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          MOLFAR_VERTEP_ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
       - name: Check the APK
         run: |
           apk=$(ls out/dist/*.apk)
@@ -149,9 +149,9 @@ jobs:
         run: |
           mkdir app && cd app
           case "${{ matrix.target }}" in
-            npm) tar -xzf ../downloads/npm-pack/*.tgz && echo "CMD=bun $PWD/package/chrysalis.js" >> "$GITHUB_ENV" ;;
-            windows-x64) 7z x -bso0 ../downloads/*-windows-x64.zip && echo "CMD=$(cygpath -w "$(ls -d "$PWD"/Molfar-Vertep-*)")\\chrysalis.exe" >> "$GITHUB_ENV" ;;
-            *) tar -xzf ../downloads/*-${{ matrix.target }}.tar.gz && echo "CMD=$(ls -d "$PWD"/Molfar-Vertep-*)/chrysalis" >> "$GITHUB_ENV" ;;
+            npm) tar -xzf ../downloads/npm-pack/*.tgz && echo "CMD=bun $PWD/package/molfar-vertep.js" >> "$GITHUB_ENV" ;;
+            windows-x64) 7z x -bso0 ../downloads/*-windows-x64.zip && echo "CMD=$(cygpath -w "$(ls -d "$PWD"/Molfar-Vertep-*)")\\molfar-vertep.exe" >> "$GITHUB_ENV" ;;
+            *) tar -xzf ../downloads/*-${{ matrix.target }}.tar.gz && echo "CMD=$(ls -d "$PWD"/Molfar-Vertep-*)/molfar-vertep" >> "$GITHUB_ENV" ;;
           esac
       - name: Smoke test
         shell: bash
@@ -169,20 +169,20 @@ jobs:
         with:
           context: .
           load: true
-          tags: chrysalis:test
-          build-args: CHRYSALIS_VERSION=${{ inputs.version }}
+          tags: molfar-vertep:test
+          build-args: MOLFAR_VERTEP_VERSION=${{ inputs.version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Start it
         run: |
-          docker run -d --name chrysalis -p 8788:8788 chrysalis:test
+          docker run -d --name molfar-vertep -p 8788:8788 molfar-vertep:test
           for i in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:8788/v1/health; then break; fi
             sleep 1
           done
           echo
           curl -fsS http://127.0.0.1:8788/v1/health | grep -q '"ok":true'
-          docker logs chrysalis 2>&1 | grep -q '#setup='
+          docker logs molfar-vertep 2>&1 | grep -q '#setup='
           echo "container is up and printed its setup link"
       - if: failure()
-        run: docker logs chrysalis || true
+        run: docker logs molfar-vertep || true

@@ -570,7 +570,7 @@ export const useAgent = create<AgentState>()((set, get) => {
 
     newChatWith: (text) => {
       // the composer keeps unsent text under a per-thread key; "new" is the chat not created yet
-      prefs.set("chrysalis.agent.draft.new", text)
+      prefs.set("molfar.agent.draft.new", text)
       get().newChat()
       set((st) => ({ draftSeed: st.draftSeed + 1 }))
     },

@@ -247,7 +247,7 @@ describe("agent tools", () => {
     const { sourceRev } = await import("../src/builder/server.js");
     const { builderVersion } = await import("../src/builder/assets.js");
     const dir = path.join(p.apps, "vn");
-    const status = path.join(dir, "dist", ".chrysalis-build.json");
+    const status = path.join(dir, "dist", ".molfar-build.json");
     fs.mkdirSync(path.join(dir, "dist"), { recursive: true });
     fs.writeFileSync(
       status,
@@ -289,7 +289,7 @@ describe("agent tools", () => {
     const { sourceRev } = await import("../src/builder/server.js");
     const { builderVersion } = await import("../src/builder/assets.js");
     const dir = path.join(p.apps, "fresh");
-    const status = path.join(dir, "dist", ".chrysalis-build.json");
+    const status = path.join(dir, "dist", ".molfar-build.json");
     fs.mkdirSync(path.join(dir, "dist"), { recursive: true });
     const builder = await builderVersion();
     const stamp = (at: number) => JSON.stringify({ rev: sourceRev(dir), ok: true, mode: "development", errors: [], warnings: 0, at, builder });

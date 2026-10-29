@@ -142,31 +142,31 @@ There is more in the small details: "Story, move" makes the next reply push the 
 
 | System | Download | Start it |
 | --- | --- | --- |
-| Windows | `Molfar-Vertep-<version>-windows-x64.zip` | Unzip, double-click `chrysalis.exe` |
+| Windows | `Molfar-Vertep-<version>-windows-x64.zip` | Unzip, double-click `molfar-vertep.exe` |
 | macOS (Apple silicon) | `Molfar-Vertep-<version>-macos-arm64.tar.gz` | Unpack, double-click `start.command` |
 | macOS (Intel) | `Molfar-Vertep-<version>-macos-x64.tar.gz` | Unpack, double-click `start.command` |
-| Linux | `Molfar-Vertep-<version>-linux-x64.tar.gz` (or `-arm64`) | Unpack, run `./chrysalis` |
+| Linux | `Molfar-Vertep-<version>-linux-x64.tar.gz` (or `-arm64`) | Unpack, run `./molfar-vertep` |
 | Android 9+ | `Molfar-Vertep-<version>-android-arm64.apk` | Install, open the app |
 | Docker (from 0.3.0) | `ghcr.io/molfarwav/molfar-vertep` | See README section below |
 
-Releases up to 0.9.0 named their archives `Chrysalis-<version>-<system>`; self-update accepts both names since 0.8.0. Internal names stay (`chrysalis` command, `CHRYSALIS_*`, data folders) so installs keep working.
+Releases up to 0.9.0 named their archives `Chrysalis-<version>-<system>`; self-update accepts both names since 0.8.0. Releases up to 1.7.x shipped the program as `chrysalis` / `chrysalis.exe`; from the next release it is `molfar-vertep` / `molfar-vertep.exe`. An update renames it for you (the old file is kept as `.old` for a rollback), and the old command, `CHRYSALIS_*` variables, data folder and log file are carried over to the new names. A copy older than 1.2.3 cannot update itself across that change: download the new archive once.
 
 On Windows you can also run from source with one file: put `Molfar-Vertep.bat` (in the repository root) in any folder and double-click it. It installs Git and Bun if they are missing, downloads Molfar Vertep next to itself, offers each new release before installing it, builds what changed, offers a desktop shortcut and opens Molfar Vertep in your browser. `Molfar-Vertep.bat dev` follows the newest work in progress instead of releases. Folder names with spaces or in any language are fine.
 
 If Git says the folder has *dubious ownership* (another Windows user owns it: common on a second drive, a USB stick, or a folder made as administrator), the launcher stops and offers to trust that one folder. To do it yourself, run `git config --global --add safe.directory "D:/path/to/Molfar-Vertep"` with your folder's path (forward slashes), then start the launcher again.
 
-On macOS, start with `start.command`, not `chrysalis`. These builds do not carry a signature macOS accepts, so opening `chrysalis` directly is blocked or closes straight away with `killed`. `start.command` clears the download flag, signs the program for that Mac and starts it; use it again after each update.
+On macOS, start with `start.command`, not `molfar-vertep`. These builds do not carry a signature macOS accepts, so opening `molfar-vertep` directly is blocked or closes straight away with `killed`. `start.command` clears the download flag, signs the program for that Mac and starts it; use it again after each update.
 
 The Android APK is debug-signed, so it cannot update an installed copy: remove the old app first (export your apps' backups before that, because uninstalling deletes the app's data).
 
 ### Docker
 
-From version 0.3.0 the release workflow publishes `ghcr.io/molfarwav/molfar-vertep` (tags `latest` and the version). Settings and data live in the `/chrysalis` volume, and the container listens on port 8788:
+From version 0.3.0 the release workflow publishes `ghcr.io/molfarwav/molfar-vertep` (tags `latest` and the version). Settings and data live in the `/molfar-vertep` volume (`/chrysalis` up to 1.7.x; a setup that still mounts it there keeps working, with a note), and the container listens on port 8788:
 
 ```sh
-docker run -d --name chrysalis -p 8788:8788 -v chrysalis-data:/chrysalis \
+docker run -d --name molfar-vertep -p 8788:8788 -v molfar-vertep-data:/molfar-vertep \
   ghcr.io/molfarwav/molfar-vertep:latest
-docker logs chrysalis        # the first start prints the setup link
+docker logs molfar-vertep        # the first start prints the setup link
 ```
 
 The repository's `docker-compose.yml` does the same; `docker compose up -d --build` builds an image from your checkout instead of pulling one.
@@ -194,7 +194,7 @@ On Windows, if a `git` command answers "detected dubious ownership in repository
 
 Molfar Vertep opens your browser (or prints a link) with a one-time setup address. Open it, create your account, and add a model connection in **Settings > API connections**. The first account is the admin: it can add more people, each with their own workspace, agent and apps.
 
-Lost the link? It is in the window where Molfar Vertep started and in `data/logs/chrysalis.log`. Forgot a password? Stop Molfar Vertep and run `chrysalis reset-password <name>`.
+Lost the link? It is in the window where Molfar Vertep started and in `data/logs/molfar-vertep.log`. Forgot a password? Stop Molfar Vertep and run `molfar-vertep reset-password <name>`.
 
 The Store's list of apps comes from [MolfarWav/Molfar.Vertep-Store](https://github.com/MolfarWav/Molfar.Vertep-Store). Official apps are the ones under the MolfarWav account on GitHub, and Roleplay is one of them. Other apps are community apps: Molfar Vertep shows what they ask for (plugin permissions, network hosts, packages) and you review that before installing. A later update that asks for more stops for review again.
 
@@ -266,18 +266,18 @@ Every other dependency is MIT, BSD, ISC, Apache-2.0, or OFL-1.1.
 
 ### Bring your own tools
 
-Your whole workspace is a folder of plain files under git. Run `chrysalis workspace` in a terminal (Molfar Vertep makes itself a command the first time it starts, so there is nothing to install; open a new terminal if it was already running). It prints where the workspace is; point your editor or coding agent at it and work normally, saves reach open pages on their own. `AGENTS.md` there explains the layout to whatever agent reads it. For the parts that are not files, `./chrysalis api GET /v1/apps` calls the running engine's API.
+Your whole workspace is a folder of plain files under git. Run `molfar-vertep workspace` in a terminal (Molfar Vertep makes itself a command the first time it starts, so there is nothing to install; open a new terminal if it was already running). It prints where the workspace is; point your editor or coding agent at it and work normally, saves reach open pages on their own. `AGENTS.md` there explains the layout to whatever agent reads it. For the parts that are not files, `molfar-vertep api GET /v1/apps` calls the running engine's API.
 
 ### Settings file
 
-Server settings live in `config.yaml`, created on first start with a note on every line. `chrysalis paths` prints where it is:
+Server settings live in `config.yaml`, created on first start with a note on every line. `molfar-vertep paths` prints where it is:
 
 | Install | config.yaml and data |
 | --- | --- |
-| Windows | `%LOCALAPPDATA%\Chrysalis` |
-| macOS | `~/Library/Application Support/Chrysalis` |
-| Linux | `~/.local/share/chrysalis` |
-| Docker | the `/chrysalis` volume |
+| Windows | `%LOCALAPPDATA%\MolfarVertep` |
+| macOS | `~/Library/Application Support/MolfarVertep` |
+| Linux | `~/.local/share/molfar-vertep` |
+| Docker | the `/molfar-vertep` volume |
 | From source | the repository folder |
 
 Put a `config.yaml` next to the program to keep everything in that folder instead (a portable copy, for example on a USB drive).
@@ -285,7 +285,7 @@ Put a `config.yaml` next to the program to keep everything in that folder instea
 ```yaml
 port: 8788
 lan: false          # true: phones and other computers on your network can open it
-allowedHosts: []    # extra names, like chrysalis.home or a Tailscale name
+allowedHosts: []    # extra names, like molfar-vertep.home or a Tailscale name
 ssl:
   enabled: false    # HTTPS: phones need it for the microphone and installing as an app
 ```
@@ -295,9 +295,9 @@ Admins can change the same settings in **Settings > Server**, which applies them
 Every setting also works for a single run as an environment variable or a flag:
 
 ```sh
-CHRYSALIS_PORT=9000 chrysalis
-chrysalis --lan --port 9000 --no-open-browser
-chrysalis --help
+MOLFAR_VERTEP_PORT=9000 molfar-vertep
+molfar-vertep --lan --port 9000 --no-open-browser
+molfar-vertep --help
 ```
 
 ### Release builds
@@ -308,7 +308,7 @@ bun run dist linux-x64 windows-x64   # some of them
 ANDROID_HOME=~/android-sdk bun run dist android-apk   # the APK (JDK 17+)
 ```
 
-Output lands in `out/dist/`. Set `CHRYSALIS_ANDROID_KEYSTORE`, `CHRYSALIS_ANDROID_KEYSTORE_PASSWORD`, `CHRYSALIS_ANDROID_KEY_ALIAS` and `CHRYSALIS_ANDROID_KEY_PASSWORD` to sign the APK for release; keep that keystore, since Android only updates an app signed with the same key.
+Output lands in `out/dist/`. Set `MOLFAR_VERTEP_ANDROID_KEYSTORE`, `MOLFAR_VERTEP_ANDROID_KEYSTORE_PASSWORD`, `MOLFAR_VERTEP_ANDROID_KEY_ALIAS` and `MOLFAR_VERTEP_ANDROID_KEY_PASSWORD` to sign the APK for release; keep that keystore, since Android only updates an app signed with the same key.
 
 Releases are built by `.github/workflows/release.yml` when a `vX.Y.Z` tag that matches `package.json` is pushed on `main`. Every push and pull request runs the tests and builds every download.
 

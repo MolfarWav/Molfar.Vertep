@@ -362,7 +362,7 @@ const dict = {
   "Update all": "すべて更新",
   "Update available": "更新があります",
   "Update plugin": "プラグインを更新",
-  "Update with bun add -g chrysalis-engine@latest, then restart Molfar Vertep.": "bun add -g chrysalis-engine@latest で更新し、Molfar Vertep を再起動してください。",
+  "Update with bun add -g molfar-vertep@latest, then restart Molfar Vertep.": "bun add -g molfar-vertep@latest で更新し、Molfar Vertep を再起動してください。",
   "Update with git pull, bun install and bun run build:client, then restart Molfar Vertep.": "git pull、bun install、bun run build:client で更新し、Molfar Vertep を再起動してください。",
   "Updated to v{version}.": "v{version} に更新しました。",
   "Updates": "更新",

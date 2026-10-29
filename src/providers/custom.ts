@@ -4,7 +4,7 @@
  * Custom (user-editable, git-tracked): providers.json describes endpoints.
  *   - models: explicit list, OR "auto" → dynamic discovery via GET {baseUrl}/models
  *     (OpenAI-compatible standard; cached + refreshed by pi-ai's catalog store).
- * Curated (shipped by Chrysalis): well-known aggregators users just add a key for.
+ * Curated (shipped by Molfar Vertep): well-known aggregators users just add a key for.
  * API keys live in the user's auth.json (OUTSIDE git) — never in providers.json.
  */
 import { readFileSync } from "node:fs";

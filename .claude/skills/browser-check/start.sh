@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Start a throwaway Chrysalis with a fake model, ready for Playwright.
+# Start a throwaway Molfar Vertep with a fake model, ready for Playwright.
 #   .claude/skills/browser-check/start.sh [WORK] [ENGINE_PORT] [MOCK_PORT]
-# WORK defaults to /tmp/chrysalis-check; it is wiped first. Writes $WORK/env
+# WORK defaults to /tmp/molfar-vertep-check; it is wiped first. Writes $WORK/env
 # (source it), copies pw.mjs there and installs playwright-core there once.
 set -euo pipefail
 SKILL="$(cd "$(dirname "$0")" && pwd)"
 REPO="$(cd "$SKILL/../../.." && pwd)"
-WORK="${1:-/tmp/chrysalis-check}"
+WORK="${1:-/tmp/molfar-vertep-check}"
 PORT="${2:-8796}"
 MOCK_PORT="${3:-8797}"
 USER_NAME=molfar
@@ -23,7 +23,7 @@ MOCK_PORT=$MOCK_PORT bun run "$SKILL/mock-model.ts" > "$WORK/mock.log" 2>&1 < /d
 MOCK_PID=$!
 # exec: the subshell becomes the engine, so $! is its PID and no shell holds
 # this script's stdout open (a pipe into `tail` would never close)
-(cd "$REPO" && exec env DATA_DIR="$WORK/data" CHRYSALIS_PORT=$PORT CHRYSALIS_OPEN_BROWSER=false bun run src/index.ts) > "$WORK/engine.log" 2>&1 < /dev/null &
+(cd "$REPO" && exec env DATA_DIR="$WORK/data" MOLFAR_VERTEP_PORT=$PORT MOLFAR_VERTEP_OPEN_BROWSER=false bun run src/index.ts) > "$WORK/engine.log" 2>&1 < /dev/null &
 ENGINE_PID=$!
 
 for _ in $(seq 1 60); do grep -q "setup=" "$WORK/engine.log" 2>/dev/null && break; sleep 1; done

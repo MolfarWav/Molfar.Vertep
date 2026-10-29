@@ -3,7 +3,7 @@
 // while another tab is in front; a tour must not start then).
 import { useEffect, useState } from "react"
 
-const LANG_KEY = "chrysalis-lang"
+const LANG_KEY = "molfar-lang"
 
 /** The shell's language (same-origin localStorage, written by the shell's language switch). */
 const readLocale = (): string => {
