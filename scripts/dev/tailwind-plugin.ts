@@ -55,7 +55,7 @@ function fixUrls(css: string, fromFile: string, project: string): string {
 }
 
 export default {
-  name: "chrysalis-tailwind",
+  name: "molfar-tailwind",
   setup(build) {
     build.onLoad({ filter: /\.css$/ }, async (args) => {
       const project = projectOf(args.path);

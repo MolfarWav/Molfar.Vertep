@@ -1,12 +1,12 @@
 /**
- * Starts a packaged Chrysalis from an empty folder and walks the first run:
+ * Starts a packaged Molfar Vertep from an empty folder and walks the first run:
  * health, both frontends, account setup, and installing Roleplay from the
  * Store (this needs the network: the Store list and the app are on GitHub).
  *
- *   bun run scripts/smoke.ts out/dist/Molfar-Vertep-1.0.0-linux-x64/chrysalis
- *   bun run scripts/smoke.ts bun out/dist/npm/chrysalis.js
+ *   bun run scripts/smoke.ts out/dist/Molfar-Vertep-1.0.0-linux-x64/molfar-vertep
+ *   bun run scripts/smoke.ts bun out/dist/npm/molfar-vertep.js
  *
- * The expected version is CHRYSALIS_VERSION when set, else package.json's.
+ * The expected version is MOLFAR_VERTEP_VERSION when set, else package.json's.
  * Used by CI on every OS the downloads target. Exits non-zero on the first
  * failed check and prints the engine's output.
  */
@@ -16,12 +16,12 @@ import path from "node:path";
 
 const command = process.argv.slice(2);
 if (command.length === 0) {
-  console.error("usage: bun run scripts/smoke.ts <chrysalis executable> [args...]");
+  console.error("usage: bun run scripts/smoke.ts <molfar-vertep executable> [args...]");
   process.exit(2);
 }
 const pkg = JSON.parse(fs.readFileSync(path.join(import.meta.dir, "..", "package.json"), "utf8")) as { version: string };
-const expected = process.env.CHRYSALIS_VERSION || pkg.version;
-const home = fs.mkdtempSync(path.join(os.tmpdir(), "chrysalis-smoke-"));
+const expected = process.env.MOLFAR_VERTEP_VERSION || pkg.version;
+const home = fs.mkdtempSync(path.join(os.tmpdir(), "molfar-vertep-smoke-"));
 const port = 20000 + Math.floor(Math.random() * 20000);
 const base = `http://127.0.0.1:${port}`;
 
@@ -40,7 +40,7 @@ const version = Bun.spawnSync([...command, "--version"], { stdout: "pipe", stder
 check(version.stdout.toString().includes(expected), `--version prints ${expected}`);
 
 const engine = Bun.spawn([...command, "start", "--home", home, "--port", String(port)], {
-  env: { ...process.env, CHRYSALIS_OPEN_BROWSER: "false", CHRYSALIS_APPS_PACKAGE_DOWNLOADS: "false" },
+  env: { ...process.env, MOLFAR_VERTEP_OPEN_BROWSER: "false", MOLFAR_VERTEP_APPS_PACKAGE_DOWNLOADS: "false" },
   stdout: "pipe",
   stderr: "pipe",
 });
@@ -65,7 +65,7 @@ try {
 
   const token = /#setup=([^\s]+)/.exec(output)?.[1];
   check(token, "startup prints a setup link");
-  const logFile = path.join(home, "data", "logs", "chrysalis.log");
+  const logFile = path.join(home, "data", "logs", "molfar-vertep.log");
   check(fs.existsSync(logFile) && fs.readFileSync(logFile, "utf8").includes(token), "the setup link is in the log file");
 
   const setup = await fetch(`${base}/v1/auth/setup`, {

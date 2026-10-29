@@ -63,8 +63,11 @@ let started = false;
 let seq = 0;
 let env: Record<string, unknown> = {};
 
+/** Events are "molfar:*"; an app written for 1.7.x listens for "chrysalis:*"
+ *  (#66), so both names are called. */
 function emit(event: string, payload?: unknown): void {
-  for (const cb of listeners.get(event) ?? []) {
+  const legacy = event.startsWith("molfar:") ? `chrysalis:${event.slice("molfar:".length)}` : null;
+  for (const cb of [...(listeners.get(event) ?? []), ...(legacy ? listeners.get(legacy) ?? [] : [])]) {
     try {
       cb(payload);
     } catch (e) {
@@ -74,8 +77,8 @@ function emit(event: string, payload?: unknown): void {
 }
 
 function fullReload(reason: string): void {
-  console.info("[chrysalis] reloading:", reason);
-  emit("chrysalis:beforeFullReload", { reason });
+  console.info("[molfar-vertep] reloading:", reason);
+  emit("molfar:beforeFullReload", { reason });
   location.reload();
 }
 
@@ -149,7 +152,7 @@ function hotContext(rec: Rec) {
 function resolveTarget(target: string, from: string): unknown {
   if (target.startsWith("dep:")) {
     const id = target.slice(4);
-    if (!deps.has(id)) throw new Error(`[chrysalis] dependency ${id} is missing from the deps bundle (imported by ${from})`);
+    if (!deps.has(id)) throw new Error(`[molfar-vertep] dependency ${id} is missing from the deps bundle (imported by ${from})`);
     return deps.get(id);
   }
   if (target === "\0empty") return {};
@@ -176,7 +179,7 @@ function execute(rec: Rec): void {
   const reg = (type: unknown, id: string) => RefreshRuntime.register(type, `${rec.id} ${id}`);
   const require = (spec: string) => {
     const target = rec.deps[spec];
-    if (target === undefined) throw new Error(`[chrysalis] cannot find "${spec}" (imported by ${rec.id})`);
+    if (target === undefined) throw new Error(`[molfar-vertep] cannot find "${spec}" (imported by ${rec.id})`);
     return resolveTarget(target, rec.id);
   };
   try {
@@ -193,7 +196,7 @@ function execute(rec: Rec): void {
 
 function load(id: string): { exports: unknown } {
   const rec = records.get(id);
-  if (!rec) throw new Error(`[chrysalis] unknown module ${id}`);
+  if (!rec) throw new Error(`[molfar-vertep] unknown module ${id}`);
   if (!rec.module) execute(rec);
   return rec.module!;
 }
@@ -236,7 +239,7 @@ function failureText(e: unknown, id?: string): string {
  *  only — the pane's own controls decide what to do with it. */
 function notifyParent(text: string | null): void {
   try {
-    parent.postMessage({ __chrysalisRuntime: 1, t: "error", text }, "*");
+    parent.postMessage({ __molfarRuntime: 1, t: "error", text }, "*");
   } catch { /* top-level page in standalone mode */ }
 }
 
@@ -293,7 +296,7 @@ function flushClientErrors(): void {
   if (!clientErrorsDirty || !clientErrors.length) return;
   clientErrorsDirty = false;
   try {
-    parent.postMessage({ __chrysalisRuntime: 1, t: "app-errors", events: clientErrors.splice(0) }, "*");
+    parent.postMessage({ __molfarRuntime: 1, t: "app-errors", events: clientErrors.splice(0) }, "*");
   } catch { /* top-level page in standalone mode */ }
 }
 
@@ -304,7 +307,7 @@ function flushClientLogs(): void {
   // state a test is looking at
   const events = clientLogs.splice(0);
   try {
-    parent.postMessage({ __chrysalisRuntime: 1, t: "app-logs", events: events.slice(-LOGS_PER_FLUSH) }, "*");
+    parent.postMessage({ __molfarRuntime: 1, t: "app-logs", events: events.slice(-LOGS_PER_FLUSH) }, "*");
   } catch { /* top-level page in standalone mode */ }
 }
 
@@ -347,7 +350,7 @@ function installClientErrorCapture(): void {
 function showErrors(list: BuildMessage[] | string[]): void {
   clearErrors();
   if (!list.length) return;
-  const host = document.createElement("chrysalis-error-overlay");
+  const host = document.createElement("molfar-error-overlay");
   const root = host.attachShadow({ mode: "open" });
   const box = document.createElement("div");
   // the overlay exists to be READ: text stays selectable, a click never
@@ -415,7 +418,7 @@ function prune(ids: string[]): void {
 }
 
 function apply(table: ModuleTable, info: { errors?: BuildMessage[]; removed?: string[] }): void {
-  emit("chrysalis:beforeUpdate", { type: "update" });
+  emit("molfar:beforeUpdate", { type: "update" });
   const changed = Object.keys(table);
   const wasLive = new Set(changed.filter((id) => records.get(id)?.module));
   define(table);
@@ -483,7 +486,7 @@ function apply(table: ModuleTable, info: { errors?: BuildMessage[]; removed?: st
   if (info.errors?.length) showErrors(info.errors);
   else if (failures.length) showErrors(failures);
   else clearErrors();
-  emit("chrysalis:afterUpdate", { type: "update", updates: changed.map((path) => ({ path })) });
+  emit("molfar:afterUpdate", { type: "update", updates: changed.map((path) => ({ path })) });
 }
 
 // ---------- event stream ----------
@@ -569,7 +572,7 @@ const api = {
     let el = styles.get(id);
     if (!el) {
       el = document.createElement("style");
-      el.setAttribute("data-chrysalis-css", id);
+      el.setAttribute("data-molfar-css", id);
       document.head.appendChild(el);
       styles.set(id, el);
     }
@@ -615,7 +618,7 @@ const api = {
       connect();
       // Tell the host the app has had its first paint; the pane's opening
       // overlay waits for this instead of vanishing when src is assigned.
-      const announce = () => parent.postMessage({ __chrysalisRuntime: 1, t: "ready" }, "*");
+      const announce = () => parent.postMessage({ __molfarRuntime: 1, t: "ready" }, "*");
       if (document.readyState === "complete") requestAnimationFrame(() => requestAnimationFrame(announce));
       else addEventListener("load", () => requestAnimationFrame(() => requestAnimationFrame(announce)), { once: true });
     };
@@ -625,4 +628,4 @@ const api = {
 };
 
 installClientErrorCapture();
-w.__chrysalis_dev = api;
+w.__molfar_dev = api;

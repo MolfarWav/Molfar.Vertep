@@ -20,7 +20,7 @@
  */
 
 /** Never resolvable (.invalid is reserved), so nothing but the engine answers. */
-export const SANDBOX_GIT_HOST = "git.chrysalis.invalid";
+export const SANDBOX_GIT_HOST = "git.molfar-vertep.invalid";
 
 const CD_FUNCTION = `cd() {
   local target="\${1:-/workspace}"

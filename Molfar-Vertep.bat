@@ -395,7 +395,7 @@ rem ---------- back to the previous release ----------
 rem The release tag before the one checked out (or, on a work branch, the
 rem newest release). The engine first checks the data: the account files
 rem saved at the last change of version go back only when the newer version
-rem stored them in a way the older one cannot read (chrysalis rollback).
+rem stored them in a way the older one cannot read (molfar-vertep rollback).
 :previous
 git diff --quiet HEAD -- . ":(exclude)bun.lock" ":(exclude)client-agent/bun.lock"
 if errorlevel 1 (
@@ -441,7 +441,7 @@ rem ---------- restore Roleplay (8 in the menu) ----------
 rem An app that does not start leaves no way into its own screens. This lists
 rem what is wrong and what would change, asks, then writes the version the app
 rem shipped in over its code. The data folder is never touched; the replaced
-rem files stay in the workspace history (chrysalis restore-app).
+rem files stay in the workspace history (molfar-vertep restore-app).
 :restore_app
 if not exist "src\apps\restore.ts" (
   echo %MV_W%This version of Molfar Vertep has no restore step. Update it first.%MV_0%
@@ -567,7 +567,7 @@ echo %MV_S%=== Starting Molfar Vertep %MV_NOW%. Your browser opens by itself.%MV
 echo %MV_D%    Keep this window open while you use it; close it or press Ctrl+C to stop.%MV_0%
 echo %MV_D%    First start: the link with #setup= creates your account.%MV_0%
 rem tells the engine its launcher started it, so it opens the browser
-set "CHRYSALIS_LAUNCHER=1"
+set "MOLFAR_VERTEP_LAUNCHER=1"
 if defined MV_STAY echo %MV_D%    To stay on this version, start with "Molfar-Vertep.bat nopull": a plain start offers the newest release again.%MV_0%
 call bun start
 set "MV_EXIT=%errorlevel%"

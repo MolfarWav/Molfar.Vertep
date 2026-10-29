@@ -4,7 +4,7 @@
  * The file is the user's: a commented YAML document they can open in any
  * editor. Settings > Server rewrites it from the same template, so the
  * comments survive a save from the UI. Every setting can also be given for one
- * run as an environment variable (MOLFAR_VERTEP_PORT=9000, or CHRYSALIS_PORT as up to 1.2.x) or a flag
+ * run as an environment variable (MOLFAR_VERTEP_PORT=9000, or CHRYSALIS_PORT up to 1.7.x) or a flag
  * (--port 9000); those win over the file and are reported as locked, so the
  * UI never shows a value the engine is not actually using.
  *
@@ -110,7 +110,7 @@ const SETTING_KEYS = new Set(SETTINGS.map((s) => s.key));
 const SECTIONS = new Set(SETTINGS.filter((s) => s.key.includes(".")).map((s) => s.key.split(".")[0]!));
 
 /** MOLFAR_VERTEP_ plus the dotted path in capitals: ssl.certPath → MOLFAR_VERTEP_SSL_CERT_PATH.
- *  The CHRYSALIS_ name of 1.2.x is read too (src/env.ts). */
+ *  The CHRYSALIS_ name of 1.7.x and older is read too (src/env.ts). */
 export function envNameOf(key: string, prefix: string = ENV_PREFIX): string {
   return prefix + key.replace(/([a-z0-9])([A-Z])/g, "$1_$2").replace(/\./g, "_").toUpperCase();
 }

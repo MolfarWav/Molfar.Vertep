@@ -11,11 +11,11 @@ import { log } from "../logger.js";
  *  "./…" is the worker's source path, which a compiled executable maps to
  *  its embedded copy on every OS; anything else is a file beside the engine
  *  bundle. */
-declare const CHRYSALIS_SANDBOX_WORKER: string | undefined;
+declare const MOLFAR_VERTEP_SANDBOX_WORKER: string | undefined;
 const WORKER_PATH =
-  typeof CHRYSALIS_SANDBOX_WORKER !== "string" ? path.join(import.meta.dir, "sandbox-worker.mjs") :
-  CHRYSALIS_SANDBOX_WORKER.startsWith("./") ? CHRYSALIS_SANDBOX_WORKER :
-  path.join(import.meta.dir, CHRYSALIS_SANDBOX_WORKER);
+  typeof MOLFAR_VERTEP_SANDBOX_WORKER !== "string" ? path.join(import.meta.dir, "sandbox-worker.mjs") :
+  MOLFAR_VERTEP_SANDBOX_WORKER.startsWith("./") ? MOLFAR_VERTEP_SANDBOX_WORKER :
+  path.join(import.meta.dir, MOLFAR_VERTEP_SANDBOX_WORKER);
 const CALL_TIMEOUT_MS = 20_000; // includes worker boot; sandbox itself caps at 10s
 /** Room on top of a call's own execution limit for boot and the round trip. */
 const CALL_OVERHEAD_MS = 10_000;

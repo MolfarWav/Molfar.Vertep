@@ -18,7 +18,7 @@ export interface HtmlEntry {
 }
 
 export interface HtmlPlan {
-  /** index.html with <!--chrysalis:N--> where each entry was */
+  /** index.html with <!--molfar:N--> where each entry was */
   template: string;
   entries: HtmlEntry[];
 }
@@ -61,7 +61,7 @@ export async function planHtml(html: string, fs: BuildFs, emitter: Emitter, env:
     } else {
       entries.push({ n, kind: "script", path: null, inline: m[2]! });
     }
-    scripts.push({ start: m.index!, end: m.index! + m[0].length, repl: `<!--chrysalis:${n}-->` });
+    scripts.push({ start: m.index!, end: m.index! + m[0].length, repl: `<!--molfar:${n}-->` });
   }
   let out = "";
   let last = 0;
@@ -83,7 +83,7 @@ export async function planHtml(html: string, fs: BuildFs, emitter: Emitter, env:
       if (p && !(await fs.isFile(joinPath("public", p))) && (await fs.isFile(p))) {
         const n = entries.length;
         entries.push({ n, kind: "style", path: p });
-        tags.push({ start: m.index!, end: m.index! + whole.length, repl: `<!--chrysalis:${n}-->` });
+        tags.push({ start: m.index!, end: m.index! + whole.length, repl: `<!--molfar:${n}-->` });
         continue;
       }
     }
@@ -114,7 +114,7 @@ export async function planHtml(html: string, fs: BuildFs, emitter: Emitter, env:
 /** Fill the placeholders: entry n -> the markup for its outputs. Stylesheets
  *  collected from script entries go at the end of <head>. */
 export function fillHtml(plan: HtmlPlan, markup: (e: HtmlEntry) => string, headExtra: string): string {
-  let html = plan.template.replace(/<!--chrysalis:(\d+)-->/g, (_w, n: string) => {
+  let html = plan.template.replace(/<!--molfar:(\d+)-->/g, (_w, n: string) => {
     const e = plan.entries[Number(n)];
     return e ? markup(e) : "";
   });

@@ -430,7 +430,7 @@ const ComposerSpend: FC = () => {
 /** The external-store runtime's id for a chat with no session yet. */
 const DEFAULT_THREAD_ID = "DEFAULT_THREAD_ID";
 const draftKey = (sessionId: string | null) =>
-  `chrysalis.agent.draft.${sessionId ?? "new"}`;
+  `molfar.agent.draft.${sessionId ?? "new"}`;
 const readDraft = (key: string): string => {
   try {
     return localStorage.getItem(key) ?? "";

@@ -2,7 +2,7 @@
  *  index.html before the bundle; this is its contract. */
 declare global {
   interface Window {
-    ChrysalisBridgeHost: {
+    MolfarBridgeHost: {
       frameSrc(appId: string, username: string): string;
       serve(iframe: HTMLIFrameElement, appId: string, username: string, trusted?: boolean): () => void;
       allowedRequest(appId: string, method: string, path: string, trusted?: boolean): boolean;
@@ -14,7 +14,7 @@ declare global {
       onShellRequest?: (appId: string, req: ShellRequest) => unknown;
     };
     /** In-browser app builder (src/builder/browser/host.ts, /client/builder/host.js). */
-    ChrysalisBuilder?: {
+    MolfarBuilder?: {
       watch(
         appId: string,
         onStatus: (s: AppBuildStatus) => void,

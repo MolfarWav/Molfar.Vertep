@@ -28,7 +28,7 @@ let locale: Locale = detect()
 const listeners = new Set<() => void>()
 
 function detect(): Locale {
-  const saved = prefs.get("chrysalis-lang")
+  const saved = prefs.get("molfar-lang")
   if (saved && saved in LOCALES) return saved as Locale
   const tags = typeof navigator === "undefined" ? [] : [navigator.language, ...(navigator.languages ?? [])]
   for (const tag of tags) {
@@ -45,7 +45,7 @@ export const getLocale = (): Locale => locale
 export function setLocale(next: Locale): void {
   if (next === locale) return
   locale = next
-  prefs.set("chrysalis-lang", next)
+  prefs.set("molfar-lang", next)
   applyDomLocale()
   for (const fn of listeners) fn()
 }

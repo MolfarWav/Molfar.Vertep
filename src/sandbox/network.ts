@@ -206,7 +206,7 @@ export async function proxySandboxRequest(input: ProxyInput): Promise<Response> 
   }
   // the sandbox's HTTP runs through XHR, which cannot set a User-Agent, and
   // many sites refuse a request without one
-  headers["user-agent"] ??= "chrysalis-sandbox/1.0";
+  headers["user-agent"] ??= "molfar-vertep-sandbox/1.0";
   const method = /^[A-Z]{1,16}$/.test(input.method) ? input.method : "GET";
 
   let hop: Hop;
@@ -261,7 +261,7 @@ export const guardedGitHttp: HttpClient = {
   async request({ url, method = "GET", headers = {}, body }) {
     const chunks: Uint8Array[] = [];
     if (body) for await (const chunk of body) chunks.push(chunk);
-    const hop = await guardedRequest(new URL(url), method, { ...headers, "user-agent": "git/chrysalis" }, chunks.length ? Buffer.concat(chunks) : null, AbortSignal.timeout(CLONE_TIMEOUT_MS));
+    const hop = await guardedRequest(new URL(url), method, { ...headers, "user-agent": "git/molfar-vertep" }, chunks.length ? Buffer.concat(chunks) : null, AbortSignal.timeout(CLONE_TIMEOUT_MS));
     const source = hop.body;
     async function* capped(): AsyncGenerator<Uint8Array> {
       let read = 0;

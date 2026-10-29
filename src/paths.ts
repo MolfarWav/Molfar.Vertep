@@ -234,7 +234,7 @@ apps/*/data/.cache/
 
 /**
  * Workspace-level AGENTS.md — read by ANY coding agent pointed at this dir
- * (Chrysalis's built-in agent, Claude Code, Zcode, …), and put in front of
+ * (the built-in agent, Claude Code, Zcode, …), and put in front of
  * the built-in agent directly. No secrets: the file is git-tracked. Its job:
  * teach the file-first contract + how to drive the engine.
  */

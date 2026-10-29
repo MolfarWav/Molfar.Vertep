@@ -68,7 +68,7 @@ interface Mod {
 
 const FULL_REBUILD = /^(?:index\.html|package\.json|package-lock\.json|bun\.lock|bun\.lockb|npm-shrinkwrap\.json|(?:ts|js)config[^/]*\.json|\.env[^/]*|node_modules\/.*)$/;
 const REQUIRE = /\brequire\("((?:[^"\\]|\\.)*)"\)/g;
-const FACTORY = "function (require, module, exports, __chrysalis_meta, $RefreshReg$, $RefreshSig$)";
+const FACTORY = "function (require, module, exports, __molfar_meta, $RefreshReg$, $RefreshSig$)";
 
 /** Small sync string hash (cache keys and file names, not security). */
 export function strHash(s: string): string {
@@ -105,7 +105,7 @@ export class DevSession {
       esbuild: this.ctx.env.esbuild,
       mode: this.ctx.mode,
       define: defines(this.ctx),
-      assetUrl: (p: string) => `__chrysalis_dev.url(${JSON.stringify(p)})`,
+      assetUrl: (p: string) => `__molfar_dev.url(${JSON.stringify(p)})`,
       // dev CSS is a <style> in the document: emitted files resolve from it
       cssAssetRef: (p: string) => "./" + p,
       buildWorker: (p: string) => buildWorkerBundle(this.ctx, this.emitter, p),
@@ -190,7 +190,7 @@ export class DevSession {
           format: "cjs",
           target: "es2022",
           supported: { "dynamic-import": false },
-          define: { "import.meta": "__chrysalis_meta" },
+          define: { "import.meta": "__molfar_meta" },
         })
       ).code;
     }
@@ -230,7 +230,7 @@ export class DevSession {
     const js = cssModule ? (r.outputFiles?.find((f) => f.path.endsWith(".js"))?.text ?? "") : "";
     m.inputs = inputs;
     m.deps = {};
-    m.code = `${js}\n__chrysalis_dev.css(${JSON.stringify(m.id)}, ${JSON.stringify(css)});` + (cssModule ? "" : "\n__chrysalis_meta.hot.accept();");
+    m.code = `${js}\n__molfar_dev.css(${JSON.stringify(m.id)}, ${JSON.stringify(css)});` + (cssModule ? "" : "\n__molfar_meta.hot.accept();");
   }
 
   private async buildMod(m: Mod, pending: Mod[]): Promise<void> {
@@ -242,7 +242,7 @@ export class DevSession {
       case "css":
         return this.buildCss(m);
       case "asset":
-        m.code = esm(`__chrysalis_dev.url(${JSON.stringify(await this.emitter.asset(m.file))})`);
+        m.code = esm(`__molfar_dev.url(${JSON.stringify(await this.emitter.asset(m.file))})`);
         return;
       case "raw":
         m.code = esm(JSON.stringify(await this.ctx.fs.readText(m.file)));
@@ -256,7 +256,7 @@ export class DevSession {
       case "sharedworker":
       case "worker-url": {
         const out = await buildWorkerBundle(this.ctx, this.emitter, m.file);
-        const url = `__chrysalis_dev.url(${JSON.stringify(out)})`;
+        const url = `__molfar_dev.url(${JSON.stringify(out)})`;
         m.code =
           m.kind === "worker-url"
             ? esm(url)
@@ -309,7 +309,7 @@ export class DevSession {
     const ids = [...this.depIds].sort();
     const contents =
       ids.map((p, i) => `import * as d${i} from ${JSON.stringify("/" + p)};`).join("\n") +
-      `\n__chrysalis_dev.deps({${ids.map((p, i) => `${JSON.stringify(p)}: d${i}`).join(", ")}});\n`;
+      `\n__molfar_dev.deps({${ids.map((p, i) => `${JSON.stringify(p)}: d${i}`).join(", ")}});\n`;
     const entries = new Map([["\0entry:deps", { path: "__deps.js", contents, loader: "js" as esbuild.Loader }]]);
     const r = await this.ctx.env.esbuild.build({
       entryPoints: ["\0entry:deps"],
@@ -336,7 +336,7 @@ export class DevSession {
   }
 
   private snapshot(): { path: string; contents: string } {
-    const body = `__chrysalis_dev.env = ${JSON.stringify(this.ctx.metaEnv)};\n__chrysalis_dev.define({\n${[...this.mods.values()].map((m) => this.moduleSource(m)).join(",\n")}\n});\n`;
+    const body = `__molfar_dev.env = ${JSON.stringify(this.ctx.metaEnv)};\n__molfar_dev.define({\n${[...this.mods.values()].map((m) => this.moduleSource(m)).join(",\n")}\n});\n`;
     return { path: `dev/app-${strHash(body).slice(0, 12)}.js`, contents: body };
   }
 
@@ -363,8 +363,8 @@ export class DevSession {
     return [
       { path: "index.html", contents: this.html(meta) },
       { path: "dev/meta.json", contents: JSON.stringify(meta) },
-      { path: "dev/meta.js", contents: `__chrysalis_dev.sync(${meta.seq}, ${JSON.stringify(meta.snapshot)});\n` },
-      { path: "dev/boot.js", contents: `__chrysalis_dev.start(${JSON.stringify(this.entryIds)}, ${meta.seq});\n` },
+      { path: "dev/meta.js", contents: `__molfar_dev.sync(${meta.seq}, ${JSON.stringify(meta.snapshot)});\n` },
+      { path: "dev/boot.js", contents: `__molfar_dev.start(${JSON.stringify(this.entryIds)}, ${meta.seq});\n` },
     ];
   }
 
@@ -512,7 +512,7 @@ export class DevSession {
     const errors = this.collectErrors();
     const info = removed.length ? { errors, removed } : { errors };
     const files: BuildOutput["files"] = [
-      { path: hotFile, contents: `__chrysalis_dev.update(${meta.seq}, {\n${out.map((m) => this.moduleSource(m)).join(",\n")}\n}, ${JSON.stringify(info)});\n` },
+      { path: hotFile, contents: `__molfar_dev.update(${meta.seq}, {\n${out.map((m) => this.moduleSource(m)).join(",\n")}\n}, ${JSON.stringify(info)});\n` },
     ];
     const remove: string[] = [];
     meta.hot.push(hotFile);

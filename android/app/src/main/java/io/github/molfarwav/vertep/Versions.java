@@ -1,4 +1,4 @@
-package org.projectchrysalis.chrysalis;
+package io.github.molfarwav.vertep;
 
 /** Dotted version comparison ("1.10.0" is newer than "1.9.2"). */
 final class Versions {

@@ -768,7 +768,7 @@ describe("S5 in-browser builder: one app in, one dist out", () => {
   it("build output cannot leave dist, name hidden files, or copy from outside the app", async () => {
     const { checkOutput, writeOutput } = await import("../src/builder/server.js");
     const base = { ok: true, mode: "production", copies: [], errors: [], warnings: [] };
-    for (const bad of ["../x.js", "/abs.js", ".hidden", "a/../../x", "assets/.chrysalis-build.json", "a\\b.js", "a//b.js", ""]) {
+    for (const bad of ["../x.js", "/abs.js", ".hidden", "a/../../x", "assets/.molfar-build.json", "a\\b.js", "a//b.js", ""]) {
       expect(typeof checkOutput({ ...base, files: [{ path: bad, contents: "x" }] }), bad).toBe("string");
     }
     for (const from of ["data/private.json", "../other/x", "plugins/p/plugin.js", ".git/config", ".env", "dist/x"]) {
@@ -947,7 +947,7 @@ describe("A2 the bridge's second lock (server side)", () => {
       WebSocket: class {}, TextEncoder, TextDecoder, btoa, atob, Map, Set, URL, Uint8Array,
     });
     vm.runInContext(source, context);
-    const host = win.ChrysalisBridgeHost as { allowedRequest: (a: string, m: string, p: string, t?: boolean) => boolean };
+    const host = win.MolfarBridgeHost as { allowedRequest: (a: string, m: string, p: string, t?: boolean) => boolean };
     const paths = ["/v1/apps/x/chats", "/v1/apps/x/tree", "/v1/apps/x/mcp", "/v1/apps/x/mcp/s", "/v1/apps/y/chats", "/v1/models", "/v1/models/context", "/v1/models/shown",
       "/v1/models/pricing", "/v1/models/params", "/v1/models/params/effective", "/v1/models/favorites", "/v1/models/vision", "/v1/images", "/v1/images/models", "/v1/images/favorites", "/v1/images/endpoints", "/v1/images/endpoints/e", "/v1/images/endpoints/e/models", "/v1/images/endpoints/e/options", "/v1/images/workflow/adapt", "/v1/assets", "/v1/assets/abc", "/v1/audio/speech", "/v1/audio/speech/endpoints",
       "/v1/audio/speech/endpoints/e", "/v1/settings/connections", "/v1/settings/providers", "/v1/settings", "/v1/plugins", "/v1/plugins/p/approve",
@@ -974,7 +974,7 @@ describe("A2 the bridge's second lock (server side)", () => {
       crypto: { getRandomValues: (b: Uint8Array) => b }, location: { origin: "http://localhost:8788" },
       WebSocket: class {}, TextEncoder, TextDecoder, btoa, atob, Map, Set, URL, Uint8Array,
     }));
-    const shellRequest = (win.ChrysalisBridgeHost as { shellRequest: (t: boolean, d: unknown) => unknown }).shellRequest;
+    const shellRequest = (win.MolfarBridgeHost as { shellRequest: (t: boolean, d: unknown) => unknown }).shellRequest;
     expect(shellRequest(true, { op: "ask-molfar", text: "make a card", extra: "x" })).toEqual({ op: "ask-molfar", text: "make a card" });
     expect(shellRequest(true, { op: "apps" })).toEqual({ op: "apps" });
     expect(shellRequest(true, { op: "open-app", appId: "notes" })).toEqual({ op: "open-app", appId: "notes" });
@@ -1196,10 +1196,10 @@ describe("A5 sessions end with the password and the account behind them", () => 
     const login = async (username: string, password: string): Promise<string> => {
       const res = await app.request("/v1/auth/login", { method: "POST", headers: json, body: JSON.stringify({ username, password }) });
       expect(res.status).toBe(200);
-      return /chrysalis_session=([^;]+)/.exec(res.headers.get("set-cookie") ?? "")![1]!;
+      return /molfar_vertep_session=([^;]+)/.exec(res.headers.get("set-cookie") ?? "")![1]!;
     };
     const as = (cookie: string, url: string, init: { method?: string; body?: unknown } = {}) =>
-      app.request(url, { method: init.method ?? "GET", headers: { ...json, cookie: `chrysalis_session=${cookie}` }, ...(init.body ? { body: JSON.stringify(init.body) } : {}) });
+      app.request(url, { method: init.method ?? "GET", headers: { ...json, cookie: `molfar_vertep_session=${cookie}` }, ...(init.body ? { body: JSON.stringify(init.body) } : {}) });
     return { app, users, login, as };
   };
 

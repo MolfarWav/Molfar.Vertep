@@ -35,6 +35,7 @@ function makeShell(bus: Bus, kept: { local: Map<string, string>; session: Map<st
       if (quotaFull) throw new Error("QuotaExceededError");
       store.set(k, v);
     },
+    removeItem: (k: string) => { store.delete(k); },
   };
   const sessionStorage = {
     getItem: (k: string) => (kept.session.has(k) ? kept.session.get(k)! : null),
@@ -45,7 +46,7 @@ function makeShell(bus: Bus, kept: { local: Map<string, string>; session: Map<st
     window: win, document: {}, localStorage, sessionStorage, crypto: { getRandomValues: (b: Uint8Array) => b }, location: { origin: "http://localhost:8788" },
     WebSocket: class {}, TextEncoder, TextDecoder, btoa, atob, Map, Set, URL, Uint8Array, JSON,
   }));
-  const host = win.ChrysalisBridgeHost as { serve: (f: unknown, a: string, u: string) => () => void; frameSrc: (a: string, u: string) => string; storageKey: (u: string, a: string) => string };
+  const host = win.MolfarBridgeHost as { serve: (f: unknown, a: string, u: string) => () => void; frameSrc: (a: string, u: string) => string; storageKey: (u: string, a: string) => string };
   const deliver = (source: unknown, data: unknown) => bus.queue.push(() => { for (const l of listeners) l({ source, data: structuredClone(data) }); });
   return {
     host,
@@ -188,6 +189,46 @@ describe("app storage: acknowledgements and catching up after a reload", () => {
     f.ls.setItem("draft", "typed while the disk was full");
     bus.flush();
     expect(f.win.chrysalisStorage.unsaved()).toEqual([{ storage: "local", key: "draft", reason: "browser-quota" }]);
+  });
+
+  // #66: the names up to 1.7.x stay for apps written against them
+  it("molfarShell and molfarStorage are the same objects as chrysalisShell and chrysalisStorage", () => {
+    const bus = makeBus();
+    const f = makeFrame(bus, makeShell(bus));
+    bus.flush();
+    expect(f.win.molfarShell).toBe(f.win.chrysalisShell);
+    expect(f.win.molfarStorage).toBe(f.win.chrysalisStorage);
+    expect(typeof f.win.molfarShell.askMolfar).toBe("function");
+  });
+
+  it("an unsaved write is announced under both event names", () => {
+    const bus = makeBus();
+    const shell = makeShell(bus);
+    const f = makeFrame(bus, shell);
+    bus.flush();
+    shell.setQuotaFull(true);
+    f.ls.setItem("draft", "typed while the disk was full");
+    bus.flush();
+    const types = (f.events as Array<{ type: string }>).map((e) => e.type);
+    expect(types).toContain("molfar:storage");
+    expect(types).toContain("chrysalis:storage");
+  });
+
+  it("an app's storage saved under the 1.7.x key is still there, and moves to the new key on the next save", () => {
+    const bus = makeBus();
+    const kept = { local: new Map<string, string>(), session: new Map<string, string>() };
+    const shell0 = makeShell(bus, kept);
+    const legacyKey = shell0.host.storageKey("u", "rp").replace("molfar.app-storage.", "chrysalis.app-storage.");
+    kept.local.delete(shell0.host.storageKey("u", "rp"));
+    kept.local.set(legacyKey, JSON.stringify({ local: { old: "from 1.7" }, session: {} }));
+    const shell = makeShell(bus, kept);
+    const f = makeFrame(bus, shell);
+    bus.flush();
+    expect(f.ls.getItem("old")).toBe("from 1.7");
+    f.ls.setItem("fresh", "now");
+    bus.flush();
+    expect(shell.saved().local).toEqual({ old: "from 1.7", fresh: "now" });
+    expect(kept.local.has(legacyKey)).toBe(false);
   });
 
   it("a late refusal of an older write does not mark the newer text unsaved", () => {

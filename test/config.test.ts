@@ -198,7 +198,7 @@ describe("first-run setup", () => {
     expect(listed.setup).toBe(true);
     const res = await post({ token: "tok-123456", username: "mira", password: "hunter22" });
     expect(res.status).toBe(200);
-    expect(res.headers.get("set-cookie")).toContain("chrysalis_session=");
+    expect(res.headers.get("set-cookie")).toContain("molfar_vertep_session=");
     expect(users.get("mira")?.role).toBe("admin");
     expect(fs.existsSync(path.join(home, "data", "users", "mira", "settings.json"))).toBe(true);
     // the link works exactly once

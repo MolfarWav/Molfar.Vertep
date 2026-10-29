@@ -253,7 +253,7 @@ export function transformNewUrl(src: string): string {
   const hoisted: string[] = [];
   let n = 0;
   const out = src.replace(/new\s+URL\(\s*(['"])(\.{1,2}\/[^'"\n]+)\1\s*,\s*import\.meta\.url\s*\)/g, (_w, _q: string, rel: string) => {
-    const id = `__chrysalis_url_${n++}`;
+    const id = `__molfar_url_${n++}`;
     const script = /\.(?:[cm]?[jt]sx?)$/.test(rel);
     hoisted.push(`import ${id} from ${JSON.stringify(rel + (script ? "?worker&url" : "?url"))};`);
     return `new URL(${id}, import.meta.url)`;
@@ -330,7 +330,7 @@ export async function walkFiles(fs: BuildFs, dir: string): Promise<string[]> {
 export function createPlugin(o: PluginOptions): esbuild.Plugin {
   const walk = (dir: string) => walkFiles(o.fs, dir);
   return {
-    name: "chrysalis-builder",
+    name: "molfar-builder",
     setup(build) {
       build.onResolve({ filter: /.*/ }, async (args): Promise<esbuild.OnResolveResult | undefined> => {
         if (args.kind === "entry-point") {

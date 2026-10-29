@@ -19,7 +19,7 @@
   }
   let saved = null
   try {
-    saved = localStorage.getItem("chrysalis-lang")
+    saved = localStorage.getItem("molfar-lang") || localStorage.getItem("chrysalis-lang")
   } catch {
     // blocked site data: fall back to the browser's language
   }

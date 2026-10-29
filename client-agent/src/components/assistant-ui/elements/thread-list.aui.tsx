@@ -294,7 +294,7 @@ const ThreadListSkeleton: FC = () => {
 };
 
 /** dataTransfer type of a dragged chat row; its value is the session id */
-export const CHAT_DRAG_TYPE = "application/x-chrysalis-chat";
+export const CHAT_DRAG_TYPE = "application/x-molfar-chat";
 
 export const ThreadListItem: FC = () => {
   const id = useAuiState((s) => s.threadListItem.id);

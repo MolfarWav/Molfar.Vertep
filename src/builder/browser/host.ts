@@ -106,8 +106,8 @@ class BuilderFrame {
     });
     this.onMessage = (e: MessageEvent) => {
       if (e.source !== this.iframe.contentWindow) return;
-      const d = e.data as { __chrysalisBuilder?: number; t?: string; rid?: unknown; ops?: unknown; id?: unknown; output?: unknown; error?: unknown; text?: unknown };
-      if (!d || d.__chrysalisBuilder !== 1) return;
+      const d = e.data as { __molfarBuilder?: number; t?: string; rid?: unknown; ops?: unknown; id?: unknown; output?: unknown; error?: unknown; text?: unknown };
+      if (!d || d.__molfarBuilder !== 1) return;
       if (d.t === "loaded") loaded();
       else if (d.t === "ready") readyOk();
       else if (d.t === "fatal") readyFail(new Error(String(d.error)));
@@ -135,7 +135,7 @@ class BuilderFrame {
   private post(m: Record<string, unknown>, transfer: Transferable[] = []): void {
     // the frame is opaque-origin: "*" is the only target it can have, and
     // nothing secret is ever sent to it
-    this.iframe.contentWindow?.postMessage({ __chrysalisBuilder: 1, ...m }, "*", transfer);
+    this.iframe.contentWindow?.postMessage({ __molfarBuilder: 1, ...m }, "*", transfer);
   }
 
   private async relay(rid: number, ops: unknown[]): Promise<void> {
@@ -595,4 +595,4 @@ function rebuild(appId: string): Promise<void> {
   return requestBuild(appId, true);
 }
 
-(window as unknown as { ChrysalisBuilder: unknown }).ChrysalisBuilder = { watch, rebuild, version: VERSION };
+(window as unknown as { MolfarBuilder: unknown }).MolfarBuilder = { watch, rebuild, version: VERSION };

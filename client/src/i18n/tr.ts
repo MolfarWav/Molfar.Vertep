@@ -362,7 +362,7 @@ const dict = {
   "Update all": "Tümünü güncelle",
   "Update available": "Güncelleme var",
   "Update plugin": "Eklentiyi güncelle",
-  "Update with bun add -g chrysalis-engine@latest, then restart Molfar Vertep.": "bun add -g chrysalis-engine@latest ile güncelleyin, ardından Molfar Vertep'i yeniden başlatın.",
+  "Update with bun add -g molfar-vertep@latest, then restart Molfar Vertep.": "bun add -g molfar-vertep@latest ile güncelleyin, ardından Molfar Vertep'i yeniden başlatın.",
   "Update with git pull, bun install and bun run build:client, then restart Molfar Vertep.": "git pull, bun install ve bun run build:client ile güncelleyin, sonra Molfar Vertep'i yeniden başlatın.",
   "Updated to v{version}.": "v{version} sürümüne güncellendi.",
   "Updates": "Güncellemeler",

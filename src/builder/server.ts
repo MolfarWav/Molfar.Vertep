@@ -239,10 +239,10 @@ export interface BuildStatusFile {
   builder?: string;
 }
 
-const STATUS = ".chrysalis-build.json";
-const CLIENT_ERRORS = ".chrysalis-client-errors.jsonl";
+const STATUS = ".molfar-build.json";
+const CLIENT_ERRORS = ".molfar-client-errors.jsonl";
 const CLIENT_ERRORS_MAX = 200;
-const CLIENT_LOGS = ".chrysalis-client-logs.jsonl";
+const CLIENT_LOGS = ".molfar-client-logs.jsonl";
 const CLIENT_LOGS_MAX = 300;
 
 export function readBuildStatus(appDir: string): BuildStatusFile | null {

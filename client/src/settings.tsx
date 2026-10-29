@@ -1516,7 +1516,7 @@ function AccountSection(props: { me: Me; onLogout: () => void }) {
         fr.readAsDataURL(file)
       })
       const r = await avatarApi.upload(data, file.type || "image/png")
-      prefs.set("chrysalis-avatar-v", String(Date.now()))
+      prefs.set("molfar-avatar-v", String(Date.now()))
       setAvatarOk(true)
       setHasAvatar(true)
       setMsg(tr("Picture saved."))
@@ -1548,7 +1548,7 @@ function AccountSection(props: { me: Me; onLogout: () => void }) {
       <h3 className="text-13 font-medium text-ink">{tr("Account")}</h3>
       <div className="flex items-center gap-3">
         {avatarOk && hasAvatar ? <img
-            src={`/v1/auth/avatar/${encodeURIComponent(props.me.username)}?v=${prefs.get("chrysalis-avatar-v") ?? "0"}`}
+            src={`/v1/auth/avatar/${encodeURIComponent(props.me.username)}?v=${prefs.get("molfar-avatar-v") ?? "0"}`}
             alt=""
             className="size-12 shrink-0 rounded-full object-cover"
             onError={() => setAvatarOk(false)}

@@ -1,4 +1,4 @@
-package org.projectchrysalis.chrysalis;
+package io.github.molfarwav.vertep;
 
 import android.Manifest;
 import android.app.Activity;
@@ -36,7 +36,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /** Start and stop the local server, open it in the browser, and check for a
- *  newer release. Chrysalis itself runs in the phone's browser. */
+ *  newer release. Molfar Vertep itself runs in the phone's browser. */
 public final class MainActivity extends Activity implements EngineService.Listener {
     private TextView status;
     private TextView detail;
@@ -190,14 +190,14 @@ public final class MainActivity extends Activity implements EngineService.Listen
                     Toast.makeText(this, getString(R.string.no_browser, base), Toast.LENGTH_LONG).show();
                 }
             });
-        }, "chrysalis-open").start();
+        }, "molfar-vertep-open").start();
     }
 
     /** What the launcher did on the last Start, then the end of the engine
      *  log, or the service output when the engine never got far enough to
      *  write one. */
     private String logText() {
-        File engineLog = new File(EngineService.homeDir(this), "data/logs/chrysalis.log");
+        File engineLog = new File(EngineService.homeDir(this), "data/logs/molfar-vertep.log");
         String text = EngineService.lastLines(engineLog, 400);
         String output = EngineService.lastLines(EngineService.outputFile(this), 60);
         String launcher = EngineService.lastLines(EngineService.launcherLogFile(this), 80);
@@ -247,7 +247,7 @@ public final class MainActivity extends Activity implements EngineService.Listen
                     view.setText(text.isEmpty() ? getString(R.string.logs_empty) : text);
                     if (atBottom) scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
                 });
-            }, "chrysalis-log").start();
+            }, "molfar-vertep-log").start();
             handler.postDelayed(tail[0], 2000);
         };
         dialog.setOnDismissListener(d -> handler.removeCallbacks(tail[0]));
@@ -331,7 +331,7 @@ public final class MainActivity extends Activity implements EngineService.Listen
             } catch (Exception ignored) {
                 // offline or no releases yet
             }
-        }, "chrysalis-update").start();
+        }, "molfar-vertep-update").start();
     }
 
     private void openUrl(String url) {
@@ -377,7 +377,7 @@ public final class MainActivity extends Activity implements EngineService.Listen
                     showUpdateFailed(e.getMessage() == null ? e.toString() : e.getMessage());
                 });
             }
-        }, "chrysalis-download").start();
+        }, "molfar-vertep-download").start();
     }
 
     private void updateDone() {

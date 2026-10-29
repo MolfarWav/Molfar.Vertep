@@ -39,7 +39,7 @@ async function setup() {
   fs.writeFileSync(path.join(appDir, "dist", "dev", "deps-1.js"), "");
   fs.writeFileSync(path.join(appDir, "dist", "dev", "meta.json"), JSON.stringify({ snapshot: "dev/snap-1.js", depsJs: "dev/deps-1.js", depsCss: null }));
   const writeStatus = (extra: Record<string, unknown> = {}) =>
-    fs.writeFileSync(path.join(appDir, "dist", ".chrysalis-build.json"), JSON.stringify({ rev: sourceRev(appDir), ok: true, mode: "development", errors: [], warnings: 0, at: 1, builder: "b1", ...extra }));
+    fs.writeFileSync(path.join(appDir, "dist", ".molfar-build.json"), JSON.stringify({ rev: sourceRev(appDir), ok: true, mode: "development", errors: [], warnings: 0, at: 1, builder: "b1", ...extra }));
   writeStatus();
   const call = (method: string, route: string, body?: unknown) =>
     app.request(route, { method, headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });

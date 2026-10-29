@@ -11,7 +11,7 @@
     <color name="accent">#7AA2F7</color>
     <color name="danger">#F2777A</color>
 
-    <style name="Theme.Chrysalis" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.MolfarVertep" parent="android:Theme.Material.NoActionBar">
         <item name="android:colorAccent">@color/accent</item>
         <item name="android:colorBackground">@color/deep</item>
         <item name="android:windowBackground">@color/deep</item>

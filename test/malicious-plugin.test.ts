@@ -196,7 +196,7 @@ describe("exfiltration ways out of an app page", () => {
     };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
-    const host = win.ChrysalisBridgeHost as {
+    const host = win.MolfarBridgeHost as {
       allowedRequest: (appId: string, method: string, path: string, trusted?: boolean) => boolean;
       eventAllowed: (appId: string, trusted: boolean, raw: string) => boolean;
     };
@@ -309,7 +309,7 @@ describe("exfiltration ways out of an app page", () => {
     };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
-    const host = win.ChrysalisBridgeHost as { eventAllowed: (appId: string, trusted: boolean, raw: string) => boolean };
+    const host = win.MolfarBridgeHost as { eventAllowed: (appId: string, trusted: boolean, raw: string) => boolean };
     const evt = (type: string, payload: unknown) => JSON.stringify({ type, payload });
 
     // this app's own traffic plus the hello build stamp
@@ -373,7 +373,7 @@ describe("exfiltration ways out of an app page", () => {
     };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
-    const host = win.ChrysalisBridgeHost as {
+    const host = win.MolfarBridgeHost as {
       serve: (iframe: { contentWindow: unknown }, appId: string, username: string) => () => void;
     };
     const makeSource = (appId: string): FakeSource => {
@@ -437,7 +437,7 @@ describe("exfiltration ways out of an app page", () => {
     };
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
-    const host = win.ChrysalisBridgeHost as {
+    const host = win.MolfarBridgeHost as {
       serve: (iframe: { contentWindow: unknown }, appId: string, username: string) => () => void;
       frameSrc: (appId: string, username: string) => string;
     };

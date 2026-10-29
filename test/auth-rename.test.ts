@@ -38,9 +38,9 @@ async function setup() {
   const json = { "content-type": "application/json" };
   const login = await app.request("/v1/auth/login", { method: "POST", headers: json, body: JSON.stringify({ username: "carol", password: "carol-pass-1" }) });
   expect(login.status).toBe(200);
-  const cookie = /chrysalis_session=([^;]+)/.exec(login.headers.get("set-cookie") ?? "")?.[1] ?? "";
+  const cookie = /molfar_vertep_session=([^;]+)/.exec(login.headers.get("set-cookie") ?? "")?.[1] ?? "";
   const rename = (username: string) =>
-    app.request("/v1/auth/rename", { method: "POST", headers: { ...json, cookie: `chrysalis_session=${cookie}` }, body: JSON.stringify({ username, password: "carol-pass-1" }) });
+    app.request("/v1/auth/rename", { method: "POST", headers: { ...json, cookie: `molfar_vertep_session=${cookie}` }, body: JSON.stringify({ username, password: "carol-pass-1" }) });
   return { users, rename };
 }
 

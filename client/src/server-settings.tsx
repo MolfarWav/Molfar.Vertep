@@ -152,7 +152,7 @@ function PhoneQr(props: { urls: string[] }) {
 function updateHow(info: ServerInfo, staging: boolean): string {
   if (info.container) return staging ? tr("Pull the staging image and recreate the container. Your data stays in its volume.") : tr("Pull the latest image and recreate the container. Your data stays in its volume.")
   if (info.installKind === "source") return tr("Update with git pull, bun install and bun run build:client, then restart Molfar Vertep.")
-  if (info.installKind === "npm") return tr("Update with bun add -g chrysalis-engine@latest, then restart Molfar Vertep.")
+  if (info.installKind === "npm") return tr("Update with bun add -g molfar-vertep@latest, then restart Molfar Vertep.")
   if (info.installKind === "android") return tr("Install the new app from the release page. Your data stays.")
   if (info.portable) return tr("Download it from the release page, then move config.yaml and the data folder into the new copy before deleting this one.")
   return tr("Download it from the release page and replace this copy. Your data stays in its own folder.")

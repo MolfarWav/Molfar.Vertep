@@ -8,7 +8,7 @@ export const inShell = (): boolean => window.parent !== window
 export function announceAsk(ask: { id: string; question: string; chatId: string } | null): void {
   if (!inShell()) return
   window.parent.postMessage(
-    { __chrysalisAgent: "ask", open: ask !== null, ...(ask ? { id: ask.id, chatId: ask.chatId, question: ask.question.slice(0, 300) } : {}) },
+    { __molfarAgent: "ask", open: ask !== null, ...(ask ? { id: ask.id, chatId: ask.chatId, question: ask.question.slice(0, 300) } : {}) },
     location.origin,
   )
 }
@@ -17,7 +17,7 @@ export function announceAsk(ask: { id: string; question: string; chatId: string 
  *  ("ask"), a run finished ("done") or failed ("error"). The shell decides whether to say it. */
 export function announceNotice(n: { kind: "ask" | "done" | "error"; chatId: string; text: string }): void {
   if (!inShell()) return
-  window.parent.postMessage({ __chrysalisAgent: "notice", kind: n.kind, chatId: n.chatId, text: n.text.slice(0, 200) }, location.origin)
+  window.parent.postMessage({ __molfarAgent: "notice", kind: n.kind, chatId: n.chatId, text: n.text.slice(0, 200) }, location.origin)
 }
 
 /** The user's first click or key in this page: the shell may ask the browser for its permission to
@@ -27,7 +27,7 @@ export function relayFirstGesture(): void {
   const tell = () => {
     window.removeEventListener("pointerdown", tell, true)
     window.removeEventListener("keydown", tell, true)
-    window.parent.postMessage({ __chrysalisAgent: "gesture" }, location.origin)
+    window.parent.postMessage({ __molfarAgent: "gesture" }, location.origin)
   }
   window.addEventListener("pointerdown", tell, true)
   window.addEventListener("keydown", tell, true)
@@ -35,5 +35,5 @@ export function relayFirstGesture(): void {
 
 /** Switch the shell to an app's tab (the project pane's "Open app"). */
 export function openShellApp(appId: string): void {
-  if (inShell()) window.parent.postMessage({ __chrysalisAgent: "open-app", appId }, location.origin)
+  if (inShell()) window.parent.postMessage({ __molfarAgent: "open-app", appId }, location.origin)
 }

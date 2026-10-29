@@ -3,9 +3,11 @@
 Molfar Vertep (repo MolfarWav/Molfar.Vertep) began as a fork of Chrysalis Engine (AGPL-3.0-only)
 and is now independent: nothing is merged from upstream ProjectChrysalis and no new PRs go there
 (decided 2026-10-02). Keep only the AGPL minimum: the README's "modified fork of Chrysalis Engine"
-notice and the license. Everything users see says Molfar Vertep. Internal names (`chrysalis`
-command, `CHRYSALIS_*` env vars, data paths, release archive names) stay until a planned rename
-with data migration, on the user's word only.
+notice and the license. Everything users see says Molfar Vertep. The internal names (program, command,
+env vars, data folder, log, cookie) were renamed in #66 (user, 2026-10-29: no more chrysalis anywhere);
+the old ones are only read to carry an old install over (`src/env.ts`, `adoptLegacyDir`, `logToFile`).
+App-facing names (`chrysalisShell`, `chrysalis:*` events, `x-chrysalis-app`) stay as aliases because installed
+apps cannot be updated by the engine.
 Start every session with `.fork/STATE.md`, then the handoff it points to. This file
 holds the rules that do not change between tasks; the handoff holds the task.
 

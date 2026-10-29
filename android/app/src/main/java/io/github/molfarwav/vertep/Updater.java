@@ -1,4 +1,4 @@
-package org.projectchrysalis.chrysalis;
+package io.github.molfarwav.vertep;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;

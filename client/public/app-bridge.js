@@ -1,5 +1,5 @@
 /**
- * Chrysalis app bridge — runs FIRST in every app page, inside the shell's
+ * Molfar Vertep app bridge — runs FIRST in every app page, inside the shell's
  * sandboxed iframe. The frame has an opaque origin: no cookies, no storage,
  * no parent access, and its CSP says connect-src 'none'. Every interaction
  * with the engine goes through this script, which posts a request to the
@@ -12,8 +12,8 @@
  */
 (function () {
   "use strict";
-  if (window.__chrysalisBridge) return;
-  window.__chrysalisBridge = true;
+  if (window.__molfarBridge) return;
+  window.__molfarBridge = true;
 
   var parentWin = window.parent !== window ? window.parent : null;
   var nonce = "";
@@ -46,7 +46,7 @@
 
   function post(msg) {
     if (!parentWin) return;
-    msg.__chrysalis = 1;
+    msg.__molfar = 1;
     msg.nonce = nonce;
     parentWin.postMessage(msg, "*");
   }
@@ -63,7 +63,7 @@
       whenReady(function () {
         var id = nextId++;
         pending[id] = { resolve: resolve, reject: reject };
-        msg.__chrysalis = 1;
+        msg.__molfar = 1;
         msg.id = id;
         msg.nonce = nonce;
         parentWin.postMessage(msg, "*");
@@ -74,7 +74,7 @@
   window.addEventListener("message", function (e) {
     if (!parentWin || e.source !== parentWin) return;
     var d = e.data;
-    if (!d || d.__chrysalis !== 1) return;
+    if (!d || (d.__molfar !== 1 && d.__chrysalis !== 1)) return;
     if (d.type === "init") {
       nonce = d.nonce;
       ready = true;
@@ -106,7 +106,9 @@
     for (var k in payload) msg[k] = payload[k];
     return call(msg);
   }
-  window.chrysalisShell = Object.freeze({
+  // `chrysalisShell` is the name up to 1.7.x (#66). Apps already written
+  // against it keep working, so both names stay on the same object.
+  window.molfarShell = window.chrysalisShell = Object.freeze({
     /** Open Molfar on a new chat with `text` in the composer, unsent. */
     askMolfar: function (text) { return shellCall("ask-molfar", { text: String(text) }); },
     /** The user's installed apps: [{ id, name }]. */
@@ -329,8 +331,8 @@
   // with storage-ack once its own copy is written, or with the reason it
   // refused (the app's share is full, the browser's quota is spent). A
   // refused value stays in frame memory and in the hash, listed in
-  // `unsaved`, and the app hears about it: window.chrysalisStorage.unsaved()
-  // and a "chrysalis:storage" event. Only the ack of a key's newest write
+  // `unsaved`, and the app hears about it: window.molfarStorage.unsaved()
+  // and a "molfar:storage" event (both also under their 1.7.x names, chrysalisStorage and "chrysalis:storage"). Only the ack of a key's newest write
   // counts, so a late ack never marks newer text saved.
   var opSeq = 0;
   var lastOp = { local: {}, session: {} };
@@ -357,7 +359,9 @@
     return out;
   }
   function announceUnsaved() {
-    try { window.dispatchEvent(new CustomEvent("chrysalis:storage", { detail: { unsaved: unsavedList() } })); } catch { /* no events */ }
+    var detail = { unsaved: unsavedList() };
+    try { window.dispatchEvent(new CustomEvent("molfar:storage", { detail: detail })); } catch { /* no events */ }
+    try { window.dispatchEvent(new CustomEvent("chrysalis:storage", { detail: detail })); } catch { /* no events */ }
   }
   function storageAck(d) {
     var which = d.which === "session" ? "session" : "local";
@@ -373,7 +377,7 @@
     scheduleSnapshot();
     announceUnsaved();
   }
-  window.chrysalisStorage = Object.freeze({
+  window.molfarStorage = window.chrysalisStorage = Object.freeze({
     /** Writes the shell refused: [{ storage: "local"|"session", key, reason }].
      *  The values are still in this page's storage, not in the shell's. */
     unsaved: function () { return unsavedList(); },

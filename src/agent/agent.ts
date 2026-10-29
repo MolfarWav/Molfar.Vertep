@@ -1654,7 +1654,7 @@ const FULL_LAYOUT = `# Workspace layout (your whole world)
   - package.json, index.html, src/  — the app's UI (built in the user's browser on save; the open tab hot-updates)
   - plugins/<id>/           bundled backend behavior: manifest.json {permissions} + plugin.js
   - data/                   app-owned data files (git-tracked): whatever that app stores, in its own layout
-  - node_modules/, dist/    — derived (installed / browser-built, outside git). dist/.chrysalis-build.json holds the last build's errors.
+  - node_modules/, dist/    — derived (installed / browser-built, outside git). dist/.molfar-build.json holds the last build's errors.
 - plugins/<id>/             — top-level always-on plugins (same format as bundled)
 - projects/<name>/          — the user's free projects (plugins, research, ideas): PROJECT.md instructions, project.json settings, files/ reference uploads. An app's own project settings and uploads sit in apps/<id>/.project/. Uploads (files/) are outside git and read-only for you.
 - uploads/<day>/            — files the user attached in chat (an @uploads/… path in their message); outside git and read-only for you.
@@ -1666,7 +1666,7 @@ const FULL_LAYOUT = `# Workspace layout (your whole world)
  *  itself: the two used to say the same thing twice, every request. */
 const SHORT_LAYOUT = `# Workspace layout (your whole world)
 The workspace contract below (AGENTS.md) maps the folders. Beyond it:
-- apps/<app-id>/manifest.json is { name, version, kind, origin }; apps/<app-id>/plugins/<id>/ holds manifest.json {permissions} + plugin.js; dist/.chrysalis-build.json holds the last build's errors.
+- apps/<app-id>/manifest.json is { name, version, kind, origin }; apps/<app-id>/plugins/<id>/ holds manifest.json {permissions} + plugin.js; dist/.molfar-build.json holds the last build's errors.
 - providers.json: { providers: { id: { api: openai-completions|anthropic-messages, baseUrl, models: [...] | "auto" } } }
 - agent/sessions/: your own session transcripts (readable; archive, rename, move or delete chats with the chats tool, never edit them).
 - MCP servers, model connections, speech endpoints and settings live outside this workspace; ask the user to change them in Settings.`;

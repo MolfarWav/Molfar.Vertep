@@ -32,7 +32,7 @@ const GIT_ENV = {
 };
 
 /** The git program on this machine, if any (looked up once).
- *  CHRYSALIS_NO_SYSTEM_GIT=1 runs as if there were none. */
+ *  MOLFAR_VERTEP_NO_SYSTEM_GIT=1 runs as if there were none. */
 let gitProgram: string | null | undefined;
 function systemGit(): string | null {
   if (readEnv("NO_SYSTEM_GIT") === "1") return null;

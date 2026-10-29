@@ -17,7 +17,8 @@ export interface WsData {
   alive: boolean;
 }
 
-const SESSION_COOKIE = "chrysalis_session";
+/** The session cookie, and its name up to 1.7.x (#66). */
+const SESSION_COOKIES = ["molfar_vertep_session", "chrysalis_session"];
 const HEARTBEAT_MS = 30_000;
 
 /** Browsers send Origin on every websocket handshake and the socket has no
@@ -111,8 +112,9 @@ export class EventBus {
     if (!user && this.sessions) {
       // web client: session cookie on the upgrade request
       const cookies = req.headers.get("cookie") ?? "";
-      const row = cookies.split(";").map((s) => s.trim()).find((s) => s.startsWith(`${SESSION_COOKIE}=`));
-      const sess = row ? this.sessions.verify(row.slice(SESSION_COOKIE.length + 1)) : null;
+      const parts = cookies.split(";").map((s) => s.trim());
+      const row = SESSION_COOKIES.map((name) => parts.find((s) => s.startsWith(`${name}=`))?.slice(name.length + 1)).find((v) => v);
+      const sess = row ? this.sessions.verify(row) : null;
       const bySession = sess ? this.users?.get(sess.username) ?? null : null;
       user = bySession && bySession.enabled !== false ? bySession : null;
     }

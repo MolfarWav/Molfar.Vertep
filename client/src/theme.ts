@@ -6,14 +6,14 @@
  *  Three keys in the browser's storage carry the choice, so a reload paints
  *  right away (this module applies them when it is imported) and the agent
  *  page, a same-origin iframe, can follow:
- *    chrysalis-theme         the theme id
- *    chrysalis-theme-vars    custom themes only: the colours, as JSON
- *    chrysalis-theme-scheme  custom themes only: "dark" | "light" */
+ *    molfar-theme         the theme id
+ *    molfar-theme-vars    custom themes only: the colours, as JSON
+ *    molfar-theme-scheme  custom themes only: "dark" | "light" */
 import { prefs } from "./prefs"
 
-export const THEME_KEY = "chrysalis-theme"
-export const THEME_VARS_KEY = "chrysalis-theme-vars"
-export const THEME_SCHEME_KEY = "chrysalis-theme-scheme"
+export const THEME_KEY = "molfar-theme"
+export const THEME_VARS_KEY = "molfar-theme-vars"
+export const THEME_SCHEME_KEY = "molfar-theme-scheme"
 
 export const BUILTIN_THEMES = ["vertep", "dark", "light"] as const
 export type BuiltinTheme = (typeof BUILTIN_THEMES)[number]

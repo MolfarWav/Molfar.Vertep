@@ -120,6 +120,6 @@ body {
 /* Accept mode: while shell commands wait for the user's approval, the
    composer outline takes amber. Hex, not a named tailwind color: the theme
    prunes the default palette. */
-.chrysalis-accept-mode [data-component="prompt-input"] {
+.molfar-accept-mode [data-component="prompt-input"] {
   border-color: #fbbf24;
 }

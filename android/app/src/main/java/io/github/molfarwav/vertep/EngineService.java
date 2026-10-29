@@ -1,4 +1,4 @@
-package org.projectchrysalis.chrysalis;
+package io.github.molfarwav.vertep;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Runs the compiled Chrysalis server as a child process and keeps this app
+ * Runs the compiled Molfar Vertep server as a child process and keeps this app
  * in the foreground while it runs, so Android does not reclaim it while the
  * person is in the browser.
  *
@@ -59,8 +59,8 @@ public final class EngineService extends Service {
         void onState(State state);
     }
 
-    static final String ACTION_START = "org.projectchrysalis.chrysalis.START";
-    static final String ACTION_STOP = "org.projectchrysalis.chrysalis.STOP";
+    static final String ACTION_START = "io.github.molfarwav.vertep.START";
+    static final String ACTION_STOP = "io.github.molfarwav.vertep.STOP";
     private static final String CHANNEL = "server";
     private static final int NOTIFICATION_ID = 1;
 
@@ -188,7 +188,7 @@ public final class EngineService extends Service {
         if (worker == null || !worker.isAlive()) {
             stopping = false;
             failed = false;
-            worker = new Thread(this::run, "chrysalis-engine");
+            worker = new Thread(this::run, "molfar-vertep-engine");
             worker.start();
         }
         return START_NOT_STICKY;
@@ -227,7 +227,7 @@ public final class EngineService extends Service {
         //noinspection ResultOfMethodCallIgnored
         status.delete();
 
-        File binary = new File(getApplicationInfo().nativeLibraryDir, "libchrysalis.so");
+        File binary = new File(getApplicationInfo().nativeLibraryDir, "libmolfar-vertep.so");
         launcherLog(this, false, "Engine binary " + binary.getAbsolutePath() + ": exists=" + binary.exists()
             + ", canExecute=" + binary.canExecute() + ", length=" + binary.length());
         ProcessBuilder pb = new ProcessBuilder(binary.getAbsolutePath());
@@ -236,12 +236,12 @@ public final class EngineService extends Service {
         Map<String, String> env = pb.environment();
         env.put("HOME", getFilesDir().getAbsolutePath());
         env.put("TMPDIR", tmp.getAbsolutePath());
-        env.put("CHRYSALIS_HOME", home.getAbsolutePath());
-        env.put("CHRYSALIS_RESOURCES", Payload.resourcesDir(this).getAbsolutePath());
-        env.put("CHRYSALIS_STATUS_FILE", status.getAbsolutePath());
-        env.put("CHRYSALIS_SETUP_TOKEN", setupToken(this));
-        env.put("CHRYSALIS_OPEN_BROWSER", "false");
-        env.put("CHRYSALIS_EXIT_ON_STDIN_CLOSE", "1");
+        env.put("MOLFAR_VERTEP_HOME", home.getAbsolutePath());
+        env.put("MOLFAR_VERTEP_RESOURCES", Payload.resourcesDir(this).getAbsolutePath());
+        env.put("MOLFAR_VERTEP_STATUS_FILE", status.getAbsolutePath());
+        env.put("MOLFAR_VERTEP_SETUP_TOKEN", setupToken(this));
+        env.put("MOLFAR_VERTEP_OPEN_BROWSER", "false");
+        env.put("MOLFAR_VERTEP_EXIT_ON_STDIN_CLOSE", "1");
         // Android before 14 kills a process on system calls it does not allow
         // apps (Bun 1.4 makes several): the shim turns them into ENOSYS, and
         // these two flags keep Bun off pidfd_open and copy_file_range at all
@@ -254,7 +254,7 @@ public final class EngineService extends Service {
         Process proc = process;
         launcherLog(this, false, "Engine process started");
 
-        Thread pump = new Thread(() -> copyOutput(proc.getInputStream()), "chrysalis-output");
+        Thread pump = new Thread(() -> copyOutput(proc.getInputStream()), "molfar-vertep-output");
         pump.start();
 
         String url = waitForReady(proc, status);
@@ -302,7 +302,7 @@ public final class EngineService extends Service {
                 String line;
                 while ((line = in.readLine()) != null) {
                     if (line.contains("SIGSYS") || line.contains("seccomp") || line.contains("Fatal signal") || line.contains("Cause:")
-                        || line.contains("libchrysalis") || line.contains("Abort message") || line.contains("/DEBUG")) {
+                        || line.contains("libmolfar-vertep") || line.contains("Abort message") || line.contains("/DEBUG")) {
                         hits.add(line);
                     }
                 }
@@ -400,7 +400,7 @@ public final class EngineService extends Service {
                 } catch (Exception ignored) {
                     proc.destroyForcibly();
                 }
-            }, "chrysalis-stop").start();
+            }, "molfar-vertep-stop").start();
         }
     }
 
