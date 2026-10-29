@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Molfar page: the "Chats in this project" block on the project page folds to its header and count with a click (remembered per project, open by default), and each project in the sidebar has a "+" that starts a new chat inside it (shown on hover, always visible on a phone and with a touch screen).
+
 ## 1.7.1 (2026-10-29)
 
 - Roleplay 4.75.0 comes with this release as an app update: named boards for the Chat links canvas (#108), Marinara exports import (#96), the shared progress card for the Regex and Memory imports (#116), small phone fixes (#146). Details in the Roleplay changelog.

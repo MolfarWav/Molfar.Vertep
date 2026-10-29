@@ -97,7 +97,7 @@ const inlineLink = "text-brand hover:text-brand/80 underline underline-offset-2"
 const basename = (p: string): string => p.split("/").at(-1) ?? p
 
 /** A section: a card on the pane and the page, an accordion row on the phone. */
-function Shell({ id, icon, title, aside, summary, children, className, ...rest }: {
+function Shell({ id, icon, title, aside, summary, fold, children, className, ...rest }: {
   id: string
   icon: ReactNode
   title: string
@@ -105,6 +105,8 @@ function Shell({ id, icon, title, aside, summary, children, className, ...rest }
   aside?: ReactNode
   /** phone row, right side */
   summary?: ReactNode
+  /** card and pane only (the phone row already folds): a click on the header folds the body */
+  fold?: { folded: boolean; onToggle: () => void }
   children: ReactNode
   className?: string
 } & Omit<ComponentProps<"section">, "title">): ReactNode {
@@ -123,16 +125,33 @@ function Shell({ id, icon, title, aside, summary, children, className, ...rest }
       </section>
     )
   }
+  const head = (
+    <>
+      <span className="flex shrink-0 items-center gap-2">
+        {fold ? <CaretRight className={cn("text-muted-foreground size-3.5 shrink-0 transition-transform", !fold.folded && "rotate-90")} /> : null}
+        <span className="text-brand/80 [&_svg]:size-4 [&_svg]:translate-y-0.5">{icon}</span>
+        {title}
+      </span>
+      {aside ? <span className="text-muted-foreground min-w-0 truncate font-sans text-xs font-normal">{aside}</span> : null}
+    </>
+  )
   return (
     <section className={cn("bg-card min-w-0 rounded-xl border p-4", className)} data-section={id} data-guide={`agent.section.${id}`} {...rest}>
-      <h3 className="font-heading mb-2.5 flex items-baseline justify-between gap-3 text-base font-normal">
-        <span className="flex shrink-0 items-center gap-2">
-          <span className="text-brand/80 [&_svg]:size-4 [&_svg]:translate-y-0.5">{icon}</span>
-          {title}
-        </span>
-        {aside ? <span className="text-muted-foreground min-w-0 truncate font-sans text-xs font-normal">{aside}</span> : null}
+      <h3 className={cn("font-heading text-base font-normal", !fold?.folded && "mb-2.5")}>
+        {fold ? (
+          <button
+            type="button"
+            aria-expanded={!fold.folded}
+            className="focus-visible:ring-ring/50 -my-1.5 flex min-h-9 w-full items-center justify-between gap-3 rounded-md py-1.5 text-start outline-none focus-visible:ring-1 pointer-coarse:min-h-10"
+            onClick={fold.onToggle}
+          >
+            {head}
+          </button>
+        ) : (
+          <span className="flex items-baseline justify-between gap-3">{head}</span>
+        )}
       </h3>
-      {children}
+      {fold?.folded ? null : children}
     </section>
   )
 }
@@ -654,7 +673,36 @@ export function FilesSection({ detail, mode }: { detail: ProjectDetail; mode: Mo
 
 // ---- chats, default model, actions ----
 
+const CHATS_FOLDED_KEY = "agent-ui-project-chats-folded"
+
+function readFolded(): string[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(CHATS_FOLDED_KEY) ?? "[]")
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []
+  } catch {
+    return []
+  }
+}
+
+/** Which projects have their chat list folded; remembered per project, expanded by default. */
+function useChatsFolded(pid: string): [boolean, () => void] {
+  const [ids, setIds] = useState<string[]>(readFolded)
+  const toggle = useCallback(() => {
+    setIds((cur) => {
+      const next = cur.includes(pid) ? cur.filter((x) => x !== pid) : [...cur, pid]
+      try {
+        localStorage.setItem(CHATS_FOLDED_KEY, JSON.stringify(next))
+      } catch {
+        // the fold is session-only
+      }
+      return next
+    })
+  }, [pid])
+  return [ids.includes(pid), toggle]
+}
+
 export function ChatsSection({ detail }: { detail: ProjectDetail }): ReactNode {
+  const [folded, toggleFold] = useChatsFolded(detail.id)
   const sessions = useAgent((s) => s.sessions)
   const open = useAgent((s) => s.open)
   const newChat = useAgent((s) => s.newChat)
@@ -663,7 +711,7 @@ export function ChatsSection({ detail }: { detail: ProjectDetail }): ReactNode {
     [sessions, detail.id],
   )
   return (
-    <Shell id="chats" icon={<ChatCircle />} title="Chats in this project" aside={String(chats.length)} summary={String(chats.length)}>
+    <Shell id="chats" icon={<ChatCircle />} title="Chats in this project" aside={String(chats.length)} summary={String(chats.length)} fold={{ folded, onToggle: toggleFold }}>
       {chats.length ? (
         <ul className="divide-y">
           {chats.map((c) => (
