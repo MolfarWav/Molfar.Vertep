@@ -98,7 +98,7 @@ describe("when the mode is on", () => {
 });
 
 describe("what a small model is sent", () => {
-  it("stays under 3.8k tokens before the first message", async () => {
+  it("stays under 3.95k tokens before the first message", async () => {
     const [s] = await run({ window: 16_000 });
     expect(s!.systemPrompt).toContain("# Workspace (compact mode)");
     expect(s!.systemPrompt).not.toContain("# Building apps and plugins");
@@ -113,7 +113,8 @@ describe("what a small model is sent", () => {
     // 1.2.11: the new-app rule (+~30 tokens): a model that builds an app by
     // hand never registers it (#78)
     // 1.3.3: the chats group line in tools_enable (+~20 tokens): "delete my old chats" has a tool now
-    expect(size(s!)).toBeLessThan(3_850);
+    // 1.7.2: edit_file's `edits` list (+~85 tokens): several changes to one file in one call (#101)
+    expect(size(s!)).toBeLessThan(3_950);
   });
 
   it("a large model keeps the full prompt and every tool but the app tools, which tools_enable shows", async () => {

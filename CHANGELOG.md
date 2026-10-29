@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.7.2 (2026-10-29)
+
+- Roleplay 4.76.0 comes with this release as an app update: a persona and a saved World DM world carry their own long memory across chats, like a card does, off until a chat switches it on (#99).
 - Molfar: after a task of 8 or more steps in which the model proposed no memory itself, one extra call with the same model looks back and may suggest up to three changes to the memory: add an entry, replace an outdated one, or remove one that no longer holds. Each comes as the usual Save/Skip (or Remove/Keep) card after the reply; nothing is written without a yes. On by default; the switch "Suggest memory after long tasks" is in the Memory and skills dialog (`memorySuggest` in settings.json). The extra call shows in the prompt inspector as `agent-memory`, not in the run's token chip (#99).
 - Molfar: a memory card that nobody answered (Stop, a lost connection) used to save the marker text "(stopped)" as the entry; it is a skip now (#99).
 - Molfar: the run's token chip on the agent page shows where the input went (prompt, tools, earlier tasks, this task's steps, tool results) in its tooltip, and every run record keeps the split (#101).
