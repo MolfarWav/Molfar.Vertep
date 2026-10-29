@@ -226,11 +226,12 @@ function ProjectRow({ project, query, expanded, onToggle, indices, ids }: {
 }): ReactNode {
   const active = useAgent((s) => s.view.kind === "project" && s.view.id === project.id)
   const openProject = useAgent((s) => s.openProject)
+  const newChat = useAgent((s) => s.newChat)
   const open = query ? indices.length > 0 : expanded
   const drop = useChatDrop(project.id)
   return (
     <div className={cn("flex flex-col gap-0.5 rounded-md", drop.over && "bg-muted/60 ring-ring/50 ring-1")} {...drop.props}>
-      <div className={cn("hover:bg-muted group relative flex h-8 items-center gap-0.5 rounded-md pe-2 transition-colors", active && "bg-brand-soft hover:bg-brand-soft")}>
+      <div className={cn("hover:bg-muted group relative flex h-8 items-center gap-0.5 rounded-md pe-2 transition-colors max-md:h-10 pointer-coarse:h-10", active && "bg-brand-soft hover:bg-brand-soft")}>
         {active ? <span aria-hidden className="bg-brand absolute inset-y-1 start-0 w-[3px] rounded-full" /> : null}
         <button
           type="button"
@@ -249,6 +250,15 @@ function ProjectRow({ project, query, expanded, onToggle, indices, ids }: {
         >
           <ProjectIcon project={project} />
           <span className="min-w-0 flex-1 truncate">{project.title}</span>
+        </button>
+        <button
+          type="button"
+          aria-label={`New chat in ${project.title}`}
+          title={`New chat in ${project.title}`}
+          className="text-muted-foreground hover:bg-background/60 hover:text-foreground focus-visible:ring-ring/50 flex size-7 shrink-0 items-center justify-center rounded-md opacity-0 outline-none transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 max-md:size-10 max-md:opacity-100 pointer-coarse:size-10 pointer-coarse:opacity-100"
+          onClick={() => newChat(project.id)}
+        >
+          <Plus className="size-4" />
         </button>
         <TagBadge tag={project.tag} />
       </div>
