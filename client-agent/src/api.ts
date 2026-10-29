@@ -77,6 +77,8 @@ export interface RunSpend {
   cost: number | null
   /** model calls (steps) the run made; older runs do not carry it */
   calls?: number
+  /** estimated shares of the input over all calls (issue #101); older runs do not carry it */
+  split?: { prompt: number; tools: number; earlier: number; steps: number; results: number; sent: number }
 }
 
 /** A skill loaded with skill_load during a run; `file` is set when one extra

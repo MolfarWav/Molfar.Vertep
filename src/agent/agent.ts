@@ -25,6 +25,7 @@ import { clampMaxTokens, estimateMessageTokens, estimateTextTokens, fitContext, 
 import { buildRunTools, newAppRefusal, newPlanState, planGate, type PlanState, type RunToolOptions } from "./run-tools.js";
 import { costChecksApply, effectiveCostChecksMode } from "./cost-checks.js";
 import { foldToolResults } from "./context-fold.js";
+import { addCallToSplit, newRunSplit, type RunSplit } from "./context-split.js";
 import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
   SKILL_UNLOCKS,
@@ -76,6 +77,8 @@ interface RunState {
   startedAt: number;
   /** Plan first for big tasks (run-tools.ts planGate); reset in place per run. */
   plan: PlanState;
+  /** Where this run's input went, summed over its model calls (context-split.ts). */
+  split: RunSplit;
 }
 
 /** An app the run changed, and the checkpoint taken before it did. */
@@ -194,6 +197,8 @@ export interface RunSpend {
   cost: number | null;
   /** Model calls (steps) the run made. */
   calls?: number;
+  /** Estimated shares of the input: prompt, tools, earlier tasks, this task's steps, tool results (issue #101). */
+  split?: RunSplit;
 }
 
 /** A skill the run loaded with skill_load, and what its text cost. */
@@ -434,7 +439,7 @@ export class UserAgent {
     /** The project this session belongs to (null: a plain chat). */
     readonly project: string | null = null,
     /** Checkpoints the current run took (reset at each run). */
-    private runState: RunState = { username: "", label: "", checkpoints: new Map(), startedAt: 0, plan: newPlanState() },
+    private runState: RunState = { username: "", label: "", checkpoints: new Map(), startedAt: 0, plan: newPlanState(), split: newRunSplit() },
     private root = "",
   ) {}
 
@@ -482,7 +487,7 @@ export class UserAgent {
       }
     }
     const projectSettings = project ? readSettings(paths.root, projectLayout(paths.root, project)) : null;
-    const runState: RunState = { username, label: "", checkpoints: new Map(), startedAt: 0, plan: newPlanState() };
+    const runState: RunState = { username, label: "", checkpoints: new Map(), startedAt: 0, plan: newPlanState(), split: newRunSplit() };
 
     let tools: AgentTool[] = [
       ...buildUserTools(username, paths, {
@@ -669,6 +674,7 @@ export class UserAgent {
           const { messages: lean } = foldToolResults(dialogue, runState.startedAt);
           const fit = fitContext(st.model, { systemPrompt: st.systemPrompt, messages: lean, tools: shown }, { force: budget.force, state: trim });
           if (fit.advanced) log.info(`[agent:${sessionId}] context trimmed ~${fit.before} → ~${fit.after} tokens (window ${st.model.contextWindow})`);
+          addCallToSplit(runState.split, { systemPrompt: st.systemPrompt, tools: shown, messages: fit.messages }, runState.startedAt);
           const lead: SystemMessage = { role: "system", content: st.systemPrompt, ...(shown.length ? { toolsAdded: shown.map(toToolDeclaration) } : {}), timestamp: 0 };
           return [lead, ...fit.messages];
         } catch (e) {
@@ -829,6 +835,7 @@ export class UserAgent {
     this.runState.plan.answer = "none";
     this.runState.plan.written.clear();
     this.runState.startedAt = Date.now();
+    this.runState.split = newRunSplit();
     // what the user allowed in protected paths covers one request
     if (this.runState.username) resetAllowed(this.runState.username);
     // "@path" in the message means the person is pointing at a file. Reading
@@ -1124,7 +1131,8 @@ export class UserAgent {
       sum.cacheWrite += m.usage.cacheWrite ?? 0;
     }
     if (!calls) return undefined;
-    return { ...sum, cost: this.svc.costOf(this.agent.state.model, sum), calls };
+    const split = this.runState.split.calls ? { ...this.runState.split } : undefined;
+    return { ...sum, cost: this.svc.costOf(this.agent.state.model, sum), calls, ...(split ? { split } : {}) };
   }
 
   /** The skills a run loaded, from skill_load's result details. */

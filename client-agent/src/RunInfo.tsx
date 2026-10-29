@@ -39,7 +39,12 @@ function spendLabel(s: RunSpend, showCost: boolean): string {
 function spendTitle(s: RunSpend, showCost: boolean): string {
   const n = (v: number): string => v.toLocaleString()
   const price = s.cost === null ? "no known price" : usd(s.cost)
-  return `This run: input ${n(s.input)}, output ${n(s.output)}, cache read ${n(s.cacheRead)}, cache write ${n(s.cacheWrite)} tokens${s.calls ? `, ${s.calls} model calls` : ""}${showCost ? `; ${price}` : ""}`
+  const sp = s.split
+  const share = (v: number): string => `${Math.round((v / sp!.sent) * 100)}%`
+  const where = sp?.sent
+    ? `\nWhere the input went (estimate): prompt ${share(sp.prompt)}, tools ${share(sp.tools)}, earlier tasks ${share(sp.earlier)}, this task's steps ${share(sp.steps)}, tool results ${share(sp.results)}`
+    : ""
+  return `This run: input ${n(s.input)}, output ${n(s.output)}, cache read ${n(s.cacheRead)}, cache write ${n(s.cacheWrite)} tokens${s.calls ? `, ${s.calls} model calls` : ""}${showCost ? `; ${price}` : ""}${where}`
 }
 
 export function RunInfo(): ReactNode {
