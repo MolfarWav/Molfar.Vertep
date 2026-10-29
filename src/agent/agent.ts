@@ -26,6 +26,7 @@ import { buildRunTools, newAppRefusal, newPlanState, planGate, type PlanState, t
 import { costChecksApply, effectiveCostChecksMode } from "./cost-checks.js";
 import { foldToolResults } from "./context-fold.js";
 import { nudgeBatching } from "./batch-nudge.js";
+import { memorySuggestEnabled, settingsFileOf, shouldSuggest, suggestMemory } from "./memory-suggest.js";
 import { addCallToSplit, newRunSplit, type RunSplit } from "./context-split.js";
 import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
@@ -436,7 +437,7 @@ export class UserAgent {
     readonly sessionId: string,
     private sFile: string,
     private budget: { force: boolean },
-    private svc: Pick<UserModelService, "costOf">,
+    private svc: Pick<UserModelService, "costOf" | "generate">,
     /** The project this session belongs to (null: a plain chat). */
     readonly project: string | null = null,
     /** Checkpoints the current run took (reset at each run). */
@@ -754,7 +755,10 @@ export class UserAgent {
       },
     });
     agentRef = agent;
-    return new UserAgent(agent, sessionId, sFile, budget, svc, project, runState, paths.root);
+    const created = new UserAgent(agent, sessionId, sFile, budget, svc, project, runState, paths.root);
+    if (opts.ask) created.memoryAsk = opts.ask;
+    created.planMode = opts.mode === "plan";
+    return created;
   }
 
   /** The model this session runs on, for one-shot calls made on its behalf. */
@@ -809,10 +813,54 @@ export class UserAgent {
     this.inflight = userMessage;
     beginWork(this.runState.username, this.sessionId, userMessage.replace(/\s+/g, " ").trim().slice(0, 60) || "a request");
     try {
-      return await this.runNow(userMessage, opts);
+      const result = await this.runNow(userMessage, opts);
+      await this.suggestMemoryAfter(userMessage, result);
+      return result;
     } finally {
       this.inflight = null;
       endWork(this.runState.username, this.sessionId);
+    }
+  }
+
+  /** Set by create(): the chat's confirm card, and whether the agent was read-only (plan mode). */
+  memoryAsk?: AgentToolOptions["ask"];
+  planMode = false;
+
+  /** After a long run in which the model proposed nothing: one more call suggests memory changes,
+   *  each confirmed in a card (memory-suggest.ts). Never fails the run. */
+  private async suggestMemoryAfter(userMessage: string, result: AgentRunResult): Promise<void> {
+    try {
+      const tools = result.turns.flatMap((t) => t.tools);
+      const gate = {
+        enabled: memorySuggestEnabled(settingsFileOf(this.root)),
+        plan: this.planMode,
+        hasAsk: !!this.memoryAsk,
+        ...(result.stopped ? { stopped: true } : {}),
+        ...(result.error ? { error: result.error } : {}),
+        reply: result.finalText,
+        steps: result.spend?.calls ?? result.turns.length,
+        tools: tools.map((t) => t.name),
+      };
+      if (!this.root || !shouldSuggest(gate)) return;
+      const { ref } = this.model;
+      const out = await suggestMemory({
+        root: this.root,
+        username: this.runState.username,
+        ask: this.memoryAsk,
+        project: this.project,
+        request: userMessage,
+        reply: result.finalText,
+        tools,
+        stopped: () => this.stopRequested,
+        generate: async (prompt) => {
+          const res = await this.svc.generate({ messages: [{ role: "user", content: prompt }], model: ref, sessionId: `${this.sessionId}-memory`, reasoning: "off", presetParams: { max_tokens: 700 }, source: "agent-memory" });
+          if (res.error) throw new Error(res.error);
+          return res.text;
+        },
+      });
+      if (out.asked) log.info(`[agent:${this.sessionId}] memory suggestions after the run: ${out.saved} of ${out.asked} saved`);
+    } catch (e) {
+      log.warn(`[agent:${this.sessionId}] memory suggestions skipped: ${(e as Error).message}`);
     }
   }
 

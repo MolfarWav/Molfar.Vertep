@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Molfar: after a task of 8 or more steps in which the model proposed no memory itself, one extra call with the same model looks back and may suggest up to three changes to the memory: add an entry, replace an outdated one, or remove one that no longer holds. Each comes as the usual Save/Skip (or Remove/Keep) card after the reply; nothing is written without a yes. On by default; the switch "Suggest memory after long tasks" is in the Memory and skills dialog (`memorySuggest` in settings.json). The extra call shows in the prompt inspector as `agent-memory`, not in the run's token chip (#99).
+- Molfar: a memory card that nobody answered (Stop, a lost connection) used to save the marker text "(stopped)" as the entry; it is a skip now (#99).
 - Molfar: the run's token chip on the agent page shows where the input went (prompt, tools, earlier tasks, this task's steps, tool results) in its tooltip, and every run record keeps the split (#101).
 - Molfar: tool descriptions are shorter in every mode, not only for small windows: the tool list is about 23% smaller (7,033 to 5,395 tokens with every group shown) on every model call. Parameters are unchanged; the facts the model acts on stay in the text. The small-window text for `checkpoint` wrongly said data/ is never touched; it now says it is left alone unless files are passed in `data` (#101).
 - Molfar: `edit_file` takes `edits: [{oldText, newText}]` for several changes to one file in one call (up to 20, applied in order, all or nothing, one commit); before, each change was its own model step (132 of 2,208 steps in one workspace). The replacement text is now literal: `$&` or `$1` in it were treated as patterns before (#101).

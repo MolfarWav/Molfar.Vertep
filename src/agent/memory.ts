@@ -673,6 +673,86 @@ function skillDiff(file: string, before: string, after: string): string | undefi
 const MEMORY_MARKS = 3;
 const text = (t: string, details: Record<string, unknown> = {}) => ({ content: [{ type: "text" as const, text: t }], details });
 
+/** Answers the ask bridge returns when nobody answered: not an entry the user typed. */
+const NO_ANSWER = /^\((?:no answer|stopped|question could not be delivered)\)$/;
+
+/** The confirm-and-save flow of one memory entry: the card, the write, the commit. Shared by
+ *  memory_propose and the after-run pass (memory-suggest.ts). `origin` is a phrase for the card
+ *  when the model did not ask for it in the run. */
+export async function proposeEntry(
+  root: string,
+  username: string,
+  ask: AgentToolOptions["ask"] | undefined,
+  p: { scope?: string | undefined; entry: string; topic?: string | null | undefined; replaces?: string | undefined; origin?: string },
+): Promise<{ text: string; saved: boolean }> {
+  const topic = p.topic?.trim() || null;
+  const replaces = p.replaces;
+  const scope = resolveScope(root, p.scope);
+  const proposed = normalizeEntry(p.entry);
+  if (!proposed) throw new Error("the entry is empty");
+  const file = memoryFile(scope, topic);
+  // the core rides every request: past its cap, the agent picks a topic
+  if (!topic && !replaces?.trim() && coreIsFull(root, scope, proposed)) {
+    const existing = listTopics(root, scope).map((t) => t.topic);
+    return {
+      text: `Not proposed: ${scope.file} is at its size cap (${CORE_MEMORY_CAP} characters). Propose it again with a topic${existing.length ? ` (existing: ${existing.join(", ")}; or a new one)` : " (a new lowercase-dashes name)"}, or replace an outdated core entry.`,
+      saved: false,
+    };
+  }
+  if (!ask) return { text: "Not saved: the user is not available to confirm memory entries right now.", saved: false };
+  const answer = (
+    await ask({
+      question: `${p.origin ? `${p.origin} ` : ""}Save to ${scope.label}${topic ? `, topic "${topic}"` : ""}?${replaces ? ` It replaces the entry containing "${replaces.trim()}".` : ""} Type a corrected version to save that instead.`,
+      options: ["Save", "Skip"],
+      detail: proposed,
+    })
+  ).trim();
+  if (!answer || answer === "Skip" || NO_ANSWER.test(answer)) return { text: "Not saved: the user skipped this entry. Do not propose it again.", saved: false };
+  const final = answer === "Save" ? proposed : answer;
+  const { line, replaced } = appendEntry(root, scope, final, replaces, topic);
+  await git.commitAll(root, username, `memory: ${scope.label}${topic ? ` (${topic})` : ""}`, true).catch(() => undefined);
+  return {
+    text: `Saved to ${file}: ${line}${replaced ? `\nReplaced: ${replaced}` : ""}${final !== proposed ? "\n(The user rewrote the entry; the saved text is theirs.)" : ""}`,
+    saved: true,
+  };
+}
+
+/** The first entry of a scope (core or topic) whose line contains `needle`, case-insensitively. */
+export function findEntry(root: string, scope: MemoryScope, needle: string): { line: string; file: string } | undefined {
+  const n = needle.trim().toLowerCase();
+  if (!n) return undefined;
+  for (const file of scopeFiles(root, scope)) {
+    const line = entryLines(readText(root, file)).find((l) => l.toLowerCase().includes(n));
+    if (line) return { line, file };
+  }
+  return undefined;
+}
+
+/** Ask the user to remove an outdated entry, and remove it on a yes. */
+export async function proposeRetire(
+  root: string,
+  username: string,
+  ask: AgentToolOptions["ask"] | undefined,
+  p: { scope?: string | undefined; match: string; origin?: string },
+): Promise<{ text: string; saved: boolean }> {
+  const scope = resolveScope(root, p.scope);
+  const found = findEntry(root, scope, p.match);
+  if (!found) return { text: `No entry in ${scope.label} contains "${p.match.trim()}".`, saved: false };
+  if (!ask) return { text: "Not removed: the user is not available to confirm right now.", saved: false };
+  const answer = (
+    await ask({
+      question: `${p.origin ? `${p.origin} ` : ""}Remove this entry from ${scope.label}? It no longer holds.`,
+      options: ["Remove", "Keep"],
+      detail: found.line.replace(/^- /, ""),
+    })
+  ).trim();
+  if (answer !== "Remove") return { text: "Kept: the user did not remove this entry.", saved: false };
+  const removed = removeLine(root, scope, found.file, (l) => l === found.line);
+  if (!removed) return { text: "That entry is gone already (it may have changed).", saved: false };
+  await git.commitAll(root, username, `memory: ${scope.label}, removed an entry`, true).catch(() => undefined);
+  return { text: `Removed from ${found.file}: ${removed}`, saved: true };
+}
+
 export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<AgentToolOptions, "ask">): AgentTool[] {
   const root = p.root;
 
@@ -688,34 +768,9 @@ export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<Agen
       replaces: Type.Optional(Type.String()),
     }),
     async execute(_id, params) {
-      const { scope: rawScope, entry, replaces } = params as { scope?: string; entry: string; replaces?: string; topic?: string };
-      const topic = (params as { topic?: string }).topic?.trim() || null;
-      const scope = resolveScope(root, rawScope);
-      const proposed = normalizeEntry(entry);
-      if (!proposed) throw new Error("the entry is empty");
-      const file = memoryFile(scope, topic);
-      // the core rides every request: past its cap, the agent picks a topic
-      if (!topic && !replaces?.trim() && coreIsFull(root, scope, proposed)) {
-        const existing = listTopics(root, scope).map((t) => t.topic);
-        return text(
-          `Not proposed: ${scope.file} is at its size cap (${CORE_MEMORY_CAP} characters). Propose it again with a topic${existing.length ? ` (existing: ${existing.join(", ")}; or a new one)` : " (a new lowercase-dashes name)"}, or replace an outdated core entry.`,
-        );
-      }
-      if (!opts.ask) return text("Not saved: the user is not available to confirm memory entries right now.");
-      const answer = (
-        await opts.ask({
-          question: `Save to ${scope.label}${topic ? `, topic "${topic}"` : ""}?${replaces ? ` It replaces the entry containing "${replaces.trim()}".` : ""} Type a corrected version to save that instead.`,
-          options: ["Save", "Skip"],
-          detail: proposed,
-        })
-      ).trim();
-      if (!answer || answer === "Skip" || answer === "(no answer)") return text("Not saved: the user skipped this entry. Do not propose it again.");
-      const final = answer === "Save" ? proposed : answer;
-      const { line, replaced } = appendEntry(root, scope, final, replaces, topic);
-      await git.commitAll(root, username, `memory: ${scope.label}${topic ? ` (${topic})` : ""}`, true).catch(() => undefined);
-      return text(
-        `Saved to ${file}: ${line}${replaced ? `\nReplaced: ${replaced}` : ""}${final !== proposed ? "\n(The user rewrote the entry; the saved text is theirs.)" : ""}`,
-      );
+      const { scope, entry, replaces, topic } = params as { scope?: string; entry: string; replaces?: string; topic?: string };
+      const r = await proposeEntry(root, username, opts.ask, { scope, entry, topic, replaces });
+      return text(r.text);
     },
   };
 

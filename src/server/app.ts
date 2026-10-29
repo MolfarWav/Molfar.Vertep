@@ -1960,6 +1960,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
             : true,
       smallModelMode: isSmallModelMode(settings.smallModelMode) ? settings.smallModelMode : "auto",
       costChecks: isCostChecksMode(settings.costChecks) ? settings.costChecks : "auto",
+      memorySuggest: settings.memorySuggest !== false,
       guide: parseGuideState(settings.guide),
     });
   });
@@ -1967,10 +1968,11 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.put("/v1/settings", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; costChecks?: unknown; guide?: unknown }>().catch(() => null) ?? {};
-    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("costChecks" in body) && !("guide" in body)) {
-      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode, costChecks or guide required" }, 400);
+    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; costChecks?: unknown; memorySuggest?: unknown; guide?: unknown }>().catch(() => null) ?? {};
+    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("costChecks" in body) && !("memorySuggest" in body) && !("guide" in body)) {
+      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode, costChecks, memorySuggest or guide required" }, 400);
     }
+    if (body.memorySuggest !== undefined && typeof body.memorySuggest !== "boolean") return c.json({ error: "memorySuggest must be true or false" }, 400);
     const guide = body.guide === undefined ? undefined : parseGuideState(body.guide);
     if (guide === null) return c.json({ error: "guide must be { seen?, tours?, lastVersion?, showTours? }" }, 400);
     if (body.smallModelMode !== undefined && !isSmallModelMode(body.smallModelMode)) {
@@ -2010,6 +2012,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.autoCompact !== undefined) settings.autoCompact = body.autoCompact;
     if (body.smallModelMode !== undefined) settings.smallModelMode = body.smallModelMode;
     if (body.costChecks !== undefined) settings.costChecks = body.costChecks;
+    if (body.memorySuggest !== undefined) settings.memorySuggest = body.memorySuggest;
     if (guide !== undefined) settings.guide = guide;
     fs.writeFileSync(p.settings, JSON.stringify(settings, null, 2) + "\n");
     const changes: string[] = [];
@@ -2020,10 +2023,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.autoCompact !== undefined) changes.push("auto-compact");
     if (body.smallModelMode !== undefined) changes.push("small-model mode");
     if (body.costChecks !== undefined) changes.push("cost checks");
+    if (body.memorySuggest !== undefined) changes.push("memory suggestions");
     if (guide !== undefined) changes.push("guide");
     await git.commitAll(p.root, u.username, `settings: ${changes.join(", ")}`).catch(() => undefined);
     // agents snapshot model + reasoning at creation; the guide's state is not in their prompt
-    if (changes.some((x) => x !== "guide")) evictAgents(u.username);
+    // the suggestion switch is read when a run ends, not built into the agent
+    if (changes.some((x) => x !== "guide" && x !== "memory suggestions")) evictAgents(u.username);
     return c.json({ ok: true });
   });
 

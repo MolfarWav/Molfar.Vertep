@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils"
 import { ArrowCounterClockwise, ArrowLeft, ArrowsLeftRight, Brain, CaretRight, FileText, MagnifyingGlass, PencilSimple, Plus, Sparkle, Trash } from "@phosphor-icons/react"
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { memoryApi, type AgentMemory, type AgentSkill, type AgentSkillDetail, type MemoryHit, type ScopeMemory } from "./api"
+import { getSettings, memoryApi, setMemorySuggest, type AgentMemory, type AgentSkill, type AgentSkillDetail, type MemoryHit, type ScopeMemory } from "./api"
 import { useAgent } from "./store"
 
 const NAME_RE = /^[a-z0-9][a-z0-9-]{0,47}$/
@@ -525,6 +525,38 @@ function SkillView({ skill, initialFile, scopes, onBack, onChanged, onImprove, o
   )
 }
 
+/** The switch for the suggestions the agent makes after a long task (off: it proposes only when it decides to). */
+function SuggestSwitch({ onError }: { onError: (e: unknown) => void }): ReactNode {
+  const [on, setOn] = useState<boolean | null>(null)
+  useEffect(() => {
+    getSettings().then((s) => setOn(s.memorySuggest !== false), onError)
+  }, [onError])
+  if (on === null) return null
+  return (
+    <label className="hover:bg-muted/60 flex min-h-10 cursor-pointer items-start gap-3 rounded-lg px-3 py-2">
+      <input
+        type="checkbox"
+        className="mt-1 size-4 shrink-0"
+        checked={on}
+        onChange={(e) => {
+          const next = e.target.checked
+          setOn(next)
+          setMemorySuggest(next).catch((err: unknown) => {
+            setOn(!next)
+            onError(err)
+          })
+        }}
+      />
+      <span className="grid gap-0.5">
+        <span className="text-sm font-medium">Suggest memory after long tasks</span>
+        <span className="text-muted-foreground text-xs">
+          After a task of 8 or more steps in which the agent proposed nothing itself, it looks back once and may suggest up to three changes: add an entry, replace an outdated one, or remove one that no longer holds. Each one waits for your yes. It costs one extra model call.
+        </span>
+      </span>
+    </label>
+  )
+}
+
 export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<"memory" | "skills">("memory")
@@ -664,6 +696,7 @@ export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
                   <p className="text-muted-foreground text-xs">
                     A project appears here once it has memory. Ask the agent to remember something about an app, or it will offer to at the end of a task.
                   </p>
+                  <SuggestSwitch onError={onError} />
                 </>
               )}
             </div>

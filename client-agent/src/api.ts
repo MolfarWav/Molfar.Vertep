@@ -259,8 +259,13 @@ export function setModelsShown(refs: string[], shown: boolean): Promise<{ ok: bo
   return api("PUT", "/v1/models/shown", { refs, shown })
 }
 
-export function getSettings(): Promise<{ model: string | null; reasoning: string | null }> {
+export function getSettings(): Promise<{ model: string | null; reasoning: string | null; memorySuggest?: boolean }> {
   return api("GET", "/v1/settings")
+}
+
+/** The switch for memory suggestions after a long task (on unless the user turned it off). */
+export function setMemorySuggest(on: boolean): Promise<{ ok: boolean }> {
+  return api("PUT", "/v1/settings", { memorySuggest: on })
 }
 
 export function listMcp(): Promise<McpServer[]> {
