@@ -53,6 +53,16 @@ function realInside(root: string, rel: string): string | null {
 
 const hashCache = new Map<string, { key: string; hash: string }>();
 
+/** sha256 of a file, remembered while its size and mtime stay the same. */
+function fileHash(file: string, st: fs.Stats): string {
+  const key = `${st.size}:${st.mtimeMs}`;
+  const hit = hashCache.get(file);
+  if (hit?.key === key) return hit.hash;
+  const hash = crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+  hashCache.set(file, { key, hash });
+  return hash;
+}
+
 function readEnvVars(root: string, mode: string): Record<string, string> {
   const out: Record<string, string> = {};
   for (const name of [".env", ".env.local", `.env.${mode}`, `.env.${mode}.local`]) {
@@ -109,14 +119,7 @@ export function appFsOps(appsDir: string, id: string, ops: FsOp[]): FsResult[] {
       }
       const st = fs.statSync(file);
       if (!st.isFile()) return { ok: false, error: "not a file" };
-      if (op.op === "hash") {
-        const key = `${st.size}:${st.mtimeMs}`;
-        const hit = hashCache.get(file);
-        if (hit?.key === key) return { ok: true, hash: hit.hash };
-        const hash = crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
-        hashCache.set(file, { key, hash });
-        return { ok: true, hash };
-      }
+      if (op.op === "hash") return { ok: true, hash: fileHash(file, st) };
       if (op.op === "read") {
         const cap = op.binary ? MAX_INLINE : MAX_TEXT;
         if (st.size > cap || st.size > budget) return { ok: false, error: `too large to read (${st.size} bytes)` };
@@ -133,25 +136,42 @@ export function appFsOps(appsDir: string, id: string, ops: FsOp[]): FsResult[] {
 
 // ---------- source fingerprint + change routing ----------
 
+/** Top-level folders that hold documentation, tests and tooling rather than
+ *  what the app is built from. A build only reads one of their files when an
+ *  import reaches it (`import notes from "../docs/x.md?raw"`), and the last
+ *  build's module graph says which (see buildReads). */
+const NOT_SOURCE_TOP = new Set(["docs", "test", "tests", "scripts"]);
+
+/** Whether the app-relative path (as segments) is documentation or tooling:
+ *  a file under docs/, test/, tests/ or scripts/, or a top-level *.md or
+ *  LICENSE. A directory itself is never one (the walk still has to enter it
+ *  for the files an import reached). */
+export function isDocPath(rest: readonly string[]): boolean {
+  if (rest.length === 0) return false;
+  const first = rest[0] ?? "";
+  if (rest.length > 1) return NOT_SOURCE_TOP.has(first);
+  return /\.md$/i.test(first) || /^licen[cs]e(?:\.|$)/i.test(first);
+}
+
 /** App-relative paths the builder reads, for the file watcher (rel is
- *  "<appId>/<path>"): everything but data/, plugins/, dist/, node_modules/
- *  and dot-dirs (.env files count). */
-export function isBuildSource(rel: string): boolean {
+ *  "<appId>/<path>"): everything but data/, plugins/, dist/, node_modules/,
+ *  dot-dirs (.env files count) and documentation/tooling the last build did
+ *  not read (`reads`, from buildReads). */
+export function isBuildSource(rel: string, reads?: ReadonlySet<string>): boolean {
   const segs = rel.split(/[\\/]/).filter(Boolean);
   if (segs.length < 2) return false;
   const rest = segs.slice(1);
   if (HIDDEN_TOP.has(rest[0]!) || rest.includes("node_modules") || rest.includes(".git")) return false;
   if (rest.slice(0, -1).some((s) => s.startsWith("."))) return false;
   const file = rest[rest.length - 1]!;
-  return !file.startsWith(".") || /^\.env(?:\.|$)/.test(file);
+  if (file.startsWith(".") && !/^\.env(?:\.|$)/.test(file)) return false;
+  return !isDocPath(rest) || reads?.has(rest.join("/")) === true;
 }
 
-/** A cheap fingerprint of what a build reads: newest mtime and file count
- *  over the app's source tree, plus the installed-packages marker. */
-export function sourceRev(appDir: string): string {
-  let newest = 0;
-  let count = 0;
-  const walk = (dir: string, depth: number, top: boolean): void => {
+/** Every file a build may read, with its absolute path: the one walk behind
+ *  sourceRev and sourceHashes. Skips what isBuildSource skips. */
+function walkSources(appDir: string, reads: ReadonlySet<string>, visit: (rel: string, full: string, e: fs.Dirent) => void): void {
+  const walk = (dir: string, rel: string, depth: number): void => {
     if (depth > 16) return;
     let entries: fs.Dirent[] = [];
     try {
@@ -160,26 +180,27 @@ export function sourceRev(appDir: string): string {
       return;
     }
     for (const e of entries) {
-      if (e.name === "node_modules" || (top && HIDDEN_TOP.has(e.name))) continue;
+      if (e.name === "node_modules" || (depth === 0 && HIDDEN_TOP.has(e.name))) continue;
       if (e.name.startsWith(".") && !/^\.env(?:\.|$)/.test(e.name)) continue;
+      const childRel = rel ? `${rel}/${e.name}` : e.name;
       const full = path.join(dir, e.name);
       if (e.isDirectory()) {
-        walk(full, depth + 1, false);
+        // a documentation folder is entered only for files an import reached
+        if (depth === 0 && NOT_SOURCE_TOP.has(e.name) && ![...reads].some((r) => r.startsWith(`${childRel}/`))) continue;
+        walk(full, childRel, depth + 1);
         continue;
       }
-      count++;
-      try {
-        const m = fs.statSync(full).mtimeMs;
-        if (m > newest) newest = m;
-      } catch {
-        /* raced a write */
-      }
+      if (isDocPath(childRel.split("/")) && !reads.has(childRel)) continue;
+      visit(childRel, full, e);
     }
   };
-  walk(appDir, 0, true);
-  // Install marker: whatever the app's deps were installed with — the
-  // node_modules dir itself, npm's bookkeeping, or a lockfile. A reinstall
-  // moves at least one of them, which is all this fingerprint needs.
+  walk(appDir, "", 0);
+}
+
+/** The install marker: whatever the app's deps were installed with — the
+ *  node_modules dir itself, npm's bookkeeping, or a lockfile. A reinstall
+ *  moves at least one of them. */
+export function installMarker(appDir: string): string {
   let installed = 0;
   for (const marker of ["node_modules", "node_modules/.package-lock.json", "bun.lock", "bun.lockb"]) {
     try {
@@ -189,7 +210,175 @@ export function sourceRev(appDir: string): string {
       /* not installed that way */
     }
   }
-  return `${Math.round(newest)}-${count}-${Math.round(installed)}`;
+  return String(Math.round(installed));
+}
+
+function revOf(appDir: string, reads: ReadonlySet<string>): string {
+  let newest = 0;
+  let count = 0;
+  walkSources(appDir, reads, (_rel, full) => {
+    count++;
+    try {
+      const m = fs.statSync(full).mtimeMs;
+      if (m > newest) newest = m;
+    } catch {
+      /* raced a write */
+    }
+  });
+  return `${Math.round(newest)}-${count}-${installMarker(appDir)}`;
+}
+
+/** A cheap fingerprint of what a build reads: newest mtime and file count
+ *  over the app's source tree, plus the installed-packages marker.
+ *  Documentation and tooling (docs/, test/, scripts/, top-level *.md) are
+ *  left out unless the last build read them, so editing a README does not
+ *  make the app rebuild. */
+export function sourceRev(appDir: string): string {
+  return revOf(appDir, buildReads(appDir));
+}
+
+// ---------- module graph: what lets an open resume without a full build ----------
+
+/** The dev builder saves its module graph next to the build (dev/graph.json):
+ *  per module its file, imports, the files it was built from and a signature
+ *  of its output; per source file a content hash (stamped here, at write
+ *  time, from the files as they were when the build started). A page that
+ *  opens after the sources changed asks which files differ and rebuilds only
+ *  those (DevSession.restore + update) instead of every module. */
+const GRAPH = "dev/graph.json";
+const GRAPH_VERSION = 1;
+
+interface GraphFile {
+  v: number;
+  snapshot: string;
+  seq: number;
+  depsKey: string;
+  /** content hash of every source file at build start; null = not recorded */
+  files: Record<string, string> | null;
+  install: string | null;
+  mods: Array<{ n?: unknown }>;
+}
+
+function readGraphRaw(appDir: string): GraphFile | null {
+  try {
+    const g = JSON.parse(fs.readFileSync(path.join(appDir, "dist", GRAPH), "utf8")) as GraphFile;
+    return g && g.v === GRAPH_VERSION && Array.isArray(g.mods) && typeof g.snapshot === "string" && typeof g.depsKey === "string" ? g : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The documentation/tooling paths a graph's modules were built from. */
+function docReadsOf(g: GraphFile | null): Set<string> {
+  const reads = new Set<string>();
+  for (const m of g?.mods ?? []) {
+    if (!Array.isArray(m.n)) continue;
+    for (const p of m.n) if (typeof p === "string" && isDocPath(p.split("/"))) reads.add(p);
+  }
+  return reads;
+}
+
+/** Documentation/tooling paths the last build read (an import into docs/ and
+ *  the like). Cached on the graph file's identity, with a short ttl so the
+ *  watcher can ask per event. */
+const readsCache = new Map<string, { at: number; key: string; reads: Set<string> }>();
+export function buildReads(appDir: string): ReadonlySet<string> {
+  const hit = readsCache.get(appDir);
+  const now = Date.now();
+  if (hit && now - hit.at < 1000) return hit.reads;
+  let key = "";
+  try {
+    const st = fs.statSync(path.join(appDir, "dist", GRAPH));
+    key = `${st.size}:${st.mtimeMs}`;
+  } catch {
+    /* no graph: nothing was read */
+  }
+  if (hit && hit.key === key) {
+    hit.at = now;
+    return hit.reads;
+  }
+  const reads = key ? docReadsOf(readGraphRaw(appDir)) : new Set<string>();
+  readsCache.set(appDir, { at: now, key, reads });
+  return reads;
+}
+
+const HASH_LEN = 16;
+
+/** Content hash of every source file a build may read (same set as
+ *  sourceRev), by app-relative path. Hashes are remembered per size+mtime. */
+export function sourceHashes(appDir: string, reads: ReadonlySet<string> = buildReads(appDir)): Record<string, string> {
+  const out: Record<string, string> = {};
+  walkSources(appDir, reads, (rel, full, e) => {
+    if (!e.isFile()) return;
+    try {
+      out[rel] = fileHash(full, fs.statSync(full)).slice(0, HASH_LEN);
+    } catch {
+      /* raced a write: the file counts as changed next time */
+    }
+  });
+  return out;
+}
+
+/** Record the source hashes in a graph about to be written, when the sources
+ *  still are what the build started from (`rev` was taken before it ran). A
+ *  source edited while the build ran leaves them null: the next open then
+ *  builds everything, which is always right. */
+function stampGraph(appDir: string, rev: string, text: string): string {
+  try {
+    const g = JSON.parse(text) as GraphFile;
+    const reads = docReadsOf(g);
+    const files = sourceHashes(appDir, reads);
+    // the revision was taken with the previous build's reads: it still
+    // stands for these sources if it matches with either set of reads
+    const settled = revOf(appDir, buildReads(appDir)) === rev || revOf(appDir, reads) === rev;
+    g.files = settled ? files : null;
+    g.install = installMarker(appDir);
+    return JSON.stringify(g);
+  } catch {
+    return text;
+  }
+}
+
+/** The graph on disk takes the sources as they are now: an unchanged build
+ *  was acknowledged for them (`rev` matched), so they are what it read. */
+function restampGraph(appDir: string): void {
+  const file = path.join(appDir, "dist", GRAPH);
+  try {
+    const text = fs.readFileSync(file, "utf8");
+    fs.writeFileSync(file, stampGraph(appDir, sourceRev(appDir), text));
+  } catch {
+    /* no graph: the next open builds everything */
+  }
+}
+
+export type ResumePlan = { ok: true; graph: unknown; changed: string[] } | { ok: false; why: string };
+
+/**
+ * Can the build for these sources start from the saved module graph? Yes
+ * when the previous build was a good development build by this same builder,
+ * its graph belongs to the dev meta on disk, and the packages are the ones it
+ * was built with. `changed` is then every file that differs from what that
+ * build read (edited, added, removed). Anything unusual answers "no" with the
+ * reason, and the caller builds everything.
+ */
+export function resumePlan(appDir: string, builder: string): ResumePlan {
+  const status = readBuildStatus(appDir);
+  if (!status?.ok || status.mode !== "development") return { ok: false, why: "the last build was not a good development build" };
+  if (!status.builder || status.builder !== builder) return { ok: false, why: "the last build was made by another builder version" };
+  const meta = readDevMeta(appDir) as { snapshot?: string; seq?: number; depsKey?: string } | null;
+  if (!meta) return { ok: false, why: "no development build on disk" };
+  const g = readGraphRaw(appDir);
+  if (!g) return { ok: false, why: "no module graph saved with the last build" };
+  if (g.snapshot !== meta.snapshot || g.seq !== meta.seq || g.depsKey !== meta.depsKey) return { ok: false, why: "the module graph is not the one of the last build" };
+  if (!g.files) return { ok: false, why: "sources changed while the last build ran" };
+  if (g.install !== installMarker(appDir)) return { ok: false, why: "the packages were reinstalled" };
+  const now = sourceHashes(appDir, docReadsOf(g));
+  const changed: string[] = [];
+  for (const [p, h] of Object.entries(now)) if (g.files[p] !== h) changed.push(p);
+  for (const p of Object.keys(g.files)) if (!(p in now)) changed.push(p);
+  // public/ is copied by a full build only
+  if (changed.some((p) => p.startsWith("public/"))) return { ok: false, why: "files in public/ changed" };
+  return { ok: true, graph: g, changed };
 }
 
 // ---------- build lease ----------
@@ -475,6 +664,10 @@ export function ackUnchangedBuild(appDir: string, rev: string): boolean {
   if (!fs.existsSync(path.join(appDir, "dist", "index.html")) || !readDevMeta(appDir)) return false;
   if (status.rev === rev) return true;
   fs.writeFileSync(path.join(appDir, "dist", STATUS), JSON.stringify({ ...status, rev, at: Date.now() }));
+  // the module graph's file hashes follow, or the next open would find this
+  // same edit again and rebuild for it
+  restampGraph(appDir);
+  readsCache.clear();
   return true;
 }
 
@@ -484,8 +677,22 @@ export function ackUnchangedBuild(appDir: string, rev: string): boolean {
  * build leaves dist alone and records its errors.
  */
 export function writeOutput(appsDir: string, id: string, out: BuilderOutput, rev: string, builder?: string): void {
+  try {
+    writeOutputNow(appsDir, id, out, rev, builder);
+  } finally {
+    // what the build read (the graph) may have changed with it
+    readsCache.clear();
+  }
+}
+
+function writeOutputNow(appsDir: string, id: string, out: BuilderOutput, rev: string, builder?: string): void {
   const root = appRoot(appsDir, id);
   const dist = path.join(root, "dist");
+  // the module graph carries the source hashes of this build, taken here
+  // from the sources the build started on
+  if (out.ok && out.mode === "development") {
+    out = { ...out, files: out.files.map((f) => (f.path === GRAPH ? { ...f, contents: stampGraph(root, rev, f.contents) } : f)) };
+  }
   if (!out.ok) {
     writeStatus(dist, out, rev, builder);
     return;

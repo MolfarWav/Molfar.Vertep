@@ -51,10 +51,10 @@ describe("build ack", () => {
   it("an edit no module reads, acknowledged by the lease holder, leaves the build current", async () => {
     const { appDir, call, status } = await setup();
     expect((await status()).needsBuild).toBe(false);
-    // a test file changes: the fingerprint moves
+    // a file nothing imports changes: the fingerprint moves
     await new Promise((r) => setTimeout(r, 20));
-    fs.mkdirSync(path.join(appDir, "test"));
-    fs.writeFileSync(path.join(appDir, "test", "a.test.ts"), "// edited");
+    fs.mkdirSync(path.join(appDir, "lib"));
+    fs.writeFileSync(path.join(appDir, "lib", "unused.ts"), "// edited");
     const before = await status();
     expect(before.needsBuild).toBe(true);
     const holder = "holder1234";

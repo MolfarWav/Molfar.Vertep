@@ -52,7 +52,7 @@ export function failure(mode: BuildOutput["mode"], e: unknown): BuildOutput {
 /** Dist-relative path of an esbuild output file (outdir is "/__out"). */
 export const outRel = (p: string): string => p.replace(/\\/g, "/").replace(/^(?:.*\/)?__out\//, "");
 
-export async function buildWorkerBundle(ctx: BuildContext, emitter: Emitter, path: string): Promise<string> {
+export async function buildWorkerBundle(ctx: BuildContext, emitter: Emitter, path: string, onLoadFile?: (p: string) => void): Promise<string> {
   const r = await ctx.env.esbuild.build({
     entryPoints: [path],
     bundle: true,
@@ -73,7 +73,8 @@ export async function buildWorkerBundle(ctx: BuildContext, emitter: Emitter, pat
         // a worker is its own module: its assets resolve from its own URL
         assetUrl: (p) => `new URL(${JSON.stringify(cssRefFromAssets(p))}, import.meta.url).href`,
         cssAssetRef: cssRefFromAssets,
-        buildWorker: (p) => buildWorkerBundle(ctx, emitter, p),
+        buildWorker: (p) => buildWorkerBundle(ctx, emitter, p, onLoadFile),
+        ...(onLoadFile ? { onLoadFile } : {}),
       }),
     ],
   });

@@ -28,6 +28,16 @@ export interface BuildStatus {
   errors?: BuildMessage[];
 }
 
+/** What a build did, sent with its output so the engine's log shows it. */
+interface BuildStats {
+  kind: string;
+  /** continued from the saved module graph */
+  resumed: boolean;
+  /** files the build was told changed */
+  changed: number;
+  ms: number;
+}
+
 interface ServerStatus {
   rev: string;
   needsBuild: boolean;
@@ -89,6 +99,9 @@ class BuilderFrame {
   private bytes = 0;
   private onMessage: (e: MessageEvent) => void;
   dead = false;
+  /** How long the frame's last build took, and whether it continued from a saved module graph. */
+  lastMs = 0;
+  lastResumed = false;
 
   constructor(private appId: string, prior: unknown) {
     this.iframe = document.createElement("iframe");
@@ -106,7 +119,7 @@ class BuilderFrame {
     });
     this.onMessage = (e: MessageEvent) => {
       if (e.source !== this.iframe.contentWindow) return;
-      const d = e.data as { __molfarBuilder?: number; t?: string; rid?: unknown; ops?: unknown; id?: unknown; output?: unknown; error?: unknown; text?: unknown };
+      const d = e.data as { __molfarBuilder?: number; t?: string; rid?: unknown; ops?: unknown; id?: unknown; output?: unknown; error?: unknown; text?: unknown; ms?: unknown; resumed?: unknown };
       if (!d || d.__molfarBuilder !== 1) return;
       if (d.t === "loaded") loaded();
       else if (d.t === "ready") readyOk();
@@ -114,6 +127,8 @@ class BuilderFrame {
       else if (d.t === "log") console.warn(`[builder:${appId}]`, String(d.text).slice(0, 4000));
       else if (d.t === "fs" && typeof d.rid === "number" && Array.isArray(d.ops)) void this.relay(d.rid, d.ops);
       else if (d.t === "result" && typeof d.id === "number" && d.output && typeof d.output === "object") {
+        this.lastMs = typeof d.ms === "number" ? Math.round(d.ms) : 0;
+        this.lastResumed = d.resumed === true;
         this.waiting.get(d.id)?.(d.output as Record<string, unknown>);
         this.waiting.delete(d.id);
       }
@@ -157,7 +172,7 @@ class BuilderFrame {
     this.post({ t: "fs-result", rid, results });
   }
 
-  async build(kind: string, changed: string[] = []): Promise<Record<string, unknown>> {
+  async build(kind: string, changed: string[] = [], graph?: unknown): Promise<Record<string, unknown>> {
     await this.ready;
     const id = ++this.nextId;
     return new Promise((resolve, reject) => {
@@ -170,7 +185,7 @@ class BuilderFrame {
         clearTimeout(timer);
         resolve(out);
       });
-      this.post({ t: "build", id, kind, changed });
+      this.post({ t: "build", id, kind, changed, ...(graph !== undefined ? { graph } : {}) });
     });
   }
 
@@ -195,6 +210,8 @@ class AppBuild {
   private retried = false;
   /** The deps bundle the frame's session builds on (see stale.ts). */
   private sessionDeps: string | null = null;
+  /** The saved module graph and the files that differ from it, found when the app opened: the first build continues from it. */
+  private resumed: { graph: unknown; changed: string[] } | null = null;
   /** Why the next full build runs; the shell shows it when the page reloads for it (#24). */
   private fullWhy = "the built files did not match the sources when the app opened";
   private renew: ReturnType<typeof setInterval> | undefined;
@@ -291,18 +308,25 @@ class AppBuild {
         this.releaseLease();
         return;
       }
-      if (st.needsBuild) await this.kick("full", st.rev);
-      else {
-        this.status(st.status?.errors?.length ? { phase: "error", errors: st.status.errors } : { phase: "ready" });
-        if (this.running) return;
-        this.frame = new BuilderFrame(this.appId, st.dev);
-        this.sessionDeps = depsOf(st.dev);
-        // warm the session in the background so the first edit is quick
-        void this.frame.build("warm").catch(() => {});
-        // no build to run: do not keep the lease, or another device that
-        // needs one would wait on this idle tab forever
-        this.releaseLease();
-      }
+      if (st.needsBuild) {
+        // The sources differ from the last build: when its module graph is
+        // still good, only the files that differ are rebuilt (a hot update
+        // the app's page loads fresh), not every module (#181).
+        const r = st.installing ? null : await this.resume();
+        if (r && r.changed.length === 0) {
+          // an edit nothing builds from (a doc, a touch): dist is current
+          if (await this.ack(st.rev, { kind: "ack", resumed: true, changed: 0, ms: 0 })) {
+            this.idle(st);
+            return;
+          }
+        } else if (r) {
+          this.resumed = r;
+          for (const p of r.changed) this.changed.add(p);
+          await this.kick("update", st.rev);
+          return;
+        }
+        await this.kick("full", st.rev);
+      } else this.idle(st);
       return;
     }
     if (this.disposed) return;
@@ -339,6 +363,49 @@ class AppBuild {
       }
     }
     if (!this.disposed) this.status({ phase: "ready" });
+  }
+
+  /** dist is current for the sources at `rev` although they changed: tell the engine. */
+  private async ack(rev: string, stats: BuildStats): Promise<boolean> {
+    try {
+      const r = (await api(`${this.base()}/ack`, { method: "POST", body: JSON.stringify({ holder: this.holder, rev, stats }) })) as { acked?: boolean };
+      return r.acked === true;
+    } catch {
+      /* a change landed since, or the lease moved: its own build follows */
+      return false;
+    }
+  }
+
+  /** The engine's saved module graph for the last build and the files that differ from it, or null when a full build is due. */
+  private async resume(): Promise<{ graph: unknown; changed: string[] } | null> {
+    try {
+      const r = (await api(`${this.base()}/resume`)) as { ok?: boolean; graph?: unknown; changed?: unknown };
+      if (r.ok !== true || !Array.isArray(r.changed)) return null;
+      return { graph: r.graph, changed: r.changed.filter((p): p is string => typeof p === "string") };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Nothing to build: show what dist holds and keep a session ready for the first edit. */
+  private idle(st: ServerStatus): void {
+    this.status(st.status?.errors?.length ? { phase: "error", errors: st.status.errors } : { phase: "ready" });
+    if (this.running) return;
+    this.frame = new BuilderFrame(this.appId, st.dev);
+    this.sessionDeps = depsOf(st.dev);
+    // warm the session in the background so the first edit is quick: from
+    // the saved module graph when there is one (no module is built), else
+    // by building the graph in memory
+    void this.warm(this.frame);
+    // no build to run: do not keep the lease, or another device that
+    // needs one would wait on this idle tab forever
+    this.releaseLease();
+  }
+
+  private async warm(frame: BuilderFrame): Promise<void> {
+    const r = await this.resume();
+    if (r?.changed.length) return;
+    await frame.build("warm", [], r?.graph).catch(() => {});
   }
 
   /** Run one build batch under the lease. A change event that lands while a
@@ -417,6 +484,7 @@ class AppBuild {
         /* keep the session */
       }
     }
+    let graph: unknown;
     if (!this.frame || this.frame.dead) {
       // a new builder continues from what dist holds (its dev sequence)
       let prior: unknown = null;
@@ -430,16 +498,28 @@ class AppBuild {
       }
       this.frame = new BuilderFrame(this.appId, prior);
       this.sessionDeps = depsOf(prior);
+      // a session with no modules in memory starts from the saved module
+      // graph (found when the app opened, or asked for now) and rebuilds the
+      // files that differ from it, instead of building every module first
+      if (kind === "update") {
+        const r = this.resumed ?? (await this.resume());
+        if (r) {
+          graph = r.graph;
+          changed = [...new Set([...changed, ...r.changed])];
+        }
+      }
     }
+    this.resumed = null;
     if (kind === "full") this.status({ phase: "building", message: "Building the app" });
     let output: Record<string, unknown>;
     try {
-      output = await this.frame.build(kind, changed);
+      output = await this.frame.build(kind, changed, graph);
     } catch (e) {
       this.frame = null;
       this.status({ phase: "error", message: String((e as Error).message) });
       return;
     }
+    const stats: BuildStats = { kind, resumed: this.frame.lastResumed, changed: changed.length, ms: this.frame.lastMs };
     if (output.unchanged) {
       const errors = (output.errors as BuildMessage[] | undefined) ?? [];
       this.status(errors.length ? { phase: "error", errors } : { phase: "ready" });
@@ -448,7 +528,7 @@ class AppBuild {
       // reloads the app for nothing. Never for a result with errors.
       if (!errors.length) {
         try {
-          await api(`${this.base()}/ack`, { method: "POST", body: JSON.stringify({ holder: this.holder, rev }) });
+          await this.ack(rev, stats);
         } catch {
           /* a change landed since, or the lease moved: its own build follows */
         }
@@ -456,7 +536,7 @@ class AppBuild {
       return;
     }
     try {
-      await api(`${this.base()}/output`, { method: "PUT", body: JSON.stringify({ holder: this.holder, rev, builder: VERSION, output }) });
+      await api(`${this.base()}/output`, { method: "PUT", body: JSON.stringify({ holder: this.holder, rev, builder: VERSION, output, stats }) });
     } catch (e) {
       // the output never landed, but the session in the frame already advanced
       // (seq, maybe a new snapshot): keeping it would make the next upload
