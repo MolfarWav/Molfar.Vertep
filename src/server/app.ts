@@ -60,6 +60,7 @@ import {
 import { ImageError, adaptComfyWorkflow, imageErrorBody, comfyWorkflowProblem, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
 import type { EdgeFormat } from "../speech.js";
 import * as assets from "../assets/store.js";
+import * as assetCleanup from "../assets/cleanup.js";
 import { createSandbox, type SandboxRunner } from "../sandbox/index.js";
 import { sandboxConfigOf } from "../config.js";
 import { BrowserSandbox } from "../sandbox/browser.js";
@@ -74,7 +75,7 @@ import { ensureLookWatcher, stopLookWatcher } from "./look-watch.js";
 import { assertPublicHost } from "../net-guard.js";
 import { listShellThemes } from "../themes.js";
 import { installApp, hasPackages, healPackages, installMissingPackages, packagesBusy } from "../apps/packages.js";
-import { ackUnchangedBuild, appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, readBuildStatus, readDevMeta, sourceRev, takeLease, writeClientErrors, writeClientLogs, writeOutput } from "../builder/server.js";
+import { ackUnchangedBuild, appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, readBuildStatus, readDevMeta, resumePlan, sourceRev, takeLease, writeClientErrors, writeClientLogs, writeOutput } from "../builder/server.js";
 import { builderAsset, builderFrameCsp, builderVersion } from "../builder/assets.js";
 import type { FsOp } from "../builder/fs.js";
 import { parseGuideState } from "../guide-state.js";
@@ -164,6 +165,17 @@ function parseCookies(header: string): Record<string, string> {
 
 function sha256(s: string): string {
   return nodeCrypto.createHash("sha256").update(s).digest("hex");
+}
+
+/** What the builder says a build did (kind, whether it continued from the
+ *  saved module graph, files changed, ms), as a log suffix. Display only. */
+function describeBuild(raw: unknown): string {
+  const s = raw as { kind?: unknown; resumed?: unknown; changed?: unknown; ms?: unknown } | null;
+  if (!s || typeof s !== "object") return "";
+  const kind = typeof s.kind === "string" ? s.kind.replace(/[^a-z-]/g, "").slice(0, 12) : "?";
+  const changed = typeof s.changed === "number" ? Math.max(0, Math.round(s.changed)) : 0;
+  const ms = typeof s.ms === "number" ? Math.max(0, Math.round(s.ms)) : 0;
+  return ` [${kind}${s.resumed === true ? ", from the saved module graph" : ""}, ${changed} changed file(s), ${ms} ms in the builder]`;
 }
 
 /** Route-scoped error with an HTTP status (compact helper throws these). */
@@ -1961,6 +1973,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       smallModelMode: isSmallModelMode(settings.smallModelMode) ? settings.smallModelMode : "auto",
       costChecks: isCostChecksMode(settings.costChecks) ? settings.costChecks : "auto",
       memorySuggest: settings.memorySuggest !== false,
+      appContractOnDemand: settings.appContractOnDemand === true,
       guide: parseGuideState(settings.guide),
     });
   });
@@ -1968,11 +1981,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.put("/v1/settings", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; costChecks?: unknown; memorySuggest?: unknown; guide?: unknown }>().catch(() => null) ?? {};
-    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("costChecks" in body) && !("memorySuggest" in body) && !("guide" in body)) {
-      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode, costChecks, memorySuggest or guide required" }, 400);
+    const body = await c.req.json<{ launchDefault?: string | null; storeSeen?: string; model?: string | null; reasoning?: string | null; autoCompact?: boolean | number | null; smallModelMode?: unknown; costChecks?: unknown; memorySuggest?: unknown; appContractOnDemand?: unknown; guide?: unknown }>().catch(() => null) ?? {};
+    if (!("launchDefault" in body) && !("storeSeen" in body) && !("model" in body) && !("reasoning" in body) && !("autoCompact" in body) && !("smallModelMode" in body) && !("costChecks" in body) && !("memorySuggest" in body) && !("appContractOnDemand" in body) && !("guide" in body)) {
+      return c.json({ error: "launchDefault, storeSeen, model, reasoning, autoCompact, smallModelMode, costChecks, memorySuggest, appContractOnDemand or guide required" }, 400);
     }
     if (body.memorySuggest !== undefined && typeof body.memorySuggest !== "boolean") return c.json({ error: "memorySuggest must be true or false" }, 400);
+    if (body.appContractOnDemand !== undefined && typeof body.appContractOnDemand !== "boolean") return c.json({ error: "appContractOnDemand must be true or false" }, 400);
     const guide = body.guide === undefined ? undefined : parseGuideState(body.guide);
     if (guide === null) return c.json({ error: "guide must be { seen?, tours?, lastVersion?, showTours? }" }, 400);
     if (body.smallModelMode !== undefined && !isSmallModelMode(body.smallModelMode)) {
@@ -2013,6 +2027,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.smallModelMode !== undefined) settings.smallModelMode = body.smallModelMode;
     if (body.costChecks !== undefined) settings.costChecks = body.costChecks;
     if (body.memorySuggest !== undefined) settings.memorySuggest = body.memorySuggest;
+    if (body.appContractOnDemand !== undefined) settings.appContractOnDemand = body.appContractOnDemand;
     if (guide !== undefined) settings.guide = guide;
     fs.writeFileSync(p.settings, JSON.stringify(settings, null, 2) + "\n");
     const changes: string[] = [];
@@ -2024,6 +2039,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (body.smallModelMode !== undefined) changes.push("small-model mode");
     if (body.costChecks !== undefined) changes.push("cost checks");
     if (body.memorySuggest !== undefined) changes.push("memory suggestions");
+    // read when an agent is built (app-contract.ts), so it evicts them like the other prompt-shaping settings
+    if (body.appContractOnDemand !== undefined) changes.push("app contract on demand");
     if (guide !== undefined) changes.push("guide");
     await git.commitAll(p.root, u.username, `settings: ${changes.join(", ")}`).catch(() => undefined);
     // agents snapshot model + reasoning at creation; the guide's state is not in their prompt
@@ -5387,7 +5404,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       c.header("connection", "close");
       return c.json({ error: capped.error }, 413);
     }
-    let body: { holder?: unknown; rev?: unknown; builder?: unknown; output?: unknown };
+    let body: { holder?: unknown; rev?: unknown; builder?: unknown; output?: unknown; stats?: unknown };
     try {
       body = JSON.parse(new TextDecoder().decode(capped.bytes)) as typeof body;
     } catch {
@@ -5400,7 +5417,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const rev = typeof body.rev === "string" && body.rev.length < 100 ? body.rev : sourceRev(a.dir);
     const builder = typeof body.builder === "string" && body.builder.length <= 100 ? body.builder : undefined;
     // which step a phone build dies at is otherwise invisible: no access log
-    log.info(`[build] ${u.username}/${a.id} output ${Math.round(capped.bytes.length / 1024)} KB, ${out.ok ? "ok" : "failed"}, ${out.hot ? "hot update" : "full build: open pages reload"}`);
+    log.info(`[build] ${u.username}/${a.id} output ${Math.round(capped.bytes.length / 1024)} KB, ${out.ok ? "ok" : "failed"}, ${out.hot ? "hot update" : "full build: open pages reload"}${describeBuild(body.stats)}`);
     try {
       writeOutput(c.get("paths").apps, a.id, out, rev, builder);
     } catch (e) {
@@ -5427,11 +5444,25 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.post("/v1/apps/:id/build/ack", async (c) => {
     const a = buildableApp(c);
     if (!a) return c.json({ error: "app not found" }, 404);
-    const body = await c.req.json<{ holder?: unknown; rev?: unknown }>().catch(() => ({}) as { holder?: unknown; rev?: unknown });
+    const body = await c.req.json<{ holder?: unknown; rev?: unknown; stats?: unknown }>().catch(() => ({}) as { holder?: unknown; rev?: unknown; stats?: unknown });
     const u = c.get("user");
     if (typeof body.holder !== "string" || leaseHolder(buildKey(u, a.id)) !== body.holder) return c.json({ error: "another tab is building this app" }, 409);
     if (typeof body.rev !== "string" || body.rev !== sourceRev(a.dir)) return c.json({ error: "the sources changed since this build" }, 409);
-    return c.json({ acked: ackUnchangedBuild(a.dir, body.rev) });
+    const acked = ackUnchangedBuild(a.dir, body.rev);
+    if (acked) log.info(`[build] ${u.username}/${a.id} nothing to rebuild${describeBuild(body.stats)}`);
+    return c.json({ acked });
+  });
+
+  // Can the next build start from the last build's saved module graph (#181)?
+  // The answer carries the graph and the source files that differ from what
+  // that build read; the builder rebuilds only those. "ok: false" (with the
+  // reason) means a full build is due.
+  app.get("/v1/apps/:id/build/resume", async (c) => {
+    const a = buildableApp(c);
+    if (!a) return c.json({ error: "app not found" }, 404);
+    if (!fs.existsSync(path.join(a.dir, "index.html"))) return c.json({ ok: false, why: "no index.html" }, 200, { "cache-control": "no-store" });
+    const plan = resumePlan(a.dir, await builderVersion());
+    return c.json(plan.ok ? { ok: true, changed: plan.changed, graph: plan.graph } : { ok: false, why: plan.why }, 200, { "cache-control": "no-store" });
   });
 
   app.post("/v1/apps/:id/install", async (c) => {
@@ -5889,6 +5920,115 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
       "content-security-policy": "sandbox; default-src 'none'",
       "content-disposition": `${disposition}; filename="${(got.record.name ?? got.record.id).replace(/["\\]/g, "")}"`,
     });
+  });
+
+  // ---------- storage: clean up pictures nothing links to (issue #171) ----------
+  // Shell only. The app bridge's allowlist does not name /v1/storage/, and the
+  // guard below refuses a bridged request even if that list ever changed.
+  const cleanupJobs = new assetCleanup.CleanupJobs();
+  app.use("/v1/storage/*", async (c, next) => {
+    if (c.get("bridgeApp")) return c.json({ error: "blocked by the app sandbox" }, 403);
+    return next();
+  });
+  const cleanupError = (c: Context, e: unknown) => {
+    if (e instanceof assetCleanup.CleanupError) return c.json({ error: e.message, code: e.code }, e.code === "busy" ? 409 : e.code === "bad-request" ? 400 : 500);
+    return c.json({ error: (e as Error).message }, 500);
+  };
+  /** `ids` from a body: a list of asset ids, or absent. null = malformed. */
+  const idList = (v: unknown): string[] | undefined | null => {
+    if (v === undefined) return undefined;
+    if (!Array.isArray(v) || v.length > 200000 || v.some((x) => typeof x !== "string" || !/^[a-f0-9]{64}$/i.test(x))) return null;
+    return (v as string[]).map((x) => x.toLowerCase());
+  };
+
+  // sizes and counts of the store and the trash; also drops expired trash
+  app.get("/v1/storage/assets", (c) => {
+    try {
+      return c.json({ ...assetCleanup.storageSummary(c.get("paths")), job: cleanupJobs.get(c.get("user").username) });
+    } catch (e) {
+      return cleanupError(c, e);
+    }
+  });
+
+  app.get("/v1/storage/assets/job", (c) => c.json({ job: cleanupJobs.get(c.get("user").username) }));
+
+  // find what a cleanup would move; changes nothing. The shell polls /job.
+  app.post("/v1/storage/assets/plan", (c) => {
+    const p = c.get("paths");
+    try {
+      return c.json({ job: cleanupJobs.start(c.get("user").username, "plan", (progress) => assetCleanup.planCleanup(p, { progress })) });
+    } catch (e) {
+      return cleanupError(c, e);
+    }
+  });
+
+  // move the unused pictures to the trash. The server scans again here and
+  // decides for itself; `ids` can only narrow the result.
+  app.post("/v1/storage/assets/clean", async (c) => {
+    const p = c.get("paths");
+    const body = await c.req.json<{ ids?: unknown; overrideSkipped?: unknown }>().catch(() => ({}) as { ids?: unknown; overrideSkipped?: unknown });
+    const ids = idList(body.ids);
+    if (ids === null) return c.json({ error: "ids must be a list of picture ids" }, 400);
+    try {
+      return c.json({
+        job: cleanupJobs.start(c.get("user").username, "clean", (progress) =>
+          assetCleanup.cleanAssets(p, { progress, ...(ids ? { ids } : {}), overrideSkipped: body.overrideSkipped === true })),
+      });
+    } catch (e) {
+      return cleanupError(c, e);
+    }
+  });
+
+  app.get("/v1/storage/assets/trash", (c) => {
+    try {
+      return c.json(assetCleanup.listTrash(c.get("paths")));
+    } catch (e) {
+      return cleanupError(c, e);
+    }
+  });
+
+  // a trashed picture, for its thumbnail
+  app.get("/v1/storage/assets/trash/:id/file", (c) => {
+    let got: ReturnType<typeof assetCleanup.readTrashed>;
+    try {
+      got = assetCleanup.readTrashed(c.get("paths"), c.req.param("id"));
+    } catch (e) {
+      return cleanupError(c, e);
+    }
+    if (!got) return c.json({ error: "not found" }, 404);
+    const inlineImage = /^image\/(png|jpeg|webp|gif|avif|bmp)$/i.test(got.record.mime);
+    return c.body(new Uint8Array(got.bytes), 200, {
+      "content-type": inlineImage ? got.record.mime : "application/octet-stream",
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "sandbox; default-src 'none'",
+      "content-disposition": `${inlineImage ? "inline" : "attachment"}; filename="${(got.record.name ?? got.record.id).replace(/["\\\r\n]/g, "")}"`,
+      "cache-control": "no-store",
+    });
+  });
+
+  // put pictures back: `{ ids: [...] }` or `{ all: true }`
+  app.post("/v1/storage/assets/trash/restore", async (c) => {
+    const body = await c.req.json<{ ids?: unknown; all?: unknown }>().catch(() => ({}) as { ids?: unknown; all?: unknown });
+    const ids = idList(body.ids);
+    if (ids === null || (ids === undefined && body.all !== true)) return c.json({ error: "give ids, or all: true" }, 400);
+    if (cleanupJobs.busy(c.get("user").username)) return c.json({ error: "a cleanup is running: wait for it to finish", code: "busy" }, 409);
+    try {
+      return c.json(assetCleanup.restoreFromTrash(c.get("paths"), ids ?? null));
+    } catch (e) {
+      return cleanupError(c, e);
+    }
+  });
+
+  // delete the trash for good; the body must say so
+  app.post("/v1/storage/assets/trash/empty", async (c) => {
+    const body = await c.req.json<{ confirm?: unknown }>().catch(() => ({}) as { confirm?: unknown });
+    if (body.confirm !== true) return c.json({ error: "send { confirm: true } to empty the trash" }, 400);
+    if (cleanupJobs.busy(c.get("user").username)) return c.json({ error: "a cleanup is running: wait for it to finish", code: "busy" }, 409);
+    try {
+      return c.json(assetCleanup.emptyTrash(c.get("paths")));
+    } catch (e) {
+      return cleanupError(c, e);
+    }
   });
 
   // ---------- admin ----------

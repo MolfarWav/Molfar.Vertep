@@ -69,6 +69,8 @@ export function skippedInWorkspace(rel: string): boolean {
     segs.some(isDiscardDir) ||
     // cloned repositories the agent read: fetched again when needed
     head === "repos" ||
+    // pictures the cleanup moved aside (Settings, Storage): thrown away after 30 days
+    rel === "assets-store/.trash" || rel.startsWith("assets-store/.trash/") ||
     (head === "apps" && (segs[1] === ".staging" || segs[2] === "dist")) ||
     (head === "projects" && segs[1] === ".staging") ||
     // an app's local cache: rebuilt from the data it mirrors

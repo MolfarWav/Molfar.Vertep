@@ -809,7 +809,7 @@ describe("S5 in-browser builder: one app in, one dist out", () => {
     expect(csp).toContain("connect-src 'none'");
     expect(csp).not.toContain("allow-same-origin");
     // a relayed app request never reaches the build routes
-    for (const [method, route] of [["GET", "/v1/apps/roleplay/build"], ["POST", "/v1/apps/roleplay/build/fs"], ["PUT", "/v1/apps/roleplay/build/output"], ["POST", "/v1/apps/roleplay/build/ack"], ["POST", "/v1/apps/roleplay/%62uild/lease"]] as const) {
+    for (const [method, route] of [["GET", "/v1/apps/roleplay/build"], ["POST", "/v1/apps/roleplay/build/fs"], ["PUT", "/v1/apps/roleplay/build/output"], ["POST", "/v1/apps/roleplay/build/ack"], ["GET", "/v1/apps/roleplay/build/resume"], ["POST", "/v1/apps/roleplay/%62uild/lease"]] as const) {
       const r = await app.request(route, { method, headers: { authorization: `Bearer ${token}`, "x-chrysalis-app": "roleplay", "content-type": "application/json" }, ...(method === "GET" ? {} : { body: "{}" }) });
       expect(r.status, route).toBe(403);
     }
@@ -951,9 +951,10 @@ describe("A2 the bridge's second lock (server side)", () => {
     const paths = ["/v1/apps/x/chats", "/v1/apps/x/tree", "/v1/apps/x/mcp", "/v1/apps/x/mcp/s", "/v1/apps/y/chats", "/v1/models", "/v1/models/context", "/v1/models/shown",
       "/v1/models/pricing", "/v1/models/params", "/v1/models/params/effective", "/v1/models/favorites", "/v1/models/vision", "/v1/images", "/v1/images/models", "/v1/images/favorites", "/v1/images/endpoints", "/v1/images/endpoints/e", "/v1/images/endpoints/e/models", "/v1/images/endpoints/e/options", "/v1/images/workflow/adapt", "/v1/assets", "/v1/assets/abc", "/v1/audio/speech", "/v1/audio/speech/endpoints",
       "/v1/audio/speech/endpoints/e", "/v1/settings/connections", "/v1/settings/providers", "/v1/settings", "/v1/plugins", "/v1/plugins/p/approve",
-      "/v1/embeddings/config", "/v1/embeddings/probe", "/v1/models/cache-check", "/v1/agent", "/v1/agent/bug-patch", "/v1/agent/uploads/a.json", "/v1/agent/file", "/v1/agent/pending", "/v1/mcp", "/v1/shell", "/v1/themes", "/v1/apps", "/v1/apps/x/dev", "/v1/apps/x/build", "/v1/apps/x/build/fs", "/v1/apps/x/build/ack", "/v1/apps/x/export",
+      "/v1/embeddings/config", "/v1/embeddings/probe", "/v1/models/cache-check", "/v1/agent", "/v1/agent/bug-patch", "/v1/agent/uploads/a.json", "/v1/agent/file", "/v1/agent/pending", "/v1/mcp", "/v1/shell", "/v1/themes", "/v1/apps", "/v1/apps/x/dev", "/v1/apps/x/build", "/v1/apps/x/build/fs", "/v1/apps/x/build/ack", "/v1/apps/x/build/resume", "/v1/apps/x/export",
       "/v1/apps/x/export/backup", "/v1/apps/x/exports", "/v1/apps/x/tree/leaf", "/v1/projects", "/v1/projects/import", "/v1/projects/app:x",
       "/v1/projects/project:x/export", "/v1/projects/app:x/files", "/v1/projects/app:x/files/a.png",
+      "/v1/storage/assets", "/v1/storage/assets/job", "/v1/storage/assets/plan", "/v1/storage/assets/clean", "/v1/storage/assets/trash", "/v1/storage/assets/trash/abc/file", "/v1/storage/assets/trash/restore", "/v1/storage/assets/trash/empty",
       "/v1/profile/export", "/v1/profile/import", "/v1/profile/import/t/confirm",
       "/v1/sync", "/v1/sync/settings", "/v1/sync/drive/start", "/v1/sync/drive/code", "/v1/sync/folder", "/v1/sync/target", "/v1/sync/job", "/v1/sync/check", "/v1/sync/push", "/v1/sync/pull"];
     for (const trusted of [false, true]) {
