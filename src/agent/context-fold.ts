@@ -20,6 +20,7 @@
  * count cached input tokens against the quota like any others.
  */
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
+import { splitContracts } from "./app-contract.js";
 
 /** Same length as the summaries a reloaded chat carries. */
 export const PAST_RESULT_CHARS = 300;
@@ -129,9 +130,18 @@ export function foldToolResults(msgs: AgentMessage[], runStart: number): FoldRes
       current.push(i);
       return;
     }
-    const text = textOf(r);
-    if (text.length <= PAST_RESULT_CHARS + PAST_NOTE.length + 2) return;
-    out[i] = withText(m, `${text.slice(0, PAST_RESULT_CHARS)}\n${PAST_NOTE}`);
+    // an app's contract delivered in an earlier task goes (it comes again with
+    // the first touch of the app in each task); the rest folds as usual
+    const split = splitContracts(textOf(r));
+    const text = split.body;
+    const gone = split.ids.map((id) => `\n[the contract of apps/${id} was delivered here; it comes again with the first touch of the app in each new task]`).join("");
+    if (text.length <= PAST_RESULT_CHARS + PAST_NOTE.length + 2) {
+      if (!split.ids.length) return;
+      out[i] = withText(m, `${text}${gone}`);
+      folded++;
+      return;
+    }
+    out[i] = withText(m, `${text.slice(0, PAST_RESULT_CHARS)}\n${PAST_NOTE}${gone}`);
     folded++;
   });
 
@@ -144,16 +154,17 @@ export function foldToolResults(msgs: AgentMessage[], runStart: number): FoldRes
     if (!call) continue;
     const target = fullRead(call) ?? (call.name === "write_file" || call.name === "json_set" ? normPath(call.args.path) : undefined);
     if (call.name === "read_file" && target && laterFull.has(target)) {
-      out[i] = withText(out[i]!, `[read_file ${target}: an older copy, dropped to save tokens; the file was read again or rewritten later in this task]`);
+      // an app contract delivered with this result is not part of the copy: it stays
+      out[i] = withText(out[i]!, `[read_file ${target}: an older copy, dropped to save tokens; the file was read again or rewritten later in this task]${splitContracts(textOf(r)).blocks}`);
       folded++;
       continue;
     }
     if (target) laterFull.add(target);
-    const text = textOf(r);
+    const { body: text, blocks } = splitContracts(textOf(r));
     if (r.toolCallId && oldCalls.has(r.toolCallId) && text.length > OLD_RESULT_CHARS) {
       out[i] = withText(
         out[i]!,
-        `${text.slice(0, OLD_RESULT_HEAD)}\n[${text.length - OLD_RESULT_HEAD} more characters of this older result left out to save tokens; run the tool again (read_file with offset/limit) if you need them]`,
+        `${text.slice(0, OLD_RESULT_HEAD)}\n[${text.length - OLD_RESULT_HEAD} more characters of this older result left out to save tokens; run the tool again (read_file with offset/limit) if you need them]${blocks}`,
       );
       folded++;
     }

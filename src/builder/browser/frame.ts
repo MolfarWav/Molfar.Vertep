@@ -20,7 +20,7 @@ import { buildProduction, failure, type BuildOutput } from "../prod.js";
 
 type Msg =
   | { t: "init"; wasm: ArrayBuffer; prior: DevMeta | null }
-  | { t: "build"; id: number; kind: "full" | "warm" | "update" | "production"; changed?: string[] }
+  | { t: "build"; id: number; kind: "full" | "warm" | "update" | "production"; changed?: string[]; graph?: unknown }
   | { t: "fs-result"; rid: number; results: FsResult[] };
 
 const post = (m: unknown, transfer: Transferable[] = []) => parent.postMessage({ __molfarBuilder: 1, ...(m as object) }, "*", transfer);
@@ -62,12 +62,28 @@ let devCtx: BuildContext | null = null;
 let dev: DevSession | null = null;
 let chain = Promise.resolve();
 
-async function build(kind: Extract<Msg, { t: "build" }>["kind"], changed: string[]) {
+/** Whether the last build continued from a saved module graph (the host logs it). */
+let lastResumed = false;
+
+async function build(kind: Extract<Msg, { t: "build" }>["kind"], changed: string[], graph?: unknown) {
+  lastResumed = false;
   if (kind === "production") return buildProduction(await createContext(transport, env, "production"));
   if (kind === "full" || kind === "warm" || !devCtx || !dev) {
     devCtx = await createContext(transport, env, "development");
     dev = new DevSession(devCtx, dev?.meta ?? prior);
-    if (kind === "update") {
+    if (graph !== undefined && kind !== "full") {
+      // the host holds a saved module graph for what dist holds: continue
+      // from it instead of building every module again. A graph that does
+      // not fit means dist is not what the graph describes, so an update
+      // must build everything (the adopt shortcut below would trust dist).
+      if (await dev.restore(graph)) {
+        lastResumed = true;
+        if (kind === "warm" && dev.meta) return dev.idle(dev.meta);
+      } else if (kind === "update") {
+        return dev.full();
+      }
+    }
+    if (kind === "update" && !lastResumed) {
       // a cold session: catch up with what dist holds first; if dist is not
       // from these sources, the full build IS the update
       const warm = await dev.full({ adopt: true });
@@ -109,11 +125,11 @@ addEventListener("message", (e: MessageEvent) => {
       const started = Date.now();
       let output: BuildOutput;
       try {
-        output = await build(kind, d.changed ?? []);
+        output = await build(kind, d.changed ?? [], d.graph);
       } catch (err) {
         output = failure(kind === "production" ? "production" : "development", err);
       }
-      post({ t: "result", id, output, ms: Date.now() - started });
+      post({ t: "result", id, output, ms: Date.now() - started, resumed: lastResumed });
     });
   }
 });

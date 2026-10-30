@@ -7,6 +7,13 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.7.3 (2026-10-30)
+
+- Roleplay 4.77.0 comes with this release as an app update: sprites in outfits and per character, tags as folders in Characters, a World build model row, cause links between Litopys facts, and a faster preset import.
+- Apps: reopening an app after a change no longer rebuilds everything (#181). `docs/`, `test/`, `scripts/` and top-level markdown files leave the source fingerprint unless the last build read them; every dev build saves its module graph with a hash per source file, and an open that needs a build asks `GET /v1/apps/:id/build/resume` and updates only the changed modules, or acknowledges the open when nothing the build reads differs. Anything unusual falls back to the full build.
+- Storage: Settings > Storage finds pictures in the asset store that nothing references and are older than 7 days and moves them to `assets-store/.trash`, kept 30 days with restore and a confirmed empty (#171). Shell-only routes under `/v1/storage/assets`; the scan counts any 64-hex string in any text file of the user's folder; the trash is not in backups or sync. `putAsset` refreshes `storedAt` on every upload and the asset manifest is written atomically.
+- Molfar: setting `appContractOnDemand` (off by default, a checkbox in Memory and skills) sends the active app's `AGENTS.md` and `data/README.md` with the first tool result that touches `apps/<id>/` instead of in every system prompt; a first call that would change the app is held back once and answered with the rules (#174).
+
 ## 1.7.2 (2026-10-29)
 
 - Roleplay 4.76.0 comes with this release as an app update: a persona and a saved World DM world carry their own long memory across chats, like a card does, off until a chat switches it on (#99).

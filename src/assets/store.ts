@@ -17,7 +17,7 @@ export interface AssetLimits {
   maxTotalBytes: number;
 }
 
-const DEFAULT_LIMITS: AssetLimits = { maxBytes: MAX_ASSET_BYTES, maxTotalBytes: MAX_STORE_BYTES };
+export const DEFAULT_LIMITS: AssetLimits = { maxBytes: MAX_ASSET_BYTES, maxTotalBytes: MAX_STORE_BYTES };
 
 export interface AssetRecord {
   id: string;
@@ -25,6 +25,11 @@ export interface AssetRecord {
   size: number;
   name: string | null;
   createdAt: number;
+  /** When these bytes were last stored: every upload of them, including a
+   *  re-upload of known bytes, refreshes it. The cleanup (cleanup.ts) never
+   *  trashes a picture stored within its grace period. Absent = never
+   *  re-uploaded since the field existed (createdAt stands). */
+  storedAt?: number;
   /** Apps that stored these bytes. The store is per user, but one app must
    *  not browse another's pictures; absent = stored by the shell or before
    *  owners were recorded. */
@@ -44,7 +49,7 @@ function manifestPath(p: UserPaths): string {
   return path.join(p.assetsStore, "manifest.json");
 }
 
-function readManifest(p: UserPaths): Record<string, AssetRecord> {
+export function readManifest(p: UserPaths): Record<string, AssetRecord> {
   try {
     return JSON.parse(fs.readFileSync(manifestPath(p), "utf8")) as Record<string, AssetRecord>;
   } catch {
@@ -52,9 +57,37 @@ function readManifest(p: UserPaths): Record<string, AssetRecord> {
   }
 }
 
-function writeManifest(p: UserPaths, m: Record<string, AssetRecord>): void {
+/** Like readManifest, but a manifest that exists and cannot be parsed throws
+ *  instead of reading as empty: the cleanup must never act on "no records". */
+export function readManifestStrict(p: UserPaths): Record<string, AssetRecord> {
+  let text: string;
+  try {
+    text = fs.readFileSync(manifestPath(p), "utf8");
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return {};
+    throw e;
+  }
+  const parsed = JSON.parse(text) as unknown;
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("the asset manifest is not an object");
+  return parsed as Record<string, AssetRecord>;
+}
+
+/** Written beside and renamed over, so a crash never leaves half a manifest
+ *  (readManifest would read that as "no assets"). Every store operation here
+ *  is synchronous, so a read-modify-write inside one call cannot interleave
+ *  with another request: that is the store's only lock. */
+export function writeManifest(p: UserPaths, m: Record<string, AssetRecord>): void {
   fs.mkdirSync(p.assetsStore, { recursive: true });
-  fs.writeFileSync(manifestPath(p), JSON.stringify(m, null, 2) + "\n", "utf8");
+  const tmp = `${manifestPath(p)}.${process.pid}.tmp`;
+  const text = `${JSON.stringify(m, null, 2)}\n`;
+  fs.writeFileSync(tmp, text, "utf8");
+  try {
+    fs.renameSync(tmp, manifestPath(p));
+  } catch {
+    // a scanner or sync client holding the old file on Windows: write in place
+    fs.writeFileSync(manifestPath(p), text, "utf8");
+    fs.rmSync(tmp, { force: true });
+  }
 }
 
 export function putAsset(
@@ -80,9 +113,12 @@ export function putAsset(
   const apps = [...new Set([...(prev?.apps ?? []), ...(owner ? [owner] : [])])];
   // first writer owns the metadata: another app uploading identical bytes
   // must not be able to rename or retype an asset it did not create
+  // every upload, a re-upload of known bytes too, refreshes storedAt: an
+  // upload racing a cleanup must make the picture "young" again
+  const now = Date.now();
   const record: AssetRecord = prev
-    ? { ...prev, ...(apps.length ? { apps } : {}) }
-    : { id, mime, size: bytes.length, name, createdAt: Date.now(), ...(apps.length ? { apps } : {}) };
+    ? { ...prev, storedAt: now, ...(apps.length ? { apps } : {}) }
+    : { id, mime, size: bytes.length, name, createdAt: now, storedAt: now, ...(apps.length ? { apps } : {}) };
   manifest[id] = record;
   writeManifest(p, manifest);
   return record;

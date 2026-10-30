@@ -207,11 +207,12 @@ describe("exfiltration ways out of an app page", () => {
       "/v1/auth/users", "/v1/git/log", "/v1/sandbox", "/v1/apps", "/v1/apps/other/chats",
       "/v1/apps/roleplay", "/v1/apps/roleplay/tree", "/v1/apps/roleplay/plugins", "/v1/apps/roleplay/install",
       "/v1/apps/roleplay/dev", "/v1/apps/roleplay/update", "/v1/apps/roleplay/updates",
-      "/v1/apps/roleplay/build", "/v1/apps/roleplay/build/fs", "/v1/apps/roleplay/build/output", "/v1/apps/roleplay/build/ack",
+      "/v1/apps/roleplay/build", "/v1/apps/roleplay/build/fs", "/v1/apps/roleplay/build/output", "/v1/apps/roleplay/build/ack", "/v1/apps/roleplay/build/resume",
       "/v1/apps/roleplay/rev", "/v1/apps/roleplay/activate", "/v1/apps/roleplay/rename",
       "/v1/apps/roleplay/export", "/v1/apps/roleplay/exports",
       "/v1/settings/connections", "/v1/plugins",
       "/v1/projects", "/v1/projects/app:roleplay", "/v1/projects/app:roleplay/files/a.png", "/v1/projects/import",
+      "/v1/storage/assets", "/v1/storage/assets/job", "/v1/storage/assets/plan", "/v1/storage/assets/clean", "/v1/storage/assets/trash", "/v1/storage/assets/trash/abc/file", "/v1/storage/assets/trash/restore", "/v1/storage/assets/trash/empty",
       "/v1/profile/export", "/v1/profile/import", "/v1/profile/import/t/confirm",
       "/v1/sync", "/v1/sync/settings", "/v1/sync/drive/start", "/v1/sync/drive/code", "/v1/sync/folder", "/v1/sync/target", "/v1/sync/job", "/v1/sync/check", "/v1/sync/push", "/v1/sync/pull",
     ]) {

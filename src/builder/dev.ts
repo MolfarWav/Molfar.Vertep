@@ -64,9 +64,32 @@ interface Mod {
   tailwind?: boolean;
   glob?: boolean;
   error?: BuildMessage;
+  /** Signature of the output (code and imports) of a module restored from the
+   *  saved graph, whose code is not in memory. Cleared when it is rebuilt. */
+  sig?: string;
 }
 
-const FULL_REBUILD = /^(?:index\.html|package\.json|package-lock\.json|bun\.lock|bun\.lockb|npm-shrinkwrap\.json|(?:ts|js)config[^/]*\.json|\.env[^/]*|node_modules\/.*)$/;
+/** What a module's output looks like, for telling a rebuilt one from the old. */
+const sigOf = (m: Mod): string => m.sig ?? strHash(m.code + JSON.stringify(m.deps));
+
+/** The module graph a build saves next to its output (dev/graph.json), so a
+ *  later session can continue from it without building every module again.
+ *  `files` (source hashes) and `install` are filled in by the engine when it
+ *  writes the output. */
+export interface DevGraph {
+  v: 1;
+  snapshot: string;
+  seq: number;
+  depsKey: string;
+  files: null;
+  install: null;
+  entries: string[];
+  mods: Array<{ i: string; f: string; k: Kind; d: Record<string, string>; n: string[]; s: string; t?: 1; g?: 1; e?: BuildMessage }>;
+}
+const GRAPH_PATH = "dev/graph.json";
+const KINDS = new Set<string>(["js", "css", "asset", "raw", "inline", "worker", "sharedworker", "worker-url", "empty"]);
+
+const FULL_REBUILD = /^(?:index\.html|package\.json|package-lock\.json|bun\.lock|bun\.lockb|pnpm-lock\.yaml|yarn\.lock|npm-shrinkwrap\.json|(?:ts|js)config[^/]*\.json|\.env[^/]*|node_modules\/.*)$/;
 const REQUIRE = /\brequire\("((?:[^"\\]|\\.)*)"\)/g;
 const FACTORY = "function (require, module, exports, __molfar_meta, $RefreshReg$, $RefreshSig$)";
 
@@ -235,6 +258,7 @@ export class DevSession {
 
   private async buildMod(m: Mod, pending: Mod[]): Promise<void> {
     m.error = undefined;
+    m.sig = undefined;
     const esm = (value: string) => `module.exports = { __esModule: true, default: ${value} };`;
     switch (m.kind) {
       case "js":
@@ -255,7 +279,10 @@ export class DevSession {
       case "worker":
       case "sharedworker":
       case "worker-url": {
-        const out = await buildWorkerBundle(this.ctx, this.emitter, m.file);
+        // the worker's own imports are inputs too: editing one rebuilds it
+        const inputs = new Set<string>([m.file]);
+        const out = await buildWorkerBundle(this.ctx, this.emitter, m.file, (p) => inputs.add(p));
+        m.inputs = inputs;
         const url = `__molfar_dev.url(${JSON.stringify(out)})`;
         m.code =
           m.kind === "worker-url"
@@ -362,6 +389,7 @@ export class DevSession {
   private metaFiles(meta: DevMeta): BuildOutput["files"] {
     return [
       { path: "index.html", contents: this.html(meta) },
+      { path: GRAPH_PATH, contents: JSON.stringify(this.graph(meta)) },
       { path: "dev/meta.json", contents: JSON.stringify(meta) },
       { path: "dev/meta.js", contents: `__molfar_dev.sync(${meta.seq}, ${JSON.stringify(meta.snapshot)});\n` },
       { path: "dev/boot.js", contents: `__molfar_dev.start(${JSON.stringify(this.entryIds)}, ${meta.seq});\n` },
@@ -460,6 +488,85 @@ export class DevSession {
     return { ok: true, mode: "development", files, copies: this.newCopies(), warnings: [], errors: this.collectErrors(), remove: [], keep, meta, hot: null, full: true };
   }
 
+  /** The saved module graph for the output that carries `meta`. */
+  private graph(meta: DevMeta): DevGraph {
+    return {
+      v: 1,
+      snapshot: meta.snapshot,
+      seq: meta.seq,
+      depsKey: meta.depsKey,
+      files: null,
+      install: null,
+      entries: this.entryIds,
+      mods: [...this.mods.values()].map((m) => ({
+        i: m.id,
+        f: m.file,
+        k: m.kind,
+        d: m.deps,
+        // the app's own files only: node_modules never changes under a watcher
+        n: [...m.inputs].filter((p) => !p.includes("node_modules/")),
+        s: sigOf(m),
+        ...(m.tailwind ? { t: 1 as const } : {}),
+        ...(m.glob ? { g: 1 as const } : {}),
+        ...(m.error ? { e: m.error } : {}),
+      })),
+    };
+  }
+
+  /**
+   * Continue from the module graph a previous build saved, instead of
+   * building every module again (what a page opening after a source change
+   * would otherwise do). The session then holds the graph without the
+   * modules' code; `update(changed)` rebuilds what the changed files feed.
+   * False when the graph is not usable for the meta this session carries
+   * (the caller then builds everything).
+   */
+  async restore(raw: unknown): Promise<boolean> {
+    const g = raw as Partial<DevGraph> | null;
+    const meta = this.meta;
+    if (!meta || !g || g.v !== 1 || g.snapshot !== meta.snapshot || g.seq !== meta.seq || g.depsKey !== meta.depsKey) return false;
+    if (!Array.isArray(g.entries) || !Array.isArray(g.mods) || !g.entries.every((e) => typeof e === "string")) return false;
+    const mods = new Map<string, Mod>();
+    for (const x of g.mods) {
+      if (!x || typeof x.i !== "string" || typeof x.f !== "string" || !KINDS.has(x.k) || typeof x.s !== "string" || !x.d || typeof x.d !== "object" || !Array.isArray(x.n)) return false;
+      if (!Object.values(x.d).every((v) => typeof v === "string") || !x.n.every((p) => typeof p === "string")) return false;
+      const m: Mod = { id: x.i, file: x.f, kind: x.k, code: "", deps: x.d, inputs: new Set([x.f, ...x.n]), sig: x.s };
+      if (x.t) m.tailwind = true;
+      if (x.g) m.glob = true;
+      if (x.e && typeof x.e.text === "string") m.error = x.e;
+      mods.set(m.id, m);
+    }
+    if (!g.entries.every((e) => mods.has(e))) return false;
+    const emitter = new Emitter(this.ctx.fs);
+    if (!(await this.ctx.fs.isFile("index.html"))) return false;
+    const plan = await planHtml(await this.ctx.fs.readText("index.html"), this.ctx.fs, emitter, this.ctx.metaEnv);
+    // the entries must be the ones the graph was built for (index.html is
+    // part of the file diff, so a changed one never gets here)
+    const ids = plan.entries.map((e) => (e.path ? e.path : `index.html?inline-${e.n}`));
+    const wanted = g.entries;
+    if (ids.length !== wanted.length || ids.some((id, i) => id !== wanted[i])) return false;
+    for (const e of plan.entries) {
+      if (e.path) continue;
+      const m = mods.get(`index.html?inline-${e.n}`);
+      if (m) m.inline = e.inline ?? "";
+    }
+    this.mods = mods;
+    this.entryIds = ids;
+    this.plan = plan;
+    this.emitter = emitter;
+    this.sentCopies.clear();
+    for (const c of emitter.copies.values()) this.sentCopies.add(c.to);
+    emitter.files.clear();
+    this.depIds.clear();
+    for (const m of mods.values()) for (const d of Object.values(m.deps)) if (d.startsWith("dep:")) this.depIds.add(d.slice(4));
+    return true;
+  }
+
+  /** Nothing to write: the session only holds the graph (after `restore`). */
+  idle(meta: DevMeta): DevOutput {
+    return { ok: true, mode: "development", files: [], copies: [], warnings: [], errors: this.collectErrors(), remove: [], keep: [], meta, hot: null, full: false, unchanged: true };
+  }
+
   /** Files changed on disk: rebuild what they feed and emit a hot update. */
   async update(changed: string[]): Promise<DevOutput> {
     const { fs, tailwind, resolver } = this.ctx;
@@ -496,17 +603,21 @@ export class DevSession {
     }
     // Tailwind output depends on every source's classes
     for (const m of this.mods.values()) if (m.tailwind) affected.add(m);
-    const before = new Map([...affected].map((m) => [m.id, m.code + JSON.stringify(m.deps)]));
+    const before = new Map([...affected].map((m) => [m.id, sigOf(m)]));
     const depCount = this.depIds.size;
     const built = await this.process([...affected].map((m) => ({ ...m, inputs: new Set(m.inputs) })));
     // a new package import needs a new deps bundle, and the page a reload
     if (this.depIds.size !== depCount) return this.full();
     const removed = this.prune();
-    const out = built.filter((m) => this.mods.has(m.id) && before.get(m.id) !== m.code + JSON.stringify(m.deps));
+    const out = built.filter((m) => this.mods.has(m.id) && before.get(m.id) !== sigOf(m));
     const meta = this.meta;
     if (!out.length && !removed.length) {
       return { ok: true, mode: "development", files: [], copies: [], warnings: [], errors: this.collectErrors(), remove: [], keep: [], meta, hot: null, full: false, unchanged: true };
     }
+    // folding hot files into a snapshot needs every module's code, and a
+    // session resumed from the saved graph only has the ones it rebuilt: a
+    // full build, rarely (every MAX_HOT updates)
+    if (meta.hot.length + 1 > MAX_HOT && [...this.mods.values()].some((m) => m.sig !== undefined)) return this.full();
     meta.seq += 1;
     const hotFile = `dev/hot-${meta.seq}.js`;
     const errors = this.collectErrors();

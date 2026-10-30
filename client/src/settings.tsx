@@ -49,6 +49,7 @@ import { GuideSection } from "./guide/guide-settings"
 import { useGuidePlace } from "./guide/place"
 import { SyncTab } from "./sync-settings"
 import { ImagesTab } from "./image-settings"
+import { StorageTab } from "./storage-settings"
 import { notifyEnabled, notifyPermission, requestNotifyPermission, setNotifyEnabled, showTestNotice, type NotifyPermission } from "./notice"
 
 export const inputClass =
@@ -90,7 +91,7 @@ const LOCAL_SERVERS: LocalPick[] = [
 type OAuthPick = { id: string; providerId: string; label: string; kind: "builtin"; baseUrl: null; apiKeyAuth: false; hasKey: false; authKind: "oauth" | "credentials"; needsGateway?: boolean }
 type ProviderPick = EngineProvider | CustomPick | OAuthPick | LocalPick
 
-export type TabValue = "general" | "backup" | "sync" | "api" | "models" | "speech" | "images" | "agent" | "memory" | "mcp" | "developer" | "server" | "users"
+export type TabValue = "general" | "backup" | "storage" | "sync" | "api" | "models" | "speech" | "images" | "agent" | "memory" | "mcp" | "developer" | "server" | "users"
 
 export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; initialModel?: string | null; onLogout: () => void }) {
   // "models" was its own tab before 0.9.2: it lives in the connections tab now
@@ -100,6 +101,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
   const tabs: Array<{ value: TabValue; label: string; icon: ReactNode }> = [
     { value: "general", label: tr("General"), icon: <IconSmall name="outline-sliders" /> },
     { value: "backup", label: tr("Backup"), icon: <Icon name="download" /> },
+    { value: "storage", label: tr("Storage"), icon: <Icon name="storage" /> },
     { value: "sync", label: tr("Sync"), icon: <Icon name="sync" /> },
     { value: "api", label: tr("Connections and models"), icon: <Icon name="cloud-upload" /> },
     { value: "speech", label: tr("Speech"), icon: <Icon name="speaker" /> },
@@ -132,6 +134,7 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
     <>
       {v === "general" && <GeneralTab me={props.me} onLogout={props.onLogout} />}
       {v === "backup" && <BackupTab />}
+      {v === "storage" && <StorageTab />}
       {v === "sync" && <SyncTab isAdmin={props.me.role === "admin"} />}
       {v === "api" && <ApiTab initialModel={props.initialModel} />}
       {v === "speech" && <SpeechTab />}
@@ -183,6 +186,9 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
           </Tabs.Content>
           <Tabs.Content value="backup" className="no-scrollbar">
             <BackupTab />
+          </Tabs.Content>
+          <Tabs.Content value="storage" className="no-scrollbar">
+            <StorageTab />
           </Tabs.Content>
           <Tabs.Content value="sync" className="no-scrollbar">
             <SyncTab isAdmin={props.me.role === "admin"} />

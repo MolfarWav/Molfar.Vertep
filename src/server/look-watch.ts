@@ -14,7 +14,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { EventBus } from "./ws.ts";
-import { isBuildSource } from "../builder/server.js";
+import { buildReads, isBuildSource as isBuildSourceIn } from "../builder/server.js";
 
 interface LookWatch {
   appsDir: string;
@@ -28,6 +28,12 @@ export interface WatchOpts {
 }
 
 const active = new Map<string, LookWatch>();
+
+/** isBuildSource with the docs/tests the app's last build read counted in. */
+const isBuildSource = (appsDir: string, rel: string): boolean => {
+  const app = rel.split(/[\/]/)[0];
+  return isBuildSourceIn(rel, app ? buildReads(path.join(appsDir, app)) : undefined);
+};
 
 /** What a build source looked like when last seen: size (or "d" for a
  *  directory) and mtime; null when the path does not exist. */
@@ -54,7 +60,7 @@ const scanSources = (appsDir: string): Map<string, string> => {
     }
     for (const e of entries) {
       const r = rel ? `${rel}/${e.name}` : e.name;
-      if (rel && !isBuildSource(r)) continue;
+      if (rel && !isBuildSource(appsDir, r)) continue;
       const full = path.join(dir, e.name);
       if (rel) {
         const sig = sigOf(full);
@@ -138,7 +144,7 @@ export function ensureLookWatcher(username: string, appsDir: string, bus: EventB
     try {
       watcher = fs.watch(appsDir, { recursive: true }, (_event, filename) => {
         const rel = String(filename ?? "");
-        if (isBuildSource(rel)) changedBuild.add(rel);
+        if (isBuildSource(appsDir, rel)) changedBuild.add(rel);
         else if (isAppData(rel)) changed.add(rel); // data/** → look_changed, no rebuild
         else return;
         clearTimeout(timer);
@@ -180,7 +186,7 @@ export function ensureLookWatcher(username: string, appsDir: string, bus: EventB
     poll = setInterval(() => {
       const next = scan();
       const route = (rel: string) => {
-        if (isBuildSource(rel)) changedBuild.add(rel);
+        if (isBuildSource(appsDir, rel)) changedBuild.add(rel);
         else if (isAppData(rel)) changed.add(rel);
       };
       for (const [rel, mtime] of next) {
