@@ -1,9 +1,12 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-29.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-30.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
+
+## ROLEPLAY 4.76.1: PERSONA DUPLICATION FIX (2026-10-30; Roleplay PR #39 merged, main carries 4.76.1; engine unchanged)
+Report from a user: every persona opened on the Personas page stacked another Description block (#179, closed). Cause: 4.76.0's `MemorySection key={p.id}` beside `PersonaDescription key={p.id}` under one parent (duplicate React keys); fixed with distinct keys, test `test/rp-persona-view-keys.test.ts`. 4.76.1 also publishes #38 (character recollections of a closed scene, better Litopys recall), which was on main unreleased; the owner chose "everything together". Open: #180 (a preset imported on the laptop does not reach the other devices; the engine sync carries preset files in a scenario test, so the file's presence on the laptop's disk is the next check, waiting on the owner); #181 (Roleplay open after a change runs a full rebuild, 24 s on a fast desktop, 30-90 s in the owner's log; options A, B, C in the issue, owner picks).
 
 ## RELEASE 1.7.2 PREPARED (2026-10-29, on the owner's word "інше наче готове"; engine branch `claude/release-1.7.2` from main 04363eb, Roleplay PR #37 `claude/memory-99` carries 4.76.0; the tag v1.7.2 is the owner's)
 Ships #101 (token split chip, short descriptions, batched `edit_file`, batching reminder), the memory suggestions (#99), the foldable project chats and "+" , and Roleplay 4.76.0 = persona and saved-world memory across chats (#99 part 1; parts 2 and 3 not started, each needs design questions to the owner). Order: merge the engine PR, push the tag, update the engine, only then merge Roleplay PR #37 (merging publishes 4.76.0). Not released: #174, #175. pi stays pinned at 1.2.0; 1.4.0 (2026-10-21) is the newest on npm, not tried. After the release: add the number to the #101 closing comment. Spare worktrees to remove: `E:\Claude\engine-v171`.
