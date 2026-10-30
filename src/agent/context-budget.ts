@@ -13,6 +13,7 @@
  * modified here: trimming is recomputed from the full history on every call.
  */
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
+import { splitContracts } from "./app-contract.js";
 
 /** Plain ASCII (English, code, JSON) tokenizes at roughly 3.5–4 chars. */
 const ASCII_CHARS_PER_TOKEN = 3.5;
@@ -204,9 +205,13 @@ function slim(m: AgentMessage, hard: boolean): AgentMessage {
   const content = (m as { content?: unknown }).content;
   if (!Array.isArray(content)) return m;
   if (role === "toolResult") {
-    const blocks = (content as Block[]).map((b) =>
-      b.type === "text" ? { ...b, text: hard ? clip(b.text ?? "", 200) : clip(b.text ?? "", 1200) } : b.type === "image" ? { type: "text", text: "[image removed to save context]" } : b,
-    );
+    // an app contract delivered with a result (app-contract.ts) is not clipped: the run still needs it
+    const blocks = (content as Block[]).map((b) => {
+      if (b.type === "image") return { type: "text", text: "[image removed to save context]" };
+      if (b.type !== "text") return b;
+      const kept = splitContracts(b.text ?? "");
+      return { ...b, text: `${clip(kept.body, hard ? 200 : 1200)}${kept.blocks}` };
+    });
     return { ...m, content: blocks } as AgentMessage;
   }
   if (role === "assistant") {

@@ -259,13 +259,18 @@ export function setModelsShown(refs: string[], shown: boolean): Promise<{ ok: bo
   return api("PUT", "/v1/models/shown", { refs, shown })
 }
 
-export function getSettings(): Promise<{ model: string | null; reasoning: string | null; memorySuggest?: boolean }> {
+export function getSettings(): Promise<{ model: string | null; reasoning: string | null; memorySuggest?: boolean; appContractOnDemand?: boolean }> {
   return api("GET", "/v1/settings")
 }
 
 /** The switch for memory suggestions after a long task (on unless the user turned it off). */
 export function setMemorySuggest(on: boolean): Promise<{ ok: boolean }> {
   return api("PUT", "/v1/settings", { memorySuggest: on })
+}
+
+/** The switch that loads the active app's rules when the agent first touches the app (off unless the user turned it on). */
+export function setAppContractOnDemand(on: boolean): Promise<{ ok: boolean }> {
+  return api("PUT", "/v1/settings", { appContractOnDemand: on })
 }
 
 export function listMcp(): Promise<McpServer[]> {

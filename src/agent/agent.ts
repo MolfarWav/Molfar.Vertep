@@ -28,6 +28,7 @@ import { foldToolResults } from "./context-fold.js";
 import { nudgeBatching } from "./batch-nudge.js";
 import { memorySuggestEnabled, settingsFileOf, shouldSuggest, suggestMemory } from "./memory-suggest.js";
 import { addCallToSplit, newRunSplit, type RunSplit } from "./context-split.js";
+import { appContractOnDemandEnabled, appContractText, appsNamed, carriesContract, contractPointer, isAppId, isMutatingCall, CONTRACT_FILES } from "./app-contract.js";
 import { appCodeTouched, appTouched, buildMemoryTools, memoryPromptSection, projectContextFor } from "./memory.js";
 import {
   SKILL_UNLOCKS,
@@ -650,13 +651,29 @@ export class UserAgent {
     const trim = newTrimState();
     // a project chat has its project in the system prompt already
     const shownProjects = new Set<string>(project?.startsWith("app:") ? [project.slice(4)] : []);
+    // appContractOnDemand: the run each app's contract was last delivered in (the run's start time);
+    // the app of a project chat has its contract in the prompt already
+    const contractRun = new Map<string, number>();
+    const contractDue = (name: string, args: unknown): string[] =>
+      onDemand ? appsNamed(name, args).filter((id) => id !== onDemand.startApp && contractRun.get(id) !== runState.startedAt) : [];
+    const contractsFor = (ids: string[]): string[] =>
+      ids.flatMap((id) => {
+        const text = appContractText(paths.root, id);
+        if (text) contractRun.set(id, runState.startedAt);
+        return text ? [text] : [];
+      });
     // the system prompt and, beside it, what each part is (for the prompt inspector)
     const promptParts: SourcePart[] = [];
     const memorySection = memoryPromptSection(paths.root, { compact: small });
-    const projectSection = project ? projectPromptSection(paths.root, project) : "";
+    // switch appContractOnDemand (app-contract.ts), read here, once per agent: the
+    // active app's contract arrives with the first tool result that touches the app.
+    // Not in small-window mode, whose prompt already carries pointers only.
+    const startApp = project?.startsWith("app:") ? project.slice(4) : null;
+    const onDemand: OnDemandContract | undefined = !small && appContractOnDemandEnabled(paths.settings) ? { startApp } : undefined;
+    const projectSection = project ? projectPromptSection(paths.root, project, onDemand ? { appInstructionsInPrompt: true } : {}) : "";
     const planSection = opts.mode === "plan" ? PLAN_MODE_PROMPT : "";
     const systemPrompt =
-      (small ? compactPromptFor(username, isAdmin, paths, shellOn, availableGroups(tools), promptParts) : systemPromptFor(username, isAdmin, paths, opts.sandbox, promptParts, costChecks)) +
+      (small ? compactPromptFor(username, isAdmin, paths, shellOn, availableGroups(tools), promptParts) : systemPromptFor(username, isAdmin, paths, opts.sandbox, promptParts, costChecks, onDemand)) +
       memorySection + projectSection + planSection;
     addPart(promptParts, "memory", "Memory", memorySection);
     addPart(promptParts, "docs", "Project instructions", projectSection);
@@ -676,6 +693,8 @@ export class UserAgent {
           const { messages: lean } = foldToolResults(dialogue, runState.startedAt);
           const fit = fitContext(st.model, { systemPrompt: st.systemPrompt, messages: lean, tools: shown }, { force: budget.force, state: trim });
           if (fit.advanced) log.info(`[agent:${sessionId}] context trimmed ~${fit.before} → ~${fit.after} tokens (window ${st.model.contextWindow})`);
+          // a trim that cut a delivered contract out of the history: it comes again with the next touch
+          for (const [id, at] of contractRun) if (at === runState.startedAt && !carriesContract(fit.messages, id)) contractRun.delete(id);
           const sent = nudgeBatching(fit.messages, runState.startedAt);
           addCallToSplit(runState.split, { systemPrompt: st.systemPrompt, tools: shown, messages: sent }, runState.startedAt);
           const lead: SystemMessage = { role: "system", content: st.systemPrompt, ...(shown.length ? { toolsAdded: shown.map(toToolDeclaration) } : {}), timestamp: 0 };
@@ -712,6 +731,17 @@ export class UserAgent {
             return { block: true, reason: refused };
           }
         }
+        // appContractOnDemand: a first call that would change the app is held back once and answered
+        // with the app's rules; reads and the rest get them with their result (afterToolCall)
+        if (onDemand && isMutatingCall(ctx.toolCall.name, ctx.args)) {
+          const given = contractsFor(contractDue(ctx.toolCall.name, ctx.args));
+          if (given.length) {
+            return {
+              block: true,
+              reason: `Not run: the rules of the app this call touches had not reached you yet. They are below. Read them, then repeat the call so that it follows them.\n\n${given.join("\n\n")}`,
+            };
+          }
+        }
         try {
           if (!AUTO_CHECKPOINT_TOOLS.has(ctx.toolCall.name)) return undefined;
           const appId = appTouched(ctx.toolCall.name, ctx.args);
@@ -734,11 +764,14 @@ export class UserAgent {
           }
           const appId = appTouched(ctx.toolCall.name, ctx.args);
           if (small ? appId : appCodeTouched(ctx.toolCall.name, ctx.args)) unlocked.add("app");
-          if (!appId || shownProjects.has(appId)) return undefined;
-          shownProjects.add(appId);
-          const extra = projectContextFor(paths.root, appId);
-          if (!extra) return undefined;
-          return { content: [...(ctx.result.content ?? []), { type: "text", text: `\n\n${extra}` }] };
+          const extras = contractsFor(contractDue(ctx.toolCall.name, ctx.args));
+          if (appId && !shownProjects.has(appId)) {
+            shownProjects.add(appId);
+            const extra = projectContextFor(paths.root, appId);
+            if (extra) extras.push(extra);
+          }
+          if (!extras.length) return undefined;
+          return { content: [...(ctx.result.content ?? []), { type: "text", text: `\n\n${extras.join("\n\n")}` }] };
         } catch {
           return undefined;
         }
@@ -1623,7 +1656,7 @@ function readDoc(root: string, rel: string, cap: number): string | null {
  * app list and read on demand. It all sits in the system prompt, so it is
  * cached between turns rather than paid for on each one.
  */
-function instructionDocs(paths: UserPaths, parts?: SourcePart[]): string {
+function instructionDocs(paths: UserPaths, parts?: SourcePart[], onDemand?: OnDemandContract): string {
   const out: string[] = [];
   const add = (heading: string, rel: string, cap: number): void => {
     const body = readDoc(paths.root, rel, cap);
@@ -1634,11 +1667,31 @@ function instructionDocs(paths: UserPaths, parts?: SourcePart[]): string {
   };
   add("The workspace contract", "AGENTS.md", 10_000);
   const active = activeAppId(paths);
-  if (active && /^[a-z0-9][a-z0-9_-]*$/i.test(active)) {
+  if (onDemand) {
+    // switch appContractOnDemand ON (app-contract.ts): the contract of the app
+    // this chat belongs to rides the prompt from the start; the active app's
+    // is a pointer, and arrives with the first tool result that touches it
+    const start = onDemand.startApp && isAppId(onDemand.startApp) ? onDemand.startApp : null;
+    if (start) {
+      const whose = start === active ? "The active app's" : "This chat's app's";
+      add(`${whose} own contract: ${start}`, CONTRACT_FILES[0].rel(start), CONTRACT_FILES[0].cap);
+      add(`${whose} data shapes: ${start}`, CONTRACT_FILES[1].rel(start), CONTRACT_FILES[1].cap);
+    }
+    if (active && isAppId(active) && active !== start && fs.existsSync(path.join(paths.root, "apps", active, "manifest.json"))) {
+      const pointer = contractPointer(active);
+      out.push(pointer);
+      addPart(parts, "docs", `apps/${active}/AGENTS.md (on first touch)`, pointer);
+    }
+  } else if (active && /^[a-z0-9][a-z0-9_-]*$/i.test(active)) {
     add(`The active app's own contract: ${active}`, `apps/${active}/AGENTS.md`, 14_000);
     add(`The active app's data shapes: ${active}`, `apps/${active}/data/README.md`, 6_000);
   }
   return out.join("\n\n");
+}
+
+/** appContractOnDemand is ON for this agent; `startApp` is the app of the project this chat belongs to. */
+interface OnDemandContract {
+  startApp: string | null;
 }
 
 /** The user's notes, as a list: file name + first line. Contents stay on
@@ -1683,6 +1736,8 @@ export function instructionDocsStamp(paths: UserPaths): string {
   stamp("notes");
   const active = activeAppId(paths);
   parts.push(`active:${active ?? "-"}`);
+  // the switch is read when the agent is built, so a flip must rebuild it
+  if (appContractOnDemandEnabled(paths.settings)) parts.push("appContractOnDemand");
   if (active && /^[a-z0-9][a-z0-9_-]*$/i.test(active)) {
     stamp(`apps/${active}/AGENTS.md`);
     stamp(`apps/${active}/data/README.md`);
@@ -1738,7 +1793,7 @@ function addPart(parts: SourcePart[] | undefined, kind: SourceKind, label: strin
   if (parts && text.trim()) parts.push({ kind, label, text: text.trim() });
 }
 
-function systemPromptFor(username: string, isAdmin: boolean, paths: UserPaths, sandbox?: AgentToolOptions["sandbox"], parts?: SourcePart[], costChecks = true): string {
+function systemPromptFor(username: string, isAdmin: boolean, paths: UserPaths, sandbox?: AgentToolOptions["sandbox"], parts?: SourcePart[], costChecks = true, onDemand?: OnDemandContract): string {
   // labeled sections joined by blank lines: the text is what it always was
   const sections: [SourceKind, string, string][] = [
     ["rules", "Who Molfar is", `You are Molfar, the personal agent of "${username}" in Molfar Vertep, a local engine where EVERYTHING is files you can edit like code: apps, characters, chats, plugins, looks. You build and change them for the user, who may not be a programmer.`],
@@ -1792,7 +1847,7 @@ ${installedAppsSection(paths)}An app's own AGENTS.md and data/README.md name its
   // they disagree with the general prompt above, they are what was read most
   // recently — these files describe THIS install, the prompt above describes
   // Molfar Vertep in general.
-  const docs = instructionDocs(paths, parts);
+  const docs = instructionDocs(paths, parts, onDemand);
   if (docs) out += `\n\n${docs}`;
   return out + notesAndPersona(paths, username, parts);
 }

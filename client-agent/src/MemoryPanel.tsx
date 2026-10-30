@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils"
 import { ArrowCounterClockwise, ArrowLeft, ArrowsLeftRight, Brain, CaretRight, FileText, MagnifyingGlass, PencilSimple, Plus, Sparkle, Trash } from "@phosphor-icons/react"
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { getSettings, memoryApi, setMemorySuggest, type AgentMemory, type AgentSkill, type AgentSkillDetail, type MemoryHit, type ScopeMemory } from "./api"
+import { getSettings, memoryApi, setAppContractOnDemand, setMemorySuggest, type AgentMemory, type AgentSkill, type AgentSkillDetail, type MemoryHit, type ScopeMemory } from "./api"
 import { useAgent } from "./store"
 
 const NAME_RE = /^[a-z0-9][a-z0-9-]{0,47}$/
@@ -557,6 +557,38 @@ function SuggestSwitch({ onError }: { onError: (e: unknown) => void }): ReactNod
   )
 }
 
+/** The switch that moves the active app's rules from every call to the first touch of the app. Off by default: the owner compares real runs first. */
+function AppContractSwitch({ onError }: { onError: (e: unknown) => void }): ReactNode {
+  const [on, setOn] = useState<boolean | null>(null)
+  useEffect(() => {
+    getSettings().then((s) => setOn(s.appContractOnDemand === true), onError)
+  }, [onError])
+  if (on === null) return null
+  return (
+    <label className="hover:bg-muted/60 flex min-h-10 cursor-pointer items-start gap-3 rounded-lg px-3 py-2">
+      <input
+        type="checkbox"
+        className="mt-1 size-4 shrink-0"
+        checked={on}
+        onChange={(e) => {
+          const next = e.target.checked
+          setOn(next)
+          setAppContractOnDemand(next).catch((err: unknown) => {
+            setOn(!next)
+            onError(err)
+          })
+        }}
+      />
+      <span className="grid gap-0.5">
+        <span className="text-sm font-medium">Load the active app's rules when Molfar first touches the app (fewer tokens per call)</span>
+        <span className="text-muted-foreground text-xs">
+          Off: the app's AGENTS.md and data README are sent with every model call (about 6,000 tokens). On: they arrive once per task, with the first tool result that touches the app, and a first change to the app waits until they have been shown. Cheaper, but a model that skips them can break the app's rules, so watch the first runs.
+        </span>
+      </span>
+    </label>
+  )
+}
+
 export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<"memory" | "skills">("memory")
@@ -697,6 +729,7 @@ export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
                     A project appears here once it has memory. Ask the agent to remember something about an app, or it will offer to at the end of a task.
                   </p>
                   <SuggestSwitch onError={onError} />
+                  <AppContractSwitch onError={onError} />
                 </>
               )}
             </div>

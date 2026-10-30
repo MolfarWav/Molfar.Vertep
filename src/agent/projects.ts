@@ -408,7 +408,7 @@ const size = (n: number): string => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toF
 /** The system-prompt section for a chat that belongs to a project. Small
  *  on purpose: free models have small windows, so files are listed, not
  *  inlined, and instructions and memory are clipped. */
-export function projectPromptSection(root: string, id: string): string {
+export function projectPromptSection(root: string, id: string, opts: { appInstructionsInPrompt?: boolean } = {}): string {
   let l: ProjectLayout;
   try {
     l = projectLayout(root, id);
@@ -418,9 +418,14 @@ export function projectPromptSection(root: string, id: string): string {
   const d = readProject(root, l);
   const parts = [`# Project: ${d.title} (${l.id})\nThis chat belongs to this project. Its instructions, memory, skills and files are below; work in its folder (${l.base}/) unless the user points elsewhere. Save what is worth keeping about it with memory_propose scope "${l.scope}".`];
   // an app's AGENTS.md is already in the prompt when it is the active app;
-  // repeating it here is cheap next to what forgetting it costs
+  // repeating it here is cheap next to what forgetting it costs. With the
+  // switch appContractOnDemand ON, the app's contract (this very file plus
+  // data/README.md) always rides the prompt of its own project chat, so the
+  // copy is dropped, which is the bulk of this section.
   const instr = d.instructions.trim();
-  if (instr) {
+  if (instr && l.kind === "app" && opts.appInstructionsInPrompt) {
+    parts.push(`## Instructions (${l.instructions})\nIn the app's contract section of this prompt.`);
+  } else if (instr) {
     parts.push(
       `## Instructions (${l.instructions})\n${instr.length <= PROMPT_INSTRUCTIONS ? instr : `${instr.slice(0, PROMPT_INSTRUCTIONS)}\n\n[cut here — read ${l.instructions} for the rest]`}`,
     );
