@@ -130,8 +130,16 @@ A disabled control says why, in visible text next to it, not in a tooltip.
   (`client/src/styles/tokens.css`). Roleplay: `primary` / `cta`,
   `destructive`, `muted` (`src/globals.css`). No hex values: custom themes
   override single tokens and a hex ignores them.
-- **One primary action per view.** Everything else is a secondary or ghost
-  button. Two bright buttons side by side means nobody knows which to press.
+- **The important button stands out from the page** (user, 2026-10-31), like
+  "Buy" in a shop. A button that commits or starts something (Save, Create,
+  New chat, Send, Open chat, World turn) is filled in the `primary` / `cta`
+  colour and is the loudest thing in its block, on the page background and on
+  a picture alike. Everything else (Look at, Edit, Cancel, navigation) is an
+  outline or ghost button. Filled buttons stay few: one per decision, and two
+  side by side only when they are different jobs, never alternatives. Check
+  the filled button in dark and light and over a background image (contrast
+  of its label, a scrim behind it if needed). An outline "Save" next to
+  outline "Cancel" is a bug.
 - **Never colour alone.** Pair it with an icon or a word (colour-blind users,
   and themes where two tokens come out close).
 - **Borders and backgrounds group, outlines mark state.** A callout for an

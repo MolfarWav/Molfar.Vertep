@@ -51,6 +51,10 @@ of an icon button, which also gets `aria-label`). A disabled control says why, i
   themes change them. Accent for the main action, one per view; red for destructive or broken;
   amber for "look at this"; green for done.
 - Never colour alone: add an icon or a word.
+- The important button stands out from the page, like "Buy" in a shop: a button that commits or starts
+  something (Save, Create, New chat, Send, Open chat) is filled in the primary colour and is the loudest
+  thing in its block, also over a background image; Cancel, Edit, Look at and navigation are outline or
+  ghost. Few filled buttons: one per decision; two side by side only when they are different jobs.
 - Borders and a soft background group things; a callout for an important note gets a soft
   background, a border in the same hue and an icon.
 - Check the dark and the light theme.
