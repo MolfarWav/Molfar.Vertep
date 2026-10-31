@@ -54,7 +54,9 @@ of an icon button, which also gets `aria-label`). A disabled control says why, i
 - The important button stands out from the page, like "Buy" in a shop: a button that commits or starts
   something (Save, Create, New chat, Send, Open chat) is filled in the primary colour and is the loudest
   thing in its block, also over a background image; Cancel, Edit, Look at and navigation are outline or
-  ghost. Few filled buttons: one per decision; two side by side only when they are different jobs.
+  ghost. Weight is a ladder: primary solid and larger (one per screen); white on a picture; tonal (soft
+  fill, border and text in the primary hue) for important second jobs; outline for normal actions; ghost
+  for looking. Four identical filled buttons are equals, so none is the main one.
 - Borders and a soft background group things; a callout for an important note gets a soft
   background, a border in the same hue and an icon.
 - Check the dark and the light theme.

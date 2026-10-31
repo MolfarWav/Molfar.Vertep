@@ -135,11 +135,17 @@ A disabled control says why, in visible text next to it, not in a tooltip.
   New chat, Send, Open chat, World turn) is filled in the `primary` / `cta`
   colour and is the loudest thing in its block, on the page background and on
   a picture alike. Everything else (Look at, Edit, Cancel, navigation) is an
-  outline or ghost button. Filled buttons stay few: one per decision, and two
-  side by side only when they are different jobs, never alternatives. Check
-  the filled button in dark and light and over a background image (contrast
-  of its label, a scrim behind it if needed). An outline "Save" next to
-  outline "Cancel" is a bug.
+  outline or ghost button. **Weight is a ladder, not one colour** (user,
+  2026-10-31: four identical green buttons are equals, so none is the main one):
+  1. primary: solid fill, larger (44 px), one per screen (the main job);
+  2. on a picture: a white button with dark text, so it differs from the
+     primary and reads over any image;
+  3. tonal: soft fill + border + text in the primary hue, for the important
+     second jobs (New chat, Save);
+  4. outline: normal actions; 5. ghost (text and icon): looking, optional.
+  Two buttons of the same weight side by side must be the same importance.
+  Check them in dark and light and over a background image (label contrast, a
+  scrim if needed). An outline "Save" next to outline "Cancel" is a bug.
 - **Never colour alone.** Pair it with an icon or a word (colour-blind users,
   and themes where two tokens come out close).
 - **Borders and backgrounds group, outlines mark state.** A callout for an
