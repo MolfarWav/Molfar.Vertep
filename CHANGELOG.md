@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.8.1 (2026-10-31)
+
+- A reply a provider cut short now says why. A stream that ends with `finish_reason: "error"` used to show only "Provider finish_reason: error" (reported with Argon through Nous); the error now carries the host's own reason (OpenRouter's `native_finish_reason`, an error on the choice, or the chunk's other fields) and the whole chunk goes to the engine log. Not covered: the built-in agent's replies, and a retry of a reply cut mid-way (`upstreamStreamError` in `src/models.ts`).
+- Roleplay 4.78.1 comes with this release as an app update: one character is no longer listed twice on the Dashboard and in the Litopys when the card's Soul is keyed by the first name, and a button on the character card takes a character off the Dashboard.
+
 ## 1.8.0 (2026-10-30)
 
 - Roleplay 4.78.0 comes with this release as an app update: the World DM is on by default and builds places, things and what people wear and carry from the story, with a short "World · here" note on every reply; a World book, a Places tab and backgrounds bound to places; the side Dashboard is wider with coloured tabs, change counters and an animated weather tile; the open Dashboard gets Here, Outfit and things, a World button and full screen. The engine only changes its version (#176, follow-up #185).
