@@ -51,6 +51,32 @@ async function queued<T>(file: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/** A host that cuts a stream short ends it with `finish_reason: "error"` and says why somewhere
+ *  else in the chunk: OpenRouter in `native_finish_reason` (Gemini: SAFETY, PROHIBITED_CONTENT,
+ *  OTHER ...), others in an `error` object. The library keeps only the first word, so the person
+ *  sees a bare "Provider finish_reason: error". Hand `watch` to the stream's
+ *  `onProviderStreamEvent`; `detail()` is what the host said. A host that says it somewhere
+ *  unknown shows the chunk's other fields, and the engine log keeps the whole chunk. */
+export function upstreamStreamError(): { watch: (chunk: unknown) => void; detail: () => string } {
+  let found = "";
+  return {
+    watch(chunk) {
+      const c = chunk as { choices?: Record<string, unknown>[] } & Record<string, unknown>;
+      const choice = c?.choices?.[0];
+      if (found || !choice || choice.finish_reason !== "error") return;
+      const err = (v: unknown) => (typeof v === "string" ? v : typeof (v as { message?: unknown } | null)?.message === "string" ? (v as { message: string }).message : "");
+      const said = [typeof choice.native_finish_reason === "string" && choice.native_finish_reason && `the host's reason: ${choice.native_finish_reason}`, err(choice.error), err(c.error)].filter(Boolean).join(", ");
+      // anything else the host attached (not the usual chunk fields), so a new host is not a blank
+      const { delta: _d, index: _i, finish_reason: _f, logprobs: _l, native_finish_reason: _n, error: _e, ...extra } = choice;
+      const { choices: _c, id: _id, object: _o, created: _cr, model: _m, usage: _u, error: _ce, system_fingerprint: _sf, ...top } = c;
+      const rest = JSON.stringify({ ...top, ...extra });
+      found = said || (rest !== "{}" ? `the host also sent ${rest.slice(0, 300)}` : "");
+      log.warn(`[models] stream ended with finish_reason "error": ${JSON.stringify(chunk).slice(0, 1000)}`);
+    },
+    detail: () => (found ? ` (${found})` : ""),
+  };
+}
+
 /** A model error a person can act on. A refused OAuth refresh arrives as a
  *  page of request details and stack; what it means is "sign in again". */
 export function explainModelError(message: string | undefined): string {
@@ -1451,7 +1477,9 @@ export class UserModelService {
       };
       roundThinkStart = 0;
       roundThinkEnd = 0;
+      const upstream = upstreamStreamError();
       const stream = this.models.streamSimple(model, context, {
+        onProviderStreamEvent: upstream.watch,
         ...(reasoningLevel && reasoningLevel !== "off" ? { reasoning: reasoningLevel } : {}),
         ...(req.thinkingBudget && req.thinkingBudget > 0 && reasoningLevel && reasoningLevel !== "off"
           ? ({ thinkingBudgets: { [BUDGET_KEY[reasoningLevel ?? ""] ?? "medium"]: req.thinkingBudget } } as never)
@@ -1469,7 +1497,7 @@ export class UserModelService {
       });
       const final = await consumeStream(stream);
       if (final.stopReason === "error") {
-        throw new Error(`model error: ${explainModelError(final.errorMessage)}`);
+        throw new Error(`model error: ${explainModelError(final.errorMessage)}${upstream.detail()}`);
       }
 
       const toolCalls = final.content.filter(
@@ -1525,7 +1553,9 @@ export class UserModelService {
     }
     // exhausted rounds: do one final call WITHOUT tools to force a text answer
     const context: Context = { systemPrompt, messages };
+    const upstream = upstreamStreamError();
     const stream = this.models.streamSimple(model, context, {
+      onProviderStreamEvent: upstream.watch,
       ...(req.signal ? ({ signal: req.signal } as never) : {}),
       sessionId,
       ...(sessionHeaders || req.modelHeaders ? { headers: { ...req.modelHeaders, ...sessionHeaders } } : {}),
@@ -1534,7 +1564,7 @@ export class UserModelService {
     roundThinkEnd = 0;
     const final = await consumeStream(stream);
     if (final.stopReason === "error") {
-      throw new Error(`model error: ${explainModelError(final.errorMessage)}`);
+      throw new Error(`model error: ${explainModelError(final.errorMessage)}${upstream.detail()}`);
     }
     const exhausted = this.resultFrom(final, model, toolTrace, req, thinkMs, textBeforeTools);
     if (parts.some((p) => p.type === "tool") || final.stopReason === "aborted") {
