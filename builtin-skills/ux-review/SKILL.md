@@ -16,8 +16,23 @@ desktop and on a phone. Working code that nobody finds or understands is not don
 3. **Use.** How many taps from where the user already is? Does the default work, so most users never
    touch it?
 
+## The bar
+Judge every screen by four words: practical (the common task takes the fewest steps), native (Esc
+closes, back goes back, nothing hover-only), designed (one type scale, clear hierarchy, room to
+breathe, looks like one product) and client-first (words follow what the person wants to do, not how
+the data is stored). If a screen is not good to look at or not clear at a glance, say so and propose a
+better one with two or three variants before changing it; do not restyle silently.
+Count the steps from where the user starts. There is no magic "three clicks": people leave when a
+step gives no sign of where it leads, so every step shows what is behind it. Before building, write
+down where it lives, which existing components you reuse (search for them) and the states (empty,
+loading, error, phone); compare the result with that note before you say done.
+
 ## Fewer fields, grouped
 - Every option has a default that works. Rare options go under a folded "More" / "Advanced".
+- Fold last, not first. First cut words, group under real headings and order by use. Never fold two
+  or three short rows. A fold looks like one: a full-width header at least 40 px high, a visible
+  caret, a hover state, and when closed a one-line summary of what is inside. No folds inside folds.
+  Use the app's existing fold component, never a new local one.
 - Group related controls in one block with a heading and a border. More than about seven controls
   in a block: split it or fold part of it.
 - On/off: a switch. Two or three choices: show them all (radio row, segmented buttons). Four or
@@ -39,6 +54,14 @@ of an icon button, which also gets `aria-label`). A disabled control says why, i
 - Borders and a soft background group things; a callout for an important note gets a soft
   background, a border in the same hue and an icon.
 - Check the dark and the light theme.
+
+## Looks right
+- Text is never below 12 px; use the app's sizes, not one-off ones. At most three levels on a screen
+  (title, section heading, row), told apart by size, weight and space.
+- Spacing in steps of 4 px; the same gap between things of the same level.
+- What can be pressed looks pressable. A control that looks like a plain label is a bug.
+- Squint test: look at the screenshot small; if you cannot see the groups, the buttons and the main
+  action, redo the hierarchy.
 
 ## Feedback and recovery
 - Every action shows a result: loading, done, or an error saying what to do next.
