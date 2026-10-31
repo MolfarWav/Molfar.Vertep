@@ -59,9 +59,11 @@ A difference is fixed or reported, never shipped silently.
 Then the three questions:
 
 1. **Find.** Where will the user look for this? Put a control next to the
-   thing it changes (decided 2026-10-11: app settings live in the apps, not in
-   the shell's Settings). A setting that affects one chat sits in that chat's
-   panel; one that affects one card sits in the card editor.
+   thing it changes. A setting that affects one chat sits in that chat's
+   panel; one that affects one card sits in the card editor. Settings of a
+   whole app are reachable from the shell's Settings (Apps section, user
+   2026-10-31; before that, 2026-10-11, they lived only inside the apps): an
+   app has no Settings item of its own in its navigation rail.
 2. **Understand.** Can a user who never read the docs tell what it does from
    the label and one line under it? If not, rename it or add the hint
    (section 3) before adding more UI.
