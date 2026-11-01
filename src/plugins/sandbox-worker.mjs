@@ -123,10 +123,11 @@ if (typeof fn === "function") { out = fn(env.ctx, env.host); }`);
 }
 
 port.on("message", async (msg) => {
-  const { id, source, hook, ctx, storeSnapshot = {}, llmResults = {}, netResults = {}, netAllowed = false, maxStoreBytes = 1024 * 1024, storeAllowed = true, llmAllowed = true, fsAllowed = false, fsRoot = null, zipAllowed = false, zipBase64 = null, siblingToolDefs = null, embedResults = {}, embedInfo = {}, executionTimeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = msg;
+  const { id, source, hook, ctx, storeSnapshot = {}, llmResults = {}, netResults = {}, netAllowed = false, scriptAllowed = false, scriptResults = {}, maxStoreBytes = 1024 * 1024, storeAllowed = true, llmAllowed = true, fsAllowed = false, fsRoot = null, zipAllowed = false, zipBase64 = null, siblingToolDefs = null, embedResults = {}, embedInfo = {}, executionTimeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = msg;
   const logs = [];
   const llmRequests = [];
   const netRequests = [];
+  const scriptRequests = [];
   const embedRequests = [];
   const store = { ...storeSnapshot };
   let storeBytes = JSON.stringify(store).length;
@@ -192,6 +193,22 @@ port.on("message", async (msg) => {
             results: {},
           },
     };
+    // two-phase like net: request(key, { code, input, seed }) on pass A; read results[key] =
+    // { ok: true, value } | { ok: false, error } on the next pass. The engine runs the code on a
+    // sandbox of its own (src/plugins/script-box.ts); nothing runs in this one.
+    host.script = scriptAllowed
+      ? {
+          request: (key, req) => {
+            if (typeof key !== "string" || !req || typeof req.code !== "string") throw new Error("script.request(key, {code, input, seed?})");
+            if (scriptRequests.length >= 16) throw new Error("too many script requests in one pass");
+            scriptRequests.push({ key, req });
+          },
+          results: scriptResults,
+        }
+      : {
+          request: () => { throw new Error("permission \"script\" not granted (add \"script\" to manifest permissions)"); },
+          results: {},
+        };
     // NOTE: we do NOT pass fetchAdapter — but the package may still inject a
     // fetch symbol; neutralize it explicitly inside the guest. It rides as its
     // own module so the harness can import it BEFORE plugin.js: statements
@@ -442,7 +459,7 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
       },
     );
     if (!result.ok) {
-      reply({ id, ok: false, error: result.error.message, logs, storeWrites: store, llmRequests, netRequests, embedRequests });
+      reply({ id, ok: false, error: result.error.message, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
       return;
     }
     // The guest reports its own failures in the envelope rather than rejecting:
@@ -453,19 +470,19 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
     try {
       envelope = JSON.parse(result.data ?? "null");
     } catch {
-      reply({ id, ok: false, error: "hook returned non-serializable result", logs, storeWrites: store, llmRequests, netRequests, embedRequests });
+      reply({ id, ok: false, error: "hook returned non-serializable result", logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
       return;
     }
     if (!envelope || envelope.ok !== true) {
       const error = envelope && typeof envelope.error === "string" ? envelope.error : "hook returned non-serializable result";
-      reply({ id, ok: false, error, logs, storeWrites: store, llmRequests, netRequests, embedRequests });
+      reply({ id, ok: false, error, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
       return;
     }
-    reply({ id, ok: true, out: envelope.value ?? null, storeWrites: store, llmRequests, netRequests, embedRequests, logs });
+    reply({ id, ok: true, out: envelope.value ?? null, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests, logs });
   } catch (e) {
     // wasm abort / load failure — host will terminate+respawn this worker
     try {
-      reply({ id, ok: false, error: `sandbox aborted: ${String(e?.message ?? e).slice(0, 200)}`, logs, storeWrites: store, llmRequests, netRequests, embedRequests });
+      reply({ id, ok: false, error: `sandbox aborted: ${String(e?.message ?? e).slice(0, 200)}`, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
     } catch {
       /* port dead — host timeout handles it */
     }

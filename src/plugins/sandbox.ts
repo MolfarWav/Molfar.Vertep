@@ -48,6 +48,14 @@ export interface SandboxRequest {
    *  a worker runs one call at a time. */
   executionTimeoutMs?: number;
   memoryLimitBytes?: number;
+  /** Wall clock for the whole call, boot and round trip included, before the worker is terminated.
+   *  Default: the execution limit plus CALL_OVERHEAD_MS. A call whose own limit can fail to fire
+   *  (a memory bomb ignores the interrupt) sets it close to the limit. */
+  hardTimeoutMs?: number;
+  /** The plugin may ask for scripts to be run (permission "script"); `scriptResults` are the answers to the
+   *  last pass's requests, by key. */
+  scriptAllowed?: boolean;
+  scriptResults?: Record<string, unknown>;
 }
 
 export interface SandboxResponse {
@@ -59,6 +67,7 @@ export interface SandboxResponse {
   storeWrites?: Record<string, unknown>;
   llmRequests?: { key: string; req: unknown }[];
   netRequests?: { key: string; req: unknown }[];
+  scriptRequests?: { key: string; req: unknown }[];
   embedRequests?: { key: string; req: { texts?: unknown; model?: unknown } }[];
   logs?: string[];
   /** The worker's shared wasm heap after this call (see HEAP_RETIRE_BYTES). */
@@ -105,7 +114,7 @@ class SandboxWorkerHandle {
     this.pending.clear();
   }
 
-  call(req: SandboxRequest, timeoutMs = req.executionTimeoutMs ? req.executionTimeoutMs + CALL_OVERHEAD_MS : CALL_TIMEOUT_MS): Promise<SandboxResponse> {
+  call(req: SandboxRequest, timeoutMs = req.hardTimeoutMs ?? (req.executionTimeoutMs ? req.executionTimeoutMs + CALL_OVERHEAD_MS : CALL_TIMEOUT_MS)): Promise<SandboxResponse> {
     const id = this.nextId++;
     return new Promise<SandboxResponse>((resolve) => {
       let settled = false;

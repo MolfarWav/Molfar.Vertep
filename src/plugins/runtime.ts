@@ -33,6 +33,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { PluginSandbox, sandbox, type SandboxResponse } from "./sandbox.js";
+import { runScripts } from "./script-box.js";
 import type { PluginStoreService } from "./store.js";
 import type { UserModelService, GenerateRequest, GenerateResult } from "../models.js";
 import { log } from "../logger.js";
@@ -47,7 +48,7 @@ import { pacerFor, readLimits, runLimited, type PluginLimits } from "./llm-pace.
 export const PLUGIN_HOOKS = ["onTick", "uiPanel", "onAppUpdate", "appTools", "llmRequest"] as const;
 export type PluginHook = (typeof PLUGIN_HOOKS)[number];
 
-export type PluginPermissionCap = "llm" | "store" | "schedule" | "network" | "tools" | "routes" | "fs" | "zip" | "hooks";
+export type PluginPermissionCap = "llm" | "store" | "schedule" | "network" | "tools" | "routes" | "fs" | "zip" | "hooks" | "script";
 
 function hasCapAny(plugin: LoadedPlugin, cap: PluginPermissionCap, deps: PluginRuntimeDeps): boolean {
   const alts: Record<string, string[]> = {
@@ -240,6 +241,8 @@ export async function runPluginTool(
       fsRoot: plugin.fsRoot ?? null,
       netAllowed: caps.net,
       netResults: results.net,
+      scriptAllowed: caps.script,
+      scriptResults: results.script,
     });
     printLogs(plugin, r, deps);
     applyStoreWrites(plugin, r, deps);
@@ -655,28 +658,32 @@ function llmSourceOf(plugin: LoadedPlugin): string {
 interface PassCaps {
   llm: boolean;
   net: boolean;
+  /** May ask for small scripts to be run on a sandbox of their own (src/plugins/script-box.ts). */
+  script: boolean;
 }
 
 function passCaps(plugin: LoadedPlugin, deps: PluginRuntimeDeps): PassCaps {
-  return { llm: hasCapAny(plugin, "llm", deps), net: hasCapAny(plugin, "network", deps) };
+  return { llm: hasCapAny(plugin, "llm", deps), net: hasCapAny(plugin, "network", deps), script: hasCapAny(plugin, "script", deps) };
 }
 
 /** Answers handed to the next pass, by the key the plugin asked under. */
 interface PassResults {
   llm: Record<string, unknown>;
   net: Record<string, unknown>;
+  script: Record<string, unknown>;
   embed: Record<string, unknown>;
   /** Which model (and connection) made each embed result's vectors. */
   embedInfo: Record<string, { model: string | null; via: string | null }>;
 }
 
-const noResults = (): PassResults => ({ llm: {}, net: {}, embed: {}, embedInfo: {} });
+const noResults = (): PassResults => ({ llm: {}, net: {}, script: {}, embed: {}, embedInfo: {} });
 
 /** Did this pass ask for anything it is allowed to get? */
 function passWants(r: SandboxResponse, caps: PassCaps): boolean {
   return (
     (caps.llm && ((r.llmRequests?.length ?? 0) > 0 || (r.embedRequests?.length ?? 0) > 0)) ||
-    (caps.net && (r.netRequests?.length ?? 0) > 0)
+    (caps.net && (r.netRequests?.length ?? 0) > 0) ||
+    (caps.script && (r.scriptRequests?.length ?? 0) > 0)
   );
 }
 
@@ -754,6 +761,9 @@ async function runPassRequests(
     for (const { key, req } of r.netRequests ?? []) {
       results.net[key] = await executeNetRequest(plugin, req as { url?: unknown });
     }
+  }
+  if (caps.script && r.scriptRequests?.length) {
+    Object.assign(results.script, await runScripts(r.scriptRequests, `${plugin.id} script`));
   }
   if (!caps.llm) return results;
   const paced = readLimits(plugin.manifest.limits).concurrency;
@@ -871,6 +881,8 @@ export async function runPluginRoute(
         llmResults: results.llm,
         netAllowed: caps.net,
         netResults: results.net,
+        scriptAllowed: caps.script,
+        scriptResults: results.script,
         embedResults: results.embed,
         embedInfo: results.embedInfo,
         ...(siblingToolDefs ? { siblingToolDefs } : {}),
@@ -934,6 +946,7 @@ export type PluginPermission =
   | "store"
   | "schedule"
   | "network"
+  | "script"
   | `fs:${string}`
   | "fs"
   | "register:tools"
@@ -1040,6 +1053,8 @@ async function hookPasses(
       embedInfo: results.embedInfo,
       netAllowed: caps.net,
       netResults: results.net,
+      scriptAllowed: caps.script,
+      scriptResults: results.script,
       fsAllowed: hasCapAny(plugin, "fs", deps) && !!plugin.fsRoot,
       fsRoot: plugin.fsRoot ?? null,
       ...(limits ?? {}),
