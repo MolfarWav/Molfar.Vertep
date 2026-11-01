@@ -5,8 +5,8 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
-## RELEASE 1.10.0 PREPARED (2026-11-01, on the owner's word "зливай ... якщо і рушія, робимо реліз"; carries Roleplay 4.81.0)
-Engine PR #199 (mailbox) was merged by the owner; this commit bumps to 1.10.0 with notes `.fork/release-notes/1.10.0.md`. Order: merge this release PR, push the tag v1.10.0, update the engine, then merge the Roleplay PR (manifest 4.81.0 = letters, the Characters menu fix, agents reading Dashboard fields). After: close #72 and #175 with a "How it was solved" comment. #198 holds the follow-ups.
+## RELEASE 1.9.2 PREPARED (2026-11-01, on the owner's word "зливай ... якщо і рушія, робимо реліз"; carries Roleplay 4.81.0)
+Engine PR #199 (mailbox) was merged by the owner; this commit bumps to 1.9.2 with notes `.fork/release-notes/1.9.2.md`. Order: merge this release PR, push the tag v1.9.2, update the engine, then merge the Roleplay PR (manifest 4.81.0 = letters, the Characters menu fix, agents reading Dashboard fields). After: close #72 and #175 with a "How it was solved" comment. #198 holds the follow-ups.
 
 ## INBOX WORK: #72 LETTERS FROM CARDS + #175 MOLFAR'S MAILBOX (2026-11-01; engine branch `claude/inbox-issues-175-72-4dbebf` + Roleplay branch of the same name from fork main `fd1419e`; NOT merged, NOT released)
 Plan and decisions: `.fork/handoff/inbox-letters/PLAN.md`. Owner's picks: #72 first, all three triggers (idle chat, never-played card, played card with no Soul), 14-day threshold, Litopys' model, a letter writes nothing into a chat, letters have their own colour (emerald, never counted as a failure); #175 first slice = memory proposals (skills later).
