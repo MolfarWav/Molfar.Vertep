@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.9.3 (2026-11-01)
+
+- Roleplay 4.82.0 comes with this release as an app update: trying an agent on a real chat (#137), two ready map agents and a `grid` widget (#140), agent sets with "used by N chats", the last set per character and one switch for notes (#138), a permissions dialog with model roles, plain error texts and drag reorder in the Forge (#139).
+- Dev: skill `browser-check` has a Forge check run on the real Roleplay app with the fake model (#141); the real-model checklist stays manual (`.fork/handoff/forge-checks/MANUAL.md`).
+- Molfar: a new tool `agent_dry_run`. It runs a Roleplay agent (a draft or an installed one) over a real chat and reads back what happened: what the chat gave the agent (an empty Dashboard field is marked), the question each model card would ask, what every wire carried, and what the agent would write and show. Nothing is written to the chat. By default no model is called: cards get an example answer or one Molfar passes in, to see how the agent copes with a bad one. A run on the chat's model costs tokens, so the user confirms it first (no question for a local model or with cost checks off). Needs Roleplay with the trial route (#137).
+
 ## 1.9.2 (2026-11-01)
 
 - Molfar's mailbox (#175). Memory suggestions Molfar cannot settle with you right now wait in `memory/mailbox/` instead of blocking the end of a run or being lost: the end-of-task suggestions, a card nobody answered, a run with nobody to ask, and the new "Later" answer on the live card. Memory and skills has a Mailbox tab and a count on its button; Save is the same write as a card's (a commit, text editable first), Skip is remembered so the same entry is not suggested again. Routes `GET /v1/agent/mailbox`, `POST /v1/agent/mailbox/accept` and `/skip`. Skills and other kinds follow (#198).

@@ -56,6 +56,7 @@ const GROUP_OF: Record<string, ToolGroup> = {
   bug_solution: "app",
   plugin_log: "app",
   app_request: "app",
+  agent_dry_run: "app",
   model_try: "app",
   web_fetch: "web",
   image_generate: "image",
@@ -102,6 +103,7 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
   app_console: "Read console output captured from an open app page (newest last).",
   plugin_log: "Read plugin (backend) output and failures, newest last. app/plugin/errors narrow it.",
   app_request: "Call an app's own plugin route as the user: id, method, path, body. Writes are real and committed.",
+  agent_dry_run: "Try a Roleplay agent (draft or installed) on a real chat, nothing written: chat, draft|agent, replies, inputs, live (asks the model, the user confirms).",
   model_try: "One paid test generation on a model (the user confirms): messages, system, model, maxTokens.",
   web_fetch: "Read a public web page as plain text (internet must be on in Settings).",
   image_generate: "Draw a picture, get its /v1/assets/<id> URL for a card avatar or background. list: true lists models; prompt in English; paid models ask the user.",
@@ -120,6 +122,8 @@ const COMPACT_DESCRIPTIONS: Record<string, string> = {
  *  except where the long text carries a fact the model acts on: those get a slightly longer one here.
  *  Parameters are never touched. */
 const FULL_DESCRIPTIONS: Record<string, string> = {
+  agent_dry_run:
+    "Run a Roleplay agent (draft in apps/roleplay/data/agents/drafts, or installed) over a REAL chat and read what happened: what the chat gave its Input (EMPTY = nothing there, e.g. an unfilled Dashboard field), each model question, every wire, what it would write and show. The chat is only read. No model is called: cards get an example answer or the one in `replies` (card id -> text; try a bad one). live: true asks the chat's model, costs tokens, the user confirms; never reach it through app_request. chat: a chat id (app_request GET /chats).",
   json_get:
     'Read fields of a JSON file (card, lorebook) without loading it all. pointer "/data/description" or pointers [...]; "" = the shape (keys, types, sizes). A value too big to show comes back as its shape or head.',
   json_set:

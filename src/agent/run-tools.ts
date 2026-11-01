@@ -188,6 +188,138 @@ function appRequestTool(dispatch: NonNullable<RunToolOptions["appRequest"]>, pla
   };
 }
 
+// ---------- agent_dry_run ----------
+
+type Json = Record<string, unknown>;
+const jsonOf = (v: unknown): Json => (v && typeof v === "object" && !Array.isArray(v) ? (v as Json) : {});
+const listOf = (v: unknown): Json[] => (Array.isArray(v) ? v.map(jsonOf) : []);
+const brief = (v: unknown, n = 80): string => {
+  const t = typeof v === "string" ? v : JSON.stringify(v);
+  const one = (t ?? "").replace(/\s+/g, " ");
+  return one.length > n ? `${one.slice(0, n - 1)}…` : one;
+};
+
+/** One queued write in a short line: `mana -10`, `mood = "tense"`, `rooms + {...}`. */
+const writeLine = (w: Json): string => {
+  const f = String(w.field ?? "");
+  if (w.op === "own.add") return `${f} ${Number(w.by) < 0 ? "-" : "+"}${Math.abs(Number(w.by))}`;
+  if (w.op === "list.add") return `${f} + ${brief(w.item, 60)}`;
+  if (w.op === "list.update") return `${f} ~ ${brief(w.id, 60)}`;
+  if (w.op === "list.remove") return `${f} - ${brief(w.id, 60)}`;
+  return `${f} = ${brief(w.value, 60)}`;
+};
+
+/**
+ * The route's answer (POST /agents/dry of the Roleplay app) as the text Molfar reads: what the chat gave the agent,
+ * what the model was asked and said, what every wire carried and what the agent would write and show.
+ */
+export function formatDryRun(r: Json): string {
+  const src = jsonOf(r.source);
+  const chat = jsonOf(r.chat);
+  const lines: string[] = [];
+  lines.push(
+    `Dry run of ${src.kind} "${src.id}" on chat "${chat.title}" (${chat.messages} messages). ${r.live ? "The chat's model answered the questions." : "No model was called: the answers are examples or the ones you gave."} Nothing was written.`,
+  );
+  lines.push(r.status === "done" ? `Result: done, ${r.calls} model ${Number(r.calls) === 1 ? "call" : "calls"}.` : `Result: FAILED at card "${r.node ?? "?"}": ${r.reason ?? "no reason given"}`);
+  const usage = jsonOf(r.usage);
+  if (r.live && usage.input !== undefined) lines.push(`Cost: ${usage.input} tokens in, ${usage.output} out${usage.priced ? `, $${Number(usage.cost).toFixed(4)}` : ""}.`);
+  const inputs = listOf(r.inputs);
+  if (inputs.length) {
+    lines.push("", "What the agent received:");
+    for (const i of inputs) lines.push(`- ${i.id} (${i.source}${i.field ? ` ${i.field}` : ""}): ${i.empty ? "EMPTY, the chat has nothing for it" : `${i.tokens} tokens: ${brief(i.text, 140)}`}`);
+  }
+  const asked = listOf(r.asked);
+  if (asked.length) {
+    lines.push("", "Questions to the model:");
+    for (const a of asked) {
+      lines.push(`- card ${a.node}, ${a.example ? "example answer" : a.error ? `ERROR ${a.error}` : `answer${a.model ? ` of ${a.model}` : ""}`}: ${brief(a.reply, 200)}`);
+      lines.push(`  question (${estimateTextTokens(String(a.prompt ?? ""))} tokens): ${brief(a.prompt, 240)}`);
+    }
+  }
+  const wires = jsonOf(r.wires);
+  const keys = Object.keys(wires);
+  if (keys.length) {
+    lines.push("", "Wires (card:port = value; skip = the path did not fire, wait = waits for a model answer, missing = no data):");
+    for (const k of keys) {
+      const w = jsonOf(wires[k]);
+      lines.push(`- ${k} = ${w.state === "value" ? brief(w.value, 100) : w.state}`);
+    }
+  }
+  const own = listOf(r.ownWrites);
+  const dash = listOf(r.dashWrites);
+  const refused = listOf(r.refused);
+  lines.push("", `Writes to the agent's memory: ${own.length ? own.map(writeLine).join("; ") : "none"}`);
+  if (dash.length) lines.push(`Writes to the Dashboard: ${dash.map(writeLine).join("; ")}`);
+  for (const x of refused) lines.push(`Refused: ${writeLine(jsonOf(x.write))} (${x.why})`);
+  const outs = listOf(r.outputs);
+  lines.push(`Shows or sends: ${outs.length ? outs.map((o) => `${o.kind}${o.text ? ` "${brief(o.text, 100)}"` : Array.isArray(o.choices) ? ` [${(o.choices as string[]).join(" / ")}]` : ""}`).join("; ") : "nothing"}`);
+  const after = jsonOf(r.ownAfter);
+  if (Object.keys(after).length) lines.push(`Memory after: ${brief(after, 300)}`);
+  return lines.join("\n");
+}
+
+function agentDryRunTool(
+  dispatch: NonNullable<RunToolOptions["appRequest"]>,
+  plan: boolean,
+  ask: RunToolOptions["ask"],
+  tryModel: RunToolOptions["tryModel"],
+): AgentTool {
+  return {
+    name: "agent_dry_run",
+    label: "Try a Roleplay agent on a chat",
+    description:
+      "Run a Roleplay agent (a draft in apps/roleplay/data/agents/drafts, or an installed one) over a REAL chat and read what happened: what the chat gave its Input card (EMPTY = nothing there, e.g. an unfilled Dashboard field), each question to the model, what every wire carried, what the agent would write and show. The chat is only read; nothing is written. No model is called: model cards get an example answer, or the one in `replies` (card id -> text; try a bad one). live: true asks the chat's model for real, costs tokens, and the user confirms first. chat: a chat id (app_request GET /chats lists them).",
+    parameters: Type.Object({
+      chat: Type.String({ description: "Chat id" }),
+      draft: Type.Optional(Type.String({ description: "Draft name, as the file without .vertep-agent.json" })),
+      agent: Type.Optional(Type.String({ description: "Installed agent id, instead of a draft" })),
+      replies: Type.Optional(Type.Record(Type.String(), Type.String(), { description: "Model answers by card id" })),
+      inputs: Type.Optional(Type.Record(Type.String(), Type.String(), { description: "Input values by give id, instead of the chat's" })),
+      live: Type.Optional(Type.Boolean({ description: "Ask the chat's model (costs tokens)" })),
+    }),
+    async execute(_id, params) {
+      const p = params as { chat: string; draft?: string; agent?: string; replies?: Record<string, string>; inputs?: Record<string, string>; live?: boolean };
+      const app = "roleplay";
+      if (!p.draft && !p.agent) throw new Error("draft or agent is required");
+      if (p.live && plan) throw new Error("Plan mode: a run on the model is not allowed. Run it without live, or describe it in your plan.");
+      const send = async (body: Json) => {
+        const got = await dispatch(app, "POST", "/agents/dry", {}, { chatId: p.chat, ...(p.draft ? { draft: p.draft } : { agent: p.agent }), ...(p.inputs ? { inputs: p.inputs } : {}), ...body });
+        if (!got) throw new Error(`apps/${app} has no agent trial route (POST /agents/dry): it is not the Roleplay app, or its version is older than the trial. plugin_log shows load errors.`);
+        const r = jsonOf(got.payload);
+        if (got.status >= 400) {
+          const errs = listOf(r.errors).map((e) => `${e.code}: ${e.message}`);
+          throw new Error(`${got.status} ${r.error ?? "refused"}${errs.length ? `\n${errs.slice(0, 8).join("\n")}` : ""}`);
+        }
+        return r;
+      };
+      if (p.live) {
+        // read first (free), so the user is asked about the real model, the real question count and the real size
+        const probe = await send({ probe: true });
+        const models = [...new Set(Object.values(jsonOf(probe.models)).map(String).filter(Boolean))];
+        const tokens = listOf(probe.inputs).reduce((n, i) => n + Number(i.tokens ?? 0), 0);
+        const calls = Number(probe.maxCalls ?? 0);
+        const target = tryModel?.resolve(models[0]);
+        if (target?.confirm !== false) {
+          if (!ask) return textResult("Not run: the user is not available to confirm a paid model call.", { sent: false });
+          const answer = (
+            await ask({
+              question: `Run "${p.draft ?? p.agent}" on the chat's model (${models.join(", ") || "the app's model"})?`,
+              options: [
+                { label: "Run", description: `up to ${calls} model ${calls === 1 ? "call" : "calls"}, about ${tokens.toLocaleString("en-US")} tokens of chat in each`, recommended: true },
+                { label: "Skip", description: "Molfar goes on without it" },
+              ],
+              detail: `Chat "${jsonOf(probe.chat).title}". The answers are only read; nothing is written to the chat or the agent.`,
+            })
+          ).trim();
+          if (answer !== "Run") return textResult(`Not run: the user skipped it${answer && answer !== "Skip" && answer !== "(no answer)" ? ` and said: ${answer}` : ""}. Do not retry it unasked.`, { sent: false });
+        }
+      }
+      const r = await send({ ...(p.replies ? { replies: p.replies } : {}), ...(p.live ? { live: true } : {}) });
+      return textResult(cap(formatDryRun(r), RESULT_CHARS), { app, status: r.status, live: p.live === true });
+    },
+  };
+}
+
 // ---------- model_try ----------
 
 const TRY_DEFAULT_TOKENS = 1024;
@@ -522,7 +654,7 @@ function runBudgetTool(basis: NonNullable<RunToolOptions["budgetBasis"]>, ask: R
 
 export function buildRunTools(username: string, o: RunToolOptions): AgentTool[] {
   const out: AgentTool[] = [pluginLogTool(username)];
-  if (o.appRequest) out.push(appRequestTool(o.appRequest, o.mode === "plan"));
+  if (o.appRequest) out.push(appRequestTool(o.appRequest, o.mode === "plan"), agentDryRunTool(o.appRequest, o.mode === "plan", o.ask, o.tryModel));
   if (o.tryModel) out.push(modelTryTool(o.tryModel, o.ask));
   if (o.images && o.mode !== "plan") out.push(imageGenerateTool(o.images, o.ask));
   if (o.internet) out.push(webFetchTool(o.internet));

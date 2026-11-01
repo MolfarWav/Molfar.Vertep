@@ -7,7 +7,9 @@
 // a turn may wait `delayMs` before answering (a slow model)
 // a turn may set `drop`: the connection breaks after the first words (a provider that closes the socket mid-stream);
 // `dropTimes` breaks only that many requests, then the turn answers normally
-type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number; wordMs?: number; drop?: boolean; dropTimes?: number };
+// a turn may set `match`: it answers every request whose body contains that text (first match wins) and is not part of the
+// cycle; the cycling turns answer the rest. Used when several callers share the model (a chat reply, an agent's question).
+type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number; wordMs?: number; drop?: boolean; dropTimes?: number; match?: string };
 const dropped = new Map<number, number>();
 const DEFAULT: Turn[] = [
   { tool: "read_file", args: { path: "AGENTS.md" } },
@@ -15,17 +17,23 @@ const DEFAULT: Turn[] = [
 ];
 let turns: Turn[] = process.env.MOCK_TURNS ? (JSON.parse(await Bun.file(process.env.MOCK_TURNS).text()) as Turn[]) : DEFAULT;
 let next = 0;
+// what was asked, for a check to count: GET /__log gives [{ at, match, bytes }] (match = the routed turn's text or null), POST /__log empties it
+const log: { at: number; match: string | null; bytes: number }[] = [];
 const model = process.env.MOCK_MODEL ?? "mock-model";
 
 Bun.serve({
   port: Number(process.env.MOCK_PORT ?? 8797),
   async fetch(req) {
     const url = new URL(req.url);
+    if (url.pathname === "/__log") { if (req.method === "POST") { log.length = 0; return Response.json({ ok: true }); } return Response.json(log); }
     if (url.pathname === "/__reset") { next = 0; return Response.json({ ok: true }); }
     if (url.pathname === "/__turns") { turns = (await req.json()) as Turn[]; next = 0; return Response.json({ ok: true, turns: turns.length }); }
     if (url.pathname.endsWith("/models")) return Response.json({ data: [{ id: model }] });
     const raw = await req.text();
-    const turn = turns[next++ % turns.length] as Turn;
+    const routed = turns.find((x) => x.match && raw.includes(x.match));
+    const cycle = turns.filter((x) => !x.match);
+    log.push({ at: Date.now(), match: routed?.match ?? null, bytes: raw.length });
+    const turn = (routed ?? cycle[next++ % Math.max(cycle.length, 1)] ?? { text: "ok" }) as Turn;
     const enc = new TextEncoder();
     const chunk = (o: unknown) => enc.encode(`data: ${JSON.stringify(o)}\n\n`);
     const base = { id: `c${next}`, object: "chat.completion.chunk", created: 1, model };
