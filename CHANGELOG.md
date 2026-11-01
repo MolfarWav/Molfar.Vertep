@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Molfar: a new tool `agent_dry_run`. It runs a Roleplay agent (a draft or an installed one) over a real chat and reads back what happened: what the chat gave the agent (an empty Dashboard field is marked), the question each model card would ask, what every wire carried, and what the agent would write and show. Nothing is written to the chat. By default no model is called: cards get an example answer or one Molfar passes in, to see how the agent copes with a bad one. A run on the chat's model costs tokens, so the user confirms it first (no question for a local model or with cost checks off). Needs Roleplay with the trial route (#137).
+
 ## 1.9.1 (2026-11-01)
 
 - Roleplay 4.80.2 comes with this release as an app update: four fixes on Home. "Open in Marketplace" opens that card's page, "From your library" shows text, tags and a played line instead of a blank space, "Waiting on you" lists what waits, "Pick up the story" frames the portrait.

@@ -71,6 +71,107 @@ describe("app_request", () => {
   });
 });
 
+describe("agent_dry_run", () => {
+  const done = {
+    ok: true, source: { kind: "draft", id: "keeper" }, chat: { id: "c1", title: "Gate", messages: 3, lastSpeaker: "Aria" }, live: false,
+    maxCalls: 1, models: { fast: "app/model" }, status: "done", calls: 1,
+    inputs: [
+      { id: "msg", source: "lastUserMessage", text: "I summon an imp.", tokens: 5, empty: false },
+      { id: "mood", source: "state", field: "mood", text: "", tokens: 0, empty: true },
+    ],
+    asked: [{ node: "ask", prompt: "Did the user summon?\nI summon an imp.", reply: "YES", example: true }],
+    wires: { "in:msg": { state: "value", value: "I summon an imp." }, "in:mood": { state: "missing" }, "ask:yes": { state: "value", value: true }, "note:in": { state: "skip" } },
+    ownWrites: [{ op: "own.add", field: "mana", by: -10 }],
+    dashWrites: [],
+    refused: [],
+    outputs: [{ kind: "note", text: "An imp appears" }],
+    ownAfter: { mana: 40 },
+  };
+  const calls: unknown[][] = [];
+  const answers: Record<string, { status: number; payload: unknown }> = {};
+  const dispatch: RunToolOptions["appRequest"] = async (...a) => {
+    calls.push(a);
+    const body = a[4] as { probe?: boolean };
+    const r = answers[body.probe ? "probe" : "run"];
+    return r ?? { status: 200, payload: done };
+  };
+  const asks: AskRequest[] = [];
+  const ask = async (q: AskRequest) => { asks.push(q); return "Run"; };
+  beforeEach(() => { calls.length = 0; asks.length = 0; for (const k of Object.keys(answers)) delete answers[k]; });
+
+  it("reads the trial of a draft on a chat and tells what the chat gave, asked, carried and wrote", async () => {
+    const t = tool(buildRunTools("mia", { appRequest: dispatch }), "agent_dry_run");
+    const text = out(await run(t, { chat: "c1", draft: "keeper", replies: { ask: "NO" } }));
+    expect(calls).toEqual([["roleplay", "POST", "/agents/dry", {}, { chatId: "c1", draft: "keeper", replies: { ask: "NO" } }]]);
+    expect(text).toContain('Dry run of draft "keeper" on chat "Gate" (3 messages). No model was called');
+    expect(text).toContain("Result: done, 1 model call.");
+    expect(text).toContain("- mood (state mood): EMPTY, the chat has nothing for it");
+    expect(text).toContain("- msg (lastUserMessage): 5 tokens: I summon an imp.");
+    expect(text).toContain("- card ask, example answer: YES");
+    expect(text).toContain("- in:mood = missing");
+    expect(text).toContain("- note:in = skip");
+    expect(text).toContain("Writes to the agent's memory: mana -10");
+    expect(text).toContain('Shows or sends: note "An imp appears"');
+    expect(asks).toEqual([]);
+  });
+
+  it("says where a failed run stopped", async () => {
+    answers.run = { status: 200, payload: { ...done, status: "failed", node: "ask", reason: "The answer is not JSON", ownWrites: [] } };
+    const t = tool(buildRunTools("mia", { appRequest: dispatch }), "agent_dry_run");
+    expect(out(await run(t, { chat: "c1", agent: "keeper" }))).toContain('Result: FAILED at card "ask": The answer is not JSON');
+  });
+
+  it("passes a refusal of the file on, with the checker's errors", async () => {
+    answers.run = { status: 400, payload: { error: "Card x is not wired", errors: [{ code: "E_UNWIRED", message: "Card x is not wired" }] } };
+    const t = tool(buildRunTools("mia", { appRequest: dispatch }), "agent_dry_run");
+    await expect(run(t, { chat: "c1", draft: "keeper" })).rejects.toThrow(/400 Card x is not wired\nE_UNWIRED/);
+  });
+
+  it("needs a draft or an agent, and an app that has the route", async () => {
+    const t = tool(buildRunTools("mia", { appRequest: dispatch }), "agent_dry_run");
+    await expect(run(t, { chat: "c1" })).rejects.toThrow("draft or agent is required");
+    const none = tool(buildRunTools("mia", { appRequest: async () => null }), "agent_dry_run");
+    await expect(run(none, { chat: "c1", draft: "k" })).rejects.toThrow("no agent trial route");
+  });
+
+  it("reads before it asks the model: the user is asked about the real model and call count, and Skip runs nothing", async () => {
+    answers.probe = { status: 200, payload: { ...done, probe: true } };
+    const skip = async (q: AskRequest) => { asks.push(q); return "Skip"; };
+    const t = tool(buildRunTools("mia", { appRequest: dispatch, ask: skip }), "agent_dry_run");
+    const text = out(await run(t, { chat: "c1", draft: "keeper", live: true }));
+    expect(text).toContain("Not run: the user skipped it");
+    expect(calls).toHaveLength(1);
+    expect(calls[0]![4]).toMatchObject({ probe: true });
+    expect(asks[0]!.question).toContain("app/model");
+    expect(asks[0]!.options?.[0]).toMatchObject({ label: "Run" });
+  });
+
+  it("runs on the model after the user says Run, and only then", async () => {
+    answers.probe = { status: 200, payload: { ...done, probe: true } };
+    answers.run = { status: 200, payload: { ...done, live: true, usage: { input: 120, output: 4, cost: 0.0012, priced: true } } };
+    const t = tool(buildRunTools("mia", { appRequest: dispatch, ask }), "agent_dry_run");
+    const text = out(await run(t, { chat: "c1", draft: "keeper", live: true }));
+    expect(calls.map((c) => (c[4] as { probe?: boolean; live?: boolean }).probe ? "probe" : "live")).toEqual(["probe", "live"]);
+    expect(text).toContain("The chat's model answered the questions.");
+    expect(text).toContain("Cost: 120 tokens in, 4 out, $0.0012.");
+  });
+
+  it("does not ask when the model costs nothing, and refuses a live run in plan mode", async () => {
+    answers.probe = { status: 200, payload: { ...done, probe: true } };
+    const free: RunToolOptions["tryModel"] = { resolve: () => ({ ref: "local/m", price: () => 0, confirm: false }), generate: async () => ({}) as never };
+    const t = tool(buildRunTools("mia", { appRequest: dispatch, ask, tryModel: free }), "agent_dry_run");
+    await run(t, { chat: "c1", draft: "keeper", live: true });
+    expect(asks).toEqual([]);
+    const plan = tool(buildRunTools("mia", { appRequest: dispatch, mode: "plan" }), "agent_dry_run");
+    await expect(run(plan, { chat: "c1", draft: "keeper", live: true })).rejects.toThrow("Plan mode");
+    expect(out(await run(plan, { chat: "c1", draft: "keeper" }))).toContain("Result: done");
+  });
+
+  it("is in the app tool group", () => {
+    expect(groupOf("agent_dry_run")).toBe("app");
+  });
+});
+
 describe("model_try", () => {
   const sent: unknown[] = [];
   const tryModel: RunToolOptions["tryModel"] = {
