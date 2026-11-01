@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { proposeEntry, proposeRetire, readMemory, resolveScope } from "../src/agent/memory.js";
 import { buildSuggestPrompt, memorySuggestEnabled, parseSuggestions, scopesFor, shouldSuggest, suggestMemory, traceOf, usable } from "../src/agent/memory-suggest.js";
+import { dropMail, listMail } from "../src/agent/mailbox.js";
 import { bootstrapUserDir } from "../src/paths.js";
 
 let dataDir: string;
@@ -18,7 +19,7 @@ const seed = (file: string, lines: string[]) => {
   fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
   fs.writeFileSync(path.join(root, file), `# Memory\n\n${lines.map((l) => `- 2026-10-01: ${l}`).join("\n")}\n`);
 };
-const gate = { enabled: true, plan: false, hasAsk: true, reply: "done", steps: 9, tools: ["read_file"] };
+const gate = { enabled: true, plan: false, reply: "done", steps: 9, tools: ["read_file"] };
 const global = () => readMemory(root, resolveScope(root, "global"));
 
 describe("memory suggestions after a long run (issue #99)", () => {
@@ -27,7 +28,6 @@ describe("memory suggestions after a long run (issue #99)", () => {
     expect(shouldSuggest({ ...gate, steps: 7 })).toBe(false);
     expect(shouldSuggest({ ...gate, enabled: false })).toBe(false);
     expect(shouldSuggest({ ...gate, plan: true })).toBe(false);
-    expect(shouldSuggest({ ...gate, hasAsk: false })).toBe(false);
     expect(shouldSuggest({ ...gate, stopped: true })).toBe(false);
     expect(shouldSuggest({ ...gate, error: "boom" })).toBe(false);
     expect(shouldSuggest({ ...gate, reply: "  " })).toBe(false);
@@ -102,87 +102,62 @@ describe("memory suggestions after a long run (issue #99)", () => {
     expect(kept.map((s) => `${s.action}:${s.action === "add" ? s.entry : (s as { match: string }).match}`)).toEqual(["add:new fact", "replace:build with", "retire:ukrainian"]);
   });
 
-  it("the whole pass: each suggestion is a card; Save writes, Skip does not, retire removes", async () => {
+  it("the whole pass leaves each suggestion in the mailbox: no card, nothing written", async () => {
     seed("memory/MEMORY.md", ["old build note", "the user is in Kyiv"]);
-    const cards: string[] = [];
-    const answers = ["Save", "Skip", "Remove"];
     const raw = JSON.stringify({
       proposals: [
         { action: "replace", scope: "global", match: "old build note", entry: "build runs with bun" },
-        { action: "add", scope: "global", entry: "skipped fact" },
+        { action: "add", scope: "global", entry: "a new fact" },
         { action: "retire", scope: "global", match: "Kyiv" },
       ],
     });
-    const out = await suggestMemory({
-      root,
-      username: "alice",
-      ask: async (q) => {
-        cards.push(q.question);
-        return answers.shift() ?? "Skip";
-      },
-      generate: async () => raw,
-      project: null,
-      request: "r",
-      reply: "done",
-      tools: [],
-    });
-    expect(out).toEqual({ asked: 3, saved: 2 });
-    expect(cards[0]).toContain("Suggested after this task:");
-    expect(cards[0]).toContain('It replaces the entry containing "old build note"');
-    expect(cards[2]).toContain("Remove this entry");
-    expect(global()).toContain("build runs with bun");
-    expect(global()).not.toContain("old build note");
-    expect(global()).not.toContain("skipped fact");
-    expect(global()).not.toContain("Kyiv");
+    const out = await suggestMemory({ root, generate: async () => raw, project: null, request: "r", reply: "done", tools: [] });
+    expect(out).toEqual({ asked: 3, queued: 3 });
+    expect(listMail(root).map((m) => `${m.kind}:${m.from}`)).toEqual(["replace:after-run", "add:after-run", "retire:after-run"]);
+    // nothing was written by the pass itself
+    expect(global()).toContain("old build note");
+    expect(global()).toContain("Kyiv");
+    expect(global()).not.toContain("a new fact");
+    // the same pass again finds the same things waiting: nothing is queued twice
+    expect((await suggestMemory({ root, generate: async () => raw, project: null, request: "r", reply: "done", tools: [] })).queued).toBe(0);
+    expect(listMail(root)).toHaveLength(3);
   });
 
-  it("nothing to suggest means no card; a model that returns junk asks nothing", async () => {
-    const calls: string[] = [];
-    const base = {
-      root,
-      username: "alice",
-      ask: async (q: { question: string }) => {
-        calls.push(q.question);
-        return "Save";
-      },
-      project: null,
-      request: "r",
-      reply: "d",
-      tools: [],
-    };
-    expect(await suggestMemory({ ...base, generate: async () => '{"proposals":[]}' })).toEqual({ asked: 0, saved: 0 });
-    expect(await suggestMemory({ ...base, generate: async () => "I think nothing is needed." })).toEqual({ asked: 0, saved: 0 });
-    expect(calls).toEqual([]);
+  it("a suggestion the user skipped before is not queued again", async () => {
+    const raw = JSON.stringify({ proposals: [{ action: "add", scope: "global", entry: "Skipped fact" }] });
+    const run = () => suggestMemory({ root, generate: async () => raw, project: null, request: "r", reply: "d", tools: [] });
+    expect((await run()).queued).toBe(1);
+    dropMail(root, listMail(root)[0]!.id, true);
+    expect((await run()).queued).toBe(0);
+    expect(listMail(root)).toHaveLength(0);
   });
 
-  it("Stop ends the pass before the next card", async () => {
-    let stopped = false;
+  it("nothing to suggest means nothing queued; a model that returns junk queues nothing", async () => {
+    const base = { root, project: null, request: "r", reply: "d", tools: [] };
+    expect(await suggestMemory({ ...base, generate: async () => '{"proposals":[]}' })).toEqual({ asked: 0, queued: 0 });
+    expect(await suggestMemory({ ...base, generate: async () => "I think nothing is needed." })).toEqual({ asked: 0, queued: 0 });
+    expect(listMail(root)).toEqual([]);
+  });
+
+  it("Stop ends the pass before the next suggestion", async () => {
+    let calls = 0;
     const raw = JSON.stringify({ proposals: [{ action: "add", scope: "global", entry: "one" }, { action: "add", scope: "global", entry: "two" }] });
-    const out = await suggestMemory({
-      root,
-      username: "alice",
-      ask: async () => {
-        stopped = true;
-        return "Skip";
-      },
-      generate: async () => raw,
-      project: null,
-      request: "r",
-      reply: "d",
-      tools: [],
-      stopped: () => stopped,
-    });
+    const out = await suggestMemory({ root, generate: async () => raw, project: null, request: "r", reply: "d", tools: [], stopped: () => calls++ > 0 });
     expect(out.asked).toBe(1);
+    expect(listMail(root)).toHaveLength(1);
   });
 });
 
 describe("the confirm card's answers (issue #99, found on the way)", () => {
-  it("an answer that is the bridge's 'nobody answered' marker is a skip, not an entry to save", async () => {
+  it("an answer that is the bridge's 'nobody answered' marker is never saved as the entry: it waits in the mailbox", async () => {
     for (const marker of ["(stopped)", "(no answer)", "(question could not be delivered)"]) {
       const r = await proposeEntry(root, "alice", async () => marker, { scope: "global", entry: "a real fact" });
       expect(r.saved).toBe(false);
+      expect(r.text).toContain("mailbox");
     }
     expect(global()).not.toContain("(stopped)");
+    // the same proposal three times is one letter
+    expect(listMail(root).map((m) => m.from)).toEqual(["unanswered"]);
   });
 
   it("retire says so when nothing matches, and keeps the entry on anything but Remove", async () => {
@@ -191,6 +166,9 @@ describe("the confirm card's answers (issue #99, found on the way)", () => {
     expect((await proposeRetire(root, "alice", async () => "Keep", { scope: "global", match: "keep me" })).saved).toBe(false);
     expect((await proposeRetire(root, "alice", async () => "(stopped)", { scope: "global", match: "keep me" })).saved).toBe(false);
     expect(global()).toContain("keep me");
+    // "Keep" is remembered as a no; the later asks are refused, so clear that to test the yes
+    for (const m of listMail(root)) dropMail(root, m.id);
+    fs.rmSync(path.join(root, "memory/mailbox"), { recursive: true, force: true });
     expect((await proposeRetire(root, "alice", async () => "Remove", { scope: "global", match: "keep me" })).saved).toBe(true);
     expect(global()).not.toContain("keep me");
   });
