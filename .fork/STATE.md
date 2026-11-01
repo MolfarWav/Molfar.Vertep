@@ -1,9 +1,15 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-10-30.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-11-01.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
+
+## #184 OMNISCIENCE P1/P2 + #197 (2026-11-01; Roleplay branch `claude/issues-197-184-649825` from fork main 5877d11, worktree `E:\Claude\rp-omni`, pushed, NOT merged, NOT released; engine unchanged)
+- **#197** (Characters menu crash, patch from the reporter's copy) was already fixed by Roleplay `e1fa534`, shipped in 4.81.0 / engine 1.9.2 (fork main has the `DropdownMenuGroup`). Closed with a "How it was solved" comment. #72 and #175 still need their closing comments (release 1.9.2).
+- **#184 built (Litopys + engine plugin):** a character's reply gets only facts with `knownBy` containing the speaker (or "all"): `soleVoice` (litopys) gives the speaker's names when one character speaks, null for narrator groups, narrator cards, cards with several Soul names (those keep "anyone present"), `buildInsert` and `buildBackstory` take `voices`; the preview route too. A new fact with no usable `knownBy` gets the scene cast (`ctx.witnesses` = `sceneCast`), "all" only when the cast is empty. Data Bank: a character-scoped file goes in only when that character speaks in a plain group (`dbCharacterIds` in `assemble`). Tests `test/rp-omniscience.test.ts` (8, include a 5-character exposure check at 500 and 2000 messages; 5 of them fail without the change). Full suite: 2256 pass / 39 fail / 27 errors = fork main's baseline (2248 pass before), typecheck clean. CHANGELOG "Unreleased" has the entry.
+- **NOT done from #184:** P0 leak scenarios on real models and a recall/timing bench at 5000 messages, P1c (narrator groups' focus notebooks), P1d (the preset-independent "Cast knowledge" brief and hidden plan), chapters `cast` (P2 second half), P3-P8 and the Data Bank shelf (DB). Not checked: a real model on a group chat (does hiding facts make small models contradict themselves?), a browser run, a card with Soul names that differ from the card name (it keeps the old behaviour on purpose). Owner's questions E1-E8 in the issue were answered by the recommended defaults only (P0, P1, P2 order); P2's chapter question (E2) is still open.
+- **#207 filed:** how the Dashboard date and time reach the chat prompt (owner reports big clock drift); only code pointers so far, nothing verified.
 
 ## RELEASE 1.9.2 PREPARED (2026-11-01, on the owner's word "зливай ... якщо і рушія, робимо реліз"; carries Roleplay 4.81.0)
 Engine PR #199 (mailbox) was merged by the owner; this commit bumps to 1.9.2 with notes `.fork/release-notes/1.9.2.md`. Order: merge this release PR, push the tag v1.9.2, update the engine, then merge the Roleplay PR (manifest 4.81.0 = letters, the Characters menu fix, agents reading Dashboard fields). After: close #72 and #175 with a "How it was solved" comment. #198 holds the follow-ups.
