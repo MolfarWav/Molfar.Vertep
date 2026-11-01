@@ -4,7 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
-00000. **1.9.3 prepared** 2026-11-01 (main holds it; the user pushes the tag v1.9.3): Agent forge leftovers, carries Roleplay 4.82.0 (STATE, "RELEASE 1.9.3 PREPARED"). Next on the Forge: #140 (Script card, `html` mode B, `batchKey`), #132 write access, and the manual real-model checklist of #141 (`.fork/handoff/forge-checks/MANUAL.md`).
+00000. **1.9.3 prepared** 2026-11-01 (main holds it; the user pushes the tag v1.9.3): Agent forge leftovers, carries Roleplay 4.82.0 (STATE, "RELEASE 1.9.3 PREPARED"). Next on the Forge: #140 (Script card, `html` mode B, `batchKey`), #132 write access (built: Roleplay PR #59 waits for the owner's review), and the manual real-model checklist of #141 (`.fork/handoff/forge-checks/MANUAL.md`).
 0000. **1.2.2 released** 2026-10-18 (main fast-forwarded; the user pushes the tag v1.2.2): pi 1.2.0, live model lists, #59, desktop rollback (STATE). Next asked: a key-driven start menu in `Molfar-Vertep.bat`; renaming `chrysalis` (exe, command) needs a data migration and the user's word.
 000. **Next releases (user, 2026-10-17)**: release P0 for large libraries (#46) with the threads fix (#47) first, on the
    user's word (engine `claude/slim-start-engine` + Roleplay `claude/slim-start`, STATE). Then, easiest first, from the
