@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.9.1 (2026-11-01)
+
+- Roleplay 4.80.2 comes with this release as an app update: four fixes on Home. "Open in Marketplace" opens that card's page, "From your library" shows text, tags and a played line instead of a blank space, "Waiting on you" lists what waits, "Pick up the story" frames the portrait.
+- Settings > Sync: the progress line ("Downloading 120 of 4000...") stays on screen while a pull started from the "Changed on both devices" panel runs; before, only the plain Pull button showed it.
+- Release builds and CI use Bun 1.4.4 (was 1.4.0). Under 1.4.0 the Edge voice could not correct a skewed PC clock and failed with a bare 403 (#143); 1.4.4 passes the headers the retry needs.
+
 ## 1.9.0 (2026-11-01)
 
 - Roleplay 4.80.1 comes with this release as an app update: the phone menus take the rail's colours (with an Agents tile), New chat is the one filled button of the chats list, and the fixes of a browser check of 4.80.0 (sheet widths, Home's header on a phone, the World DM Profile select and dimmed switches, the Lorebooks column, text under 12 px on the new screens).

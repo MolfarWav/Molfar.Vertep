@@ -643,9 +643,10 @@ export function SyncTab(props: { isAdmin: boolean }) {
                     )}
                   </div>
                 )}
-                {view.job?.running && view.job.progress && <ProgressLine progress={view.job.progress} />}
               </>
             )}
+            {/* below both the buttons and the conflict panel: a pull started from the panel shows its progress too */}
+            {view.job?.running && view.job.progress && <ProgressLine progress={view.job.progress} />}
 
             <div className="rounded-lg border border-line p-3 flex flex-col gap-3">
               <h3 className="text-13 font-medium text-ink">{tr("What travels")}</h3>

@@ -65,6 +65,16 @@ holds the rules that do not change between tasks; the handoff holds the task.
   what was left out on purpose or is still known, and how it was checked (tests, browser run). The user reads it to
   look back at why something is the way it is.
 
+## Look at what was already done before deciding (user, 2026-11-01)
+- Before proposing a fix, a design or a new idea, make a quick sweep of the past: `gh issue list --state all --search "<keywords>"`
+  (closed issues carry a "How it was solved" comment), `CHANGELOG.md`, `.fork/release-notes/`, and the matching sections of
+  `.fork/STATE.md` (`grep`, it is long). Read the hits that touch the topic and say in the reply what was found. Many problems were
+  already worked through: for example the rebuild time of an app (#181, #32, #83) and start-up speed; a report that looks new
+  is often the same cause in a different place (#190 is the cold build that #181 left alone).
+- The point: no going in circles, no reinventing what exists, no stepping on the same rake. Applies to bug batches, new
+  features, release notes and READMEs alike (check that a release note or README line does not repeat or contradict an earlier one).
+- A quick sweep, not a research project: a few searches and a skim, then proceed.
+
 ## Done means
 1. `bun run typecheck`, `bun run test`, `bun run build:client` pass.
 2. `bunx biome lint <touched files>` adds no warnings beyond the surrounding style.
