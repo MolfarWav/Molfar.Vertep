@@ -9,6 +9,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 - Molfar: a new tool `agent_dry_run`. It runs a Roleplay agent (a draft or an installed one) over a real chat and reads back what happened: what the chat gave the agent (an empty Dashboard field is marked), the question each model card would ask, what every wire carried, and what the agent would write and show. Nothing is written to the chat. By default no model is called: cards get an example answer or one Molfar passes in, to see how the agent copes with a bad one. A run on the chat's model costs tokens, so the user confirms it first (no question for a local model or with cost checks off). Needs Roleplay with the trial route (#137).
 
+## 1.9.2 (2026-11-01)
+
+- Molfar's mailbox (#175). Memory suggestions Molfar cannot settle with you right now wait in `memory/mailbox/` instead of blocking the end of a run or being lost: the end-of-task suggestions, a card nobody answered, a run with nobody to ask, and the new "Later" answer on the live card. Memory and skills has a Mailbox tab and a count on its button; Save is the same write as a card's (a commit, text editable first), Skip is remembered so the same entry is not suggested again. Routes `GET /v1/agent/mailbox`, `POST /v1/agent/mailbox/accept` and `/skip`. Skills and other kinds follow (#198).
+- Roleplay 4.81.0 comes with this release as an app update: letters from cards (#72, off by default, Characters, More, Letters from cards), a fix for the crashing Characters, More menu, and agents reading Dashboard fields (#132).
+
 ## 1.9.1 (2026-11-01)
 
 - Roleplay 4.80.2 comes with this release as an app update: four fixes on Home. "Open in Marketplace" opens that card's page, "From your library" shows text, tags and a played line instead of a blank space, "Waiting on you" lists what waits, "Pick up the story" frames the portrait.

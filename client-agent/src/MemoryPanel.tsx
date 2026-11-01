@@ -15,6 +15,8 @@ import { ArrowCounterClockwise, ArrowLeft, ArrowsLeftRight, Brain, CaretRight, F
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { getSettings, memoryApi, setAppContractOnDemand, setMemorySuggest, type AgentMemory, type AgentSkill, type AgentSkillDetail, type MemoryHit, type ScopeMemory } from "./api"
 import { useAgent } from "./store"
+import { MailboxTab } from "./MailboxTab"
+import { startMailboxPolling, useMailbox } from "./mailbox"
 
 const NAME_RE = /^[a-z0-9][a-z0-9-]{0,47}$/
 const DESCRIPTION_MAX = 300
@@ -591,7 +593,9 @@ function AppContractSwitch({ onError }: { onError: (e: unknown) => void }): Reac
 
 export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
   const [open, setOpen] = useState(false)
-  const [tab, setTab] = useState<"memory" | "skills">("memory")
+  const [tab, setTab] = useState<"memory" | "skills" | "mailbox">("memory")
+  const waiting = useMailbox((s) => s.items.length)
+  useEffect(() => startMailboxPolling(), [])
   // the guide's "Show me" opens and closes this dialog
   useEffect(() => {
     const on = (e: Event) => {
@@ -640,8 +644,10 @@ export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
     memoryApi.get().then(setData, onError)
   }, [onError])
   useEffect(() => {
-    if (open) load()
-    else {
+    if (open) {
+      load()
+      void useMailbox.getState().refresh()
+    } else {
       setSkill(null)
       setCreating(false)
       setMark(null)
@@ -683,14 +689,20 @@ export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
       <Button
         variant="ghost"
         size={caption ? "default" : "icon"}
-        className={caption ? "h-12 w-14 shrink-0 flex-col gap-0.5 px-0 text-[10px] leading-3 font-normal" : "size-9 shrink-0"}
-        aria-label="Memory and skills"
+        aria-label={waiting ? `Memory and skills, ${waiting} in the mailbox` : "Memory and skills"}
         data-guide="agent.memory"
-        title="Memory and skills"
-        onClick={() => setOpen(true)}
+        title={waiting ? `Memory and skills: ${waiting} in the mailbox` : "Memory and skills"}
+        // something waiting in the mailbox: open on it, the number on the button says why
+        onClick={() => { if (waiting) setTab("mailbox"); else if (tab === "mailbox") setTab("memory"); setOpen(true) }}
+        className={cn(caption ? "relative h-12 w-14 shrink-0 flex-col gap-0.5 px-0 text-[10px] leading-3 font-normal" : "relative size-9 shrink-0")}
       >
         <Brain size={18} />
         {caption}
+        {waiting ? (
+          <span className="bg-primary text-primary-foreground absolute top-0.5 right-0.5 flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-4 font-semibold" data-testid="mail-badge">
+            {waiting}
+          </span>
+        ) : null}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">
@@ -701,16 +713,21 @@ export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-1">
-            <Button variant={tab === "memory" ? "secondary" : "ghost"} size="sm" onClick={() => setTab("memory")}>
+            <Button variant={tab === "memory" ? "secondary" : "ghost"} size="sm" className="max-md:h-10" onClick={() => setTab("memory")}>
               Memory
             </Button>
-            <Button variant={tab === "skills" ? "secondary" : "ghost"} size="sm" onClick={() => { setTab("skills"); setSkill(null); setSkillFile(undefined); setCreating(false) }}>
+            <Button variant={tab === "skills" ? "secondary" : "ghost"} size="sm" className="max-md:h-10" onClick={() => { setTab("skills"); setSkill(null); setSkillFile(undefined); setCreating(false) }}>
               Skills{data ? ` (${data.skills.length})` : ""}
+            </Button>
+            <Button variant={tab === "mailbox" ? "secondary" : "ghost"} size="sm" className="max-md:h-10" data-testid="mail-tab" onClick={() => setTab("mailbox")}>
+              Mailbox{waiting ? ` (${waiting})` : ""}
             </Button>
           </div>
           {error ? <p className="text-destructive text-sm" role="alert">{error}</p> : null}
           {!data ? (
             <p className="text-muted-foreground text-sm">Loading…</p>
+          ) : tab === "mailbox" ? (
+            <MailboxTab onChanged={load} />
           ) : tab === "memory" ? (
             <div className="grid gap-5">
               <div className="relative">
