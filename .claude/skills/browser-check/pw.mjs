@@ -94,3 +94,9 @@ export async function close() {
   await browser?.close()
   browser = undefined
 }
+
+/** What the mock was asked since the last reset: [{ at, match, bytes }]. */
+export async function mockLog({ reset = false } = {}) {
+  const r = await fetch(env.MOCK_URL + "/__log", reset ? { method: "POST" } : undefined)
+  return reset ? [] : await r.json()
+}
