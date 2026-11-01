@@ -7,7 +7,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
-## 1.10.0 (2026-11-01)
+## 1.9.2 (2026-11-01)
 
 - Molfar's mailbox (#175). Memory suggestions Molfar cannot settle with you right now wait in `memory/mailbox/` instead of blocking the end of a run or being lost: the end-of-task suggestions, a card nobody answered, a run with nobody to ask, and the new "Later" answer on the live card. Memory and skills has a Mailbox tab and a count on its button; Save is the same write as a card's (a commit, text editable first), Skip is remembered so the same entry is not suggested again. Routes `GET /v1/agent/mailbox`, `POST /v1/agent/mailbox/accept` and `/skip`. Skills and other kinds follow (#198).
 - Roleplay 4.81.0 comes with this release as an app update: letters from cards (#72, off by default, Characters, More, Letters from cards), a fix for the crashing Characters, More menu, and agents reading Dashboard fields (#132).

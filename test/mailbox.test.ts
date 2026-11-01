@@ -37,6 +37,18 @@ describe("the mailbox store", () => {
     expect(getMail(root, (a as { item: { id: string } }).item.id)?.kind).toBe("add");
     expect(getMail(root, "../etc/passwd")).toBeUndefined();
   });
+  it("items queued in the same millisecond keep their order, whatever order the disk lists them in", () => {
+    const real = Date.now;
+    Date.now = () => 1_700_000_000_000;
+    try {
+      for (const e of ["c", "a", "b"]) queueMail(root, add(`entry ${e}`));
+    } finally {
+      Date.now = real;
+    }
+    const waiting = listMail(root);
+    expect(waiting.map((m) => (m.kind === "add" ? m.entry : ""))).toEqual(["entry c", "entry a", "entry b"]);
+    expect(new Set(waiting.map((m) => m.at)).size).toBe(3);
+  });
   it("does not queue the same proposal twice, even with other spacing or case", () => {
     expect(queueMail(root, add("The user likes   tea")).ok).toBe(true);
     expect(queueMail(root, add("the user likes tea"))).toEqual({ ok: false, reason: "duplicate" });

@@ -98,7 +98,9 @@ export function queueMail(root: string, d: MailDraft): { ok: true; item: MailIte
   if (waiting.some((m) => mailSig(m) === sig)) return { ok: false, reason: "duplicate" };
   if (waiting.length >= MAILBOX_MAX) return { ok: false, reason: "full" };
   const id = `mb-${Date.now().toString(36)}${crypto.randomBytes(3).toString("hex")}`;
-  const item = { v: 1, id, ...d, at: Date.now() } as MailItem;
+  // strictly later than everything waiting, so items queued in the same millisecond keep the order they came in
+  const at = Math.max(Date.now(), ...waiting.map((m) => m.at + 1));
+  const item = { v: 1, id, ...d, at } as MailItem;
   fs.mkdirSync(dirOf(root), { recursive: true });
   fs.writeFileSync(path.join(dirOf(root), `${id}.json`), JSON.stringify(item, null, 2), "utf8");
   return { ok: true, item };
