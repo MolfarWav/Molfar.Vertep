@@ -7,10 +7,15 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.9.1 (2026-11-01)
+
+- Roleplay 4.80.2 comes with this release as an app update: four fixes on Home. "Open in Marketplace" opens that card's page, "From your library" shows text, tags and a played line instead of a blank space, "Waiting on you" lists what waits, "Pick up the story" frames the portrait.
+- Settings > Sync: the progress line ("Downloading 120 of 4000...") stays on screen while a pull started from the "Changed on both devices" panel runs; before, only the plain Pull button showed it.
 - Release builds and CI use Bun 1.4.4 (was 1.4.0). Under 1.4.0 the Edge voice could not correct a skewed PC clock and failed with a bare 403 (#143); 1.4.4 passes the headers the retry needs.
 
 ## 1.9.0 (2026-11-01)
 
+- Roleplay 4.80.1 comes with this release as an app update: the phone menus take the rail's colours (with an Agents tile), New chat is the one filled button of the chats list, and the fixes of a browser check of 4.80.0 (sheet widths, Home's header on a phone, the World DM Profile select and dimmed switches, the Lorebooks column, text under 12 px on the new screens).
 - Roleplay 4.80.0 comes with this release as an app update: the interface overhaul (#191). A shared base (five named text sizes with a 12 px minimum, one look for folds, setting rows, sections, cards and buttons), then screen by screen: the World DM panel as three task cards, the Dashboard Sensor tab, the chat header, a side panel with a colour per item and an Agents link, a Home bento you can customize, Characters with always-visible folders, and Lorebooks with a wide list and the entry editor in a side panel. Settings left the side panel for now (open Roleplay settings from Home) and the empty Memory tab is gone.
 - Roleplay 4.79.0 comes with this release as an app update: Personas, a new look (#186). The overview shows cards with a portrait, a one-line summary, tags, chats, tokens and how much of the profile is filled, with a preview panel, search, four sorts, tags and folders, and a select mode. A persona's page has a banner and tabs (Core, Profile, Bindings, Lorebooks, Memory, Colours, Gallery), a model for the card's tasks, and "Generate image" for a portrait. New persona is a chooser: write it yourself, a short interview, or from a file. The preset list marks the default preset with a star.
 - Roleplay 4.79.1 comes with this release as an app update: the World book fills itself from the story whatever the DM's level (#185), and the Dashboard keeps what characters wear and hold and where everyone stands. The sensor reports changes, the plugin keeps the lists, so outfit details no longer drop piece by piece; a switch in Dashboard settings turns the "where everyone stands" block off.
