@@ -27,7 +27,7 @@ permissions:
   contents: read
 
 env:
-  BUN_VERSION: 1.4.0
+  BUN_VERSION: 1.4.4
   MOLFAR_VERTEP_VERSION: ${{ inputs.version }}
 
 jobs:

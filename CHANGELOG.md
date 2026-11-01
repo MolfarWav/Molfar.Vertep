@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Release builds and CI use Bun 1.4.4 (was 1.4.0). Under 1.4.0 the Edge voice could not correct a skewed PC clock and failed with a bare 403 (#143); 1.4.4 passes the headers the retry needs.
+
 ## 1.9.0 (2026-11-01)
 
 - Roleplay 4.80.0 comes with this release as an app update: the interface overhaul (#191). A shared base (five named text sizes with a 12 px minimum, one look for folds, setting rows, sections, cards and buttons), then screen by screen: the World DM panel as three task cards, the Dashboard Sensor tab, the chat header, a side panel with a colour per item and an Agents link, a Home bento you can customize, Characters with always-visible folders, and Lorebooks with a wide list and the entry editor in a side panel. Settings left the side panel for now (open Roleplay settings from Home) and the empty Memory tab is gone.

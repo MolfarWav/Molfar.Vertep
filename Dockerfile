@@ -8,7 +8,7 @@
 
 # The engine is compiled on the build machine's own architecture for the
 # image's target (Bun cross-compiles), so multi-arch images need no emulation.
-FROM --platform=$BUILDPLATFORM oven/bun:1.4.0 AS build
+FROM --platform=$BUILDPLATFORM oven/bun:1.4.4 AS build
 ARG TARGETARCH
 ARG MOLFAR_VERTEP_VERSION=
 WORKDIR /src
