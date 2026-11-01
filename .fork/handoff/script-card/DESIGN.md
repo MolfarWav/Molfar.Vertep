@@ -161,3 +161,23 @@ mode B shows the field's sample text through the same cleaner so the author sees
 2. Roleplay: checker + executor + plugin sync, host (`stepRun`, dry run), `cleanMarkup`, widget, tests.
 3. Forge UI (card form, palette, install screen line, mode switch) per `UI-PLAN.md`, then `ux-review` and a browser check.
 4. DATA-FORMATS.md, the agent-craft skill reference, CHANGELOG line, `.fork/STATE.md`, issue #140 comment.
+
+## 4. UI plan (for ux-review)
+
+Where: the Forge (agent editor) palette gets one group, "Code", with the Script card. Selecting the card opens `ScriptForm`
+in the same side form every card uses: a code box with a character counter, a row editor for inputs and one for outputs
+(id + type, up to 8 each), and a collapsed "What the code can and cannot do" note. Reused: `CardForm`, the port row
+editors of the Dice/Pick forms, `<details>`, existing issue list. Mode B: the `html` widget form gets a two-way switch
+"Fixed look" / "The model draws it" and a text-field select; the tip is a collapsed `<details>` with a sample prompt.
+The Allow page (agent permissions dialog) gets a "Code" group; `run:code` reads "Run code the agent author wrote, in a sandbox"
+and the group has a "Read the code (N)" `<details>` that lists each script. The Try tab shows "Running the script on the engine..."
+while a script is out.
+States: empty code, syntax error (`E_SCRIPT_SYNTAX`), too many cards, old engine (the agent fails with the plain message), script
+running, script failed (shown on the `failed` wire or as the run's reason), empty bound field ("Nothing drawn yet."), bad bind.
+Phones: the forms are single-column already; the Allow page reuses the existing dialog.
+
+## 5. Left out, and open
+
+- `batchKey` (the third part of #140) was not requested and is not built.
+- Decisions for the owner: the wording of `run:code`; the limits (500 ms, 16 MB); raising the Roleplay manifest `engine`
+  range at release; whether a changed script should ask for the permission again.

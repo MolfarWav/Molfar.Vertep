@@ -189,7 +189,9 @@ describe("script box: the plugin side of the exchange", () => {
     fs.mkdirSync(p, { recursive: true });
     fs.writeFileSync(path.join(p, "manifest.json"), JSON.stringify({ name: "S", version: "1", origin: "local", permissions }));
     fs.writeFileSync(path.join(p, "plugin.js"), code);
-    return discoverPlugins(path.join(dir, "plugins")).find((x) => x.id === "scripty")!;
+    const found = discoverPlugins(path.join(dir, "plugins")).find((x) => x.id === "scripty");
+    if (!found) throw new Error("plugin not discovered");
+    return found;
   };
   const deps = () => ({ store: new PluginStoreService(path.join(dir, "store")), models: {} as never, grantsFor: () => [] });
 
