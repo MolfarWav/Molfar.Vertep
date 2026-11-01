@@ -178,10 +178,10 @@ describe("memory tools (the user confirms)", () => {
     expect(read(GLOBAL_MEMORY)).not.toContain("two PCs");
   });
 
-  it("nothing is saved when nobody can confirm", async () => {
+  it("nothing is saved when nobody can confirm; it waits in the mailbox", async () => {
     const tools = buildMemoryTools("mia", p, {});
     const r = await tool(tools, "memory_propose").execute("t", { scope: "global", entry: "x" }, undefined as never);
-    expect(out(r)).toContain("Not saved");
+    expect(out(r)).toContain("mailbox");
     expect(fs.existsSync(path.join(p.root, GLOBAL_MEMORY))).toBe(false);
   });
 

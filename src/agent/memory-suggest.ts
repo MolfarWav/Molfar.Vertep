@@ -7,13 +7,14 @@
  * ends and the model proposed nothing, one more call, with the same model and
  * no history, reads the request, the tool trace, the reply and the memory as
  * it stands, and suggests at most three changes: add an entry, replace an
- * outdated one, or retire one that no longer holds. Each goes through the
- * confirm card memory_propose uses; nothing is written without a yes.
+ * outdated one, or retire one that no longer holds. They are left in the
+ * user's mailbox (mailbox.ts, #175), not shown as cards that hold up the end
+ * of the run; nothing is written without the user's yes there.
  */
 import fs from "node:fs";
 import path from "node:path";
-import { appTouched, clipMemory, findEntry, listTopics, MEMORY_TOPIC, normalizeEntry, proposeEntry, proposeRetire, readMemory, resolveScope } from "./memory.js";
-import type { AgentToolOptions } from "./tools.js";
+import { appTouched, clipMemory, findEntry, listTopics, MEMORY_TOPIC, normalizeEntry, readMemory, resolveScope } from "./memory.js";
+import { queueMail, type MailDraft } from "./mailbox.js";
 
 /** A run needs this many steps (model calls) before the pass is worth its own model call. */
 export const SUGGEST_MIN_STEPS = 8;
@@ -42,7 +43,6 @@ export interface SuggestGate {
   enabled: boolean;
   /** Plan mode is read-only: nothing to remember from it, and no writes. */
   plan: boolean;
-  hasAsk: boolean;
   stopped?: boolean;
   error?: string;
   reply: string;
@@ -54,7 +54,7 @@ export interface SuggestGate {
 
 /** Whether a finished run gets the pass. */
 export function shouldSuggest(g: SuggestGate): boolean {
-  if (!g.enabled || g.plan || !g.hasAsk || g.stopped || g.error || !g.reply.trim()) return false;
+  if (!g.enabled || g.plan || g.stopped || g.error || !g.reply.trim()) return false;
   if (g.steps < SUGGEST_MIN_STEPS) return false;
   // the model already proposed something itself: do not pile a second round on top
   return !g.tools.includes("memory_propose");
@@ -174,8 +174,6 @@ export function usable(root: string, list: Suggestion[]): Suggestion[] {
 
 export interface SuggestDeps {
   root: string;
-  username: string;
-  ask: AgentToolOptions["ask"];
   /** One model call with no history; returns the reply text. */
   generate: (prompt: string) => Promise<string>;
   /** The chat's project ("app:<id>" or "project:<name>") or null. */
@@ -188,11 +186,13 @@ export interface SuggestDeps {
 }
 
 export interface SuggestOutcome {
+  /** suggestions the model made that were worth keeping */
   asked: number;
-  saved: number;
+  /** of those, how many went into the mailbox (the rest were already waiting, or skipped by the user before) */
+  queued: number;
 }
 
-/** The whole pass: build the prompt, ask the model, show each suggestion as a card. */
+/** The whole pass: build the prompt, ask the model, leave each suggestion in the user's mailbox (#175), no card. */
 export async function suggestMemory(d: SuggestDeps): Promise<SuggestOutcome> {
   const scopes = scopesFor(d.project, d.tools);
   const memories = scopes.map((s) => {
@@ -201,16 +201,17 @@ export async function suggestMemory(d: SuggestDeps): Promise<SuggestOutcome> {
   });
   const raw = await d.generate(buildSuggestPrompt({ request: d.request, reply: d.reply, trace: traceOf(d.tools), memories }));
   const list = usable(d.root, parseSuggestions(raw, scopes));
-  const out: SuggestOutcome = { asked: 0, saved: 0 };
-  const origin = "Suggested after this task:";
+  const out: SuggestOutcome = { asked: 0, queued: 0 };
   for (const s of list) {
     if (d.stopped?.()) break;
     out.asked++;
-    const r =
+    const draft: MailDraft =
       s.action === "retire"
-        ? await proposeRetire(d.root, d.username, d.ask, { scope: s.scope, match: s.match, origin })
-        : await proposeEntry(d.root, d.username, d.ask, { scope: s.scope, entry: s.entry, topic: s.topic, replaces: s.action === "replace" ? s.match : undefined, origin });
-    if (r.saved) out.saved++;
+        ? { kind: "retire", scope: s.scope, match: s.match, from: "after-run" }
+        : s.action === "replace"
+          ? { kind: "replace", scope: s.scope, entry: s.entry, match: s.match, topic: s.topic, from: "after-run" }
+          : { kind: "add", scope: s.scope, entry: s.entry, topic: s.topic, from: "after-run" };
+    if (queueMail(d.root, draft).ok) out.queued++;
   }
   return out;
 }

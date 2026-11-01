@@ -351,6 +351,29 @@ export interface AgentMemory {
   skills: AgentSkill[]
 }
 
+/** One proposal Molfar left in the mailbox (#175). */
+export interface MailItem {
+  id: string
+  kind: "add" | "replace" | "retire"
+  scope: string
+  scopeLabel: string
+  entry?: string
+  match?: string
+  topic?: string
+  /** the memory line a replace or retire touches; absent when it is not in memory any more */
+  target?: string
+  from: "after-run" | "later" | "unanswered"
+  at: number
+}
+
+export const mailboxApi = {
+  list: () => api<{ items: MailItem[] }>("GET", "/v1/agent/mailbox"),
+  /** entry = the user's own wording of an add or replace */
+  accept: (id: string, entry?: string) => api<{ ok: boolean; saved: boolean; text: string }>("POST", "/v1/agent/mailbox/accept", { id, ...(entry !== undefined ? { entry } : {}) }),
+  skip: (id: string) => api<{ ok: boolean }>("POST", "/v1/agent/mailbox/skip", { id }),
+  skipAll: () => api<{ ok: boolean }>("POST", "/v1/agent/mailbox/skip", { all: true }),
+}
+
 /** topic null / omitted = the core file */
 export const memoryApi = {
   get: () => api<AgentMemory>("GET", "/v1/agent/memory"),

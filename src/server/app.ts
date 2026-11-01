@@ -50,6 +50,7 @@ import { SyncJobs, credDirOf as syncCredDir, storeFor as syncStoreFor, viewOf as
 import { type SyncTarget, readState as readSyncState, writeState as writeSyncState } from "../sync/state.js";
 import { summarizeSession } from "../agent/compact.js";
 import * as agentMemory from "../agent/memory.js";
+import { dropMail, listMail } from "../agent/mailbox.js";
 import { listConnections, createConnection, updateConnection, deleteConnection, validateConnectionInput, validateCostChecksInput, validatePromptFormatInput, readConnections, connectionKeyUsable, type ConnectionInfo } from "../connections.js";
 import { cacheProbe } from "../cache-probe.js";
 import { PROMPT_FORMATS, type PromptFormat } from "../providers/prompt-formats.js";
@@ -3028,6 +3029,40 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     } catch (e) {
       return memoryError(c, e);
     }
+  });
+
+  // The mailbox (#175): proposals Molfar left for later. The user settles them here; a yes is the same write as a card's.
+  app.get("/v1/agent/mailbox", (c) => {
+    const root = userPaths(dataDir, c.get("user").username).root;
+    const items = listMail(root).map((m) => {
+      const scope = agentMemory.resolveScope(root, m.scope);
+      // what a replace or retire touches, so the panel can show it beside the new text
+      const target = m.kind === "add" ? undefined : agentMemory.findEntry(root, scope, m.match)?.line.replace(/^- /, "");
+      return { ...m, scopeLabel: scope.label, ...(target ? { target } : {}) };
+    });
+    return c.json({ items });
+  });
+
+  app.post("/v1/agent/mailbox/accept", async (c) => {
+    const u = c.get("user");
+    const root = userPaths(dataDir, u.username).root;
+    const body = await c.req.json<{ id?: string; entry?: string }>().catch(() => ({}) as { id?: string; entry?: string });
+    try {
+      const r = await agentMemory.acceptMail(root, u.username, String(body.id ?? ""), typeof body.entry === "string" ? body.entry : undefined);
+      return c.json({ ok: true, saved: r.saved, text: r.text });
+    } catch (e) {
+      return memoryError(c, e);
+    }
+  });
+
+  app.post("/v1/agent/mailbox/skip", async (c) => {
+    const root = userPaths(dataDir, c.get("user").username).root;
+    const body = await c.req.json<{ id?: string; all?: boolean }>().catch(() => ({}) as { id?: string; all?: boolean });
+    if (body.all === true) {
+      for (const m of listMail(root)) dropMail(root, m.id, true);
+      return c.json({ ok: true });
+    }
+    return dropMail(root, String(body.id ?? ""), true) ? c.json({ ok: true }) : c.json({ error: "that item is not in the mailbox any more" }, 404);
   });
 
   // from/to: a topic name, or null for the core file (MEMORY.md)
