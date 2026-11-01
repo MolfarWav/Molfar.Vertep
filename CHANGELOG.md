@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.9.4 (2026-11-01)
+
+- Roleplay 4.83.0 comes with this release as an app update: characters know less than the player (#184). A character's reply carries only the story facts that character knows (a fact only the player or another character knows no longer reaches it), a narrator reply gets a short "who knows what" list (on by default, Settings > Memory), a new fact with no "who knows it" is known to the people of that scene, a group in narrator mode gets each character's notebook, and a Data Bank file scoped to one character goes in only when that character speaks. Measured on 16 synthetic scenes: a local 9B model leaked a secret in 16 of 24 replies without the filter and in 0 with it; the narrator list cut 14 leaks of 24 to 4. The engine itself is unchanged in this release.
+- Dev: `scripts/leak-scenarios/` in the Roleplay app (leak scenes judged by a model) and a long-chat bench, `.fork/STATE.md` has the numbers.
+
 ## 1.9.3 (2026-11-01)
 
 - Roleplay 4.82.0 comes with this release as an app update: trying an agent on a real chat (#137), two ready map agents and a `grid` widget (#140), agent sets with "used by N chats", the last set per character and one switch for notes (#138), a permissions dialog with model roles, plain error texts and drag reorder in the Forge (#139).
