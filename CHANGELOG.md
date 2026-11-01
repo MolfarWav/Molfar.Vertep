@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.9.0 (2026-11-01)
+
+- Roleplay 4.79.0 comes with this release as an app update: Personas, a new look (#186). The overview shows cards with a portrait, a one-line summary, tags, chats, tokens and how much of the profile is filled, with a preview panel, search, four sorts, tags and folders, and a select mode. A persona's page has a banner and tabs (Core, Profile, Bindings, Lorebooks, Memory, Colours, Gallery), a model for the card's tasks, and "Generate image" for a portrait. New persona is a chooser: write it yourself, a short interview, or from a file. The preset list marks the default preset with a star.
+- Roleplay 4.79.1 comes with this release as an app update: the World book fills itself from the story whatever the DM's level (#185), and the Dashboard keeps what characters wear and hold and where everyone stands. The sensor reports changes, the plugin keeps the lists, so outfit details no longer drop piece by piece; a switch in Dashboard settings turns the "where everyone stands" block off.
+- Molfar: the built-in `ux-review` skill, which Molfar reads before it builds or changes an interface, now sets a design bar (practical, native, designed, client-first), asks for a short plan with variants before the code, and says how a fold must look (a visible header with a summary when closed, never a fold inside a fold). It also asks that the one button that commits something stands out from the rest, and that no text is smaller than 12 px. A workspace copy of the same name still replaces it.
+
 ## 1.8.1 (2026-10-31)
 
 - A reply a provider cut short now says why. A stream that ends with `finish_reason: "error"` used to show only "Provider finish_reason: error" (reported with Argon through Nous); the error now carries the host's own reason (OpenRouter's `native_finish_reason`, an error on the choice, or the chunk's other fields) and the whole chunk goes to the engine log. Not covered: the built-in agent's replies, and a retry of a reply cut mid-way (`upstreamStreamError` in `src/models.ts`).
