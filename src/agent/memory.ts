@@ -32,6 +32,7 @@ import * as git from "../git.js";
 import { resourcesDir } from "../install.js";
 import type { UserPaths } from "../paths.js";
 import type { AgentToolOptions } from "./tools.js";
+import { dropMail, getMail, queueMail, rememberDeclined, wasDeclined, type MailDraft } from "./mailbox.js";
 import { matchCount, tokens } from "./text-match.js";
 import { estimateTextTokens } from "./context-budget.js";
 
@@ -690,7 +691,6 @@ export async function proposeEntry(
   const scope = resolveScope(root, p.scope);
   const proposed = normalizeEntry(p.entry);
   if (!proposed) throw new Error("the entry is empty");
-  const file = memoryFile(scope, topic);
   // the core rides every request: past its cap, the agent picks a topic
   if (!topic && !replaces?.trim() && coreIsFull(root, scope, proposed)) {
     const existing = listTopics(root, scope).map((t) => t.topic);
@@ -699,20 +699,54 @@ export async function proposeEntry(
       saved: false,
     };
   }
-  if (!ask) return { text: "Not saved: the user is not available to confirm memory entries right now.", saved: false };
+  const draft = entryDraft(p.scope, proposed, topic, replaces);
+  if (wasDeclined(root, draft)) return { text: "Not proposed: the user skipped this entry before. Do not propose it again.", saved: false };
+  // nobody to ask (a run without a screen): it waits in the mailbox instead of being lost
+  if (!ask) return leaveInMailbox(root, { ...draft, from: "unanswered" });
   const answer = (
     await ask({
-      question: `${p.origin ? `${p.origin} ` : ""}Save to ${scope.label}${topic ? `, topic "${topic}"` : ""}?${replaces ? ` It replaces the entry containing "${replaces.trim()}".` : ""} Type a corrected version to save that instead.`,
-      options: ["Save", "Skip"],
+      question: `${p.origin ? `${p.origin} ` : ""}Save to ${scope.label}${topic ? `, topic "${topic}"` : ""}?${replaces ? ` It replaces the entry containing "${replaces.trim()}".` : ""} Type a corrected version to save that instead. "Later" leaves it in your mailbox.`,
+      options: ["Save", "Later", "Skip"],
       detail: proposed,
     })
   ).trim();
-  if (!answer || answer === "Skip" || NO_ANSWER.test(answer)) return { text: "Not saved: the user skipped this entry. Do not propose it again.", saved: false };
-  const final = answer === "Save" ? proposed : answer;
-  const { line, replaced } = appendEntry(root, scope, final, replaces, topic);
-  await git.commitAll(root, username, `memory: ${scope.label}${topic ? ` (${topic})` : ""}`, true).catch(() => undefined);
+  if (answer === "Later" || NO_ANSWER.test(answer)) return leaveInMailbox(root, { ...draft, from: answer === "Later" ? "later" : "unanswered" });
+  if (!answer || answer === "Skip") {
+    rememberDeclined(root, draft);
+    return { text: "Not saved: the user skipped this entry. Do not propose it again.", saved: false };
+  }
+  return saveEntry(root, username, { scope, entry: answer === "Save" ? proposed : answer, topic, replaces, proposed });
+}
+
+/** The mailbox shape of an entry proposal. */
+function entryDraft(scope: string | undefined, entry: string, topic: string | null, replaces: string | undefined): MailDraft {
+  const name = scope?.trim() || "global";
+  const t = topic ? { topic } : {};
+  return replaces?.trim()
+    ? { kind: "replace", scope: name, entry, match: replaces.trim(), ...t, from: "later" }
+    : { kind: "add", scope: name, entry, ...t, from: "later" };
+}
+
+/** Put a proposal in the mailbox and tell the model it is there, so it neither repeats nor waits. */
+function leaveInMailbox(root: string, d: MailDraft): { text: string; saved: boolean } {
+  const r = queueMail(root, d);
+  if (!r.ok && r.reason === "declined") return { text: "Not proposed: the user skipped this before. Do not propose it again.", saved: false };
+  if (!r.ok && r.reason === "full") return { text: "Not queued: the user's mailbox is full. Do not propose more now.", saved: false };
+  return { text: "Left in the user's mailbox; they will decide later. Do not propose it again and do not wait for an answer.", saved: false };
+}
+
+/** Write one entry, no card: the part of a proposal that follows a yes. `proposed` is the text the agent suggested. */
+export async function saveEntry(
+  root: string,
+  username: string,
+  p: { scope: MemoryScope; entry: string; topic?: string | null | undefined; replaces?: string | undefined; proposed?: string },
+): Promise<{ text: string; saved: boolean }> {
+  const topic = p.topic?.trim() || null;
+  const file = memoryFile(p.scope, topic);
+  const { line, replaced } = appendEntry(root, p.scope, p.entry, p.replaces, topic);
+  await git.commitAll(root, username, `memory: ${p.scope.label}${topic ? ` (${topic})` : ""}`, true).catch(() => undefined);
   return {
-    text: `Saved to ${file}: ${line}${replaced ? `\nReplaced: ${replaced}` : ""}${final !== proposed ? "\n(The user rewrote the entry; the saved text is theirs.)" : ""}`,
+    text: `Saved to ${file}: ${line}${replaced ? `\nReplaced: ${replaced}` : ""}${p.proposed !== undefined && p.entry !== p.proposed ? "\n(The user rewrote the entry; the saved text is theirs.)" : ""}`,
     saved: true,
   };
 }
@@ -738,19 +772,52 @@ export async function proposeRetire(
   const scope = resolveScope(root, p.scope);
   const found = findEntry(root, scope, p.match);
   if (!found) return { text: `No entry in ${scope.label} contains "${p.match.trim()}".`, saved: false };
-  if (!ask) return { text: "Not removed: the user is not available to confirm right now.", saved: false };
+  const draft: MailDraft = { kind: "retire", scope: p.scope?.trim() || "global", match: p.match.trim(), from: "later" };
+  if (wasDeclined(root, draft)) return { text: "Not proposed: the user kept this entry before. Do not propose removing it again.", saved: false };
+  if (!ask) return leaveInMailbox(root, { ...draft, from: "unanswered" });
   const answer = (
     await ask({
-      question: `${p.origin ? `${p.origin} ` : ""}Remove this entry from ${scope.label}? It no longer holds.`,
-      options: ["Remove", "Keep"],
+      question: `${p.origin ? `${p.origin} ` : ""}Remove this entry from ${scope.label}? It no longer holds. "Later" leaves it in your mailbox.`,
+      options: ["Remove", "Later", "Keep"],
       detail: found.line.replace(/^- /, ""),
     })
   ).trim();
-  if (answer !== "Remove") return { text: "Kept: the user did not remove this entry.", saved: false };
+  if (answer === "Later" || NO_ANSWER.test(answer)) return leaveInMailbox(root, { ...draft, from: answer === "Later" ? "later" : "unanswered" });
+  if (answer !== "Remove") {
+    rememberDeclined(root, draft);
+    return { text: "Kept: the user did not remove this entry.", saved: false };
+  }
+  return removeEntry(root, username, scope, found);
+}
+
+/** Remove an entry found by `findEntry`, no card, and commit. */
+export async function removeEntry(root: string, username: string, scope: MemoryScope, found: { line: string; file: string }): Promise<{ text: string; saved: boolean }> {
   const removed = removeLine(root, scope, found.file, (l) => l === found.line);
   if (!removed) return { text: "That entry is gone already (it may have changed).", saved: false };
   await git.commitAll(root, username, `memory: ${scope.label}, removed an entry`, true).catch(() => undefined);
   return { text: `Removed from ${found.file}: ${removed}`, saved: true };
+}
+
+/** What a yes in the mailbox does: write or remove the entry the item describes, then take it out. `entry` is the user's own wording. */
+export async function acceptMail(root: string, username: string, id: string, entry?: string): Promise<{ text: string; saved: boolean }> {
+  const item = getMail(root, id);
+  if (!item) throw new Error("that item is not in the mailbox any more");
+  const scope = resolveScope(root, item.scope);
+  let r: { text: string; saved: boolean };
+  if (item.kind === "retire") {
+    const found = findEntry(root, scope, item.match);
+    if (!found) {
+      dropMail(root, id);
+      return { text: `No entry in ${scope.label} contains "${item.match}" any more.`, saved: false };
+    }
+    r = await removeEntry(root, username, scope, found);
+  } else {
+    const text = normalizeEntry(entry ?? item.entry);
+    if (!text) throw new Error("the entry is empty");
+    r = await saveEntry(root, username, { scope, entry: text, topic: item.topic, replaces: item.kind === "replace" ? item.match : undefined, proposed: item.entry });
+  }
+  dropMail(root, id);
+  return r;
 }
 
 export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<AgentToolOptions, "ask">): AgentTool[] {

@@ -860,14 +860,13 @@ export class UserAgent {
   planMode = false;
 
   /** After a long run in which the model proposed nothing: one more call suggests memory changes,
-   *  each confirmed in a card (memory-suggest.ts). Never fails the run. */
+   *  each left in the user's mailbox (memory-suggest.ts, mailbox.ts). Never fails the run. */
   private async suggestMemoryAfter(userMessage: string, result: AgentRunResult): Promise<void> {
     try {
       const tools = result.turns.flatMap((t) => t.tools);
       const gate = {
         enabled: memorySuggestEnabled(settingsFileOf(this.root)),
         plan: this.planMode,
-        hasAsk: !!this.memoryAsk,
         ...(result.stopped ? { stopped: true } : {}),
         ...(result.error ? { error: result.error } : {}),
         reply: result.finalText,
@@ -878,8 +877,6 @@ export class UserAgent {
       const { ref } = this.model;
       const out = await suggestMemory({
         root: this.root,
-        username: this.runState.username,
-        ask: this.memoryAsk,
         project: this.project,
         request: userMessage,
         reply: result.finalText,
@@ -891,7 +888,7 @@ export class UserAgent {
           return res.text;
         },
       });
-      if (out.asked) log.info(`[agent:${this.sessionId}] memory suggestions after the run: ${out.saved} of ${out.asked} saved`);
+      if (out.asked) log.info(`[agent:${this.sessionId}] memory suggestions after the run: ${out.queued} of ${out.asked} left in the mailbox`);
     } catch (e) {
       log.warn(`[agent:${this.sessionId}] memory suggestions skipped: ${(e as Error).message}`);
     }
