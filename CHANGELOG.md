@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.9.5 (2026-11-01)
+
+- Roleplay 4.84.0 comes with this release as an app update: chapters follow who saw the scene (a character's reply no longer carries a chapter that character was not in), a warning under a reply when a character acts on a secret it should not know (#184, P2 and P3), Lorebooks gets an Export menu and the right arrow for Import, and the "..." menu of a fact in the Memory overview can be pressed again (it sat under the scrollbar). The engine itself is unchanged in this release.
+
 ## 1.9.4 (2026-11-01)
 
 - Roleplay 4.83.0 comes with this release as an app update: characters know less than the player (#184). A character's reply carries only the story facts that character knows (a fact only the player or another character knows no longer reaches it), a narrator reply gets a short "who knows what" list (on by default, Settings > Memory), a new fact with no "who knows it" is known to the people of that scene, a group in narrator mode gets each character's notebook, and a Data Bank file scoped to one character goes in only when that character speaks. Measured on 16 synthetic scenes: a local 9B model leaked a secret in 16 of 24 replies without the filter and in 0 with it; the narrator list cut 14 leaks of 24 to 4. The engine itself is unchanged in this release.
