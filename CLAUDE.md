@@ -75,6 +75,17 @@ holds the rules that do not change between tasks; the handoff holds the task.
   features, release notes and READMEs alike (check that a release note or README line does not repeat or contradict an earlier one).
 - A quick sweep, not a research project: a few searches and a skim, then proceed.
 
+## Weekly Reddit report (user, 2026-11-01)
+- The user posts a weekly report on Reddit in English (post #4 covered 1.4.0 to 1.9.1) and wants more. Before preparing one, read
+  the project's shared files (not in this repo): `/mnt/project-files/reddit-report/post-draft.md` (latest post, structure, claims
+  to double-check, gallery order), `content-plan-1.4-1.8.md` (how the plan was shown for approval), and
+  `media/scripts/` (fake-model demo GIF, screenshots and cover; `README-v19.txt` gives the run order). Post #1 and its demo seed
+  are in `/mnt/project-files/reddit-overview/`. The source of the content is GitHub: release notes (`.fork/release-notes/`),
+  the Roleplay changelog, and the release list (re-check it before the final count, new releases appear mid-week).
+- Order of work: plan first (per-version table, 5-8 headline features, what to skip, which feature gets the animated GIF),
+  the user approves, then the draft and the media. Images and the draft go to one folder on the user's desktop
+  (`G:\AI-Data\Reddit-<n>-Molfar-Vertep\`, numbered files; the laptop has no G:).
+
 ## Done means
 1. `bun run typecheck`, `bun run test`, `bun run build:client` pass.
 2. `bunx biome lint <touched files>` adds no warnings beyond the surrounding style.
