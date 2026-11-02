@@ -7,6 +7,12 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.10.1 (2026-11-02)
+
+- An app that never builds now says why. The in-browser builder used to wait for its hidden frame with no limit: when the browser never started it (a reverse proxy in front of the engine that passes neither the `Host` header nor `X-Forwarded-Proto: https`, so the frame's Content-Security-Policy names the wrong address; a frame-blocking extension), the tab stayed on "Building the app" for ever, with no CPU use, no log line and no console error in the main window. The frame now has 30 seconds to start (the esbuild download does not count, so slow phones are not hit) and esbuild two minutes more, and the error says what the usual cause is and what to look for in the console (#224).
+- A refused build request is shown as an error. Behind a proxy that rewrites `Host` the engine refuses every write as cross-origin, and the tab showed "Another open tab is building this app" for ever (about one request a second). It now shows the engine's own message, at once or after three refusals in a row while waiting.
+- Checked in a real browser against a throwaway engine with several proxies: the unfixed code stayed on "Building" for 150 s without an error, the fixed one shows the error in about 34 s (frame) or within 5 s (refused request); direct addresses and proxies that pass the headers still build in about 9 s. Whether the reporter of #224 has such a proxy is not known, so that issue stays open.
+
 ## 1.10.0 (2026-11-02)
 
 - Roleplay 4.86.0 comes with this release as an app update: a journal for each character in the open Dashboard (a thought, how they see the people they know, what they want after a scene; no extra model call, the thought fades after 3 turns, settings under Dashboard > Journal, its own part "Dashboard · journal" in the prompt inspector), and the Dashboard clock fixes (#207): the date no longer falls a day behind after "the next morning", the story model is told "about 09:00" instead of inventing an hour, and a scene with your character alone keeps its date and time. The engine itself has no code changes.
