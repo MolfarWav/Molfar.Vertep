@@ -40,6 +40,8 @@ export interface SandboxRequest {
   zipBase64?: string;
   /** Safe reads may be repeated once when the WASM runtime aborts during teardown. */
   retryOnPoison?: boolean;
+  /** The siblings' insertCeiling answers for a route called with ?insertceilings (host.insertCeilings). */
+  siblingCeilings?: { plugin: string; id: string; tokens: number }[];
   /** Who is calling ("plugin route GET /path"), named in the error the other
    *  calls get when this one takes the shared worker down. */
   label?: string;

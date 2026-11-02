@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { discoverPlugins, invalidatePluginCache, runPluginHook, runPluginRoute, runPluginTool, collectSiblingTools, collectSiblingLlmHooks, sanitizeTurn, SCAN_VEC_MAX, syncSchedules, stopSchedules, type LoadedPlugin } from "../src/plugins/runtime.js";
+import { discoverPlugins, invalidatePluginCache, runPluginHook, runPluginRoute, runPluginTool, collectSiblingTools, collectSiblingLlmHooks, collectInsertCeilings, sanitizeTurn, SCAN_VEC_MAX, syncSchedules, stopSchedules, type LoadedPlugin } from "../src/plugins/runtime.js";
 import { log } from "../src/logger.js";
 import { PluginStoreService } from "../src/plugins/store.js";
 
@@ -459,6 +459,66 @@ export function uiPanel(ctx) {
     const unflagged = (without?.json ?? {}) as { tools?: unknown };
     expect(unflagged.tools ?? null).toBeNull();
   }, 30_000);
+
+  it("insertCeiling: siblings' ceilings reach a route's host (?insertceilings=<chat>), cleaned, absent without the flag", async () => {
+    writePlugin(
+      "asker",
+      { name: "A", version: "1", permissions: ["routes"], origin: "local" },
+      `export function handleRoute(req, host) {
+        return { status: 200, json: { ceilings: host.insertCeilings ?? null } };
+      }`,
+    );
+    // answers for the chat it is asked about, as a list; ids and numbers it should not get away with are dropped
+    writePlugin(
+      "memory",
+      { name: "M", version: "1", permissions: ["hooks"], origin: "local" },
+      `export function insertCeiling(ctx) {
+        return { ceilings: [
+          { id: "insert", tokens: ctx.chatId === "c1" ? 800.2 : 0 },
+          { id: "bad id!", tokens: 50 },
+          { id: "neg", tokens: -5 },
+          { id: "huge", tokens: 99999999 },
+          { id: "nan", tokens: "12" },
+          { tokens: 7, plugin: "someone-else" },
+        ], asked: ctx.plugin, window: ctx.windowTokens ?? null };
+      }`,
+    );
+    // one row without a list, a plugin that throws, one without the permission, one without the export
+    writePlugin("single", { name: "S", version: "1", permissions: ["hooks"], origin: "local" }, `export function insertCeiling() { return { id: "dice", tokens: 60 }; }`);
+    writePlugin("broken", { name: "B", version: "1", permissions: ["hooks"], origin: "local" }, `export function insertCeiling() { throw new Error("boom"); }`);
+    writePlugin("nohooks", { name: "N", version: "1", permissions: ["routes"], origin: "local" }, `export function insertCeiling() { return { tokens: 9999 }; }`);
+    writePlugin("silent", { name: "Q", version: "1", permissions: ["hooks"], origin: "local" }, `export function llmRequest() { return null; }`);
+    const plugins = discoverPlugins(path.join(dir, "plugins"));
+    const asker = plugins.find((p) => p.id === "asker")!;
+    const base = deps();
+    const run = (query: Record<string, string>) =>
+      runPluginRoute(asker, { method: "POST", path: "/go", query, body: {} }, {
+        ...base,
+        insertCeilings: (self, ctx) => collectInsertCeilings(plugins, self, ctx, base),
+      });
+    type Row = { plugin: string; id: string; tokens: number };
+    const rows = async (query: Record<string, string>) => ((await run(query))?.json as { ceilings: Row[] | null }).ceilings;
+
+    expect(await rows({ insertceilings: "c1", window: "64000" })).toEqual([
+      { plugin: "memory", id: "insert", tokens: 801 },
+      { plugin: "memory", id: "memory", tokens: 50 },
+      { plugin: "memory", id: "memory", tokens: 7 },
+      { plugin: "single", id: "dice", tokens: 60 },
+    ]);
+    // another chat: the plugin answers for it (0 here), nothing else changes
+    expect((await rows({ insertceilings: "c2" }))?.find((r) => r.id === "insert")?.tokens).toBe(0);
+    // no flag, no ceilings on the host
+    expect(await rows({})).toBeNull();
+  }, 60_000);
+
+  it("insertCeiling: a sibling sees the asking plugin, the chat and the window", async () => {
+    writePlugin("asker", { name: "A", version: "1", permissions: ["routes"], origin: "local" }, `export function handleRoute() { return { status: 200, json: {} }; }`);
+    writePlugin("echo", { name: "E", version: "1", permissions: ["hooks"], origin: "local" }, `export function insertCeiling(ctx) { return { tokens: ctx.windowTokens ?? -1, id: ctx.plugin + ":" + ctx.chatId }; }`);
+    const plugins = discoverPlugins(path.join(dir, "plugins"));
+    const asker = plugins.find((p) => p.id === "asker")!;
+    const rows = await collectInsertCeilings(plugins, asker, { chatId: "chat_9", windowTokens: 4096 }, deps());
+    expect(rows).toEqual([{ plugin: "echo", id: "asker:chat_9", tokens: 4096 }]);
+  }, 60_000);
 
   it("llmRequest hooks: sibling patches run in priority order and cannot set host-only fields", async () => {
     writePlugin(

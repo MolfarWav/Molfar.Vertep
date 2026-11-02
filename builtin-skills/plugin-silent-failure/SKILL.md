@@ -22,13 +22,14 @@ You cannot read the engine log, but `plugin_log` shows every plugin's `host.log`
 | `host.fs.*` | `fs` |
 | `onTick` | `schedule` AND `"schedule": { "intervalMs": N }` |
 | `llmRequest` | `hooks` + `llm` |
+| `insertCeiling` | `hooks` |
 | `host.net.*` | `network` (+ optional `networkHosts`) |
 
 - `origin: "imported"` needs the user's grant for each permission in Settings. `origin: "local"` is trusted.
 - `host.fs` exists only in app-bundled plugins, scoped to that app's `data/`. A top-level plugin has no fs, even with the permission.
 
 ## 3. Is the export one the engine calls?
-- The engine calls only: `handleRoute`, `handleTool`, `onTick`, `uiPanel`, `onAppUpdate`, `appTools`, `llmRequest`. Any other name (`onSchedule`, `tick`, `run`, a default export) is never called, and nothing reports it.
+- The engine calls only: `handleRoute`, `handleTool`, `onTick`, `uiPanel`, `onAppUpdate`, `appTools`, `llmRequest`, `insertCeiling`. Any other name (`onSchedule`, `tick`, `run`, a default export) is never called, and nothing reports it.
 - Signatures are fixed. `onTick(ctx, host)`, where ctx is `{ pluginId }`. A one-argument `onTick(host)` receives ctx as "host", so `host.fs` is undefined and the tick throws. This is the most common bug.
 - ESM only: `export function onTick(ctx, host) {…}`. `exports.x =` or `module.exports` exports nothing.
 - Keep exports synchronous. There is no `fetch`, `setTimeout`, `require`, or npm import. Async work goes through `host.llm` / `host.net` (two-phase).

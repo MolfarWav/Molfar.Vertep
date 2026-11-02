@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.9.7 (2026-11-02)
+
+- Fix: a reply could come back empty or a few tokens long once a chat filled the model's context window (Discord report: a 64k window, long chats, "works when unlocked"). The model library lowers the output limit of every request to what is left of the window after its own estimate and a 4096-token margin, never below 1; Roleplay already trims the prompt to the window minus the reply, so the margin took all the room and `max_tokens` went out as 1. When an app names the output limit, the engine now sends it as it is. The agent keeps its own limit.
+- Plugins: a new optional hook `insertCeiling` lets each plugin report how many prompt tokens it may add to a chat; a sibling's route called with `?insertceilings=<chatId>` reads the answers as `host.insertCeilings` (#217). Nothing uses it yet: Roleplay keeps its own table until it declares ceilings, so no app update is needed for the fix above.
+
 ## 1.9.6 (2026-11-02)
 
 - Roleplay 4.85.0 comes with this release as an app update: search words for new facts and chapters (the memory finds an old fact when you ask in other words), the history leaves room for every kind of memory block on a small context window, and an optional hidden "who knows what" plan for narrator replies, off by default, plus the memory-injection changes already on Roleplay main (answer language, newest recollection by your message, memory shapes behavior, soul temperament). The engine itself has no code changes. Details in `.fork/release-notes/1.9.6.md`.

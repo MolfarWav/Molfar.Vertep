@@ -47,6 +47,10 @@ Exports the engine calls:
   `priority`: lower runs first, higher wins conflicts. The engine labels what a hook
   adds with the plugin's name in the prompt inspector; return
   `promptSources: { parts: [{ kind, label, text }] }` beside the patch for finer labels.
+- `insertCeiling({ chatId, plugin, windowTokens? }, host)` → `{ ceilings: [{ id, tokens }] }`: the most prompt
+  tokens this plugin may add to the chat's next request (permission `hooks`). A sibling's route called with
+  `?insertceilings=<chatId>` (optional `&window=<tokens>`) reads every sibling's answer as `host.insertCeilings`
+  (`[{ plugin, id, tokens }]`, bad rows dropped) to reserve room before it trims history. Absent without the flag.
 
 Prompt inspector labels: a `genReq` may carry `promptSources: { v: 1, parts: [{ kind, label,
 detail?, text }], omitted: [{ kind, label, reason, tokens? }], vars: [{ name, value }] }`, where each

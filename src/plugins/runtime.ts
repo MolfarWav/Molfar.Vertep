@@ -29,6 +29,12 @@
  *                               a one-argument onTick(host) gets ctx, not host)
  *     onAppUpdate({ from, to }, host) → the app's own data upgrades, run
  *                               once after its code moved between versions
+ *     insertCeiling({ chatId, plugin, windowTokens? }, host)
+ *                             → { ceilings: [{ id, tokens }] }: the most prompt
+ *                               tokens this plugin may add to the chat's next
+ *                               request (permission: hooks). A sibling's route
+ *                               called with ?insertceilings=<chatId> reads the
+ *                               answers as host.insertCeilings to reserve room
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -44,7 +50,7 @@ import { pacerFor, readLimits, runLimited, type PluginLimits } from "./llm-pace.
 /** Exports the engine calls on its own (routes and tools are dispatched by
  *  request, not from here). Only these names fire — a plugin exporting
  *  anything else is never reached. */
-export const PLUGIN_HOOKS = ["onTick", "uiPanel", "onAppUpdate", "appTools", "llmRequest"] as const;
+export const PLUGIN_HOOKS = ["onTick", "uiPanel", "onAppUpdate", "appTools", "llmRequest", "insertCeiling"] as const;
 export type PluginHook = (typeof PLUGIN_HOOKS)[number];
 
 export type PluginPermissionCap = "llm" | "store" | "schedule" | "network" | "tools" | "routes" | "fs" | "zip" | "hooks";
@@ -103,6 +109,9 @@ export interface PluginRuntimeDeps {
   /** App plugins whose llmRequest hook may patch this plugin's model
    *  requests (permissions: hooks + llm). Set by app-route dispatch. */
   llmHooks?: (self: LoadedPlugin) => Promise<LlmRequestHook[]>;
+  /** What the sibling plugins' insertCeiling hooks answer for one chat (collectInsertCeilings).
+   *  Set by app-route dispatch. */
+  insertCeilings?: (self: LoadedPlugin, ctx: InsertCeilingCtx) => Promise<InsertCeiling[]>;
   /** Register an abort signal for a streamed llm request (keyed by its stream
    *  descriptor's chatId by the dispatch layer). Cancelling aborts the
    *  provider stream; the kernel salvages whatever partial text exists. */
@@ -339,6 +348,66 @@ export async function collectSiblingTools(
       return r ? { text: r.text, isError: !r.ok } : { text: "tool unavailable", isError: true };
     },
   };
+}
+
+export interface InsertCeilingCtx {
+  chatId: string;
+  windowTokens?: number;
+}
+/** One block a plugin may add to a request, as its own ceiling in tokens. */
+export interface InsertCeiling {
+  /** The plugin that answered; the host sets it, a plugin cannot speak for another. */
+  plugin: string;
+  /** What the plugin calls the block ("insert", "backstory"...). */
+  id: string;
+  tokens: number;
+}
+
+const CEILING_ROWS_PER_PLUGIN = 32;
+const CEILING_MAX_TOKENS = 1_000_000;
+
+/** An insertCeiling answer, cleaned: `{ ceilings: [{ id, tokens }] }`, or one `{ id?, tokens }`.
+ *  Rows with a bad shape or a number outside 0..1,000,000 are dropped, so a broken plugin
+ *  cannot reserve the whole window or turn the sum into NaN. */
+export function sanitizeInsertCeilings(raw: unknown, pluginId: string): InsertCeiling[] {
+  const o = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
+  if (!o) return [];
+  const rows = Array.isArray(o.ceilings) ? o.ceilings : "tokens" in o ? [o] : [];
+  const out: InsertCeiling[] = [];
+  for (const row of rows.slice(0, CEILING_ROWS_PER_PLUGIN)) {
+    const r = row && typeof row === "object" ? (row as { id?: unknown; tokens?: unknown }) : null;
+    if (!r || typeof r.tokens !== "number" || !Number.isFinite(r.tokens)) continue;
+    const tokens = Math.ceil(r.tokens);
+    if (tokens < 0 || tokens > CEILING_MAX_TOKENS) continue;
+    const id = typeof r.id === "string" && /^[\w:. -]{1,64}$/.test(r.id) ? r.id : pluginId;
+    out.push({ plugin: pluginId, id, tokens });
+  }
+  return out;
+}
+
+/** The ceilings the siblings of `self` report for one chat: each sibling with the "hooks"
+ *  permission and an insertCeiling export is asked in id order. Crash-isolated: a plugin that
+ *  fails or answers nothing adds no rows, and the caller keeps its own table for it. */
+export async function collectInsertCeilings(
+  appPlugins: LoadedPlugin[],
+  self: LoadedPlugin,
+  ctx: InsertCeilingCtx,
+  deps: PluginRuntimeDeps,
+): Promise<InsertCeiling[]> {
+  const out: InsertCeiling[] = [];
+  for (const sibling of [...appPlugins].sort((a, b) => (a.id < b.id ? -1 : 1))) {
+    if (sibling.id === self.id || sibling.replacedBy) continue;
+    if (!hasCapAny(sibling, "hooks", deps)) continue;
+    // cheap pre-check before paying for a sandbox eval: no name, no export
+    if (!sibling.source.includes("insertCeiling")) continue;
+    try {
+      const res = await runPluginHook(sibling, "insertCeiling", { chatId: ctx.chatId, plugin: self.id, ...(ctx.windowTokens ? { windowTokens: ctx.windowTokens } : {}) }, deps);
+      out.push(...sanitizeInsertCeilings(res, sibling.id));
+    } catch (e) {
+      log.warn(`[plugin:${sibling.id}] insertCeiling hook crashed: ${(e as Error).message}`);
+    }
+  }
+  return out;
 }
 
 /** Request fields an llmRequest hook may patch. Everything else is host-only
@@ -852,6 +921,14 @@ export async function runPluginRoute(
       const bridge = await deps.siblingTools(plugin);
       siblingToolDefs = bridge ? [...(bridge.tools ?? [])] : [];
     }
+    // ?insertceilings=<chatId>[&window=<tokens>]: what the siblings' insertCeiling hooks answer for
+    // that chat, as host.insertCeilings; absent without the flag or when no sibling answers
+    let siblingCeilings: InsertCeiling[] | null = null;
+    const ceilingChat = req.query.insertceilings;
+    if (typeof ceilingChat === "string" && ceilingChat && ceilingChat.length <= 128 && deps.insertCeilings) {
+      const win = Number(req.query.window);
+      siblingCeilings = await deps.insertCeilings(plugin, { chatId: ceilingChat, ...(Number.isInteger(win) && win > 0 && win <= 100_000_000 ? { windowTokens: win } : {}) }).catch(() => []);
+    }
     for (let pass = 0; pass < MAX_ROUTE_PASSES; pass++) {
       const r = await box.eval({
         ...zipLimits,
@@ -874,6 +951,7 @@ export async function runPluginRoute(
         embedResults: results.embed,
         embedInfo: results.embedInfo,
         ...(siblingToolDefs ? { siblingToolDefs } : {}),
+        ...(siblingCeilings ? { siblingCeilings } : {}),
         retryOnPoison: req.method === "GET" || req.method === "HEAD",
       });
       printLogs(plugin, r, deps);

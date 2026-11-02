@@ -123,7 +123,7 @@ if (typeof fn === "function") { out = fn(env.ctx, env.host); }`);
 }
 
 port.on("message", async (msg) => {
-  const { id, source, hook, ctx, storeSnapshot = {}, llmResults = {}, netResults = {}, netAllowed = false, maxStoreBytes = 1024 * 1024, storeAllowed = true, llmAllowed = true, fsAllowed = false, fsRoot = null, zipAllowed = false, zipBase64 = null, siblingToolDefs = null, embedResults = {}, embedInfo = {}, executionTimeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = msg;
+  const { id, source, hook, ctx, storeSnapshot = {}, llmResults = {}, netResults = {}, netAllowed = false, maxStoreBytes = 1024 * 1024, storeAllowed = true, llmAllowed = true, fsAllowed = false, fsRoot = null, zipAllowed = false, zipBase64 = null, siblingToolDefs = null, siblingCeilings = null, embedResults = {}, embedInfo = {}, executionTimeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = msg;
   const logs = [];
   const llmRequests = [];
   const netRequests = [];
@@ -409,6 +409,7 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
     host.fs = fsSvc;
     host.zip = zipSvc;
     if (siblingToolDefs) host.siblingTools = siblingToolDefs;
+    if (siblingCeilings) host.insertCeilings = siblingCeilings;
 
     // guest console.* joins the capped `logs` collection (host.log's 500-char
     // + count caps apply) instead of the library default: raw engine stdout
