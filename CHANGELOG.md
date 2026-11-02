@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.9.6 (2026-11-02)
+
+- Roleplay 4.85.0 comes with this release as an app update: search words for new facts and chapters (the memory finds an old fact when you ask in other words), the history leaves room for every kind of memory block on a small context window, and an optional hidden "who knows what" plan for narrator replies, off by default. The engine itself has no code changes. Details in `.fork/release-notes/1.9.6.md`.
+
 ## 1.9.5 (2026-11-01)
 
 - Roleplay 4.84.0 comes with this release as an app update: chapters follow who saw the scene (a character's reply no longer carries a chapter that character was not in), a warning under a reply when a character acts on a secret it should not know (#184, P2 and P3), Lorebooks gets an Export menu and the right arrow for Import, and the "..." menu of a fact in the Memory overview can be pressed again (it sat under the scrollbar). The engine itself is unchanged in this release.
