@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.10.0 (2026-11-02)
+
+- Roleplay 4.86.0 comes with this release as an app update: a journal for each character in the open Dashboard (a thought, how they see the people they know, what they want after a scene; no extra model call, the thought fades after 3 turns, settings under Dashboard > Journal, its own part "Dashboard · journal" in the prompt inspector), and the Dashboard clock fixes (#207): the date no longer falls a day behind after "the next morning", the story model is told "about 09:00" instead of inventing an hour, and a scene with your character alone keeps its date and time. The engine itself has no code changes.
+
 ## 1.9.7 (2026-11-02)
 
 - Fix: a reply could come back empty or a few tokens long once a chat filled the model's context window (Discord report: a 64k window, long chats, "works when unlocked"). The model library lowers the output limit of every request to what is left of the window after its own estimate and a 4096-token margin, never below 1; Roleplay already trims the prompt to the window minus the reply, so the margin took all the room and `max_tokens` went out as 1. When an app names the output limit, the engine now sends it as it is. The agent keeps its own limit.
