@@ -49,6 +49,16 @@ interface ServerStatus {
 
 const VERSION = typeof __BUILDER_VERSION__ === "string" ? __BUILDER_VERSION__ : "dev";
 const BUILD_TIMEOUT = 5 * 60_000;
+/** How long the builder frame page may take to start (a small page: this is not a download of esbuild). */
+const FRAME_LOAD_TIMEOUT = 30_000;
+/** How long esbuild may take to compile and answer once the frame is up. */
+const ESBUILD_START_TIMEOUT = 120_000;
+const FRAME_STUCK =
+  "The app builder did not start: its page never answered inside the sandbox frame. The usual cause is the address you opened Vertep at " +
+  "not matching what the engine sees, for example a reverse proxy that does not pass the Host and X-Forwarded-Proto headers " +
+  "(the frame's Content-Security-Policy is built from them); a browser extension that blocks frames can do it too. " +
+  "Open the engine by its own address (http://<server>:<port>) to check, and look in the browser console for \"Content Security Policy\" or \"Refused to frame\".";
+const ESBUILD_STUCK = "The app builder started but esbuild did not become ready in two minutes. Reload the page; if it repeats, the device may be too slow or short of memory.";
 const READ_BUDGET = 1536 * 1024 * 1024;
 /** Seconds a BUSY lease may block a build before this tab forces it over.
  *  Idle leases yield at once (see takeLease), so this only caps a build that
@@ -113,15 +123,37 @@ class BuilderFrame {
     let readyOk!: () => void;
     let readyFail!: (e: Error) => void;
     const loadedP = new Promise<void>((r) => (loaded = r));
+    // The frame page and esbuild each get a limit. Without one a frame the browser never starts (a
+    // Content-Security-Policy that does not match the address the page is opened at, an extension) leaves
+    // `ready` pending for good: no CPU, no log, no error, and the 5-minute build timeout, which only
+    // starts after `ready`, never runs. The user saw a tab that "builds" for ever.
+    let bootTimer: ReturnType<typeof setTimeout> | undefined = setTimeout(
+      () => readyFail(new Error(FRAME_STUCK)),
+      FRAME_LOAD_TIMEOUT,
+    );
+    const bootDone = () => {
+      clearTimeout(bootTimer);
+      bootTimer = undefined;
+    };
     this.ready = new Promise<void>((res, rej) => {
-      readyOk = res;
-      readyFail = rej;
+      readyOk = () => {
+        bootDone();
+        res();
+      };
+      readyFail = (e) => {
+        bootDone();
+        rej(e);
+      };
     });
     this.onMessage = (e: MessageEvent) => {
       if (e.source !== this.iframe.contentWindow) return;
       const d = e.data as { __molfarBuilder?: number; t?: string; rid?: unknown; ops?: unknown; id?: unknown; output?: unknown; error?: unknown; text?: unknown; ms?: unknown; resumed?: unknown };
       if (!d || d.__molfarBuilder !== 1) return;
-      if (d.t === "loaded") loaded();
+      // the frame page is up: its start-up limit is met (downloading esbuild.wasm is not counted in it)
+      if (d.t === "loaded") {
+        bootDone();
+        loaded();
+      }
       else if (d.t === "ready") readyOk();
       else if (d.t === "fatal") readyFail(new Error(String(d.error)));
       else if (d.t === "log") console.warn(`[builder:${appId}]`, String(d.text).slice(0, 4000));
@@ -141,6 +173,9 @@ class BuilderFrame {
         const [bytes] = await Promise.all([wasm(), loadedP]);
         const copy = bytes.slice(0);
         this.post({ t: "init", wasm: copy, prior }, [copy]);
+        // the frame is up: esbuild now gets its own (longer) time to start, a phone compiles the wasm slowly
+        bootDone();
+        bootTimer = setTimeout(() => readyFail(new Error(ESBUILD_STUCK)), ESBUILD_START_TIMEOUT);
       } catch (e) {
         readyFail(e as Error);
       }
@@ -201,6 +236,8 @@ type Watcher = { onStatus: (s: BuildStatus) => void; onReload: (why: string) => 
 class AppBuild {
   private holder = Math.random().toString(36).slice(2) + Date.now().toString(36);
   private leased = false;
+  /** Why the last lease request was refused (an HTTP error, not another tab holding it); null when it was answered. */
+  private leaseError: string | null = null;
   private disposed = false;
   private frame: BuilderFrame | null = null;
   private changed = new Set<string>();
@@ -254,13 +291,27 @@ class AppBuild {
     return `/v1/apps/${encodeURIComponent(this.appId)}/build`;
   }
 
+  /** The engine refused the lease request itself (403, 5xx, no answer): saying "another tab is building" would be a lie and could last for ever. */
+  private leaseRefused(): boolean {
+    if (this.leaseError === null || this.disposed) return false;
+    this.status({
+      phase: "error",
+      message:
+        `The engine refused the build request: ${this.leaseError}. If Vertep is opened through a reverse proxy, the proxy must pass the Host header ` +
+        "unchanged (a proxy that rewrites it makes the engine refuse every write as cross-origin) and, for HTTPS, X-Forwarded-Proto.",
+    });
+    return true;
+  }
+
   private async lease(opts: { force?: boolean; busy?: boolean } = {}): Promise<boolean> {
     const busy = opts.busy ?? this.running !== null;
     try {
       const r = (await api(`${this.base()}/lease`, { method: "POST", body: JSON.stringify({ holder: this.holder, busy, ...(opts.force ? { force: true } : {}) }) })) as { granted?: boolean };
       this.leased = r.granted === true;
-    } catch {
+      this.leaseError = null;
+    } catch (e) {
       this.leased = false;
+      this.leaseError = String((e as Error).message);
     }
     if (this.disposed) {
       this.releaseLease();
@@ -283,6 +334,7 @@ class AppBuild {
     }
     if (this.disposed) return;
     if (!(await this.lease({ busy: true }))) {
+      if (this.leaseRefused()) return;
       if (!this.disposed) this.status({ phase: "waiting", message: "Another open tab is building this app" });
       return;
     }
@@ -330,12 +382,14 @@ class AppBuild {
       return;
     }
     if (this.disposed) return;
+    if (this.leaseRefused()) return;
     if (!st.needsBuild) {
       this.status({ phase: "ready" });
       return;
     }
     // another tab is building: wait for it
     this.status({ phase: "waiting", message: "Another open tab is building this app" });
+    let refused = 0;
     for (let i = 0; i < 300; i++) {
       await new Promise((r) => setTimeout(r, 1000));
       if (this.disposed) return;
@@ -358,6 +412,9 @@ class AppBuild {
           await this.kick("full", st.rev);
           return;
         }
+        // one failed request may be a blip; three in a row is a refusal
+        refused = this.leaseError === null ? 0 : refused + 1;
+        if (refused >= 3 && this.leaseRefused()) return;
       } catch {
         /* keep waiting */
       }
