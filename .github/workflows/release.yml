@@ -45,6 +45,9 @@ jobs:
   publish:
     name: Publish
     needs: build
+    # build ends red when the optional macOS arm64 run gets no runner; publish
+    # still goes when every required build passed
+    if: ${{ always() && needs.build.outputs.ready == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

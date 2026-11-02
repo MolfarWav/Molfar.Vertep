@@ -66,7 +66,8 @@ jobs:
 
   staging-release:
     name: Publish staging pre-release
-    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    # build ends red when the optional macOS arm64 run gets no runner (build.yml)
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/staging' && needs.version.result == 'success' && needs.check.result == 'success' && needs.build.outputs.ready == 'true' }}
     needs: [version, check, build]
     runs-on: ubuntu-latest
     permissions:
