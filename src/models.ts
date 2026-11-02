@@ -1403,6 +1403,12 @@ export class UserModelService {
       ...(allTools.length && hasToolExec ? { tools: allTools } : {}),
     });
 
+    // the output limit the caller named reaches the provider whole: pi-ai lowers maxTokens to window - its own
+    // estimate - 4096 (never below 1), and a caller that already budgets its prompt against the window (the Roleplay
+    // app: window minus the reply) got max_tokens 1 once a chat filled the window. contextWindow 0 switches that
+    // lowering off for this call only; the window still drives the caller's budget, the inspector and overflow checks
+    const streamModel = req.presetParams?.max_tokens != null ? ({ ...model, contextWindow: 0 } as typeof model) : model;
+
     // text the model writes BEFORE pausing to call tools — kept so the result
     // contains everything that streamed, not just the final round
     let textBeforeTools = "";
@@ -1478,7 +1484,7 @@ export class UserModelService {
       roundThinkStart = 0;
       roundThinkEnd = 0;
       const upstream = upstreamStreamError();
-      const stream = this.models.streamSimple(model, context, {
+      const stream = this.models.streamSimple(streamModel, context, {
         onProviderStreamEvent: upstream.watch,
         ...(reasoningLevel && reasoningLevel !== "off" ? { reasoning: reasoningLevel } : {}),
         ...(req.thinkingBudget && req.thinkingBudget > 0 && reasoningLevel && reasoningLevel !== "off"
@@ -1554,7 +1560,7 @@ export class UserModelService {
     // exhausted rounds: do one final call WITHOUT tools to force a text answer
     const context: Context = { systemPrompt, messages };
     const upstream = upstreamStreamError();
-    const stream = this.models.streamSimple(model, context, {
+    const stream = this.models.streamSimple(streamModel, context, {
       onProviderStreamEvent: upstream.watch,
       ...(req.signal ? ({ signal: req.signal } as never) : {}),
       sessionId,

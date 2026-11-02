@@ -7,6 +7,28 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.10.0 (2026-11-02)
+
+- Roleplay 4.86.0 comes with this release as an app update: a journal for each character in the open Dashboard (a thought, how they see the people they know, what they want after a scene; no extra model call, the thought fades after 3 turns, settings under Dashboard > Journal, its own part "Dashboard · journal" in the prompt inspector), and the Dashboard clock fixes (#207): the date no longer falls a day behind after "the next morning", the story model is told "about 09:00" instead of inventing an hour, and a scene with your character alone keeps its date and time. The engine itself has no code changes.
+
+## 1.9.7 (2026-11-02)
+
+- Fix: a reply could come back empty or a few tokens long once a chat filled the model's context window (Discord report: a 64k window, long chats, "works when unlocked"). The model library lowers the output limit of every request to what is left of the window after its own estimate and a 4096-token margin, never below 1; Roleplay already trims the prompt to the window minus the reply, so the margin took all the room and `max_tokens` went out as 1. When an app names the output limit, the engine now sends it as it is. The agent keeps its own limit.
+- Plugins: a new optional hook `insertCeiling` lets each plugin report how many prompt tokens it may add to a chat; a sibling's route called with `?insertceilings=<chatId>` reads the answers as `host.insertCeilings` (#217). Nothing uses it yet: Roleplay keeps its own table until it declares ceilings, so no app update is needed for the fix above.
+
+## 1.9.6 (2026-11-02)
+
+- Roleplay 4.85.0 comes with this release as an app update: search words for new facts and chapters (the memory finds an old fact when you ask in other words), the history leaves room for every kind of memory block on a small context window, and an optional hidden "who knows what" plan for narrator replies, off by default, plus the memory-injection changes already on Roleplay main (answer language, newest recollection by your message, memory shapes behavior, soul temperament). The engine itself has no code changes. Details in `.fork/release-notes/1.9.6.md`.
+
+## 1.9.5 (2026-11-01)
+
+- Roleplay 4.84.0 comes with this release as an app update: chapters follow who saw the scene (a character's reply no longer carries a chapter that character was not in), a warning under a reply when a character acts on a secret it should not know (#184, P2 and P3), Lorebooks gets an Export menu and the right arrow for Import, and the "..." menu of a fact in the Memory overview can be pressed again (it sat under the scrollbar). The engine itself is unchanged in this release.
+
+## 1.9.4 (2026-11-01)
+
+- Roleplay 4.83.0 comes with this release as an app update: characters know less than the player (#184). A character's reply carries only the story facts that character knows (a fact only the player or another character knows no longer reaches it), a narrator reply gets a short "who knows what" list (on by default, Settings > Memory), a new fact with no "who knows it" is known to the people of that scene, a group in narrator mode gets each character's notebook, and a Data Bank file scoped to one character goes in only when that character speaks. Measured on 16 synthetic scenes: a local 9B model leaked a secret in 16 of 24 replies without the filter and in 0 with it; the narrator list cut 14 leaks of 24 to 4. The engine itself is unchanged in this release.
+- Dev: `scripts/leak-scenarios/` in the Roleplay app (leak scenes judged by a model) and a long-chat bench, `.fork/STATE.md` has the numbers.
+
 ## 1.9.3 (2026-11-01)
 
 - Roleplay 4.82.0 comes with this release as an app update: trying an agent on a real chat (#137), two ready map agents and a `grid` widget (#140), agent sets with "used by N chats", the last set per character and one switch for notes (#138), a permissions dialog with model roles, plain error texts and drag reorder in the Forge (#139).

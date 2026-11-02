@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import nodeCrypto from "node:crypto";
 import { PluginStoreService } from "../plugins/store.js";
-import { discoverPlugins, discoverAppPlugins, runPluginHook, runPluginHookOutcome, runPluginRoute, runPluginTool, readPluginExport, syncSchedules, stopSchedules, invalidatePluginCache, collectSiblingTools, collectSiblingLlmHooks, mergeToolBridges, type LoadedPlugin, type PluginRuntimeDeps, type PluginToolBridge } from "../plugins/runtime.js";
+import { discoverPlugins, discoverAppPlugins, runPluginHook, runPluginHookOutcome, runPluginRoute, runPluginTool, readPluginExport, syncSchedules, stopSchedules, invalidatePluginCache, collectSiblingTools, collectSiblingLlmHooks, collectInsertCeilings, mergeToolBridges, type LoadedPlugin, type PluginRuntimeDeps, type PluginToolBridge } from "../plugins/runtime.js";
 import { McpRegistry, WEB_SEARCH_PRESET, readStdioApprovals, stdioFingerprint, writeStdioApproval, type CredentialMap, type McpServerConfig } from "../mcp/registry.js";
 import { listApps, readApp, createAppSkeleton, renameAppDir, appTree, validateAppManifest, hashAppTree, type AppInfo } from "../apps/manager.js";
 import { UPDATE_STRATEGIES, applyWrites, discardDir, discardStaleStaging, mergeBrief, restoreWrites, forgetInstall, mergeTrees, moveInstall, readBaseline, readCodeTree, readInstallSource, readPendingUpgrade, recoverBaseline, replaceTree, satisfiesRange, seedDataTemplates, writeBaseline, writeInstallSource, writePendingUpgrade, type InstallSource } from "../apps/update.js";
@@ -537,6 +537,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       // sibling request patching: an app plugin's llmRequest hook may patch
       // this plugin's model requests (permissions: hooks + llm)
       llmHooks: (self) => collectSiblingLlmHooks(enabledAppPlugins(userPaths(dataDir, u.username).apps, appId, userPaths(dataDir, u.username).settings), self, base),
+      // the insert ceilings the sibling plugins report for a chat (?insertceilings=<chatId> on a route)
+      insertCeilings: (self, ctx) => collectInsertCeilings(enabledAppPlugins(userPaths(dataDir, u.username).apps, appId, userPaths(dataDir, u.username).settings), self, ctx, base),
     };
   };
   /** The MCP tools one app's generations may call: the engine servers that
