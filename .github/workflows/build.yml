@@ -13,6 +13,13 @@ on:
         description: Build the Android APK
         type: boolean
         default: true
+      macos_arm64:
+        description: >-
+          Start the macOS arm64 download on a Mac. Off for releases and staging:
+          when GitHub has no such runner the job is cancelled, the called
+          workflow fails, and its outputs never reach the caller.
+        type: boolean
+        default: true
     secrets:
       ANDROID_KEYSTORE_BASE64:
         required: false
@@ -168,6 +175,7 @@ jobs:
   smoke-macos-arm64:
     name: Run on macos-arm64 (optional)
     needs: binaries
+    if: inputs.macos_arm64
     continue-on-error: true
     timeout-minutes: 30
     strategy:

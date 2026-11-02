@@ -58,6 +58,9 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.version.outputs.version }}
+      # pull requests and main still start the Mac download; staging, which
+      # publishes a pre-release, does not wait for a Mac runner
+      macos_arm64: ${{ github.ref != 'refs/heads/staging' }}
     secrets:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
