@@ -8,12 +8,12 @@ description: Use when the user asks to publish an app's workspace changes (made 
 Molfar changes app code in the user's workspace (`data/users/<name>/apps/<id>`).
 This turns those changes into a release of the app's own repository (Roleplay:
 `MolfarWav/Molfar.Vertep-Roleplay`). Works only on the machine that holds the
-workspace (the desktop: `C:\Users\sulaz\Chrysalis-Engine\data`); a cloud
+workspace (the desktop: `E:\Claude\Chrysalis-Engine\data`); a cloud
 session cannot see it.
 
 ## 1. See what changed
 ```bash
-bun scripts/publish-app.ts list --app roleplay --data C:/Users/sulaz/Chrysalis-Engine/data
+bun scripts/publish-app.ts list --app roleplay --data E:/Claude/Chrysalis-Engine/data
 bun scripts/publish-app.ts diff --app roleplay --data <same> src/foo.tsx plugins/bar/plugin.js
 ```
 `list` compares the app's code with the baseline the engine kept from the last
