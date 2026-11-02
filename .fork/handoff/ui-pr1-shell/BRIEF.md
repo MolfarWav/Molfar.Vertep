@@ -32,8 +32,8 @@ Two separate places. The split decides who can do what.
 
 | Part | Path | Git | Reachable from the cloud? |
 |---|---|---|---|
-| **Engine shell** (top bar with Agent / Roleplay tabs, i18n, builder) | `C:/Users/sulaz/Chrysalis-Engine/client/src/` (`App.tsx` 112 KB, `i18n/`, `styles/tokens.css`) | repo `MolfarWav/Molfar.Vertep`, branch `claude/*` | yes |
-| **Roleplay app** (nav rail, Home, Chats, sections, chat); AGPL-3.0 fork of ProjectChrysalis/Roleplay-Chrysalis | `C:/Users/sulaz/Chrysalis-Engine/data/users/molfarwav2/apps/roleplay/src/` | its own **local** git repo at `data/users/molfarwav2/` (branch `main`, 443 commits, **no remote**). `/data/` is in the engine `.gitignore` | **no.** Only a session on this machine can edit it |
+| **Engine shell** (top bar with Agent / Roleplay tabs, i18n, builder) | `E:/Claude/Chrysalis-Engine/client/src/` (`App.tsx` 112 KB, `i18n/`, `styles/tokens.css`) | repo `MolfarWav/Molfar.Vertep`, branch `claude/*` | yes |
+| **Roleplay app** (nav rail, Home, Chats, sections, chat); AGPL-3.0 fork of ProjectChrysalis/Roleplay-Chrysalis | `E:/Claude/Chrysalis-Engine/data/users/molfarwav2/apps/roleplay/src/` | its own **local** git repo at `data/users/molfarwav2/` (branch `main`, 443 commits, **no remote**). `/data/` is in the engine `.gitignore` | **no.** Only a session on this machine can edit it |
 
 Consequences:
 - ~~PR 1 (the app part) must run **locally on this machine**, in the workspace repo, never pushed anywhere. The workspace contains private chats (`apps/roleplay/data`, 1.4 MB). Do not copy it to GitHub.~~ **DONE/OUTDATED 2026-10-02:** the app has a public fork repo, `MolfarWav/Molfar.Vertep-Roleplay`; the app part goes there. The private `data/` still never leaves the machine.
@@ -49,7 +49,7 @@ Consequences:
 4. Verify: `bun run typecheck` and `bun test test/` in the app folder, then the real thing in a browser at 1280 px and 390 px (recipe: skill `molfar-vertep`, `references/ui-audit-windows.md`; throwaway engine with a copy of Roleplay, never Sergey's live data). Report what you ran. Do not claim "works" without it.
 5. Sergey is not a programmer. The final report is in plain Ukrainian: what changed, what he will see, how to undo.
 6. Commit small, one titled save per step. ~~No push in PR 1 (the workspace repo has no remote). Publishing is the separate step "PR 1c" below, only on Sergey's word.~~ **OUTDATED 2026-10-02:** push to the fork repo only on the user's word.
-7. Working directory: start the session in `C:/Users/sulaz/Chrysalis-Engine/data/users/molfarwav2/apps/roleplay`. Paths starting with `src/`, `plugins/`, `docs/` are relative to that folder; paths starting with `client/` or `.fork/` are relative to the engine root `C:/Users/sulaz/Chrysalis-Engine`. Step 0 becomes `git tag pre-ui-redesign-2026-10-01` (the git repo found from this folder is the workspace repo).
+7. Working directory: start the session in `E:/Claude/Chrysalis-Engine/data/users/molfarwav2/apps/roleplay`. Paths starting with `src/`, `plugins/`, `docs/` are relative to that folder; paths starting with `client/` or `.fork/` are relative to the engine root `E:/Claude/Chrysalis-Engine`. Step 0 becomes `git tag pre-ui-redesign-2026-10-01` (the git repo found from this folder is the workspace repo).
 
 ## PR 1 scope (app, local): "shell and navigation". Four steps, one commit each
 
