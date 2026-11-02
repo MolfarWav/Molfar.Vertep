@@ -497,7 +497,7 @@ export function uiPanel(ctx) {
         insertCeilings: (self, ctx) => collectInsertCeilings(plugins, self, ctx, base),
       });
     type Row = { plugin: string; id: string; tokens: number };
-    const rows = async (query: Record<string, string>) => ((await run(query))?.json as { ceilings: Row[] | null }).ceilings;
+    const rows = async (query: Record<string, string>) => ((await run(query))?.json as { ceilings: Row[] | null } | undefined)?.ceilings;
 
     expect(await rows({ insertceilings: "c1", window: "64000" })).toEqual([
       { plugin: "memory", id: "insert", tokens: 801 },
