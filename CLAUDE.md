@@ -42,6 +42,7 @@ holds the rules that do not change between tasks; the handoff holds the task.
   The bar (user, 2026-10-31): practical, native, designed, client-first; Roleplay's front is judged like a website, not only "does it work". A written UI plan (where, reused components, states, variants) comes before the code, and the result is compared with it before done.
 - The agent's system prompt is built once per agent instance: anything that changes what goes into it must `evictAgents` or change the docs/project stamp.
 - Agent write limits live in code, not in the prompt: `AGENT_WRITE_DENYLIST` (never) and `protect.ts` (ask the user first). Memory and skills change only through the confirmed tools.
+- No personal identifiers in repo files, commits or PRs (user, 2026-11-02): no Windows user name, real name, e-mail, or local path under the user's profile folder (`C:\Users\<name>`). The repo is public and the history keeps whatever lands in it. Name a machine by its role (desktop, laptop) and a folder by its engine path.
 - Never a model name in a commit, file or PR. Commit style: `area: what changed, in plain words`, a body saying why, then the attribution lines the harness gives.
 - No upstream merges, no new upstream PRs. The one already open (`claude/upstream-context-fixes`) is left as it is.
 - Our own catalogs: the Store list is `MolfarWav/Molfar.Vertep-Store` (`apps.json`), official apps are MolfarWav only (`OFFICIAL_SOURCES`).
