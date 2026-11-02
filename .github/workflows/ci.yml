@@ -58,6 +58,9 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.version.outputs.version }}
+      # pull requests and main still start the Mac download; staging, which
+      # publishes a pre-release, does not wait for a Mac runner
+      macos_arm64: ${{ github.ref != 'refs/heads/staging' }}
     secrets:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -66,7 +69,8 @@ jobs:
 
   staging-release:
     name: Publish staging pre-release
-    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    # build ends red when the optional macOS arm64 run gets no runner (build.yml)
+    if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/staging' && needs.version.result == 'success' && needs.check.result == 'success' && needs.build.outputs.ready == 'true' }}
     needs: [version, check, build]
     runs-on: ubuntu-latest
     permissions:

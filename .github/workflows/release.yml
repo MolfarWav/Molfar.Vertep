@@ -36,6 +36,10 @@ jobs:
   build:
     needs: verify
     uses: ./.github/workflows/build.yml
+    with:
+      # no Mac run: a cancelled one (no runner) failed the whole build and
+      # Publish never saw the gate's output (v1.10.0, 2026-11-02)
+      macos_arm64: false
     secrets:
       ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
       ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -45,6 +49,9 @@ jobs:
   publish:
     name: Publish
     needs: build
+    # build ends red when the optional macOS arm64 run gets no runner; publish
+    # still goes when every required build passed
+    if: ${{ always() && needs.build.outputs.ready == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
