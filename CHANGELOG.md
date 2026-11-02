@@ -9,7 +9,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## 1.9.6 (2026-11-02)
 
-- Roleplay 4.85.0 comes with this release as an app update: search words for new facts and chapters (the memory finds an old fact when you ask in other words), the history leaves room for every kind of memory block on a small context window, and an optional hidden "who knows what" plan for narrator replies, off by default. The engine itself has no code changes. Details in `.fork/release-notes/1.9.6.md`.
+- Roleplay 4.85.0 comes with this release as an app update: search words for new facts and chapters (the memory finds an old fact when you ask in other words), the history leaves room for every kind of memory block on a small context window, and an optional hidden "who knows what" plan for narrator replies, off by default, plus the memory-injection changes already on Roleplay main (answer language, newest recollection by your message, memory shapes behavior, soul temperament). The engine itself has no code changes. Details in `.fork/release-notes/1.9.6.md`.
 
 ## 1.9.5 (2026-11-01)
 
