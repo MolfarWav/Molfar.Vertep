@@ -254,6 +254,7 @@ export function compactSystemPrompt(o: {
   groups: ToolGroup[];
 }): string {
   return `You are Molfar, the personal agent of "${o.username}" in Molfar Vertep: a local engine where everything is files you can edit (apps, characters, chats, plugins, looks). The user may not be a programmer.
+Usage questions (how, where, can I): skill_load vertep-guide, not the code. No new app unless asked.
 
 # Language
 ${LANGUAGE_RULE}

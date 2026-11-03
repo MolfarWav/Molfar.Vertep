@@ -705,6 +705,7 @@ const dict = {
   "Nothing found": "Нічого не знайдено",
   "Try another word, or clear the search.": "Спробуйте інше слово або очистьте пошук.",
   "Guide": "Гайд",
+  "What each part of Molfar Vertep is and how the parts fit together.": "Що таке кожна частина Molfar Vertep і як вони пов’язані.",
   "Show tours on a first visit": "Показувати тури під час першого відвідування",
   "A short walk-through the first time you open a screen.": "Короткий тур, коли ви вперше відкриваєте екран.",
   "Show all tours again": "Пройти всі тури знову",
@@ -931,6 +932,14 @@ const dict = {
   "Priority: faster, costs more.": "Priority: швидше, коштує більше.",
   "Ultrafast: the fastest lane, costs the most.": "Ultrafast: найшвидша лінія, коштує найдорожче.",
   "Default: OpenRouter's normal speed and price.": "Default: звичайна швидкість і ціна OpenRouter.",
+  "Tips": "Поради",
+  "Contents": "Зміст",
+  "Forward": "Вперед",
+  "Guide pages": "Сторінки посібника",
+  "Could not load the guide.": "Не вдалося завантажити посібник.",
+  "This page changed in English; showing the English version until its translation is updated.": "Ця сторінка змінилася в англійській версії; доки переклад не оновлено, показано англійську версію.",
+  "This page does not exist": "Такої сторінки немає",
+  "Open the start page": "Відкрити початкову сторінку",
 }
 
 export default dict
