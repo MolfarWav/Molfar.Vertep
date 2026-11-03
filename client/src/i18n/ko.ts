@@ -705,6 +705,7 @@ const dict = {
   "Nothing found": "찾을 수 없음",
   "Try another word, or clear the search.": "다른 단어를 입력하거나 검색을 지워 보세요.",
   "Guide": "가이드",
+  "What each part of Molfar Vertep is and how the parts fit together.": "Molfar Vertep의 각 부분이 무엇이고 서로 어떻게 연결되는지.",
   "Show tours on a first visit": "처음 방문할 때 투어 표시",
   "A short walk-through the first time you open a screen.": "화면을 처음 열 때 짧은 투어가 시작됩니다.",
   "Show all tours again": "모든 투어 다시 보기",
@@ -931,6 +932,14 @@ const dict = {
   "Priority: faster, costs more.": "Priority: 더 빠르지만 비용이 더 듭니다.",
   "Ultrafast: the fastest lane, costs the most.": "Ultrafast: 가장 빠른 경로이며 비용이 가장 높습니다.",
   "Default: OpenRouter's normal speed and price.": "Default: OpenRouter의 기본 속도와 가격입니다.",
+  "Tips": "팁",
+  "Contents": "목차",
+  "Forward": "앞으로",
+  "Guide pages": "가이드 페이지",
+  "Could not load the guide.": "가이드를 불러오지 못했습니다.",
+  "This page changed in English; showing the English version until its translation is updated.": "이 페이지는 영어판에서 바뀌었습니다. 번역이 업데이트될 때까지 영어판을 보여 드립니다.",
+  "This page does not exist": "이 페이지는 없습니다",
+  "Open the start page": "시작 페이지 열기",
 }
 
 export default dict

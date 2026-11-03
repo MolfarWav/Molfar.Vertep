@@ -705,6 +705,7 @@ const dict = {
   "Nothing found": "Hiçbir şey bulunamadı",
   "Try another word, or clear the search.": "Başka bir sözcük deneyin ya da aramayı temizleyin.",
   "Guide": "Rehber",
+  "What each part of Molfar Vertep is and how the parts fit together.": "Molfar Vertep’in her bölümünün ne olduğu ve bölümlerin nasıl bir araya geldiği.",
   "Show tours on a first visit": "İlk ziyarette turları göster",
   "A short walk-through the first time you open a screen.": "Bir ekranı ilk kez açtığınızda kısa bir tur başlar.",
   "Show all tours again": "Tüm turları yeniden göster",
@@ -931,6 +932,14 @@ const dict = {
   "Priority: faster, costs more.": "Priority: daha hızlı, daha pahalı.",
   "Ultrafast: the fastest lane, costs the most.": "Ultrafast: en hızlı hat, en pahalısı.",
   "Default: OpenRouter's normal speed and price.": "Default: OpenRouter'ın normal hızı ve fiyatı.",
+  "Tips": "İpuçları",
+  "Contents": "İçindekiler",
+  "Forward": "İleri",
+  "Guide pages": "Kılavuz sayfaları",
+  "Could not load the guide.": "Kılavuz yüklenemedi.",
+  "This page changed in English; showing the English version until its translation is updated.": "Bu sayfa İngilizcede değişti; çevirisi güncellenene kadar İngilizce sürüm gösteriliyor.",
+  "This page does not exist": "Bu sayfa yok",
+  "Open the start page": "Başlangıç sayfasını aç",
 }
 
 export default dict
