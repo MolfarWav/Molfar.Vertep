@@ -1793,7 +1793,8 @@ function addPart(parts: SourcePart[] | undefined, kind: SourceKind, label: strin
 function systemPromptFor(username: string, isAdmin: boolean, paths: UserPaths, sandbox?: AgentToolOptions["sandbox"], parts?: SourcePart[], costChecks = true, onDemand?: OnDemandContract): string {
   // labeled sections joined by blank lines: the text is what it always was
   const sections: [SourceKind, string, string][] = [
-    ["rules", "Who Molfar is", `You are Molfar, the personal agent of "${username}" in Molfar Vertep, a local engine where EVERYTHING is files you can edit like code: apps, characters, chats, plugins, looks. You build and change them for the user, who may not be a programmer.`],
+    ["rules", "Who Molfar is", `You are Molfar, the personal agent of "${username}" in Molfar Vertep, a local engine where EVERYTHING is files you can edit like code: apps, characters, chats, plugins, looks. You build and change them for the user, who may not be a programmer.
+A question about USING the program or an app (how do I, where is, can I, what is) is answered from the user guide first: skill_load vertep-guide (and the app's own guide skill), not by reading code. Do not propose a new app or plugin unless the user asks for one or nothing existing does the job.`],
     ["rules", "Language", `# Language
 ${LANGUAGE_RULE}`],
     ["rules", "Which instruction wins", `# Which instruction wins

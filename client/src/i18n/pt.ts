@@ -705,6 +705,7 @@ const dict = {
   "Nothing found": "Nada encontrado",
   "Try another word, or clear the search.": "Tente outra palavra ou limpe a pesquisa.",
   "Guide": "Guia",
+  "What each part of Molfar Vertep is and how the parts fit together.": "O que é cada parte do Molfar Vertep e como elas se encaixam.",
   "Show tours on a first visit": "Mostrar tours na primeira visita",
   "A short walk-through the first time you open a screen.": "Um tour curto na primeira vez que você abre uma tela.",
   "Show all tours again": "Mostrar todos os tours de novo",
@@ -931,6 +932,14 @@ const dict = {
   "Priority: faster, costs more.": "Priority: mais rápido, custa mais.",
   "Ultrafast: the fastest lane, costs the most.": "Ultrafast: a faixa mais rápida, custa mais.",
   "Default: OpenRouter's normal speed and price.": "Default: velocidade e preço normais do OpenRouter.",
+  "Tips": "Dicas",
+  "Contents": "Índice",
+  "Forward": "Avançar",
+  "Guide pages": "Páginas do guia",
+  "Could not load the guide.": "Não foi possível carregar o guia.",
+  "This page changed in English; showing the English version until its translation is updated.": "Esta página mudou em inglês; a versão em inglês é exibida até que a tradução seja atualizada.",
+  "This page does not exist": "Esta página não existe",
+  "Open the start page": "Abrir a página inicial",
 }
 
 export default dict

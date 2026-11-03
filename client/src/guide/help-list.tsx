@@ -1,9 +1,11 @@
 // The help list (account menu, start page): every help tip of the guide, searchable,
 // grouped. A dialog. "Show me" hands the tip to the guide host, which closes the list,
 // opens the place and points at the element.
-import { useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { ModalDialog, Dialog } from "../ui/dialog"
 import { Button } from "../ui/button"
+import { Tabs } from "../ui/tabs"
+import { GuideReader } from "./guide-reader"
 import { tr } from "../i18n/index"
 import { useIsMobile } from "./mobile"
 import { HELP_GROUPS, searchHelp, tipText, type HelpGroup, type Tip } from "./guide"
@@ -19,6 +21,16 @@ const groupLabel = (g: HelpGroup): string =>
     help: tr("Help and bugs"),
   })[g]
 
+const TAB_KEY = "molfar-help-tab"
+type HelpTab = "tips" | "guide"
+const loadTab = (): HelpTab => {
+  try {
+    return localStorage.getItem(TAB_KEY) === "guide" ? "guide" : "tips"
+  } catch {
+    return "tips"
+  }
+}
+
 interface Props {
   open: boolean
   onClose: () => void
@@ -30,13 +42,41 @@ interface Props {
 
 export function HelpList(p: Props) {
   const mobile = useIsMobile()
+  const [tab, setTab] = useState<HelpTab>(loadTab)
+  // a guide page filling the phone screen: the search box makes room for it
+  const [pageView, setPageView] = useState(false)
+  const onPageView = useCallback((v: boolean) => setPageView(v), [])
+  const pickTab = (v: unknown) => {
+    const t: HelpTab = v === "guide" ? "guide" : "tips"
+    setTab(t)
+    try {
+      localStorage.setItem(TAB_KEY, t)
+    } catch {
+      // site data blocked: Help opens on Tips next time
+    }
+  }
   const found = useMemo(() => searchHelp(TIPS, p.query), [p.query])
   const groups = HELP_GROUPS.map((g) => ({ id: g, tips: found.filter((tip) => tip.help === g) })).filter((g) => g.tips.length > 0)
 
   return (
     <ModalDialog open={p.open} onClose={p.onClose}>
-      <Dialog size="large" title={tr("Help")} description={tr("Short answers about Molfar Vertep. “Show me” takes you to the place.")}>
+      <Dialog
+        size={tab === "guide" ? "x-large" : "large"}
+        title={tr("Help")}
+        description={tab === "guide" ? tr("What each part of Molfar Vertep is and how the parts fit together.") : tr("Short answers about Molfar Vertep. “Show me” takes you to the place.")}
+      >
         <div className="flex h-[min(640px,calc(100dvh-9rem))] min-h-0 flex-col">
+          <Tabs value={tab} onValueChange={pickTab} className="shrink-0 px-4 pt-3">
+            <Tabs.List aria-label={tr("Help")} className="flex gap-1">
+              <Tabs.Trigger value="tips" className="w-auto! min-h-10 px-3 md:min-h-8">
+                {tr("Tips")}
+              </Tabs.Trigger>
+              <Tabs.Trigger value="guide" className="w-auto! min-h-10 px-3 md:min-h-8">
+                {tr("Guide")}
+              </Tabs.Trigger>
+            </Tabs.List>
+          </Tabs>
+          {tab === "guide" && mobile && pageView ? null : (
           <div className="shrink-0 px-4 py-3">
             <input
               type="search"
@@ -49,6 +89,10 @@ export function HelpList(p: Props) {
               className="h-10 w-full rounded-lg border border-line bg-panel px-3 text-16 text-ink outline-none placeholder:text-ink-faint focus:border-line-focus md:h-8 md:text-13"
             />
           </div>
+          )}
+          {tab === "guide" ? (
+            <GuideReader locale={p.locale} query={p.query} onPageView={onPageView} />
+          ) : (
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4" data-testid="help-results">
             {groups.length === 0 ? (
               <div className="flex flex-col items-center gap-1 px-4 py-10 text-center" role="status">
@@ -80,6 +124,7 @@ export function HelpList(p: Props) {
               ))
             )}
           </div>
+          )}
         </div>
       </Dialog>
     </ModalDialog>

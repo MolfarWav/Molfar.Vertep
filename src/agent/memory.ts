@@ -445,7 +445,7 @@ export function listSkills(root: string, only?: string): SkillInfo[] {
 }
 
 /** Where a skill's folder is on disk. */
-const skillDirAbs = (root: string, s: SkillInfo): string =>
+export const skillDirAbs = (root: string, s: SkillInfo): string =>
   s.builtin ? path.join(builtinDir(), s.name) : path.join(root, path.dirname(s.file));
 
 /** A skill's SKILL.md text, built-in or not. */

@@ -1,0 +1,44 @@
+<!-- source: d5f38d848a56 -->
+# Apps
+
+Cómo buscar, añadir, actualizar y quitar apps. Las apps son lo que de verdad usas: Roleplay es la principal.
+
+## La página de inicio
+
+Una pestaña nueva (+) abre la página de inicio, «¿Adónde?». Muestra Molfar y tus apps instaladas. En un ordenador, haz clic en una app para ver qué contiene y pulsa «Abrir»; los detalles también tienen «Exportar app» y, para las apps que tienen una fuente de actualización, «Buscar actualizaciones». En un teléfono, un toque la abre al momento y el botón (i) muestra los detalles. El icono de la papelera elimina una app tras preguntar, y esto borra sus datos de forma permanente.
+
+Cada app abierta tiene su propia pestaña. Las pestañas se pueden arrastrar en cualquier orden y vuelven después de recargar.
+
+## Con una app abierta
+
+La barra de herramientas ofrece:
+
+- «Dividir»: Molfar a la izquierda, la app en vivo a la derecha.
+- «Pantalla completa»: la app en su propia pestaña del navegador, que puedes instalar como una app.
+- «Plugins»: los plugins de la app y sus permisos; importa más desde git.
+- «Recompilar»: recompila la app ahora mismo.
+
+En un teléfono, estas tres opciones están en el menú de cuenta.
+
+## La Store
+
+«Store» en la página de inicio muestra apps de Molfar Vertep (marcadas como «App oficial») y de la comunidad. Pulsa «Instalar»: primero ves qué incluye la app y a qué puede acceder, y nada se ejecuta hasta que confirmas. Instala solo lo que te dé confianza, porque las apps ejecutan código real en tu ordenador. «Actualizar» pide apps nuevas, y una insignia cuenta las añadidas desde la última vez que miraste.
+
+## Apps nuevas e importadas
+
+- «Nueva app»: ponle un nombre (el autor es opcional) y obtienes una base que Molfar desarrolla contigo.
+- «Importar app»: desde un repositorio git o desde un archivo de copia hecho con «Exportar app». Primero se inspecciona, y nada se ejecuta hasta que hayas leído qué incluye y lo confirmes.
+
+## Actualizaciones
+
+El icono de descarga en la barra superior recibe un punto cuando hay algo pendiente. Muestra cada app con fuente de actualización y tiene «Comprobar ahora». «Actualizar todo» aparece cuando dos o más apps esperan, y nunca incluye a Molfar Vertep en sí.
+
+Tus propios cambios se combinan con una actualización, y tus datos se conservan. Donde tus cambios se solapan con la versión nueva, nada cambia todavía: eliges «Conservar la mía», «Aceptar actualización» o «Pedir a Molfar que combine». Una actualización que instala paquetes nuevos o pide permisos nuevos espera tu aprobación.
+
+## Dónde están los ajustes de una app
+
+Los ajustes propios de una app están dentro de la app. Los Ajustes del shell guardan lo que comparten todas las apps: modelos, voz, imágenes, memoria, servidores MCP. Consulta [[settings]].
+
+## Si una app falla
+
+Cuando la compilación de una app falla, conserva su última versión buena, y su barra de error ofrece «Preguntar a Molfar», que le envía el problema en un chat nuevo. Consulta [[help-and-bugs]].

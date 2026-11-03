@@ -705,6 +705,7 @@ const dict = {
   "Nothing found": "見つかりませんでした",
   "Try another word, or clear the search.": "別の言葉を試すか、検索をクリアしてください。",
   "Guide": "ガイド",
+  "What each part of Molfar Vertep is and how the parts fit together.": "Molfar Vertep の各部分の役割と、それらのつながり。",
   "Show tours on a first visit": "初めて開いたときにツアーを表示",
   "A short walk-through the first time you open a screen.": "画面を初めて開いたときに短いツアーが始まります。",
   "Show all tours again": "すべてのツアーをもう一度表示",
@@ -931,6 +932,14 @@ const dict = {
   "Priority: faster, costs more.": "Priority: 高速ですが、料金は高めです。",
   "Ultrafast: the fastest lane, costs the most.": "Ultrafast: 最速のレーンで、料金は最も高くなります。",
   "Default: OpenRouter's normal speed and price.": "Default: OpenRouter の通常の速度と価格です。",
+  "Tips": "ヒント",
+  "Contents": "目次",
+  "Forward": "進む",
+  "Guide pages": "ガイドのページ",
+  "Could not load the guide.": "ガイドを読み込めませんでした。",
+  "This page changed in English; showing the English version until its translation is updated.": "このページは英語版で更新されました。翻訳が更新されるまで英語版を表示しています。",
+  "This page does not exist": "このページは存在しません",
+  "Open the start page": "最初のページを開く",
 }
 
 export default dict

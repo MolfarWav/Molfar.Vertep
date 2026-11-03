@@ -705,6 +705,7 @@ const dict = {
   "Nothing found": "未找到结果",
   "Try another word, or clear the search.": "试试其他词，或清空搜索。",
   "Guide": "向导",
+  "What each part of Molfar Vertep is and how the parts fit together.": "Molfar Vertep 各部分是什么，以及它们如何协同。",
   "Show tours on a first visit": "首次访问时显示导览",
   "A short walk-through the first time you open a screen.": "第一次打开某个界面时显示简短导览。",
   "Show all tours again": "再次显示所有导览",
@@ -931,6 +932,14 @@ const dict = {
   "Priority: faster, costs more.": "Priority：更快，费用更高。",
   "Ultrafast: the fastest lane, costs the most.": "Ultrafast：最快的通道，费用最高。",
   "Default: OpenRouter's normal speed and price.": "Default：OpenRouter 的常规速度和价格。",
+  "Tips": "提示",
+  "Contents": "目录",
+  "Forward": "前进",
+  "Guide pages": "指南页面",
+  "Could not load the guide.": "无法加载指南。",
+  "This page changed in English; showing the English version until its translation is updated.": "此页面的英文版已更改；在翻译更新之前显示英文版。",
+  "This page does not exist": "此页面不存在",
+  "Open the start page": "打开起始页",
 }
 
 export default dict

@@ -80,6 +80,7 @@ import { ackUnchangedBuild, appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, r
 import { builderAsset, builderFrameCsp, builderVersion } from "../builder/assets.js";
 import type { FsOp } from "../builder/fs.js";
 import { parseGuideState } from "../guide-state.js";
+import { listGuideBooks, readGuidePage } from "../guide-pages.js";
 import { clearDir, FolderBusyError, sweepMovedAside } from "../clear-dir.js";
 
 export interface AppEnv {
@@ -1243,6 +1244,14 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // the workspace's own shell themes (themes/*.json); refused files come back
   // with the reason so the agent can fix what it wrote
   app.get("/v1/themes", (c) => c.json(listShellThemes(c.get("paths").themes)));
+
+  // the guide (Help > Guide): the engine's book and each installed app's, read from
+  // their skill folders; a page in the asked language when its translation is current
+  app.get("/v1/guide", (c) => c.json({ books: listGuideBooks(c.get("paths").root, c.req.query("lang") ?? "en") }));
+  app.get("/v1/guide/:book/:page", (c) => {
+    const page = readGuidePage(c.get("paths").root, c.req.param("book"), c.req.param("page"), c.req.query("lang") ?? "en");
+    return page ? c.json(page) : c.json({ error: "no such guide page" }, 404);
+  });
 
   // change the logged-in user's own password (current one required; there is
   // no passwordless state to go back to, so removal isn't a thing)
