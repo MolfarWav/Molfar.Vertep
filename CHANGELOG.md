@@ -9,7 +9,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## 1.10.3 (2026-11-03)
 
-- Roleplay 4.87.0 comes with this release as an app update: ten more Help articles (new chat, the Chats page, chat files, What this chat carries, the "+" menu, Sprites, Backup and restore, display switches, Arcs, Home customizing), help inside the agent editor (a folded "What goes in and out" block in the Card tab and three articles on agents), and a fix: "Reset look and local settings" no longer deletes folders, the Backgrounds list and connection profiles (#145, #148). The engine itself has no code changes. Details in `.fork/release-notes/1.10.3.md`.
+- Roleplay 4.87.0 comes with this release as an app update: ten more Help articles (new chat, the Chats page, chat files, What this chat carries, the "+" menu, Sprites, Backup and restore, display switches, Arcs, Home customizing), help inside the agent editor (a folded "What goes in and out" block in the Card tab and three articles on agents), a Message format pick in Vertep Lite (on by default), a card's Dialogue highlight that now colours its own quotes, a setting for the length of one recollection, and a fix: "Reset look and local settings" no longer deletes folders, the Backgrounds list and connection profiles (#145, #148). The engine itself has no code changes. Details in `.fork/release-notes/1.10.3.md`.
 
 ## 1.10.2 (2026-11-03)
 
