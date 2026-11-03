@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.10.3 (2026-11-03)
+
+- Roleplay 4.87.0 comes with this release as an app update: ten more Help articles (new chat, the Chats page, chat files, What this chat carries, the "+" menu, Sprites, Backup and restore, display switches, Arcs, Home customizing), help inside the agent editor (a folded "What goes in and out" block in the Card tab and three articles on agents), and a fix: "Reset look and local settings" no longer deletes folders, the Backgrounds list and connection profiles (#145, #148). The engine itself has no code changes. Details in `.fork/release-notes/1.10.3.md`.
+
 ## 1.10.2 (2026-11-03)
 
 - App routes answer in tens of milliseconds instead of a second (#232). Measured on 1.10.1 in a throwaway engine with a 3000-file workspace: a route of the smallest plugin 975 -> 17 ms, a 4000-item GET 1010 -> 50 ms, a POST that writes a file 1020 -> 21 ms, four GETs at once 3970 -> 200 ms, eight at once 7800 -> 170 ms. Two causes: every plugin call of the whole engine ran on one sandbox worker, one after another, and every route ran a `git status` walk over the whole workspace before it answered.
