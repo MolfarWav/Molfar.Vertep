@@ -560,6 +560,8 @@ export interface PluginRouteResponse {
   json?: unknown;
   text?: string;
   contentType?: string;
+  /** Paths (relative to the plugin's data dir) the route wrote or removed. */
+  fsWrites?: string[];
 }
 // ---------- network service (permission "network", SPEC-v2 §3) ----------
 // Two-phase like llm: the sandbox registers requests, the HOST executes them
@@ -901,6 +903,8 @@ export async function runPluginRoute(
   if (!hasCapAny(plugin, "routes", deps)) return null;
   const MAX_ROUTE_PASSES = passLimit(plugin);
   const caps = passCaps(plugin, deps);
+  /** Every path this route wrote/removed, across passes: the dispatcher's commit. */
+  const fsWrites: string[] = [];
   let results = noResults();
   // pass-A carry-all: the sandbox module is re-evaluated fresh EVERY pass, so
   // plugin module state cannot survive — routes return {__llmPending, stash}
@@ -940,6 +944,7 @@ export async function runPluginRoute(
       siblingCeilings = await deps.insertCeilings(plugin, { chatId: ceilingChat, ...(Number.isInteger(win) && win > 0 && win <= 100_000_000 ? { windowTokens: win } : {}) }).catch(() => []);
     }
     for (let pass = 0; pass < MAX_ROUTE_PASSES; pass++) {
+      const snap = snapshotOf(plugin, deps);
       const r = await box.eval({
         ...zipLimits,
         source: plugin.source,
@@ -948,7 +953,7 @@ export async function runPluginRoute(
         // zipBase64 already rides the message for the host-side zip service —
         // keep the multi-MB string OUT of the guest's ctx (64MB heap)
         ctx: { ...req, zipBase64: undefined, ...(stash ? { stash } : {}) } as unknown as Record<string, unknown>,
-        storeSnapshot: snapshotOf(plugin, deps),
+        storeSnapshot: snap,
         storeAllowed: hasCapAny(plugin, "store", deps),
         llmAllowed: caps.llm,
         fsAllowed: hasCapAny(plugin, "fs", deps) && !!plugin.fsRoot,
@@ -965,9 +970,12 @@ export async function runPluginRoute(
         ...(siblingToolDefs ? { siblingToolDefs } : {}),
         ...(siblingCeilings ? { siblingCeilings } : {}),
         retryOnPoison: req.method === "GET" || req.method === "HEAD",
+        // a read shares the data dir with other reads; anything else has it alone
+        exclusive: !(req.method === "GET" || req.method === "HEAD"),
       });
       printLogs(plugin, r, deps);
       applyStoreWrites(plugin, r, deps);
+      for (const w of r.fsWrites ?? []) if (!fsWrites.includes(w)) fsWrites.push(w);
       if (!r.ok) {
         logFailure(plugin, deps, `route ${req.method} ${req.path} failed: ${r.error}`);
         // the plugin id belongs in the response too: the app page (and the
@@ -990,6 +998,7 @@ export async function runPluginRoute(
           ...(out.json !== undefined ? { json: out.json } : {}),
           ...(out.text !== undefined ? { text: String(out.text) } : {}),
           ...(typeof out.contentType === "string" ? { contentType: out.contentType } : {}),
+          ...(fsWrites.length ? { fsWrites } : {}),
         };
       }
       results = await runPassRequests(plugin, r, routeDeps, caps, "route");

@@ -87,7 +87,7 @@ describe("plugin sandbox execution", () => {
     expect(out).toBeNull();
   }, 20_000);
 
-  it("retries a read-only route once after the worker is poisoned", async () => {
+  it("answers a route that finished its work before the runtime is torn down", async () => {
     const appData = path.join(dir, "app-data");
     fs.mkdirSync(appData, { recursive: true });
     writePlugin(
@@ -95,8 +95,11 @@ describe("plugin sandbox execution", () => {
       { name: "R", version: "1", permissions: ["routes", "fs"], origin: "local" },
       // An ASYNC export returning a big payload is the one shape that still
       // aborts the wasm runtime on teardown (quickjs-ng frees the runtime with
-      // the awaited graph still live). The "ready" file is a one-shot latch, so
-      // the retry takes the cheap synchronous path and succeeds.
+      // the awaited graph still live). The answer is posted from INSIDE the
+      // eval callback, so the route's result reaches the host before that
+      // teardown failure — the failure now costs the worker, not the answer.
+      // The "ready" file is a one-shot latch: a second run takes the cheap
+      // synchronous path and proves the next call has a healthy worker.
       `export async function handleRoute(_req, host) {
   try {
     host.fs.read("ready");
@@ -114,10 +117,15 @@ describe("plugin sandbox execution", () => {
     const out = await runPluginRoute(plugin, { method: "GET", path: "/recover", query: {}, body: null }, deps());
 
     expect(out?.status).toBe(200);
-    expect(out?.json).toEqual({ recovered: true });
+    // the work the route did is what the caller gets — not "sandbox aborted"
+    expect((out?.json as { big?: unknown[] } | undefined)?.big?.length).toBe(300_000);
+
+    // and the failure only took that worker: the next route runs normally
+    const next = await runPluginRoute(plugin, { method: "GET", path: "/recover", query: {}, body: null }, deps());
+    expect(next?.json).toEqual({ recovered: true });
   }, { timeout: 30_000 });
 
-  it("a call that runs out of memory is named to the calls it took down, and a safe read is retried", async () => {
+  it("a call that runs out of memory fails alone, and the pool keeps serving", async () => {
     const { sandbox } = await import("../src/plugins/sandbox.js");
     const hog = `export function uiPanel() { return new Array(200000000).fill(1).length; }`;
     const quick = `export function uiPanel(ctx) { return ctx; }`;
@@ -126,18 +134,98 @@ describe("plugin sandbox execution", () => {
       sandbox.eval({ source: quick, hook: "uiPanel", ctx: { n: 1 }, storeSnapshot: {} }),
       sandbox.eval({ source: quick, hook: "uiPanel", ctx: { n: 2 }, storeSnapshot: {}, retryOnPoison: true }),
     ]);
+    // the culprit failed, it did not take anyone down for it: the pool gives
+    // each concurrent call its own worker, so an innocent call is not a
+    // bystander of another call's crash any more
     expect(culprit.ok).toBe(false);
     expect(culprit.bystander).toBeUndefined();
-    // the bystander without a retry says who did it
-    expect(plain.ok).toBe(false);
-    expect(plain.bystander).toBe(true);
-    expect(plain.error).toContain("big-plugin route GET /bootstrap");
+    expect(plain.ok).toBe(true);
+    expect(plain.bystander).toBeUndefined();
     // a safe read runs again on the fresh worker
     expect(safe.ok).toBe(true);
     // and the next call finds a healthy worker
     const after = await sandbox.eval({ source: quick, hook: "uiPanel", ctx: { n: 3 }, storeSnapshot: {} });
     expect(after.ok).toBe(true);
   }, 40_000);
+
+  it("writing routes of one app never interleave, so a read-modify-write handler loses no update", async () => {
+    const appData = path.join(dir, "app-data");
+    fs.mkdirSync(appData, { recursive: true });
+    writePlugin(
+      "counter",
+      { name: "C", version: "1", permissions: ["routes", "fs"], origin: "local" },
+      // the pause between the read and the write is where a second worker
+      // would slip in; with the pool it can, unless the dir is taken alone
+      `export function handleRoute(_req, host) {
+  let n = 0;
+  try { n = Number(host.fs.read("n")); } catch {}
+  for (let i = 0; i < 2_000_000; i++) {}
+  host.fs.write("n", String(n + 1));
+  return { status: 200, json: { n: n + 1 } };
+}`,
+    );
+    const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+    plugin.fsRoot = appData;
+    const outs = await Promise.all(
+      Array.from({ length: 8 }, () => runPluginRoute(plugin, { method: "POST", path: "/inc", query: {}, body: {} }, deps())),
+    );
+    expect(outs.every((o) => o?.status === 200)).toBe(true);
+    expect(fs.readFileSync(path.join(appData, "n"), "utf8")).toBe("8");
+    // every call saw a different count: none ran on a stale read
+    expect(new Set(outs.map((o) => (o?.json as { n: number } | undefined)?.n)).size).toBe(8);
+  }, { timeout: 60_000 });
+
+  it("reads and a write on one app all complete, and the data dir is free again afterwards", async () => {
+    const { sandbox } = await import("../src/plugins/sandbox.js");
+    const appData = path.join(dir, "app-data");
+    fs.mkdirSync(appData, { recursive: true });
+    const quick = `export function uiPanel(ctx) { return ctx; }`;
+    const base = { source: quick, hook: "uiPanel", ctx: {}, storeSnapshot: {}, fsAllowed: true, fsRoot: appData };
+    // reader, writer, reader: the writer holds back the second reader, nobody is lost
+    const mixed = await Promise.all([
+      sandbox.eval({ ...base, exclusive: false }),
+      sandbox.eval({ ...base }),
+      sandbox.eval({ ...base, exclusive: false }),
+    ]);
+    expect(mixed.every((o) => o.ok)).toBe(true);
+    // a call that fails (the culprit of a poisoned worker) must release the dir too
+    const hog = `export function uiPanel() { return new Array(200000000).fill(1).length; }`;
+    const bad = await sandbox.eval({ ...base, source: hog, memoryLimitBytes: 8 * 1024 * 1024 });
+    expect(bad.ok).toBe(false);
+    const after = await sandbox.eval({ ...base });
+    expect(after.ok).toBe(true);
+  }, { timeout: 60_000 });
+
+  it("a worker whose runtime aborts after answering never gets the next call", async () => {
+    const appData = path.join(dir, "app-data");
+    fs.mkdirSync(appData, { recursive: true });
+    writePlugin(
+      "abort-then-quick",
+      { name: "A", version: "1", permissions: ["routes", "fs"], origin: "local" },
+      // /big is the async-big-payload shape that aborts the runtime on teardown (once per ?k);
+      // /quick is cheap. A quick call sent the moment /big answers lands in the window where
+      // the worker is still freeing its runtime.
+      `export async function handleRoute(req, host) {
+  if (req.path === "/quick") return { status: 200, json: { q: 1 } };
+  const k = "ready-" + req.query.k;
+  try { host.fs.read(k); return { status: 200, json: { again: true } }; } catch {}
+  host.fs.write(k, "1");
+  const big = [];
+  for (let i = 0; i < 300_000; i++) big.push({ i });
+  return { status: 200, json: { big } };
+}`,
+    );
+    const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+    plugin.fsRoot = appData;
+    for (let round = 0; round < 3; round++) {
+      const big = await runPluginRoute(plugin, { method: "POST", path: "/big", query: { k: String(round) }, body: {} }, deps());
+      expect(big?.status).toBe(200);
+      const quick = await Promise.all(
+        Array.from({ length: 6 }, () => runPluginRoute(plugin, { method: "GET", path: "/quick", query: {}, body: null }, deps())),
+      );
+      for (const q of quick) expect(q?.json).toEqual({ q: 1 });
+    }
+  }, { timeout: 90_000 });
 
   it("every reply reports the worker's wasm heap, the number that retires a leaking worker", async () => {
     const { sandbox } = await import("../src/plugins/sandbox.js");

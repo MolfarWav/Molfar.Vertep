@@ -2418,11 +2418,19 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   });
 
   // ---------- git ----------
-  app.get("/v1/git/log", async (c) => c.json({ commits: await git.log(c.get("paths").root, 50) }));
+  // A route's own commit trails its answer (see queueRouteCommit), so anything
+  // that reads or writes history waits for the queue first — otherwise undo
+  // would not see the change the user just made, and a manual commit could
+  // land before the route's.
+  app.get("/v1/git/log", async (c) => {
+    await whenCommitsSettled();
+    return c.json({ commits: await git.log(c.get("paths").root, 50) });
+  });
   app.post("/v1/git/commit", async (c) => {
     const u = c.get("user");
     const body = await c.req.json<{ message: string }>().catch(() => null);
     if (!body?.message) return c.json({ error: "message required" }, 400);
+    await whenCommitsSettled();
     const oid = await git.commitAll(c.get("paths").root, u.username, body.message);
     return c.json({ oid });
   });
@@ -2431,6 +2439,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const p = c.get("paths");
     const body = await c.req.json<{ path: string; commit: string }>().catch(() => null);
     if (!body?.path || !body?.commit) return c.json({ error: "path and commit required" }, 400);
+    await whenCommitsSettled();
     const commits = await git.log(p.root, 500).catch(() => [] as git.CommitInfo[]);
     const target = commits.find((cm) => cm.oid.startsWith(body.commit ?? ""));
     if (!target) return c.json({ error: "commit not found" }, 404);
@@ -5832,6 +5841,101 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
 
   // app route dispatch: /v1/apps/<activeAppId>/<rest...> → bundled plugins with
   // routes permission exporting handleRoute(req, host). First non-null wins.
+  /** App-route commits, OFF the response path.
+   *
+   *  Every app route used to run `git.changedPaths` + `commitPaths` +
+   *  `commitAll` before answering — each one a full statusMatrix walk of the
+   *  whole workspace (700 MB, isomorphic-git, JS). Measured on a real
+   *  workspace: 250-300 ms per route when idle, 1.0-1.1 s per route with four
+   *  requests in flight, i.e. it was BOTH the biggest per-route cost and the
+   *  reason concurrent routes got slower instead of faster. The plugin has
+   *  already written its files synchronously, so the commit only has to trail
+   *  the answer, not precede it.
+   *
+   *  Pending jobs are batched (one status walk per batch, not per route) and
+   *  run strictly in order. `fsWrites` — the paths the sandbox actually wrote —
+   *  tells a route's own changes from edits made out of band (agent, shell
+   *  tool), so the history keeps its honest labels. */
+  interface RouteCommitJob {
+    root: string;
+    appsDir: string;
+    username: string;
+    appId: string;
+    label: string;
+    wrote: string[];
+  }
+  let commitQueue: RouteCommitJob[] = [];
+  /** Routes of an app running right now, by workspace root and app id (see pumpCommits). */
+  const routesRunning = new Map<string, number>();
+  let commitRunning = false;
+  const commitIdle: Array<() => void> = [];
+  /** Resolves once every queued app-route commit has been written. */
+  const whenCommitsSettled = (): Promise<void> => (commitRunning || commitQueue.length
+    ? new Promise((resolve) => commitIdle.push(resolve))
+    : Promise.resolve());
+
+  const pumpCommits = async (): Promise<void> => {
+    if (commitRunning) return;
+    commitRunning = true;
+    try {
+      while (commitQueue.length) {
+        const first = commitQueue[0]!;
+        const batch = commitQueue.filter((j) => j.root === first.root);
+        commitQueue = commitQueue.filter((j) => j.root !== first.root);
+        const root = first.root;
+        const appPrefix = path.relative(root, first.appsDir).replace(/\\/g, "/");
+        const wrote = new Set<string>();
+        // plugin fs paths are relative to apps/<id>/data (discoverAppPlugins)
+        for (const j of batch) for (const w of j.wrote) wrote.add(`${appPrefix ? `${appPrefix}/` : ""}${j.appId}/data/${w}`);
+        const dirty = await git.changedPaths(root).catch(() => [] as string[]);
+        if (!dirty.length) continue;
+        // A path the batch wrote is ours, and so is everything under a folder it removed.
+        const isMine = (f: string): boolean => {
+          if (wrote.has(f)) return true;
+          for (let i = f.indexOf("/"); i > 0; i = f.indexOf("/", i + 1)) if (wrote.has(f.slice(0, i))) return true;
+          return false;
+        };
+        // Apps with a route still running, or finished and waiting in the queue: their data
+        // dir holds files that belong to a commit which has not been queued yet. Labelling
+        // those out-of-band would be a lie, so they wait for their own route's commit.
+        const busy = new Set<string>();
+        for (const [k, n] of routesRunning) if (n > 0 && k.startsWith(`${root}\u0000`)) busy.add(k.slice(root.length + 1));
+        for (const j of commitQueue) if (j.root === root) busy.add(j.appId);
+        const dataPrefix = (id: string): string => `${appPrefix ? `${appPrefix}/` : ""}${id}/data/`;
+        const inBusyData = (f: string): boolean => {
+          for (const id of busy) if (f.startsWith(dataPrefix(id))) return true;
+          return false;
+        };
+        const mine = dirty.filter(isMine);
+        const later = dirty.filter((f) => !isMine(f) && inBusyData(f));
+        const outside = dirty.filter((f) => !isMine(f) && !inBusyData(f));
+        if (outside.length) {
+          const preview = outside.slice(0, 3).join(", ") + (outside.length > 3 ? ` +${outside.length - 3} more` : "");
+          await git.commitPaths(root, first.username, `out-of-band: ${preview}`, outside).catch(() => undefined);
+        }
+        if (!mine.length) continue;   // nothing of ours to commit
+        // apps named in this batch, so a shared commit still says whose changes it holds
+        const ids = [...new Set(batch.map((j) => j.appId))];
+        const label = batch.length === 1 ? batch[0]!.label : `${batch[0]!.label} (+${batch.length - 1} more)`;
+        const message = `app(${ids.join("+")}): ${label}`;
+        // commitAll would sweep the files that wait for a running route along with ours
+        if (later.length) await git.commitPaths(root, first.username, message, mine).catch(() => undefined);
+        else await git.commitAll(root, first.username, message).catch(() => undefined);
+      }
+    } catch {
+      /* a failed commit must never take the queue (or the server) down */
+    } finally {
+      commitRunning = false;
+      if (!commitQueue.length) for (const done of commitIdle.splice(0)) done();
+      else void pumpCommits();
+    }
+  };
+
+  const queueRouteCommit = (p: UserPaths, username: string, appId: string, method: string, rel: string, wrote: string[]): void => {
+    commitQueue.push({ root: p.root, appsDir: p.apps, username, appId, label: `${method} ${rel}`, wrote });
+    void pumpCommits();
+  };
+
   /** Shared app-route dispatch. */
   const dispatchAppRoute = async (
     u: UserRecord,
@@ -5845,28 +5949,29 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
     if (appId === "active" || !readApp(p.apps, appId)) return { status: 404, payload: { error: "app not found" } };
     await retryPendingUpgrade(u, p, appId);
     const deps = getAppDeps(u, appId);
-    // pending changes that predate this route (agent writes, shell edits) —
-    // committed under their own label after the route so a sweep never
-    // attributes out-of-band edits to whatever request happened to fire
-    const dirtyBefore = await git.changedPaths(p.root).catch(() => [] as string[]);
+    const runKey = `${p.root}\u0000${appId}`;
+    routesRunning.set(runKey, (routesRunning.get(runKey) ?? 0) + 1);
+    try {
     for (const plugin of enabledAppPlugins(p.apps, appId, p.settings)) {
       const payload = body && typeof body === "object" ? (body as { zipBase64?: string }).zipBase64 : undefined;
       const res = await runPluginRoute(plugin, { method, path: rel, query, body, ...(typeof payload === "string" ? { zipBase64: payload } : {}) }, deps);
       if (res) {
-        // app data writes auto-commit (undo parity); failed routes (500) never
-        // commit — a crashing plugin must not sweep unrelated changes in.
+        // app data writes auto-commit (undo parity) — but AFTER the answer.
+        // See queueRouteCommit: the files are already on disk, and a full
+        // status walk of the workspace costs 250-1100 ms.
         if ((res.status ?? 200) < 400) {
-          if (dirtyBefore.length > 0) {
-            const preview = dirtyBefore.slice(0, 3).join(", ") + (dirtyBefore.length > 3 ? ` +${dirtyBefore.length - 3} more` : "");
-            await git.commitPaths(p.root, u.username, `out-of-band: ${preview}`, dirtyBefore).catch(() => undefined);
-          }
-          await git.commitAll(p.root, u.username, `app(${appId}): ${method} ${rel}`).catch(() => undefined);
+          queueRouteCommit(p, u.username, appId, method, rel, res.fsWrites ?? []);
         }
         if (res.json !== undefined) return { status: res.status ?? 200, payload: res.json };
         return { status: res.status ?? 200, payload: res.text ?? "", ...(res.contentType ? { contentType: res.contentType } : {}) };
       }
     }
     return null;
+    } finally {
+      const left = (routesRunning.get(runKey) ?? 1) - 1;
+      if (left > 0) routesRunning.set(runKey, left);
+      else routesRunning.delete(runKey);
+    }
   };
 
   /** Why nothing answered an app route. A plugin that cannot load, or that
