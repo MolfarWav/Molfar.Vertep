@@ -569,6 +569,40 @@ afterEach(() => {
     expect(gitBoundaryIgnored("apps/demo/data/characters/a/card.json")).toBe(false);
   });
 
+  it("a route that is still running keeps its files out of another route's out-of-band commit", async () => {
+    const { log, changedPaths, commitAll } = await import("../src/git.js");
+    const root = path.join(dataDir, "users", "alice");
+    const appDir = path.join(root, "apps", "twowrite");
+    fs.mkdirSync(path.join(appDir, "plugins", "p"), { recursive: true });
+    fs.mkdirSync(path.join(appDir, "data"), { recursive: true });
+    fs.writeFileSync(path.join(appDir, "manifest.json"), JSON.stringify({ name: "Two", version: "1", kind: "app" }));
+    fs.writeFileSync(path.join(appDir, "plugins", "p", "manifest.json"), JSON.stringify({ name: "P", version: "1", permissions: ["routes", "fs"], origin: "local" }));
+    // /slow writes its file at once and then keeps the route open; /fast writes and returns
+    fs.writeFileSync(
+      path.join(appDir, "plugins", "p", "plugin.js"),
+      `export function handleRoute(req, host) {
+        if (req.path === "/slow") { host.fs.write("slow.txt", "s"); for (let i = 0; i < 8_000_000; i++) {} return { status: 200, json: { ok: 1 } }; }
+        if (req.path === "/fast") { host.fs.write("fast.txt", "f"); return { status: 200, json: { ok: 1 } }; }
+        return null;
+      }`,
+    );
+    await commitAll(root, "alice", "base: app files");
+    const slowFile = path.join(appDir, "data", "slow.txt");
+    const slow = app.request("/v1/apps/twowrite/slow", { headers: h() });
+    // only once /slow has written, so /fast's commit walk meets a file that is not its own
+    for (let i = 0; i < 400 && !fs.existsSync(slowFile); i++) await new Promise((r) => setTimeout(r, 10));
+    expect(fs.existsSync(slowFile)).toBe(true);
+    expect((await app.request("/v1/apps/twowrite/fast", { headers: h() })).status).toBe(200);
+    expect((await slow).status).toBe(200);
+    for (let i = 0; i < 200 && (await changedPaths(root)).length; i++) await new Promise((r) => setTimeout(r, 50));
+    expect(await changedPaths(root)).toEqual([]);
+    const messages = (await log(root, 6)).map((c) => c.message);
+    // every file was written by a route: no commit may call it out-of-band
+    expect(messages.filter((m) => m.startsWith("out-of-band"))).toEqual([]);
+    expect(messages).toContain("app(twowrite): GET /fast");
+    expect(messages).toContain("app(twowrite): GET /slow");
+  }, { timeout: 30_000 });
+
   it("route sweep commits out-of-band edits under their own label, not the route's", async () => {
     const { log, changedPaths, commitAll } = await import("../src/git.js");
     const root = path.join(dataDir, "users", "alice");
@@ -585,7 +619,18 @@ afterEach(() => {
       body: JSON.stringify({ text: "sweep test" }),
     });
     expect(put.status).toBe(200);
-    expect(await changedPaths(root)).toEqual([]); // everything committed
+    // The route's own commit TRAILS its answer now (app.ts queueRouteCommit):
+    // it is off the response path, so "everything committed" is a state the
+    // request finishes before, not during.
+    const settled = async (): Promise<string[]> => {
+      for (let i = 0; i < 200; i++) {
+        const left = await changedPaths(root);
+        if (!left.length) return left;
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      return changedPaths(root);
+    };
+    expect(await settled()).toEqual([]); // everything committed
     const commits = await log(root, 5);
     expect(commits[0]!.message).toBe("app(notes): PUT /notes/p1");
     const oob = commits[1]!;

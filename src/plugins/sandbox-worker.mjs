@@ -300,6 +300,12 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
       }
     })();
 
+    // Paths this call wrote or removed, relative to the app's data dir. The
+    // host needs them to tell a route's OWN writes from edits made out of band
+    // (agent, shell tool) when it commits, and it cannot re-derive them without
+    // a full status walk of the workspace.
+    const fsWrites = [];
+
     // Scoped fs service (SPEC-v2 §3): bundled plugins may read/write their
     // app's data/ dir. Path-safe: resolve within root, block escapes.
     const fsSvc = (() => {
@@ -377,6 +383,8 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
             fs.mkdirSync(path.dirname(full), { recursive: true });
             fs.writeFileSync(full, content, "utf8");
           } catch (e) { scrub(e, rel); }
+          const relSlash = path.relative(fsRoot, full).split(path.sep).join("/");
+          if (!fsWrites.includes(relSlash)) fsWrites.push(relSlash);
         },
         list: (rel = ".") => { try { return fs.readdirSync(within(rel)).sort(); } catch (e) { scrub(e, rel); } },
         // size and change time without reading the file: lets an app keep a derived index and
@@ -420,6 +428,10 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
           const full = within(rel);
           if (full === fsRoot) throw new Error("refusing to remove the data dir itself");
           try { fs.rmSync(full, { recursive: true, force: true }); } catch (e) { scrub(e, rel); }
+          // a folder takes everything under it with it: name each path so the
+          // commit that follows describes the deletions honestly
+          const relSlash = path.relative(fsRoot, full).split(path.sep).join("/");
+          if (!fsWrites.includes(relSlash)) fsWrites.push(relSlash);
         },
       };
     })();
@@ -441,8 +453,54 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
         .slice(0, 500);
       logs.push(`[console.${level}] ${text}`);
     };
+    // ANSWER BEFORE TEARDOWN. The runtime is freed right after the callback
+    // below returns, and on a fat call that teardown itself can abort the wasm
+    // runtime (`Assertion failed: list_empty(&rt->gc_obj_list)` in
+    // JS_FreeRuntime). Until now the answer was posted only after teardown, so
+    // a route that had ALREADY finished its work (a POST that changed the
+    // world) came back as "sandbox aborted: …". postMessage copies
+    // synchronously, so posting from inside the callback puts the result on the
+    // wire before the runtime is freed; a later teardown failure only costs
+    // this worker (the `poison` note below), never the result.
+    let delivered = false;
+    const deliver = (payload) => {
+      if (delivered) return;
+      delivered = true;
+      // `settling`: the runtime is still to be freed; the host keeps this worker
+      // out of rotation until the `settled` note at the end of the handler
+      reply({ id, fsWrites, settling: true, ...payload });
+    };
     const result = await runSandboxed(
-      async ({ evalCode }) => evalCode(harnessCode(hook), "harness.mjs"),
+      async ({ evalCode }) => {
+        let r;
+        try {
+          r = await evalCode(harnessCode(hook), "harness.mjs");
+        } catch (e) {
+          deliver({ ok: false, error: String((e && e.message) || e).slice(0, 400), logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+          throw e;
+        }
+        if (!r || !r.ok) {
+          deliver({ ok: false, error: (r && r.error && r.error.message) || "sandbox eval failed", logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+          return r;
+        }
+        // The guest reports its own failures in the envelope rather than
+        // rejecting: a rejected promise crossing the boundary aborts the wasm
+        // runtime on teardown (same JS_FreeRuntime assertion), which would turn
+        // every ordinary plugin bug into a poisoned worker.
+        let envelope = null;
+        try {
+          envelope = JSON.parse(r.data ?? "null");
+        } catch {
+          envelope = null;
+        }
+        if (!envelope || envelope.ok !== true) {
+          const error = envelope && typeof envelope.error === "string" ? envelope.error : "hook returned non-serializable result";
+          deliver({ ok: false, error, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+          return r;
+        }
+        deliver({ ok: true, out: envelope.value ?? null, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+        return r;
+      },
       {
         executionTimeout: executionTimeoutMs,
         memoryLimit: memoryLimitBytes,
@@ -459,33 +517,45 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
         },
       },
     );
+    // Answered already? Then everything past here is teardown: it must not
+    // touch the answer, and a failure in it is this worker's problem only.
+    if (delivered) return;
     if (!result.ok) {
-      reply({ id, ok: false, error: result.error.message, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+      deliver({ ok: false, error: result.error.message, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
       return;
     }
-    // The guest reports its own failures in the envelope rather than rejecting:
-    // a rejected promise crossing the boundary aborts the wasm runtime on
-    // teardown (same JS_FreeRuntime assertion), which would turn every ordinary
-    // plugin bug into a poisoned worker.
     let envelope;
     try {
       envelope = JSON.parse(result.data ?? "null");
     } catch {
-      reply({ id, ok: false, error: "hook returned non-serializable result", logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+      deliver({ ok: false, error: "hook returned non-serializable result", logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
       return;
     }
     if (!envelope || envelope.ok !== true) {
       const error = envelope && typeof envelope.error === "string" ? envelope.error : "hook returned non-serializable result";
-      reply({ id, ok: false, error, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+      deliver({ ok: false, error, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
       return;
     }
-    reply({ id, ok: true, out: envelope.value ?? null, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests, logs });
+    deliver({ ok: true, out: envelope.value ?? null, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests, logs });
   } catch (e) {
     // wasm abort / load failure — host will terminate+respawn this worker
     try {
-      reply({ id, ok: false, error: `sandbox aborted: ${String(e?.message ?? e).slice(0, 200)}`, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+      if (delivered) {
+        // The caller already has its answer; only this worker is unfit now.
+        port.postMessage({ id: 0, poison: true });
+      } else {
+        deliver({ ok: false, error: `sandbox aborted: ${String(e?.message ?? e).slice(0, 200)}`, logs, storeWrites: store, llmRequests, netRequests, scriptRequests, embedRequests });
+      }
     } catch {
       /* port dead — host timeout handles it */
+    }
+  } finally {
+    // Reached once the runtime has been freed (or its freeing failed and `poison` went out first):
+    // from here the host may hand this worker its next call.
+    try {
+      port.postMessage({ id: 0, settled: true });
+    } catch {
+      /* port dead */
     }
   }
 });
