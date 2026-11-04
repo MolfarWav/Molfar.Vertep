@@ -9,6 +9,9 @@ import { PluginStoreService } from "../../../src/plugins/store.ts";
 
 const [stateRoot, pluginFile, runsArg] = process.argv.slice(2);
 const runs = Number(runsArg ?? 3);
+// CHAT / CARD: the chat id and the character id of the appended reply (a copy of a real data folder works too)
+const CHAT = process.env.CHAT ?? "c1";
+const CARD = process.env.CARD ?? "aria";
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "upd-"));
 const app = path.join(tmp, "apps", "roleplay");
 fs.mkdirSync(path.join(app, "plugins", "relations"), { recursive: true });
@@ -24,11 +27,11 @@ for (let r = 0; r < runs; r++) {
   fs.rmSync(data, { recursive: true, force: true });
   fs.cpSync(stateRoot!, data, { recursive: true });
   const prose = "She turned toward the window and spoke quietly. ".repeat(40);
-  fs.appendFileSync(path.join(data, "chats/c1.jsonl"), [{ id: "unew", role: "user", name: "You", text: "Go on." }, { id: "cnew", role: "char", name: "Four Beauties", text: prose, swipe: 0, characterId: "aria" }].map((m) => JSON.stringify(m)).join(String.fromCharCode(10)) + String.fromCharCode(10));
+  fs.appendFileSync(path.join(data, "chats/" + CHAT + ".jsonl"), [{ id: "unew", role: "user", name: "You", text: "Go on." }, { id: "cnew", role: "char", name: "Four Beauties", text: prose, swipe: 0, characterId: CARD }].map((m) => JSON.stringify(m)).join(String.fromCharCode(10)) + String.fromCharCode(10));
   const deps = { store: new PluginStoreService(path.join(tmp, "store")), models: models as never, grantsFor: () => plugin.manifest.permissions };
   marks = [];
   const t0 = performance.now();
-  const out = await runPluginRoute(plugin, { method: "POST", path: "/dashboard/update", query: {}, body: { chatId: "c1", op: "send" } }, deps as never);
+  const out = await runPluginRoute(plugin, { method: "POST", path: "/dashboard/update", query: {}, body: { chatId: CHAT, op: "send" } }, deps as never);
   const t1 = performance.now();
   const j: any = out?.json;
   const pass1 = marks.length ? marks[0]! - t0 : NaN;
