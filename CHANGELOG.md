@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.10.4 (2026-11-04)
+
+- Roleplay 4.88.0 comes with this release as an app update: one identity for every person, thing and place of a chat, shared by the Dashboard, the World DM, Litopys and agents (one person is no longer two Dashboard characters; merge and "different people" in the Person tab; a thing keeps its identity on a person, on the floor and in another place, and a place keeps what was left in it) (#240); the Dashboard sensor reads whole replies with a word scan, the card's Attire line and a ledger of worn and held things, and asks the writer to show clothes after six turns (#236); agents can change Dashboard fields with Undo (#132); a chat no longer jumps to its oldest message during background refreshes (#241). The engine itself has no code changes. Details in `.fork/release-notes/1.10.4.md`.
+
 ## 1.10.3 (2026-11-03)
 
 - Roleplay 4.87.0 comes with this release as an app update: ten more Help articles (new chat, the Chats page, chat files, What this chat carries, the "+" menu, Sprites, Backup and restore, display switches, Arcs, Home customizing), help inside the agent editor (a folded "What goes in and out" block in the Card tab and three articles on agents), a Message format pick in Vertep Lite (on by default), a card's Dialogue highlight that now colours its own quotes, a setting for the length of one recollection, and a fix: "Reset look and local settings" no longer deletes folders, the Backgrounds list and connection profiles (#145, #148). The engine itself has no code changes. Details in `.fork/release-notes/1.10.3.md`.
