@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.10.5 (2026-11-04)
+
+- Roleplay 4.89.0 comes with this release as an app update: presets can read which app features are on in a chat as `vertep.*` flags, in `{{#if}}` and section conditions (#237); Write for me, Polish and the continue nudge follow the preset's picks; a "Works with" line in the Preset panel; Vertep Lite says Vertep is the app; Export and Import keep a preset's Choices, conditions and groups (#238); SillyTavern presets import as shipped: modules that are off stay off, `[PICK n: TAG]` tags and ↑/↓ pairs become Choices, "do not touch" blocks are locked, the authors' explanations become hints and notes (#239).
+- The in-browser build no longer stops after a fixed 5 minutes while it still works (#190): it stops after 3 minutes without progress (time hidden does not count) or 30 minutes in all, and a second tab no longer forces a second build beside a slow one.
+- The repository stops tracking `.agents/` (a local copy of the skills that 1.10.4 shipped by mistake, with a key file; the key was revoked).
 ## 1.10.4 (2026-11-04)
 
 - Roleplay 4.88.0 comes with this release as an app update: one identity for every person, thing and place of a chat, shared by the Dashboard, the World DM, Litopys and agents (one person is no longer two Dashboard characters; merge and "different people" in the Person tab; a thing keeps its identity on a person, on the floor and in another place, and a place keeps what was left in it) (#240); the Dashboard sensor reads whole replies with a word scan, the card's Attire line and a ledger of worn and held things, and asks the writer to show clothes after six turns (#236); agents can change Dashboard fields with Undo (#132); a chat no longer jumps to its oldest message during background refreshes (#241). The engine itself has no code changes. Details in `.fork/release-notes/1.10.4.md`.

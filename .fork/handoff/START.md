@@ -4,7 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
-000000. **Presets #238/#239/#237** (2026-11-04): #238 and #239 are done in Roleplay PR #68 (branch `claude/great-hamilton-9o3cov`), waiting for review and a release. #237 is done on Roleplay PR #69 (stacked on #68). #190: build watchdog on this engine branch (STATE); the ready-made phone build is still open. All three wait for the release.
+000000. **1.10.5 prepared** 2026-11-04 (main holds it; the user pushes the tag v1.10.5): carries Roleplay 4.89.0 (#237, #238, #239), build watchdog #190 (STATE, "RELEASE 1.10.5"). After the tag: close #237/#238/#239 with "How it was solved"; #190 waits for the reporter.
 00000. **1.9.3 prepared** 2026-11-01 (main holds it; the user pushes the tag v1.9.3): Agent forge leftovers, carries Roleplay 4.82.0 (STATE, "RELEASE 1.9.3 PREPARED"). Next on the Forge: #140 (Script card, `html` mode B, `batchKey`), #132 write access, and the manual real-model checklist of #141 (`.fork/handoff/forge-checks/MANUAL.md`).
 0000. **1.2.2 released** 2026-10-18 (main fast-forwarded; the user pushes the tag v1.2.2): pi 1.2.0, live model lists, #59, desktop rollback (STATE). Next asked: a key-driven start menu in `Molfar-Vertep.bat`; renaming `chrysalis` (exe, command) needs a data migration and the user's word.
 000. **Next releases (user, 2026-10-17)**: release P0 for large libraries (#46) with the threads fix (#47) first, on the

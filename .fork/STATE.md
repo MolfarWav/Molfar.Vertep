@@ -5,6 +5,9 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## RELEASE 1.10.5 (2026-11-04): carries Roleplay 4.89.0 (Roleplay PRs #68 + #69, `claude/great-hamilton-9o3cov` + `-237`); engine: build watchdog (#190), `.agents/` untracked
+#237, #238, #239 shipped (close each with "How it was solved" after the tag); #190 stays open (ready-made phone build, the "last good build" wording; waits for the reporter's retest). The NanoGPT key that 1.10.4 shipped in `.agents/skills/ask-model/keys.env` was revoked by the owner (2026-11-04). Order: merge engine to main, push tag v1.10.5, update the engine, then merge the Roleplay PRs (#68, then #69; merging publishes 4.89.0).
+
 ## BUILD WATCHDOG #190 (2026-11-04, engine branch `claude/great-hamilton-9o3cov`, not released)
 The reporter (OPPO A55, Roleplay 4.85.0) confirmed the cold build fails even in front, charging, screen on, in Chrome alone: the fixed 5-minute `BUILD_TIMEOUT` in `src/builder/browser/host.ts` stopped a build that was still working. Now a watchdog: the build stops after 3 minutes with no activity from the frame (file reads, messages; time hidden does not count) or after 30 minutes in all. A second tab no longer forces a busy lease over after 120 s (it waited out a live slow build and started a second one beside it; now 31 min). Not checked: a real slow phone; a unit test of the host (it needs a browser). Still open on #190: a ready-made build for phones (official Roleplay `dist` + `dev/graph.json` built in CI and shipped with the release, so the first open resumes with no build), and the "shows its last good build" wording when there was none (`client/src/App.tsx` BuildErrors, a new string in 14 locales).
 
