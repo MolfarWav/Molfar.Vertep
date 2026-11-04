@@ -48,7 +48,11 @@ interface ServerStatus {
 }
 
 const VERSION = typeof __BUILDER_VERSION__ === "string" ? __BUILDER_VERSION__ : "dev";
-const BUILD_TIMEOUT = 5 * 60_000;
+/** A build stops when the frame has done nothing for this long: no file read, no message (#190). A slow phone
+ *  reads files all through a cold build, so it is never cut while it works; a hung one still ends. */
+const BUILD_IDLE = 3 * 60_000;
+/** And in any case after this long: a build that keeps reading but never ends. */
+const BUILD_CEILING = 30 * 60_000;
 /** How long the builder frame page may take to start (a small page: this is not a download of esbuild). */
 const FRAME_LOAD_TIMEOUT = 30_000;
 /** How long esbuild may take to compile and answer once the frame is up. */
@@ -61,9 +65,11 @@ const FRAME_STUCK =
 const ESBUILD_STUCK = "The app builder started but esbuild did not become ready in two minutes. Reload the page; if it repeats, the device may be too slow or short of memory.";
 const READ_BUDGET = 1536 * 1024 * 1024;
 /** Seconds a BUSY lease may block a build before this tab forces it over.
- *  Idle leases yield at once (see takeLease), so this only caps a build that
- *  never finishes; the frame's own timeout is five minutes. */
-const TAKEOVER_AFTER_S = 120;
+ *  Idle leases yield at once and a dead holder's lease runs out in 45 s (see
+ *  takeLease), so this only caps a holder that stays alive and busy: it waits
+ *  out the build ceiling, or a second tab on a slow phone would start a second
+ *  build beside a first one that is still working (#190). */
+const TAKEOVER_AFTER_S = 31 * 60;
 
 let wasmBytes: Promise<ArrayBuffer> | null = null;
 const wasm = () =>
@@ -112,6 +118,8 @@ class BuilderFrame {
   /** How long the frame's last build took, and whether it continued from a saved module graph. */
   lastMs = 0;
   lastResumed = false;
+  /** When the frame last did something (a file read, any message): the build watchdog reads it. */
+  private lastActivity = Date.now();
 
   constructor(private appId: string, prior: unknown) {
     this.iframe = document.createElement("iframe");
@@ -125,7 +133,7 @@ class BuilderFrame {
     const loadedP = new Promise<void>((r) => (loaded = r));
     // The frame page and esbuild each get a limit. Without one a frame the browser never starts (a
     // Content-Security-Policy that does not match the address the page is opened at, an extension) leaves
-    // `ready` pending for good: no CPU, no log, no error, and the 5-minute build timeout, which only
+    // `ready` pending for good: no CPU, no log, no error, and the build watchdog, which only
     // starts after `ready`, never runs. The user saw a tab that "builds" for ever.
     let bootTimer: ReturnType<typeof setTimeout> | undefined = setTimeout(
       () => readyFail(new Error(FRAME_STUCK)),
@@ -149,6 +157,7 @@ class BuilderFrame {
       if (e.source !== this.iframe.contentWindow) return;
       const d = e.data as { __molfarBuilder?: number; t?: string; rid?: unknown; ops?: unknown; id?: unknown; output?: unknown; error?: unknown; text?: unknown; ms?: unknown; resumed?: unknown };
       if (!d || d.__molfarBuilder !== 1) return;
+      this.lastActivity = Date.now();
       // the frame page is up: its start-up limit is met (downloading esbuild.wasm is not counted in it)
       if (d.t === "loaded") {
         bootDone();
@@ -189,6 +198,7 @@ class BuilderFrame {
   }
 
   private async relay(rid: number, ops: unknown[]): Promise<void> {
+    this.lastActivity = Date.now();
     let results: unknown[];
     if (this.bytes > READ_BUDGET) {
       results = ops.map(() => ({ ok: false, error: "the build read too much" }));
@@ -211,13 +221,34 @@ class BuilderFrame {
     await this.ready;
     const id = ++this.nextId;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
+      // A fixed 5-minute limit stopped cold builds that were still working on mid-range phones (#190). The
+      // watchdog stops a build that does nothing for BUILD_IDLE, or runs past BUILD_CEILING. Time the page
+      // spent hidden (Android freezes a background tab) does not count as idle.
+      const started = Date.now();
+      this.lastActivity = started;
+      const onVisible = () => {
+        if (document.visibilityState === "visible") this.lastActivity = Date.now();
+      };
+      document.addEventListener("visibilitychange", onVisible);
+      const stop = () => {
+        clearInterval(watch);
+        document.removeEventListener("visibilitychange", onVisible);
+      };
+      const watch = setInterval(() => {
+        const now = Date.now();
+        const why = now - this.lastActivity > BUILD_IDLE
+          ? "the build stopped making progress for 3 minutes and was stopped"
+          : now - started > BUILD_CEILING
+            ? "the build took longer than 30 minutes and was stopped"
+            : null;
+        if (!why) return;
+        stop();
         this.waiting.delete(id);
         this.dispose();
-        reject(new Error("the build took too long and was stopped"));
-      }, BUILD_TIMEOUT);
+        reject(new Error(why));
+      }, 5_000);
       this.waiting.set(id, (out) => {
-        clearTimeout(timer);
+        stop();
         resolve(out);
       });
       this.post({ t: "build", id, kind, changed, ...(graph !== undefined ? { graph } : {}) });

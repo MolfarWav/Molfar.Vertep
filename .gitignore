@@ -30,3 +30,6 @@ dist/
 Thumbs.db
 *.tsbuildinfo
 coverage/
+
+# a mirror of .claude/skills some agent tools create on the desktop (it carried keys.env into v1.10.4)
+/.agents/
