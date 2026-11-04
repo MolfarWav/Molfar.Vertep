@@ -5,6 +5,9 @@ Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.for
 History: per release the CHANGELOG, `.fork/release-notes/`, and git history (the long logs that
 used to live here and the finished handoffs were removed on 2026-10-10; `git log -- .fork` finds them).
 
+## PRESET IMPORT/EXPORT #238/#239 (2026-11-04; Roleplay PR #68, not released)
+Export writes the `studio` bag and Import reads it as our own format (#238). The SillyTavern importer keeps what the file sends with its defaults: off setvar modules stay off sections, `[PICK n: TAG]` and ↑/↓ pairs become Choices, "do not touch/enable" blocks import `locked`, prose `{{// }}` comments become hints, section `note`s and the description (#239). New section fields `locked`, `note`; `expandMacros` exported from the engine plugin for tests. Help article anchors re-pointed (296 were stale on main). Not checked: browser run of the editor lock/note, the real Sola file. #237: Lite CORE line done on `claude/great-hamilton-9o3cov-237`; the rest in `.fork/handoff/issue-237/HANDOFF.md`.
+
 ## RELEASE 1.10.4 (2026-11-04): carries Roleplay 4.88.0 (Roleplay PR #67, branch `claude/sensor-full-scan` + `claude/chat-scroll-jump`); engine code unchanged
 Entity registry #240, sensor #236/#212, agents write #132, scroll jump #241, all closed with this release. Item recognition goes on in the issue opened for the next tests (owner plays big cards, then the chats are scanned with `scripts/sensor-replay.ts`; corpus in Roleplay `.eval-local/`, git-excluded, now 7 chats incl. `student`). Engine checks on the laptop: typecheck and build:client clean; `bun run test` 1154 pass / 29 fail, all Windows environment: `EPERM` creating symlinks (no symlink privilege on this machine) plus the known set (release installer, 0600 modes, sandbox git prelude). Roleplay: typecheck clean, 3121 pass.
 
