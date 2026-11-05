@@ -1233,7 +1233,7 @@ function MemoryMeaningSection() {
           </select>
         </div>
         {config.provider === "auto" && (
-          <p className="text-11 leading-4 text-ink-faint">{tr("Automatic tries your API connections that have a key, then OpenRouter.")}</p>
+          <p className="text-11 leading-4 text-ink-faint">{tr("Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.")}</p>
         )}
       </div>
 

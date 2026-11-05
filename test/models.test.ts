@@ -345,7 +345,7 @@ describe("embeddings probe (honest semantic-recall status)", () => {
       let body = "";
       req.on("data", (c) => { body += c; });
       req.on("end", () => {
-        hits++;
+        if (req.method === "POST") hits++;
         const parsed = JSON.parse(body || "{}") as { input?: string[]; model?: string };
         lastModel = parsed.model ?? "";
         const input = parsed.input ?? [];
@@ -567,9 +567,13 @@ describe("embeddings through OpenRouter and provider choice", () => {
   let calls: { url: string; auth: string; model: string; input: string[] }[];
   let failUrls: string[];
 
+  let localModels: string[];
   const fakeFetch = (async (url: unknown, init?: RequestInit) => {
+    if (String(url).endsWith("/models")) {
+      return new Response(JSON.stringify({ data: localModels.map((id) => ({ id })) }), { status: 200, headers: { "content-type": "application/json" } });
+    }
     const body = JSON.parse(String(init?.body ?? "{}")) as { model?: string; input?: string[] };
-    const headers = init?.headers as Record<string, string>;
+    const headers = (init?.headers ?? {}) as Record<string, string>;
     calls.push({ url: String(url), auth: headers.authorization ?? "", model: body.model ?? "", input: body.input ?? [] });
     if (failUrls.some((f) => String(url).startsWith(f))) return new Response("nope", { status: 500 });
     return new Response(JSON.stringify({ data: (body.input ?? []).map(() => ({ embedding: [0.5, 0.25] })) }), { status: 200, headers: { "content-type": "application/json" } });
@@ -579,6 +583,7 @@ describe("embeddings through OpenRouter and provider choice", () => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), "embed-or-"));
     calls = [];
     failUrls = [];
+    localModels = ["llama-3-8b", "nomic-embed-text-v1.5"];
     globalThis.fetch = fakeFetch;
   });
   afterEach(() => {
@@ -587,7 +592,7 @@ describe("embeddings through OpenRouter and provider choice", () => {
   });
 
   /** A workspace with the given connections, credentials and settings. */
-  function setup(opts: { openrouter?: boolean; orKey?: string; custom?: boolean; settings?: Record<string, unknown> }): UserModelService {
+  function setup(opts: { openrouter?: boolean; orKey?: string; custom?: boolean; local?: "keyless" | "keyed"; settings?: Record<string, unknown> }): UserModelService {
     const p = userPaths(dir, "u");
     fs.mkdirSync(p.root, { recursive: true });
     const connections: Record<string, unknown> = {};
@@ -597,6 +602,10 @@ describe("embeddings through OpenRouter and provider choice", () => {
     if (opts.custom) {
       connections.hub = { name: "Embed Hub", api: "openai-completions", baseUrl: "https://hub.example/v1", models: [] };
       auth.hub = { type: "api_key", key: "hub-key", boundBaseUrl: "https://hub.example/v1" };
+    }
+    if (opts.local) {
+      connections.lan = { name: "My LM Studio", api: "openai-completions", baseUrl: "http://localhost:1234/v1", models: [] };
+      if (opts.local === "keyed") auth.lan = { type: "api_key", key: "lan-key", boundBaseUrl: "http://localhost:1234/v1" };
     }
     fs.mkdirSync(path.dirname(p.connections), { recursive: true });
     fs.writeFileSync(p.connections, JSON.stringify({ connections }));
@@ -657,6 +666,35 @@ describe("embeddings through OpenRouter and provider choice", () => {
     expect(svc.embedModelUsed).toBe("qwen/qwen3-embedding-4b");
   });
 
+  it("auto: a local server comes first and needs no key; its embedding model is found in its list", async () => {
+    // the remote connection is listed first on purpose: order in the file must not decide
+    const svc = setup({ openrouter: true, orKey: "or-key", custom: true, local: "keyless" });
+    expect(await svc.embed(["x"])).toEqual([[0.5, 0.25]]);
+    expect(calls.map((c) => c.url)).toEqual(["http://localhost:1234/v1/embeddings"]);
+    expect(calls[0]).toMatchObject({ auth: "", model: "nomic-embed-text-v1.5" });
+    expect(svc.embedVia).toBe("My LM Studio");
+    expect(svc.embedModelUsed).toBe("nomic-embed-text-v1.5");
+    // local down: the paid ones answer
+    calls = [];
+    failUrls = ["http://localhost:1234"];
+    await svc.embed(["x"]);
+    expect(calls.map((c) => c.url)).toEqual(["http://localhost:1234/v1/embeddings", "https://hub.example/v1/embeddings"]);
+  });
+
+  it("a named embedding model beats the guess from a local list; a local list without an embedder keeps the default", async () => {
+    await setup({ local: "keyless", settings: { embedModel: "my-embedder" } }).embed(["x"]);
+    expect(calls[0]?.model).toBe("my-embedder");
+    calls = [];
+    localModels = ["llama-3-8b"];
+    await setup({ local: "keyed", settings: {} }).embed(["x"]);
+    expect(calls[0]).toMatchObject({ auth: "Bearer lan-key", model: "text-embedding-3-small" });
+  });
+
+  it("auto with nothing set up returns null and calls nothing", async () => {
+    expect(await setup({ openrouter: true }).embed(["x"])).toBeNull();
+    expect(calls).toHaveLength(0);
+  });
+
   it("auto with only an OpenRouter key works in one step", async () => {
     const svc = setup({ openrouter: true, orKey: "or-key" });
     expect(await svc.embed(["x"])).toEqual([[0.5, 0.25]]);
@@ -675,5 +713,7 @@ describe("embeddings through OpenRouter and provider choice", () => {
       { id: "openrouter", name: "OpenRouter", kind: "builtin", ready: true },
       { id: "hub", name: "Embed Hub", kind: "custom", ready: true },
     ]);
+    // a local server is ready without a key and says it is local
+    expect(setup({ local: "keyless" }).embedProviders()).toContainEqual({ id: "lan", name: "My LM Studio", kind: "custom", ready: true, local: true });
   });
 });

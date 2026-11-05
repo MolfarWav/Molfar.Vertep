@@ -747,11 +747,11 @@ export class UserModelService {
   }
 
   /** One OpenAI-style embeddings request: the vectors, or null (never throws). */
-  private async embedRequest(url: string, key: string, model: string, input: string[]): Promise<number[][] | null> {
+  private async embedRequest(url: string, key: string | null, model: string, input: string[]): Promise<number[][] | null> {
     try {
       const res = await fetch(url, {
         method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+        headers: { "content-type": "application/json", ...(key ? { authorization: `Bearer ${key}` } : {}) },
         body: JSON.stringify({ model, input }),
         signal: AbortSignal.timeout(20_000),
       });
@@ -764,11 +764,36 @@ export class UserModelService {
     }
   }
 
+  /** The embedding model a local server offers, when the user named none:
+   *  the first id in its /models list that looks like an embedder. Local
+   *  stacks (Ollama, LM Studio) do not know the OpenAI default name. null =
+   *  nothing found, the caller keeps the default name. Remembered 10 minutes. */
+  private localEmbedModels = new Map<string, { at: number; model: string | null }>();
+  private async localEmbedModel(baseUrl: string, key: string | null): Promise<string | null> {
+    const hit = this.localEmbedModels.get(baseUrl);
+    if (hit && Date.now() - hit.at < 600_000) return hit.model;
+    let model: string | null = null;
+    try {
+      const res = await fetch(baseUrl.replace(/\/$/, "") + "/models", {
+        headers: key ? { authorization: `Bearer ${key}` } : {},
+        signal: AbortSignal.timeout(5_000),
+      });
+      if (res.ok) {
+        const body = (await res.json()) as { data?: { id?: unknown }[] };
+        const ids = (body.data ?? []).map((m) => m.id).filter((x): x is string => typeof x === "string");
+        model = ids.find((id) => /embed|nomic|bge|e5-|gte-|minilm|mxbai|arctic/i.test(id)) ?? null;
+      }
+    } catch { /* unreachable: no model, no cache of a failure below */ }
+    if (model) this.localEmbedModels.set(baseUrl, { at: Date.now(), model });
+    return model;
+  }
+
   /** Text embeddings (OpenAI-style POST .../embeddings). The engine setting
    *  `embedProvider` picks the endpoint: "openrouter" = the OpenRouter builtin
    *  connection only (fixed URL); a custom connection id = that connection
-   *  only; "auto" = each keyed custom connection in turn, then OpenRouter if
-   *  it has a key. null when none can answer: callers fall back to lexical.
+   *  only; "auto" = local connections first (no key needed there), then the
+   *  keyed remote ones, then OpenRouter if it has a key. null when none can
+   *  answer: callers fall back to lexical.
    *  The model that made the vectors is left in embedModelUsed. */
   async embed(texts: string[], model?: string): Promise<number[][] | null> {
     const clean = texts.map((t) => String(t).slice(0, 8000)).filter((t) => t.trim());
@@ -794,11 +819,15 @@ export class UserModelService {
       try {
         if (new URL(def.baseUrl).protocol !== "https:" && !isLocalEndpoint(def.baseUrl)) return null;
       } catch { return null; }
+      const local = isLocalEndpoint(def.baseUrl);
       const cred = await auth.read(authTarget(def, id));
-      if (!cred || cred.type !== "api_key" || !cred.key) return null;
-      if (!connectionKeyUsable(def, id, cred)) return null;
-      const used = this.embedModelName({ model, settings });
-      const out = await this.embedRequest(def.baseUrl.replace(/\/$/, "") + "/embeddings", cred.key, used, clean);
+      const keyed = !!cred && cred.type === "api_key" && !!cred.key && connectionKeyUsable(def, id, cred);
+      // a local model server usually has no key; a remote one never works without
+      if (!keyed && !local) return null;
+      const key = keyed ? (cred as { key: string }).key : null;
+      let used = this.embedModelName({ model, settings });
+      if (local && !model && settings.model === null) used = (await this.localEmbedModel(def.baseUrl, key)) ?? used;
+      const out = await this.embedRequest(def.baseUrl.replace(/\/$/, "") + "/embeddings", key, used, clean);
       return out ? done(out, def.name ?? id, used) : null;
     };
     if (settings.provider === "openrouter") return viaOpenRouter();
@@ -806,7 +835,10 @@ export class UserModelService {
       const def = conns.connections[settings.provider];
       return def ? viaCustom(settings.provider, def) : null;
     }
-    for (const [id, def] of Object.entries(conns.connections)) {
+    // local first (free, private), then the remote keyed ones, then OpenRouter
+    const isLocal = (d: ConnectionDef) => !!d.baseUrl && isLocalEndpoint(d.baseUrl);
+    const ordered = Object.entries(conns.connections).sort(([, a], [, b]) => Number(isLocal(b)) - Number(isLocal(a)));
+    for (const [id, def] of ordered) {
       const out = await viaCustom(id, def);
       if (out) return out;
     }
@@ -816,12 +848,12 @@ export class UserModelService {
   /** The places embeddings can come from, for the Settings choice. OpenRouter
    *  is always listed (ready once its builtin connection has a key); custom
    *  connections are the OpenAI-style ones. ready = a usable key exists. */
-  embedProviders(): { id: string; name: string; kind: "builtin" | "custom"; ready: boolean }[] {
+  embedProviders(): { id: string; name: string; kind: "builtin" | "custom"; ready: boolean; local?: boolean }[] {
     const conns = readConnections(this.paths).connections;
     const auth = readAuth(this.paths);
     const orConn = Object.values(conns).some((d) => d.providerId === OPENROUTER_PROVIDER_ID && !d.proxyOf);
     const orCred = auth[OPENROUTER_PROVIDER_ID];
-    const out: { id: string; name: string; kind: "builtin" | "custom"; ready: boolean }[] = [
+    const out: { id: string; name: string; kind: "builtin" | "custom"; ready: boolean; local?: boolean }[] = [
       { id: "openrouter", name: "OpenRouter", kind: "builtin", ready: orConn && orCred?.type === "api_key" && !!orCred.key },
     ];
     for (const [id, def] of Object.entries(conns)) {
@@ -829,10 +861,14 @@ export class UserModelService {
       if (def.api !== "openai-completions") continue;
       const cred = auth[authTarget(def, id)];
       let ready = !!cred && cred.type === "api_key" && !!cred.key && connectionKeyUsable(def, id, cred);
+      let local = false;
       try {
-        if (new URL(def.baseUrl).protocol !== "https:" && !isLocalEndpoint(def.baseUrl)) ready = false;
+        local = isLocalEndpoint(def.baseUrl);
+        if (new URL(def.baseUrl).protocol !== "https:" && !local) ready = false;
+        // a local server needs no key
+        else if (local) ready = true;
       } catch { ready = false; }
-      out.push({ id, name: def.name ?? id, kind: "custom", ready });
+      out.push({ id, name: def.name ?? id, kind: "custom", ready, ...(local ? { local: true } : {}) });
     }
     return out;
   }

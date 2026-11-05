@@ -561,7 +561,7 @@ const dict = {
   "Provider": "Sağlayıcı",
   "Automatic": "Otomatik",
   "{name} (no key)": "{name} (anahtar yok)",
-  "Automatic tries your API connections that have a key, then OpenRouter.": "Otomatik, önce anahtarı olan API bağlantılarını dener, sonra OpenRouter’ı.",
+  "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "Otomatik, önce kendi bilgisayarındaki bir modeli, sonra anahtarı olan API bağlantılarını, en son OpenRouter’ı dener.",
   "Embedding model": "Embedding modeli",
   "Default: {model}": "Varsayılan: {model}",
   "Use the default model": "Varsayılan modeli kullan",

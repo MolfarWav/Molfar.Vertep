@@ -563,7 +563,7 @@ const en = {
   "Provider": "",
   "Automatic": "",
   "{name} (no key)": "",
-  "Automatic tries your API connections that have a key, then OpenRouter.": "",
+  "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "",
   "Embedding model": "",
   "Default: {model}": "",
   "Use the default model": "",

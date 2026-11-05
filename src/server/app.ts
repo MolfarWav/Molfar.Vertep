@@ -1541,7 +1541,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   });
 
   // embeddings config (settings.json): which provider serves /embeddings
-  // ("auto" = the keyed custom connections, then OpenRouter; "openrouter";
+  // ("auto" = local connections, then the keyed custom ones, then OpenRouter; "openrouter";
   // or a custom connection id) and the model name sent to it. Keys are not
   // handled here: they are saved through the connections routes.
   app.get("/v1/embeddings/config", (c) => {

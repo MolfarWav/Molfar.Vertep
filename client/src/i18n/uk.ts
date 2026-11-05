@@ -561,7 +561,7 @@ const dict = {
   "Provider": "Провайдер",
   "Automatic": "Автоматично",
   "{name} (no key)": "{name} (без ключа)",
-  "Automatic tries your API connections that have a key, then OpenRouter.": "Автоматично: спершу ваші API-з’єднання з ключем, потім OpenRouter.",
+  "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "Автоматично: спершу модель на вашому комп’ютері, потім ваші API-з’єднання з ключем, потім OpenRouter.",
   "Embedding model": "Модель ембедингів",
   "Default: {model}": "За замовчуванням: {model}",
   "Use the default model": "Використовувати модель за замовчуванням",

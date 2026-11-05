@@ -20,7 +20,7 @@ Settings is the shell's own dialog, shared by all apps. Open it with the gear in
   - "Molfar's instructions", your standing preferences for him;
   - the protected files list.
   See [[molfar]].
-- **Memory.** How apps remember and find things across chats. It can match by meaning, not only exact words, with one cheap embedding model. This is optional.
+- **Memory.** How apps remember and find things across chats. It can match by meaning, not only exact words, with one cheap embedding model. This is optional. By default Molfar Vertep picks the model itself: one on your own computer first (LM Studio, Ollama, no key needed), then an API connection with a key, then OpenRouter. If none is set up, the memory says so and matches by words only.
 - **MCP servers.** Tool servers Molfar and your apps can call. Apps start with each one off and switch on what they need.
 - **Developer.** Shows each app's build state and live hot reload, which is always on.
 

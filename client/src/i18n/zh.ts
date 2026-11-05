@@ -561,7 +561,7 @@ const dict = {
   "Provider": "提供方",
   "Automatic": "自动",
   "{name} (no key)": "{name}（无密钥）",
-  "Automatic tries your API connections that have a key, then OpenRouter.": "自动模式会先尝试你有密钥的 API 连接，然后尝试 OpenRouter。",
+  "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "自动模式会先尝试你自己电脑上的模型，然后是有密钥的 API 连接，最后是 OpenRouter。",
   "Embedding model": "嵌入模型",
   "Default: {model}": "默认：{model}",
   "Use the default model": "使用默认模型",
