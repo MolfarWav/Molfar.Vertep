@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.10.6 (2026-11-05)
+
+- Roleplay 4.90.0 comes with this release as an app update: voice colors that hand themselves out (a card of several characters colors each person by itself; any other chat has "Voice colors" in the chat menu; colors are all different, kept with the chat, and a card with its own colors is left alone), and a fix for the Dashboard stalling on a long chat with "exceeded the maximum allowed time limit" (#245, a regression of 4.88.0: the first update of an old chat now takes 2.5 s instead of over 10 s, later ones 0.9 s instead of 3 to 5 s on a real chat). Engine code is unchanged.
+- `.fork/bench/dashboard-update/`: scripts that time the Dashboard update in the engine's own plugin sandbox (a built long chat, any plugin file, per-function timers).
+
 ## 1.10.5 (2026-11-04)
 
 - Roleplay 4.89.0 comes with this release as an app update: presets can read which app features are on in a chat as `vertep.*` flags, in `{{#if}}` and section conditions (#237); Write for me, Polish and the continue nudge follow the preset's picks; a "Works with" line in the Preset panel; Vertep Lite says Vertep is the app; Export and Import keep a preset's Choices, conditions and groups (#238); SillyTavern presets import as shipped: modules that are off stay off, `[PICK n: TAG]` tags and ↑/↓ pairs become Choices, "do not touch" blocks are locked, the authors' explanations become hints and notes (#239).
