@@ -104,7 +104,7 @@ export interface SandboxResponse {
   llmRequests?: { key: string; req: unknown }[];
   netRequests?: { key: string; req: unknown }[];
   scriptRequests?: { key: string; req: unknown }[];
-  embedRequests?: { key: string; req: { texts?: unknown; model?: unknown } }[];
+  embedRequests?: { key: string; req: { texts?: unknown; model?: unknown; kinds?: unknown } }[];
   logs?: string[];
   /** The worker's shared wasm heap after this call (see HEAP_RETIRE_BYTES). */
   heapBytes?: number;

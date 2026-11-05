@@ -4,6 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+00000000. **1.11.0 prepared** 2026-11-05 (the user merges the PRs and pushes the tag v1.11.0): the local embeddings model with one click (#255, transformers.js; STATE, "RELEASE 1.11.0 PREPARED"), carries Roleplay 4.91.0 (the #184 memory batch). After the tag: close #247, #248, #255, #245 with "How it was solved"; tick P6 in #184. Not tried on Windows or a phone. Next: #253, #254, then P4, P5, P7, P8.
 0000000. **1.10.6 prepared** 2026-11-05 (the user pushes the tag v1.10.6): carries Roleplay 4.90.0 (voice colours, #245; STATE, "RELEASE 1.10.6"). After the tag: close #245 with "How it was solved"; the Discord reporter and the owner should retry their long chats; a phone was not measured.
 000000. **1.10.5 prepared** 2026-11-04 (main holds it; the user pushes the tag v1.10.5): carries Roleplay 4.89.0 (#237, #238, #239), build watchdog #190 (STATE, "RELEASE 1.10.5"). After the tag: close #237/#238/#239 with "How it was solved"; #190 waits for the reporter.
 00000. **1.9.3 prepared** 2026-11-01 (main holds it; the user pushes the tag v1.9.3): Agent forge leftovers, carries Roleplay 4.82.0 (STATE, "RELEASE 1.9.3 PREPARED"). Next on the Forge: #140 (Script card, `html` mode B, `batchKey`), #132 write access, and the manual real-model checklist of #141 (`.fork/handoff/forge-checks/MANUAL.md`).

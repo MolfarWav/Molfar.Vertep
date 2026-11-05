@@ -26,6 +26,8 @@ import { SELF_UPDATE, startUpdate, updateState } from "../self-update.js";
 import { agentReadDenied, DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
 import * as git from "../git.js";
 import { UserModelService, ModelNotConfiguredError, type ModelPricing } from "../models.js";
+import { findLocalModel, type LocalModelId } from "../embed-local/catalog.js";
+import { sharedLocalEmbedder, type LocalEmbedder } from "../embed-local/index.js";
 import { effectiveParams, ModelParamsError, readModelParams, writeModelParams } from "../model-params.js";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
 import { radiusProvider } from "@earendil-works/pi-ai/providers/radius";
@@ -116,6 +118,8 @@ export interface AppDeps {
   storeFetch?: typeof fetch;
   /** Stop serving and run the newly installed program in this one's place. */
   restart?: () => Promise<void>;
+  /** The embeddings model that runs on this computer (tests substitute one on a temp folder). */
+  localEmbed?: LocalEmbedder;
 }
 
 /** The session cookie, and its name up to 1.7.x: a browser signed in under the
@@ -363,11 +367,13 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.use("*", compress());
 
 
+  const localEmbed = deps.localEmbed ?? sharedLocalEmbedder(dataDir);
   const modelServices = new Map<string, UserModelService>();
   const getModels = (u: UserRecord): UserModelService => {
     let svc = modelServices.get(u.username);
     if (!svc) {
       svc = new UserModelService(u.username, userPaths(dataDir, u.username), config);
+      svc.localEmbed = localEmbed;
       modelServices.set(u.username, svc);
     }
     return svc;
@@ -1567,8 +1573,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     }
     if (body.provider !== undefined) {
       const ok = typeof body.provider === "string" &&
-        (body.provider === "auto" || body.provider === "openrouter" || c.get("models").embedProviders().some((x) => x.kind === "custom" && x.id === body.provider));
-      if (!ok) return c.json({ error: "provider must be auto, openrouter or the id of a custom connection" }, 400);
+        (body.provider === "auto" || body.provider === "openrouter" || (body.provider === "local" && c.get("models").readEmbedSettings().local !== null) || c.get("models").embedProviders().some((x) => x.kind === "custom" && x.id === body.provider));
+      if (!ok) return c.json({ error: "provider must be auto, openrouter, local (once a model is connected) or the id of a custom connection" }, 400);
     }
     const settings = fs.existsSync(p.settings)
       ? (JSON.parse(fs.readFileSync(p.settings, "utf8")) as { embedModel?: string; embedProvider?: string })
@@ -1581,6 +1587,64 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const models = c.get("models");
     const st = models.readEmbedSettings();
     return c.json({ ok: true, model: models.embedModelName({ settings: st, openrouter: st.provider === "openrouter" }), modelSet: st.model !== null, provider: st.provider });
+  });
+
+  // The embeddings model that runs on this computer (#255): one button downloads it and connects it. The files
+  // are the machine's (data/embed-local), the choice of which one is connected is the user's (settings.json
+  // `embedLocal`). Shell-only: no app route reaches these.
+  const setEmbedSettings = async (p: UserPaths, username: string, patch: Record<string, unknown>): Promise<void> => {
+    const settings = (fs.existsSync(p.settings) ? JSON.parse(fs.readFileSync(p.settings, "utf8")) : {}) as Record<string, unknown>;
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === null) delete settings[k]; else settings[k] = v;
+    }
+    fs.writeFileSync(p.settings, JSON.stringify(settings, null, 2) + "\n", "utf8");
+    await git.commitAll(p.root, username, "settings: embeddings on this computer").catch(() => undefined);
+  };
+  /** Connect (or, with null, disconnect) a model for a user. A single other source chosen by hand would never
+   *  reach it, so that choice goes back to "auto" (the model first, the others behind it). */
+  const connectLocal = async (p: UserPaths, username: string, id: LocalModelId | null): Promise<void> => {
+    let provider = "auto";
+    try { provider = (JSON.parse(fs.readFileSync(p.settings, "utf8")) as { embedProvider?: string }).embedProvider ?? "auto"; } catch { /* defaults */ }
+    if (id === null) await setEmbedSettings(p, username, { embedLocal: null, ...(provider === "local" ? { embedProvider: "auto" } : {}) });
+    else await setEmbedSettings(p, username, { embedLocal: id, ...(provider !== "auto" ? { embedProvider: "auto" } : {}) });
+  };
+  app.get("/v1/embeddings/local", (c) => c.json({ ...localEmbed.status(), connected: c.get("models").readEmbedSettings().local }));
+  app.post("/v1/embeddings/local/download", async (c) => {
+    const body = await c.req.json<{ model?: unknown }>().catch(() => ({}) as { model?: unknown });
+    const def = findLocalModel(body.model);
+    if (!def) return c.json({ error: "unknown model" }, 400);
+    const p = c.get("paths");
+    const username = c.get("user").username;
+    try {
+      // the download outlives this request: when it is done, it is connected for the user who asked
+      localEmbed.download(def.id, (id) => { void connectLocal(p, username, id); });
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 409);
+    }
+    return c.json({ ...localEmbed.status(), connected: c.get("models").readEmbedSettings().local });
+  });
+  app.post("/v1/embeddings/local/cancel", (c) => c.json({ cancelled: localEmbed.cancel() }));
+  app.post("/v1/embeddings/local/connect", async (c) => {
+    const body = await c.req.json<{ model?: unknown }>().catch(() => ({}) as { model?: unknown });
+    if (body.model === null) {
+      await connectLocal(c.get("paths"), c.get("user").username, null);
+      return c.json({ ...localEmbed.status(), connected: null });
+    }
+    const def = findLocalModel(body.model);
+    if (!def || !localEmbed.isReady(def.id)) return c.json({ error: "that model is not downloaded" }, 409);
+    await connectLocal(c.get("paths"), c.get("user").username, def.id);
+    return c.json({ ...localEmbed.status(), connected: def.id });
+  });
+  app.delete("/v1/embeddings/local/:model", async (c) => {
+    const def = findLocalModel(c.req.param("model"));
+    if (!def) return c.json({ error: "unknown model" }, 404);
+    try {
+      const freed = await localEmbed.remove(def.id);
+      if (c.get("models").readEmbedSettings().local === def.id) await connectLocal(c.get("paths"), c.get("user").username, null);
+      return c.json({ ...localEmbed.status(), freed, connected: c.get("models").readEmbedSettings().local });
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 409);
+    }
   });
 
   // live embeddings capability probe — one tiny call through the user's
