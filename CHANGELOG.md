@@ -8,6 +8,7 @@ Versions here count from 0.1.0 and are independent of upstream's.
 ## Unreleased
 
 - Embeddings pick their source by themselves (#184): in Automatic, a model on your own computer (LM Studio, Ollama; no key needed, its embedding model is found in its model list) comes first, then API connections with a key, then OpenRouter. Settings > Memory says so.
+- Reply requests carry `scanModel` (the embeddings model that made the scan vector) so a memory plugin ranks by meaning only against vectors of the same model.
 
 ## 1.10.6 (2026-11-05)
 
