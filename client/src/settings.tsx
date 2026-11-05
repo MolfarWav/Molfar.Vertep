@@ -43,6 +43,7 @@ import {
 } from "./api"
 import type { Me } from "./types"
 import { ServerTab } from "./server-settings"
+import { LocalEmbeddings } from "./local-embeddings"
 import { ModelPanel } from "./model-panel"
 import { LOCALES, getLocale, setLocale, tr, useLocale, type Locale } from "./i18n/index"
 import { GuideSection } from "./guide/guide-settings"
@@ -1213,6 +1214,21 @@ function MemoryMeaningSection() {
       {checkable && probeState === "not-ok" ? (
         <p className="text-12 leading-4 text-ink-faint">{tr("The test call failed. Check the key, the model name and the credit.")}</p>
       ) : null}
+
+      <LocalEmbeddings
+        checking={probeState === "checking"}
+        onCheck={() => void runProbe()}
+        onChanged={() =>
+          void embeddingsApi
+            .config()
+            .then((cfg) => {
+              setConfig(cfg)
+              setDraft(cfg.model)
+              probeThen(cfg)
+            })
+            .catch(() => undefined)
+        }
+      />
 
       <div className="flex flex-col gap-1">
         <label className="text-12 text-ink-muted">{tr("Provider")}</label>

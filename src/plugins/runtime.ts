@@ -819,7 +819,11 @@ async function runPassRequests(
     for (const { key, req } of r.embedRequests ?? []) {
       const texts = Array.isArray(req.texts) ? req.texts.map(String) : [];
       try {
-        const vectors = texts.length ? await deps.models.embed(texts, typeof req.model === "string" ? req.model : undefined) : null;
+        // `kinds` (optional): what each text is for, a "query" or a "document"; a model that expects a prefix for one gets it
+        const kinds = Array.isArray(req.kinds) && req.kinds.length === texts.length && req.kinds.every((k) => k === "query" || k === "document")
+          ? (req.kinds as ("query" | "document")[])
+          : undefined;
+        const vectors = texts.length ? await deps.models.embed(texts, typeof req.model === "string" ? req.model : undefined, kinds ? { kinds } : undefined) : null;
         results.embed[key] = vectors;
         // vectors of different models never compare: tell the plugin which made these
         if (vectors) results.embedInfo[key] = { model: deps.models.embedModelUsed ?? null, via: deps.models.embedVia ?? null };

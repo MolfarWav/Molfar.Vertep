@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.11.0 (2026-11-05)
+
+- New (#255): **an embeddings model on this computer, one click.** Settings > Memory has a block "On this computer (optional)" with two models, bge-m3 (recommended, 587 MB, best on Ukrainian, Russian and English) and EmbeddingGemma 2 (346 MB), and a button **Download and connect**. The engine first installs the program that runs the model (85 MB, once), then downloads the model (checked against its checksum, an interrupted download continues from where it stopped, the window may be closed), and connects it: it comes first in Automatic and the online connection stays as a backup. It is free, nothing leaves the computer after the download, and it takes memory (about 1.1 GB or 0.6 GB) only while it works and for ten idle minutes. Delete gives the space back. It runs when the engine runs from source or from the npm bundle (under Bun), not in a compiled build or the phone launcher. Plugins may say whether a text is a "query" or a "document" (`kinds`), which EmbeddingGemma 2 needs for its prefixes.
 - Embeddings pick their source by themselves (#184): in Automatic, a model on your own computer (LM Studio, Ollama; no key needed, its embedding model is found in its model list) comes first, then API connections with a key, then OpenRouter. Settings > Memory says so.
 - Reply requests carry `scanModel` (the embeddings model that made the scan vector) so a memory plugin ranks by meaning only against vectors of the same model.
 

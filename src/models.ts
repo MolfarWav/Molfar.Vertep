@@ -3,6 +3,8 @@
  * SECURITY INVARIANT: provider credentials NEVER leave this module —
  * scripts/plugins/looks only ever reach llm.generate through here.
  */
+import { findLocalModel, type LocalModelId } from "./embed-local/catalog.js";
+import type { LocalEmbedder } from "./embed-local/index.js";
 import fs from "node:fs";
 import path from "node:path";
 import { createModels, getCurrentSystemPrompt, getCurrentTools, getSupportedThinkingLevels, uuidv7, type Api, type AssistantMessage, type AssistantMessageEvent, type Context, type Credential, type CredentialInfo, type Message, type Model, type MutableModels, type Tool as PiTool, type ToolResultMessage, type Usage } from "@earendil-works/pi-ai";
@@ -465,8 +467,13 @@ const FORMAT_DETECT_TTL = 60_000;
  *  generate() returns. A retry records a new request in the same slot. */
 const inspecting = new AsyncLocalStorage<{ entry?: InspectorEntry; sources?: PromptSources | null }>();
 
+/** The name `embedVia` carries for the model that runs on this computer. */
+export const LOCAL_EMBED_VIA = "This computer";
+
 export class UserModelService {
   readonly models: MutableModels;
+  /** The embeddings model downloaded to this computer (shared by every user of the engine); set by the app. */
+  localEmbed: LocalEmbedder | null = null;
   /** image-generation side (pi-ai images API) — same credential store */
   /** Built-in image models; the chat catalog above stays chat-only. */
   private images: ReturnType<typeof builtinModels>;
@@ -717,15 +724,17 @@ export class UserModelService {
   /** Engine embeddings settings (settings.json): `embedModel` (null = the
    *  endpoint's default) and `embedProvider` ("auto" | "openrouter" | a
    *  custom connection id). Missing or invalid values read as the default. */
-  readEmbedSettings(): { model: string | null; provider: string } {
+  readEmbedSettings(): { model: string | null; provider: string; local: LocalModelId | null } {
     let model: string | null = null;
     let provider = "auto";
+    let local: LocalModelId | null = null;
     try {
-      const st = JSON.parse(fs.readFileSync(path.join(this.paths.root, "settings.json"), "utf8")) as { embedModel?: unknown; embedProvider?: unknown };
+      const st = JSON.parse(fs.readFileSync(path.join(this.paths.root, "settings.json"), "utf8")) as { embedModel?: unknown; embedProvider?: unknown; embedLocal?: unknown };
       if (typeof st.embedModel === "string" && st.embedModel.trim()) model = st.embedModel.trim();
       if (typeof st.embedProvider === "string" && st.embedProvider.trim()) provider = st.embedProvider.trim();
+      if (findLocalModel(st.embedLocal)) local = st.embedLocal as LocalModelId;
     } catch { /* defaults */ }
-    return { model, provider };
+    return { model, provider, local };
   }
 
   /** The model sent to an endpoint: explicit arg > the user's setting > the
@@ -795,8 +804,10 @@ export class UserModelService {
    *  keyed remote ones, then OpenRouter if it has a key. null when none can
    *  answer: callers fall back to lexical.
    *  The model that made the vectors is left in embedModelUsed. */
-  async embed(texts: string[], model?: string): Promise<number[][] | null> {
-    const clean = texts.map((t) => String(t).slice(0, 8000)).filter((t) => t.trim());
+  async embed(texts: string[], model?: string, opts: { kinds?: readonly ("query" | "document")[] } = {}): Promise<number[][] | null> {
+    const keep = texts.map((t) => String(t).slice(0, 8000).trim() !== "");
+    const clean = texts.map((t) => String(t).slice(0, 8000)).filter((_, i) => keep[i]);
+    const cleanKinds = opts.kinds && opts.kinds.length === texts.length ? opts.kinds.filter((_, i) => keep[i]) : undefined;
     if (!clean.length) return null;
     const settings = this.readEmbedSettings();
     const conns = readConnections(this.paths);
@@ -805,6 +816,17 @@ export class UserModelService {
       this.embedVia = via;
       this.embedModelUsed = used;
       return out;
+    };
+    // the model downloaded to this computer (Settings > Memory): free and private, so it goes first
+    const viaLocal = async (): Promise<number[][] | null> => {
+      const id = settings.local;
+      if (!id || !this.localEmbed?.isReady(id)) return null;
+      try {
+        return done(await this.localEmbed.embed(id, clean, cleanKinds), LOCAL_EMBED_VIA, id);
+      } catch (e) {
+        log.warn(`[models] local embeddings (${id}) failed: ${(e as Error).message}`);
+        return null;
+      }
     };
     const viaOpenRouter = async (): Promise<number[][] | null> => {
       const key = await this.openRouterKey(conns, auth);
@@ -830,12 +852,15 @@ export class UserModelService {
       const out = await this.embedRequest(def.baseUrl.replace(/\/$/, "") + "/embeddings", key, used, clean);
       return out ? done(out, def.name ?? id, used) : null;
     };
+    if (settings.provider === "local") return viaLocal();
     if (settings.provider === "openrouter") return viaOpenRouter();
     if (settings.provider !== "auto") {
       const def = conns.connections[settings.provider];
       return def ? viaCustom(settings.provider, def) : null;
     }
-    // local first (free, private), then the remote keyed ones, then OpenRouter
+    // the downloaded model first (free, private), then local servers, then the remote keyed ones, then OpenRouter
+    const own = await viaLocal();
+    if (own) return own;
     const isLocal = (d: ConnectionDef) => !!d.baseUrl && isLocalEndpoint(d.baseUrl);
     const ordered = Object.entries(conns.connections).sort(([, a], [, b]) => Number(isLocal(b)) - Number(isLocal(a)));
     for (const [id, def] of ordered) {
@@ -856,6 +881,9 @@ export class UserModelService {
     const out: { id: string; name: string; kind: "builtin" | "custom"; ready: boolean; local?: boolean }[] = [
       { id: "openrouter", name: "OpenRouter", kind: "builtin", ready: orConn && orCred?.type === "api_key" && !!orCred.key },
     ];
+    // the model downloaded to this computer: listed once one is connected
+    const own = this.readEmbedSettings().local;
+    if (own && this.localEmbed?.isReady(own)) out.push({ id: "local", name: LOCAL_EMBED_VIA, kind: "builtin", ready: true, local: true });
     for (const [id, def] of Object.entries(conns)) {
       if (def.providerId || !def.baseUrl || !def.api) continue;
       if (def.api !== "openai-completions") continue;

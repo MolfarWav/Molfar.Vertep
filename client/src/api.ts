@@ -260,6 +260,37 @@ export interface EmbeddingsConfig {
   providers: EmbeddingProvider[]
 }
 
+/** The embeddings model that runs on this computer (#255): one button downloads it and connects it. */
+export type LocalModelId = "bge-m3" | "embeddinggemma-2"
+export interface LocalModelStatus {
+  id: LocalModelId
+  title: string
+  license: string
+  ramMb: number
+  diskBytes: number
+  state: "absent" | "partial" | "ready"
+  downloadedBytes: number
+}
+export interface LocalEmbedStatus {
+  supported: boolean
+  reason: "build" | null
+  runtime: { installed: boolean; diskBytes: number }
+  models: LocalModelStatus[]
+  job: { model: LocalModelId; step: 1 | 2; phase: "runtime" | "model" | "verify"; doneBytes: number; totalBytes: number; etaSec: number | null } | null
+  lastError: string | null
+  /** the model this user has connected */
+  connected: LocalModelId | null
+  /** delete answers with the bytes it freed */
+  freed?: number
+}
+export const localEmbedApi = {
+  status: () => api<LocalEmbedStatus>("GET", "/v1/embeddings/local"),
+  download: (model: LocalModelId) => api<LocalEmbedStatus>("POST", "/v1/embeddings/local/download", { model }),
+  cancel: () => api<{ cancelled: boolean }>("POST", "/v1/embeddings/local/cancel"),
+  connect: (model: LocalModelId | null) => api<LocalEmbedStatus>("POST", "/v1/embeddings/local/connect", { model }),
+  remove: (model: LocalModelId) => api<LocalEmbedStatus>("DELETE", `/v1/embeddings/local/${encodeURIComponent(model)}`),
+}
+
 /** Matching by meaning: which provider and model make text embeddings. The
  *  key itself is saved through connectionsApi, like any connection's. */
 export const embeddingsApi = {

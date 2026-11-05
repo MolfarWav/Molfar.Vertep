@@ -888,6 +888,26 @@ export function uiPanel(ctx) {
     expect(out).toEqual({ dims: 3, info: { model: "qwen/qwen3-embedding-4b", via: "OpenRouter" }, shape: true });
   }, 30_000);
 
+  it("embed kinds (query or document) reach the model service; a malformed list is dropped", async () => {
+    writePlugin(
+      "embedder3",
+      { name: "E3", version: "1", permissions: ["hooks", "llm"], origin: "local" },
+      `export function onTick(ctx, host) {
+        const v = host.llm.embedResults.v;
+        if (v) return { n: v.length };
+        host.llm.embed("v", { texts: ["a", "b"], kinds: ctx.kinds });
+        return ctx;
+      }`,
+    );
+    const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+    const seen: unknown[] = [];
+    const fakeModels = { embed: async (texts: string[], _m: unknown, opts: unknown) => { seen.push(opts); return texts.map(() => [1]); } };
+    await runPluginHook(plugin, "onTick", { kinds: ["query", "document"] }, { ...deps(), models: fakeModels as never });
+    await runPluginHook(plugin, "onTick", { kinds: ["query"] }, { ...deps(), models: fakeModels as never });
+    await runPluginHook(plugin, "onTick", { kinds: ["query", "bogus"] }, { ...deps(), models: fakeModels as never });
+    expect(seen).toEqual([{ kinds: ["query", "document"] }, undefined, undefined]);
+  }, 30_000);
+
   it("console output from routes and tools reaches the server log", async () => {
     writePlugin(
       "chatty",
