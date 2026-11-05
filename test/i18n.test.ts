@@ -19,6 +19,8 @@ import ru from "../client/src/i18n/ru.js";
 import trDict from "../client/src/i18n/tr.js";
 import uk from "../client/src/i18n/uk.js";
 import zh from "../client/src/i18n/zh.js";
+import { LOCALES } from "../client/src/i18n/locales.js";
+import { readdirSync } from "node:fs";
 
 const DICTS: Record<string, Record<string, string>> = { de, es, fr, it: itDict, ja, ko, nl, pl, pt, ru, tr: trDict, uk, zh };
 
@@ -27,6 +29,18 @@ const placeholders = (s: string): string[] =>
 
 describe("shell i18n", () => {
   const keys = Object.keys(en);
+
+  // English has no values to check (its keys are the copy), so the gap that is real is a locale nobody checks:
+  // a dictionary file or a LOCALES entry that is missing from DICTS passes every test above.
+  it("every shipped locale is checked, and every dictionary file is a shipped locale", () => {
+    const shipped = Object.keys(LOCALES).filter((c) => c !== "en").sort();
+    expect(Object.keys(DICTS).sort()).toEqual(shipped);
+    const files = readdirSync(new URL("../client/src/i18n/", import.meta.url))
+      .filter((f) => f.endsWith(".ts") && !["en.ts", "index.ts", "locales.ts"].includes(f))
+      .map((f) => f.replace(/\.ts$/, ""))
+      .sort();
+    expect(files).toEqual(shipped);
+  });
 
   it("the English key list is non-empty and unique", () => {
     expect(keys.length).toBeGreaterThan(100);
