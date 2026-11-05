@@ -78,6 +78,7 @@ Finished work is not listed here: see STATE ("Released") and git history.
 - Pushing to the Roleplay fork's main ships to every install: ask the user first.
 
 ## Standing reminders
+- Before you change an area, read its entry in `.fork/COUPLINGS.md` (engine) or, for the Roleplay app, `docs/COUPLINGS.md` in its repo: what the area is tied to and the traps (#247). Update the entry in the same change.
 - Reply in Ukrainian; code, comments, commits and repo files in English. Short comments.
 - Delegation rule: Opus/Fable orchestrate, cheaper models execute (Agent tool `model`, or the `ask-model` skill on the desktop).
 - Update `.fork/STATE.md` at the end of each item; delete a handoff once its work is released (git keeps it), carrying anything still open into this queue or a live plan.
