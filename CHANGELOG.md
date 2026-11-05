@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- Embeddings pick their source by themselves (#184): in Automatic, a model on your own computer (LM Studio, Ollama; no key needed, its embedding model is found in its model list) comes first, then API connections with a key, then OpenRouter. Settings > Memory says so.
+- Reply requests carry `scanModel` (the embeddings model that made the scan vector) so a memory plugin ranks by meaning only against vectors of the same model.
+
 ## 1.10.6 (2026-11-05)
 
 - Roleplay 4.90.0 comes with this release as an app update: voice colors that hand themselves out (a card of several characters colors each person by itself; any other chat has "Voice colors" in the chat menu; colors are all different, kept with the chat, and a card with its own colors is left alone), and a fix for the Dashboard stalling on a long chat with "exceeded the maximum allowed time limit" (#245, a regression of 4.88.0: the first update of an old chat now takes 2.5 s instead of over 10 s, later ones 0.9 s instead of 3 to 5 s on a real chat). Engine code is unchanged.

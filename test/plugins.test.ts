@@ -789,6 +789,7 @@ export function uiPanel(ctx) {
     expect(sanitizeTurn({ other: "x" })).toBeNull();
     expect(sanitizeTurn({ op: "send", swipe: Number.NaN, speakerId: "aria" })).toEqual({ op: "send", speakerId: "aria" });
     expect(sanitizeTurn({ op: "send", contextTokens: 32768 })).toEqual({ op: "send", contextTokens: 32768 });
+    expect(sanitizeTurn({ op: "send", scanModel: "nomic-embed-text-v1.5" })).toEqual({ op: "send", scanModel: "nomic-embed-text-v1.5" });
   });
 
   it("sanitizeTurn passes the scan vector only as a bounded list of finite numbers", () => {

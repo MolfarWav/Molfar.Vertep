@@ -9,6 +9,8 @@
 // `dropTimes` breaks only that many requests, then the turn answers normally
 // a turn may set `match`: it answers every request whose body contains that text (first match wins) and is not part of the
 // cycle; the cycling turns answer the rest. Used when several callers share the model (a chat reply, an agent's question).
+// POST .../embeddings answers an embedding of 8 numbers made from the words of each text (texts that share words are near);
+// POST /__embed {"fail": true} makes it answer 500 until {"fail": false}, `delayMs` slows each answer, and GET /__embed counts the requests
 type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number; wordMs?: number; drop?: boolean; dropTimes?: number; match?: string };
 const dropped = new Map<number, number>();
 const DEFAULT: Turn[] = [
@@ -20,6 +22,16 @@ let next = 0;
 // what was asked, for a check to count: GET /__log gives [{ at, match, bytes }] (match = the routed turn's text or null), POST /__log empties it
 const log: { at: number; match: string | null; bytes: number }[] = [];
 const model = process.env.MOCK_MODEL ?? "mock-model";
+const embed = { fail: false, delayMs: 0, calls: 0, texts: 0 };
+const embedding = (text: string): number[] => {
+  const v = new Array<number>(8).fill(0);
+  for (const w of text.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean)) {
+    let h = 5381;
+    for (const c of w) h = (h * 33 + c.charCodeAt(0)) >>> 0;
+    v[h % 8] += 1;
+  }
+  return v;
+};
 
 Bun.serve({
   port: Number(process.env.MOCK_PORT ?? 8797),
@@ -29,6 +41,18 @@ Bun.serve({
     if (url.pathname === "/__reset") { next = 0; return Response.json({ ok: true }); }
     if (url.pathname === "/__turns") { turns = (await req.json()) as Turn[]; next = 0; return Response.json({ ok: true, turns: turns.length }); }
     if (url.pathname.endsWith("/models")) return Response.json({ data: [{ id: model }] });
+    if (url.pathname === "/__embed") {
+      if (req.method === "POST") Object.assign(embed, await req.json());
+      return Response.json(embed);
+    }
+    if (url.pathname.endsWith("/embeddings")) {
+      const body = (await req.json()) as { input?: string[] };
+      embed.calls++;
+      embed.texts += (body.input ?? []).length;
+      if (embed.delayMs) await new Promise((r) => setTimeout(r, embed.delayMs));
+      if (embed.fail) return new Response("embeddings are down", { status: 500 });
+      return Response.json({ data: (body.input ?? []).map((t) => ({ embedding: embedding(String(t)) })) });
+    }
     const raw = await req.text();
     const routed = turns.find((x) => x.match && raw.includes(x.match));
     const cycle = turns.filter((x) => !x.match);
