@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.11.3 (2026-11-06)
+
+- No engine code changed. This release carries **Roleplay 4.94.0** as an app update: the **Draw places that have no picture** switch is always listed in World > Backgrounds (greyed out with the reason while something is missing), a drawn place or portrait **no longer fails with 402 "Insufficient available credits"** on a funded account (the description call now caps its output), a place with a person's name in it is described **in the story's own setting**, and a new **Look of the pictures** field adds a few English words to every background drawn for a chat.
+
 ## 1.11.2 (2026-11-06)
 
 - No engine code changed. This release carries **Roleplay 4.93.0** as an app update: **a long chat's vectors no longer stop the chapters** (a 3072-number embeddings model passed the 4 MB limit for plugin writes; vectors now go on in extra files, for chats, the Data Bank and the lorebook cache), **Letters from cards** have a one-tap Turn on card at the top of Characters and in Home, **portraits for cards that have none** (Draw in the card editor and Draw missing portraits, with a choice of image model, a local ComfyUI or an API model), **places drawn on the spot** in World > Backgrounds, **Botbooru** as a Marketplace source, and small fixes (#210, #266, #267). Details: Roleplay's CHANGELOG, `.fork/release-notes/1.11.2.md`.
