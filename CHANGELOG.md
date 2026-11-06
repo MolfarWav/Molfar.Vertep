@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.11.2 (2026-11-06)
+
+- No engine code changed. This release carries **Roleplay 4.93.0** as an app update: **a long chat's vectors no longer stop the chapters** (a 3072-number embeddings model passed the 4 MB limit for plugin writes; vectors now go on in extra files, for chats, the Data Bank and the lorebook cache), **Letters from cards** have a one-tap Turn on card at the top of Characters and in Home, **portraits for cards that have none** (Draw in the card editor and Draw missing portraits, with a choice of image model, a local ComfyUI or an API model), **places drawn on the spot** in World > Backgrounds, **Botbooru** as a Marketplace source, and small fixes (#210, #266, #267). Details: Roleplay's CHANGELOG, `.fork/release-notes/1.11.2.md`.
+
 ## 1.11.1 (2026-11-06)
 
 - No engine code changed. This release carries **Roleplay 4.92.0** as an app update: a **Request size** button in the chat header (tokens of the last request and the model that got it, coloured against a limit you set; past the limit a popup offers to continue in a new chat, in one click, with the preset, persona, model, agents and the story), **What fired** (the Lore button is now Fired and shows what went into the last reply), and a guide page on long chats. Details: Roleplay's CHANGELOG, `.fork/release-notes/1.11.1.md`.
