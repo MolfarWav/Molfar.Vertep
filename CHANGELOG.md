@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.11.1 (2026-11-06)
+
+- No engine code changed. This release carries **Roleplay 4.92.0** as an app update: a **Request size** button in the chat header (tokens of the last request and the model that got it, coloured against a limit you set; past the limit a popup offers to continue in a new chat, in one click, with the preset, persona, model, agents and the story), **What fired** (the Lore button is now Fired and shows what went into the last reply), and a guide page on long chats. Details: Roleplay's CHANGELOG, `.fork/release-notes/1.11.1.md`.
+
 ## 1.11.0 (2026-11-05)
 
 - New (#255): **an embeddings model on this computer, one click.** Settings > Memory has a block "On this computer (optional)" with two models, bge-m3 (recommended, 587 MB, best on Ukrainian, Russian and English) and EmbeddingGemma 2 (346 MB), and a button **Download and connect**. The engine first installs the program that runs the model (85 MB, once), then downloads the model (checked against its checksum, an interrupted download continues from where it stopped, the window may be closed), and connects it: it comes first in Automatic and the online connection stays as a backup. It is free, nothing leaves the computer after the download, and it takes memory (about 1.1 GB or 0.6 GB) only while it works and for ten idle minutes. Delete gives the space back. It runs when the engine runs from source or from the npm bundle (under Bun), not in a compiled build or the phone launcher. Plugins may say whether a text is a "query" or a "document" (`kinds`), which EmbeddingGemma 2 needs for its prefixes.
