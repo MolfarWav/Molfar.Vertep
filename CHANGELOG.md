@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.11.8 (2026-11-08)
+
+- No engine code changed. This release carries **Roleplay 4.99.0** as an app update (Molfar.Vertep#263 and #293): a finished story can be **archived** (a status on the chat, read only, out of the list and Home), the earlier chat of a continuation is archived by itself (Canvas link, Continue in a new chat, the new-chat step; a switch in Library > Litopys settings, on by default, with an Undo toast), a long quiet chat gets a "Long chat · archive?" tag, an archived chat costs no model call, and the guide's translations in 13 languages were refreshed.
+
 ## 1.11.7 (2026-11-07)
 
 - No engine code changed. This release carries **Roleplay 4.98.0** as an app update (Molfar.Vertep#184 P7, P8 and step 8): a memory fact can be known to a whole group (a guild; a card tag `group: Name` or `faction: Name`, or Members on a World group or place record), the ties between characters reach the Dashboard part of the prompt, a folded line under the newest reply says what the Dashboard recorded, and a chat that continues earlier chats can carry word-for-word passages of any chat of the chain (off by default; words only, found by rare shared words). The Agents guide page lists the four run lanes, and the architecture docs and README describe what is built. See the Roleplay CHANGELOG (4.98.0) for details.
