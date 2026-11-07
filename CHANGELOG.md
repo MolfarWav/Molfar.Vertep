@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.11.4 (2026-11-07)
+
+- No engine code changed. This release carries **Roleplay 4.95.0** as an app update: **folders for lorebook entries** (nested up to three levels, drag and drop with the mouse, six colours, optional `folder` on an entry and `folders` and `folderTones` on a book), an entry opens in a **drawer from the right** on a computer, **Chat CSS** in a chat's More menu (`css` in the chat meta), and a long lorebook entry no longer traps scrolling on a phone (reasoned fix, not reproduced).
+
 ## 1.11.3 (2026-11-06)
 
 - No engine code changed. This release carries **Roleplay 4.94.0** as an app update: the **Draw places that have no picture** switch is always listed in World > Backgrounds (greyed out with the reason while something is missing), a drawn place or portrait **no longer fails with 402 "Insufficient available credits"** on a funded account (the description call now caps its output), a place with a person's name in it is described **in the story's own setting**, and a new **Look of the pictures** field adds a few English words to every background drawn for a chat.

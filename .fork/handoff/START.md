@@ -4,6 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+000000000000. **1.11.4 prepared** 2026-11-07 (the user pushes the tag v1.11.4): carries Roleplay 4.95.0 (lorebook folders, drawer, Chat CSS, phone scroll fix; STATE, "RELEASE 1.11.4 PREPARED"). After the tag: Update on Roleplay in Updates; close #279 with "How it was solved"; ask the phone reporter to test.
 00000000000. **1.11.3 prepared** 2026-11-06 (the user pushes the tag v1.11.3): carries Roleplay 4.94.0 (Draw places switch always listed, 402 on the description call, drawn places in the story's setting, Look of the pictures; STATE, "RELEASE 1.11.3 PREPARED"). After the tag: Update on Roleplay in Updates, then retry a drawn place.
 0000000000. **1.11.2 prepared** 2026-11-06 (the user pushes the tag v1.11.2): carries Roleplay 4.93.0 (vector files split #266/#267, letters offer, #210, Botbooru, card portraits, places drawn on the spot; STATE, "RELEASE 1.11.2 PREPARED"). After the tag: close #266, #267, #210 with "How it was solved"; the Discord reporter presses Embed. Leftovers: #268.
 000000000. **1.11.1 prepared** 2026-11-06 (the user pushes the tag v1.11.1): carries Roleplay 4.92.0 (Request size button and alarm #261, one-click continue #262, What fired #253; STATE, "RELEASE 1.11.1 PREPARED"). After the tag: close #261, #262, #253 with "How it was solved". Not tried with a real provider, on Windows or a phone.
