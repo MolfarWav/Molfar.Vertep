@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.11.6 (2026-11-07)
+
+- No engine code changed. This release carries **Roleplay 4.97.0** as an app update (Molfar.Vertep#184 P4 and P5): a lie told in front of others is believed by the people who heard it, an old lie becomes a Belief fact in Litopys, you can say what was a lie, and the Library's Suggestions get a third mode, "Only risky ones" (the default of a new install), where routine changes apply at once with an Undo and risky ones wait with the reason. See `.fork/release-notes/1.11.6.md`.
+
 ## 1.11.5 (2026-11-07)
 
 - Sync: after a pull the engine tells open apps which of their data files it wrote (`look_changed`), so a pulled preset shows without a reload even where the file watcher does not run. The log lists the files a push or pull moved, grouped by area. (Molfar.Vertep#180, cause of the missing preset still open)
