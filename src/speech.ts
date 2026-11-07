@@ -11,6 +11,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomBytes, createHash, randomUUID } from "node:crypto";
+import type { IncomingMessage } from "node:http";
 import WebSocket from "ws";
 import type { UserPaths } from "./paths.js";
 import { readAuth, writeAuth, slugId } from "./connections.js";
@@ -236,8 +237,27 @@ function escapeSsml(text: string): string {
 
 const PATH_AUDIO_MARKER = Buffer.from("Path:audio\r\n");
 
-/** One websocket attempt; on a 403 with a Date header, reports the server's
- *  clock so the caller can skew-correct and retry once. */
+/** Server clock minus ours, in seconds, from a refused handshake. Some runtimes drop the
+ *  response headers (Bun 1.4.0's ws), so then a plain HEAD to the endpoint's origin gives
+ *  the Date. No user text and no cookies go there. Null when no clock can be read. */
+async function serverClockSkew(res: IncomingMessage): Promise<number | null> {
+  const fromHandshake = res.headers.date ? Date.parse(String(res.headers.date)) : NaN;
+  if (!Number.isNaN(fromHandshake)) return Math.floor(fromHandshake / 1000 - Date.now() / 1000);
+  try {
+    const origin = new URL(edgeEndpoint);
+    origin.protocol = origin.protocol === "wss:" ? "https:" : "http:";
+    origin.pathname = "/";
+    origin.search = "";
+    const r = await fetch(origin, { method: "HEAD", signal: AbortSignal.timeout(5_000) });
+    const date = Date.parse(r.headers.get("date") ?? "");
+    return Number.isNaN(date) ? null : Math.floor(date / 1000 - Date.now() / 1000);
+  } catch {
+    return null;
+  }
+}
+
+/** One websocket attempt; on a 403 reports the server's clock (from the handshake
+ *  or a HEAD request) so the caller can skew-correct and retry once. */
 function edgeSpeakOnce(opts: { text: string; voice: string; speed: number; skewSeconds: number; format?: EdgeFormat }): Promise<Buffer | { retryWithSkew: number }> {
   const text = opts.text.slice(0, 3000).trim();
   return new Promise((resolve, reject) => {
@@ -269,9 +289,11 @@ function edgeSpeakOnce(opts: { text: string; voice: string; speed: number; skewS
     };
     ws.on("unexpected-response", (_req, res) => {
       clearTimeout(timer);
-      if (res.statusCode === 403 && res.headers.date) {
-        const skew = Math.floor(new Date(res.headers.date).getTime() / 1000 - Date.now() / 1000);
-        resolve({ retryWithSkew: skew });
+      if (res.statusCode === 403) {
+        serverClockSkew(res).then((skew) => {
+          if (skew === null) reject(new Error("edge tts handshake failed (403)"));
+          else resolve({ retryWithSkew: skew });
+        });
         return;
       }
       reject(new Error(`edge tts handshake failed (${res.statusCode ?? "?"})`));

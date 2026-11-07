@@ -11,7 +11,7 @@
 import { afterAll, describe, expect, it } from "bun:test";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 import { edgeSpeakFmt, setEdgeEndpointForTests } from "../src/speech.js";
 
 const MP3 = Buffer.concat([Buffer.from([0xff, 0xfb, 0x90, 0x00]), Buffer.alloc(1500, 0x55)]);
@@ -21,6 +21,10 @@ const WEBM = Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3]), Buffer.alloc(
 const fake = {
   /** statuses to refuse the next handshakes with (a 403 carries a Date header, the way the real service's does) */
   refuse: [] as number[],
+  /** leave the Date header off refusals (a runtime that drops response headers) */
+  noDate: false,
+  /** plain HTTP requests answered (the clock lookup); each carries a Date 40 s ahead */
+  httpHits: 0,
   urls: [] as string[],
   formats: [] as string[],
   ssml: [] as string[],
@@ -36,13 +40,18 @@ const frame = (path: string, body: Buffer) => {
 };
 
 async function startFake() {
-  http = createServer();
+  http = createServer((_req, res) => {
+    fake.httpHits++;
+    res.writeHead(404, { Date: new Date(Date.now() + 40_000).toUTCString() });
+    res.end();
+  });
   wss = new WebSocketServer({
     server: http,
     verifyClient: (info, done) => {
       fake.urls.push(info.req.url ?? "");
       const status = fake.refuse.shift();
-      if (status) done(false, status, "Refused", { Date: new Date(Date.now() + 40_000).toUTCString() });
+      const date = fake.noDate ? {} : { Date: new Date(Date.now() + 40_000).toUTCString() };
+      if (status) done(false, status, "Refused", date);
       else done(true);
     },
   });
@@ -73,16 +82,6 @@ async function startFake() {
 
 await startFake();
 
-/** Some runtimes hand the `unexpected-response` handler no headers at all (Bun 1.4.0's `ws` does not), so the client
- *  cannot read the server's clock there; the clock-skew tests only run where it can. */
-const headersSurvive = await new Promise<boolean>((resolve) => {
-  fake.refuse = [403];
-  const probe = new WebSocket((http.address() as AddressInfo) && `ws://127.0.0.1:${(http.address() as AddressInfo).port}/`);
-  probe.on("unexpected-response", (_req, res) => resolve(Boolean(res.headers.date)));
-  probe.on("error", () => resolve(false));
-});
-const skewIt = headersSurvive ? it : it.skip;
-
 afterAll(async () => {
   setEdgeEndpointForTests(null);
   for (const c of wss.clients) c.terminate();
@@ -92,6 +91,8 @@ afterAll(async () => {
 
 const reset = () => {
   fake.refuse = [];
+  fake.noDate = false;
+  fake.httpHits = 0;
   fake.urls = [];
   fake.formats = [];
   fake.ssml = [];
@@ -127,7 +128,7 @@ describe("edge tts wire formats", () => {
     expect(ssml).toContain("Tom &amp; &lt;Jerry&gt;");
   });
 
-  skewIt("a 403 with the server's clock is retried once with the clock corrected", async () => {
+  it("a 403 with the server's clock is retried once with the clock corrected", async () => {
     reset();
     fake.refuse = [403];
     const clip = await edgeSpeakFmt({ text: "Skew.", voice: "en-US-AriaNeural", speed: 1, format: "mp3" });
@@ -140,7 +141,17 @@ describe("edge tts wire formats", () => {
     expect(gec(fake.urls[1]!)).toMatch(/^[0-9A-F]{64}$/);
   });
 
-  skewIt("gives up after a second refusal and says why", async () => {
+  it("a 403 without a Date header reads the clock from a plain HEAD request and retries", async () => {
+    reset();
+    fake.refuse = [403];
+    fake.noDate = true;
+    const clip = await edgeSpeakFmt({ text: "No date.", voice: "en-US-AriaNeural", speed: 1, format: "mp3" });
+    expect(clip.equals(MP3)).toBe(true);
+    expect(fake.urls).toHaveLength(2);
+    expect(fake.httpHits).toBe(1);
+  });
+
+  it("gives up after a second refusal and says why", async () => {
     reset();
     fake.refuse = [403, 403];
     await expect(edgeSpeakFmt({ text: "No.", voice: "en-US-AriaNeural", speed: 1, format: "mp3" })).rejects.toThrow("clock skew correction failed");

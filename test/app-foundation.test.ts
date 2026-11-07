@@ -659,4 +659,48 @@ afterEach(() => {
     expect(addedByRoute).toEqual(["apps/notes/data/notes/p1.json"]);
     expect(oobFiles).toContain("todo.md");
   });
+
+  it("app route commits: a GET that writes is committed, a GET that writes nothing queues no job, a POST that writes is committed", async () => {
+    const { log, changedPaths, commitAll } = await import("../src/git.js");
+    const root = path.join(dataDir, "users", "alice");
+    const appDir = path.join(root, "apps", "writeget");
+    fs.mkdirSync(path.join(appDir, "plugins", "p"), { recursive: true });
+    fs.mkdirSync(path.join(appDir, "data"), { recursive: true });
+    fs.writeFileSync(path.join(appDir, "manifest.json"), JSON.stringify({ name: "WriteGet", version: "1", kind: "app" }));
+    fs.writeFileSync(path.join(appDir, "plugins", "p", "manifest.json"), JSON.stringify({ name: "P", version: "1", permissions: ["routes", "fs"], origin: "local" }));
+    fs.writeFileSync(
+      path.join(appDir, "plugins", "p", "plugin.js"),
+      `export function handleRoute(req, host) {
+        if (req.path === "/touch") { host.fs.write("touched.txt", "t"); return { status: 200, json: { ok: 1 } }; }
+        if (req.path === "/peek") return { status: 200, json: { ok: 1 } };
+        if (req.path === "/save") { host.fs.write("saved.txt", "s"); return { status: 200, json: { ok: 1 } }; }
+        return null;
+      }`,
+    );
+    await commitAll(root, "alice", "base: write-get app");
+    const settled = async (): Promise<void> => {
+      for (let i = 0; i < 200 && (await changedPaths(root)).length; i++) await new Promise((r) => setTimeout(r, 50));
+    };
+    const before = (await log(root, 100)).length;
+
+    // a GET that writes: its file must still be committed under the route's label
+    expect((await app.request("/v1/apps/writeget/touch", { headers: h() })).status).toBe(200);
+    await settled();
+    expect((await log(root, 100)).length).toBe(before + 1);
+    expect((await log(root, 1))[0]?.message).toBe("app(writeget): GET /touch");
+    expect(await changedPaths(root)).toEqual([]);
+
+    // a GET that writes nothing: no job is queued, so an edit left pending by
+    // someone else is not swept into a commit by this read
+    fs.writeFileSync(path.join(root, "pending.md"), "left pending\n");
+    expect((await app.request("/v1/apps/writeget/peek", { headers: h() })).status).toBe(200);
+    await new Promise((r) => setTimeout(r, 300));
+    expect((await log(root, 100)).length).toBe(before + 1);
+    expect(await changedPaths(root)).toContain("pending.md");
+
+    // a POST that writes is committed (non-GET routes always queue)
+    expect((await app.request("/v1/apps/writeget/save", { method: "POST", headers: h() })).status).toBe(200);
+    await settled();
+    expect((await log(root, 1))[0]?.message).toBe("app(writeget): POST /save");
+  }, { timeout: 30_000 });
 });

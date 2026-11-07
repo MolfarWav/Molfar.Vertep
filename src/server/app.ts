@@ -47,7 +47,7 @@ import * as inspector from "../inspector.js";
 import * as profileBackup from "../profile-backup.js";
 import { DriveAuth, SignIns, driveClient, exchangeCode as exchangeDriveCode, findOrCreateFolder as findOrCreateDriveFolder, parseReturnUrl as parseDriveReturn } from "../sync/drive.js";
 import { type Choice as SyncChoice, check as syncCheck, pull as syncPull, push as syncPush } from "../sync/engine.js";
-import { SyncError } from "../sync/manifest.js";
+import { SyncError, areaSummary } from "../sync/manifest.js";
 import { SyncJobs, credDirOf as syncCredDir, storeFor as syncStoreFor, viewOf as syncView } from "../sync/service.js";
 import { type SyncTarget, readState as readSyncState, writeState as writeSyncState } from "../sync/state.js";
 import { summarizeSession } from "../agent/compact.js";
@@ -3464,6 +3464,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       const ctx = syncCtx(u, c.get("paths"));
       const job = syncJobs.start(u.username, "push", (progress) => syncPush({ ...ctx, progress }, { replaceKeys: body.replaceKeys === true, replace: body.replace === true }), (r) => {
         log.info(`[sync] ${u.username}: ${body.replace === true ? "replaced the sync with this device, " : ""}pushed rev ${r.rev} (${r.changed} changed, ${r.uploaded} uploaded)`);
+        if (r.moved.length) log.info(`[sync] ${u.username}: files by area: ${areaSummary(r.moved)}`);
       });
       return c.json({ job });
     } catch (e) {
@@ -3503,12 +3504,15 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
           }
           await git.commitAll(p.root, u.username, `sync: pulled from ${r.device || "another device"}`).catch(() => null);
           log.info(`[sync] ${u.username}: pulled rev ${r.rev} from ${r.device} (${r.applied} applied, ${r.kept} kept)`);
+          if (r.moved.length) log.info(`[sync] ${u.username}: files by area: ${areaSummary(r.moved)}`);
           if (config.apps.packageDownloads && r.apps.length) {
             void installMissingPackages(p.apps, (id, res) => {
               if (res.ok) bus.emit(u.username, "build_needed", { app: id, paths: ["package.json"] });
             });
           }
           for (const id of r.apps) bus.emit(u.username, "app_changed", { app: id });
+          // the watcher may miss a pulled batch: open app pages re-read their data from here
+          for (const [id, paths] of Object.entries(r.dataChanged)) bus.emit(u.username, "look_changed", { app: id, paths });
           bus.emit(u.username, "connections_changed", { id: "sync" });
           bus.emit(u.username, "sync_changed", {});
         },
@@ -6022,9 +6026,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
       if (res) {
         // app data writes auto-commit (undo parity) — but AFTER the answer.
         // See queueRouteCommit: the files are already on disk, and a full
-        // status walk of the workspace costs 250-1100 ms.
-        if ((res.status ?? 200) < 400) {
-          queueRouteCommit(p, u.username, appId, method, rel, res.fsWrites ?? []);
+        // status walk of the workspace costs 250-1100 ms. A read that wrote
+        // nothing cannot have changed the workspace, so it skips the walk.
+        const wrote = res.fsWrites ?? [];
+        const mayWrite = (method !== "GET" && method !== "HEAD") || wrote.length > 0;
+        if ((res.status ?? 200) < 400 && mayWrite) {
+          queueRouteCommit(p, u.username, appId, method, rel, wrote);
         }
         if (res.json !== undefined) return { status: res.status ?? 200, payload: res.json };
         return { status: res.status ?? 200, payload: res.text ?? "", ...(res.contentType ? { contentType: res.contentType } : {}) };
