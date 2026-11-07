@@ -240,3 +240,38 @@ export function groupConflicts(keys: string[]): ConflictGroup[] {
   }
   return [...groups.values()];
 }
+
+/** An app's data file key (`w/apps/<id>/data/<rest>`) split into the app id
+ *  and the app-relative path (`data/<rest>`, forward slashes); null for
+ *  anything else, and for anything under a node_modules folder. */
+export function appDataKey(key: string): { id: string; rel: string } | null {
+  const m = /^w\/apps\/([^/]+)\/(data\/.+)$/.exec(key);
+  if (!m || m[2]!.split("/").includes("node_modules")) return null;
+  return { id: m[1]!, rel: m[2]! };
+}
+
+/** Per-area counts for the sync log: `apps/<id>/data/<folder>` for an app's
+ *  data, `apps/<id>/code` for the rest of an app, else the first two path
+ *  segments. At most 12 groups, most files first. */
+export function areaSummary(keys: string[]): string {
+  const counts = new Map<string, number>();
+  for (const k of keys) {
+    const app = /^w\/apps\/([^/]+)\//.exec(k)?.[1];
+    const data = appDataKey(k);
+    let area: string;
+    if (data) {
+      const inner = data.rel.slice("data/".length).split("/");
+      area = inner.length > 1 ? `apps/${data.id}/data/${inner[0]}` : `apps/${data.id}/data`;
+    } else if (app) {
+      area = `apps/${app}/code`;
+    } else {
+      area = k.split("/").slice(0, 2).join("/");
+    }
+    counts.set(area, (counts.get(area) ?? 0) + 1);
+  }
+  return [...counts]
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+    .slice(0, 12)
+    .map(([area, n]) => `${area}=${n}`)
+    .join(", ");
+}

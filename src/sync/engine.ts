@@ -19,7 +19,7 @@ import { applyFile, bundleHash, conflictsDir, diskPath, keepCopy, readSecretBund
 import {
   type ConflictGroup, type FileEntry, type Files, type SyncHead, type SyncManifest,
   SECRETS_PATH, SYNC_FORMAT, SYNC_KIND, SYNC_PRODUCT, SyncError,
-  checkHead, checkManifest, groupConflicts, inScope, plan, pushedFiles,
+  appDataKey, checkHead, checkManifest, groupConflicts, inScope, plan, pushedFiles,
 } from "./manifest.js";
 import { type SyncState, readCache, readState, writeCache, writeState } from "./state.js";
 import type { SyncStore } from "./store.js";
@@ -171,6 +171,8 @@ export interface PushResult {
   uploaded: number;
   bytes: number;
   changed: number;
+  /** the keys this push sent or deleted, capped, for the log */
+  moved: string[];
 }
 
 /** `replace`: this device's files become the sync's (GitHub #45), for a device that does not want
@@ -199,7 +201,7 @@ export async function push(ctx: SyncContext, opts: { replaceKeys?: boolean; repl
       state.base = { rev: head.rev, files: base };
       writeState(cd, state);
     }
-    return { rev: head.rev, uploaded: 0, bytes: 0, changed: 0 };
+    return { rev: head.rev, uploaded: 0, bytes: 0, changed: 0, moved: [] };
   }
 
   // the files themselves, each read once more: one changed since the scan
@@ -281,7 +283,7 @@ export async function push(ctx: SyncContext, opts: { replaceKeys?: boolean; repl
   state.last = { rev, at: now, direction: "push" };
   writeState(cd, state);
   await collectGarbage(ctx.store, next, manifest).catch(() => undefined);
-  return { rev, uploaded: sent.size, bytes, changed: pl.up.length };
+  return { rev, uploaded: sent.size, bytes, changed: pl.up.length, moved: pl.up.slice(0, MOVED_CAP) };
 }
 
 function withoutSecrets(f: Files): Record<string, FileEntry> {
@@ -336,8 +338,18 @@ export interface PullResult {
   keys: boolean;
   /** apps whose code changed: they are rebuilt and checked again */
   apps: string[];
+  /** app data files this pull wrote or deleted: app id -> app-relative paths
+   *  (`data/...`), at most 200 per app; open app pages re-read them */
+  dataChanged: Record<string, string[]>;
+  /** every key this pull wrote or deleted, capped, for the log */
+  moved: string[];
   device: string;
 }
+
+/** The most keys a sync result carries (the log summary reads them). */
+const MOVED_CAP = 5000;
+/** The most data paths per app that a pull reports as changed. */
+const DATA_CHANGED_CAP = 200;
 
 export async function pull(ctx: SyncContext, opts: { rev?: number; resolutions?: Record<string, Choice>; all?: Choice }): Promise<PullResult> {
   const cd = credDir(ctx.paths);
@@ -410,12 +422,24 @@ export async function pull(ctx: SyncContext, opts: { rev?: number; resolutions?:
     }
 
     const apps = new Set<string>();
+    const dataChanged: Record<string, string[]> = {};
+    const moved: string[] = [];
     let applied = 0;
     const order = [...take].sort();
     for (const k of order) {
       const e = manifest.files[k];
       applyFile(ctx.paths, k, e ? fs.readFileSync(fetched.get(e.h)!) : null);
       applied++;
+      if (moved.length < MOVED_CAP) moved.push(k);
+      const d = appDataKey(k);
+      if (d) {
+        let list = dataChanged[d.id];
+        if (!list) {
+          list = [];
+          dataChanged[d.id] = list;
+        }
+        if (list.length < DATA_CHANGED_CAP) list.push(d.rel);
+      }
       const m = /^w\/apps\/([^/]+)\/(.+)$/.exec(k);
       if (m && isAppCode(m[2]!)) apps.add(m[1]!);
       ctx.progress?.({ phase: "apply", done: applied, total: order.length, bytes });
@@ -437,7 +461,7 @@ export async function pull(ctx: SyncContext, opts: { rev?: number; resolutions?:
     state.last = { rev: head.rev, at: new Date().toISOString(), direction: "pull" };
     writeState(cd, state);
     ctx.progress?.({ phase: "finish", done: order.length, total: order.length, bytes });
-    return { rev: head.rev, applied, kept, savedTo, keys: !!keys, apps: [...apps].sort(), device: head.device.name };
+    return { rev: head.rev, applied, kept, savedTo, keys: !!keys, apps: [...apps].sort(), dataChanged, moved, device: head.device.name };
   } finally {
     fs.rmSync(staging, { recursive: true, force: true });
   }

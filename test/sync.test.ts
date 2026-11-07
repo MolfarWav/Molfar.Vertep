@@ -12,7 +12,7 @@ import { bootstrapUserDir, type UserPaths } from "../src/paths.js";
 import { readInstallSource, writeInstallSource } from "../src/apps/update.js";
 import { check, push, pull, ConflictError, encodeBlob, decodeBlob } from "../src/sync/engine.js";
 import { FolderStore } from "../src/sync/store.js";
-import { plan, groupConflicts, syncPathOk, DEFAULT_SCOPE, SECRETS_PATH } from "../src/sync/manifest.js";
+import { plan, groupConflicts, syncPathOk, areaSummary, appDataKey, DEFAULT_SCOPE, SECRETS_PATH } from "../src/sync/manifest.js";
 import { readState, writeState } from "../src/sync/state.js";
 import { sha256 } from "../src/sync/local.js";
 import { DriveStore, DriveAuth, SignIns, parseReturnUrl } from "../src/sync/drive.js";
@@ -387,5 +387,59 @@ describe("Google Drive store", () => {
     await expect(push({ ...ctx(a), store: store() })).rejects.toThrow(/trash/);
     await expect(pull({ ...ctx(b), store: store() }, {})).rejects.toThrow(/trash/);
     expect(files.size).toBe(before);
+  });
+});
+
+describe("what a pull tells the open apps", () => {
+  it("a preset pushed from one device is applied on the other and reported as changed", async () => {
+    await firstRound();
+    put(a, "apps/roleplay/data/presets/preset_abc.json", '{"name":"Imported"}');
+    await push(ctx(a));
+    const r = await pull(ctx(b), {});
+    expect(read(b, "apps/roleplay/data/presets/preset_abc.json")).toBe('{"name":"Imported"}');
+    expect(r.dataChanged).toEqual({ roleplay: ["data/presets/preset_abc.json"] });
+    expect(r.moved).toContain("w/apps/roleplay/data/presets/preset_abc.json");
+    expect(areaSummary(r.moved)).toContain("apps/roleplay/data/presets=1");
+  });
+
+  it("a pull that applies no app data reports nothing", async () => {
+    await firstRound();
+    put(a, "apps/roleplay/index.html", "<p>app v2</p>");
+    await push(ctx(a));
+    const r = await pull(ctx(b), {});
+    expect(r.apps).toEqual(["roleplay"]);
+    expect(r.dataChanged).toEqual({});
+  });
+});
+
+describe("area summary for the sync log", () => {
+  it("groups by app data folder, app code and other paths, most files first", () => {
+    const keys = [
+      "w/apps/roleplay/data/presets/a.json",
+      "w/apps/roleplay/data/presets/b.json",
+      "w/apps/roleplay/data/characters/belle/card.json",
+      "w/apps/roleplay/data/characters/belle/avatar.png",
+      "w/apps/roleplay/index.html",
+      "w/apps/roleplay/data/top.json",
+      "w/chats/c1.jsonl",
+      "p/connections.json",
+      SECRETS_PATH,
+    ];
+    expect(areaSummary(keys)).toBe(
+      "apps/roleplay/data/characters=2, apps/roleplay/data/presets=2, apps/roleplay/code=1, apps/roleplay/data=1, p/connections.json=1, secrets.enc=1, w/chats=1",
+    );
+    expect(areaSummary([])).toBe("");
+  });
+
+  it("shows at most 12 groups", () => {
+    const keys = Array.from({ length: 15 }, (_, i) => `w/apps/app${String(i).padStart(2, "0")}/data/x/f.json`);
+    const parts = areaSummary(keys).split(", ");
+    expect(parts).toHaveLength(12);
+    expect(parts[0]).toBe("apps/app00/data/x=1");
+  });
+
+  it("app data under node_modules is not an app data path", () => {
+    expect(appDataKey("w/apps/x/node_modules/a/data/b.json")).toBeNull();
+    expect(appDataKey("w/apps/x/data/b.json")).toEqual({ id: "x", rel: "data/b.json" });
   });
 });

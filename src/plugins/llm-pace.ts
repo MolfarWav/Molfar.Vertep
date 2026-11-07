@@ -49,7 +49,8 @@ export interface Clock {
   sleep: (ms: number) => Promise<void>;
 }
 
-const realClock: Clock = { now: () => Date.now(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) };
+// monotonic: a wall-clock step (NTP, a VM resume) must not shrink the gap between two starts
+const realClock: Clock = { now: () => performance.now(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) };
 
 export class Pacer {
   private nextStart = 0;
