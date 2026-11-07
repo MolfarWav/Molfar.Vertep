@@ -7,6 +7,14 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.11.5 (2026-11-07)
+
+- Sync: after a pull the engine tells open apps which of their data files it wrote (`look_changed`), so a pulled preset shows without a reload even where the file watcher does not run. The log lists the files a push or pull moved, grouped by area. (Molfar.Vertep#180, cause of the missing preset still open)
+- App routes: a route queues a workspace commit only when it can have changed something (a non-GET/HEAD call, or a read that wrote a file). A read no longer starts a full status walk, which slowed the next call when an app held a large `node_modules`. (Molfar.Vertep#163)
+- Edge TTS: when the refused handshake carries no `Date` header (Bun 1.4.0), the engine reads the server time with a plain HEAD request, so the clock-skew retry works. (Molfar.Vertep#143)
+- Tests: the request pacer uses a monotonic clock. (Molfar.Vertep#173)
+- Carries **Roleplay 4.96.0** as an app update: helper models get the persona and character names instead of raw `{{user}}` and `{{char}}`, a chat with Litopys off on the Prompt board stops background model calls, and the memory-insert reserve counts "who knows what" in a normal chat whose card has several names. (Molfar.Vertep#156)
+
 ## 1.11.4 (2026-11-07)
 
 - No engine code changed. This release carries **Roleplay 4.95.0** as an app update: **folders for lorebook entries** (nested up to three levels, drag and drop with the mouse, six colours, optional `folder` on an entry and `folders` and `folderTones` on a book), an entry opens in a **drawer from the right** on a computer, **Chat CSS** in a chat's More menu (`css` in the chat meta), and a long lorebook entry no longer traps scrolling on a phone (reasoned fix, not reproduced).

@@ -4,6 +4,7 @@ Read `CLAUDE.md`, then `.fork/STATE.md`, then this file. One item at a time; com
 Finished work is not listed here: see STATE ("Released") and git history.
 
 ## Queue (open items only; the user picks the order unless it is written here)
+0000000000000. **1.11.5 prepared** 2026-11-07 (the user pushes the tag v1.11.5): carries Roleplay 4.96.0 (helper names, silent worker, reserve rows) and engine fixes #143, #163, #180 (STATE, "ISSUES #216, #180, #156, #143, #163, #173 WORKED"). After the tag: merge the Roleplay PR first or together, close what the batch leaves open.
 000000000000. **1.11.4 prepared** 2026-11-07 (the user pushes the tag v1.11.4): carries Roleplay 4.95.0 (lorebook folders, drawer, Chat CSS, phone scroll fix; STATE, "RELEASE 1.11.4 PREPARED"). After the tag: Update on Roleplay in Updates; close #279 with "How it was solved"; ask the phone reporter to test.
 00000000000. **1.11.3 prepared** 2026-11-06 (the user pushes the tag v1.11.3): carries Roleplay 4.94.0 (Draw places switch always listed, 402 on the description call, drawn places in the story's setting, Look of the pictures; STATE, "RELEASE 1.11.3 PREPARED"). After the tag: Update on Roleplay in Updates, then retry a drawn place.
 0000000000. **1.11.2 prepared** 2026-11-06 (the user pushes the tag v1.11.2): carries Roleplay 4.93.0 (vector files split #266/#267, letters offer, #210, Botbooru, card portraits, places drawn on the spot; STATE, "RELEASE 1.11.2 PREPARED"). After the tag: close #266, #267, #210 with "How it was solved"; the Discord reporter presses Embed. Leftovers: #268.
