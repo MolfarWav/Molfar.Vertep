@@ -81,6 +81,9 @@ hot-reload by mtime: nothing to call.
 - Config files are NOT run: no bundler plugins, no Vue or Svelte SFCs.
 - State: `useState` or `@preact/signals-react`. Fast refresh keeps component state, not module state.
 
+## Following the shell's colours
+- An app that wants to wear the shell's theme (Vertep, Dark, Light or a custom one) reads `window.molfarShell.theme()`: `{ id, scheme: "dark" | "light", vars }` (`vars` is the custom theme's hex colours, else null), or null before the handshake. `<html>` also carries `data-shell-scheme` and `data-shell-theme`, and a change fires `window` event `molfar:shell-theme` (`detail` is the same object). Data only; nothing else is reachable through it. Roleplay keeps a theme of its own and ignores it.
+
 ## Usability
 - The user's rule: a UI change is judged first by how easily people find, understand and use it, on a phone too. Load skill `ux-review` before you add a control and before you call it done.
 - An app with an in-app guide (Roleplay: `src/lib/guide-tips.ts`; its AGENTS.md, "The in-app guide", says how): a feature the user decides with gets a tip in the same change, so the help list and What's new point it out. The tip says only what the code does; check it against your code before done.

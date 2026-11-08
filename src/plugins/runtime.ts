@@ -47,6 +47,7 @@ import { hookInsertions, mergePromptSources, sanitizePromptSources, uncovered } 
 import { assertPublicHost } from "../net-guard.js";
 import { recordPluginLog } from "./plugin-log.js";
 import { pacerFor, readLimits, runLimited, type PluginLimits } from "./llm-pace.js";
+import type { PeerMount } from "../apps/reads.js";
 
 /** Exports the engine calls on its own (routes and tools are dispatched by
  *  request, not from here). Only these names fire — a plugin exporting
@@ -54,7 +55,12 @@ import { pacerFor, readLimits, runLimited, type PluginLimits } from "./llm-pace.
 export const PLUGIN_HOOKS = ["onTick", "uiPanel", "onAppUpdate", "appTools", "llmRequest", "insertCeiling"] as const;
 export type PluginHook = (typeof PLUGIN_HOOKS)[number];
 
-export type PluginPermissionCap = "llm" | "store" | "schedule" | "network" | "tools" | "routes" | "fs" | "zip" | "hooks" | "script";
+export type PluginPermissionCap = "llm" | "store" | "schedule" | "network" | "tools" | "routes" | "fs" | "zip" | "hooks" | "script" | "peer";
+
+/** What this plugin may read of other apps right now: nothing without the "peer" permission. */
+function peersOf(plugin: LoadedPlugin, deps: PluginRuntimeDeps): PeerMount[] {
+  return plugin.appId && deps.peersFor && hasCapAny(plugin, "peer", deps) ? deps.peersFor(plugin) : [];
+}
 
 function hasCapAny(plugin: LoadedPlugin, cap: PluginPermissionCap, deps: PluginRuntimeDeps): boolean {
   const alts: Record<string, string[]> = {
@@ -62,6 +68,7 @@ function hasCapAny(plugin: LoadedPlugin, cap: PluginPermissionCap, deps: PluginR
     routes: ["routes", "register:routes"],
     fs: ["fs"],
     zip: ["zip"],
+    peer: ["peer"],
   };
   const names = alts[cap] ?? [cap];
   const has = plugin.manifest.permissions.some((p) => names.includes(p));
@@ -95,6 +102,9 @@ export interface PluginRuntimeDeps {
   models: Pick<UserModelService, "generate" | "embed"> & Partial<Pick<UserModelService, "embedVia" | "embedModelUsed" | "visionModel">>;
   /** settings.json pluginGrants — required for imported plugins. */
   grantsFor: (pluginId: string) => string[];
+  /** What a plugin of an app may read of OTHER apps: the peers the user allowed, with the declared patterns
+   *  (apps/reads.ts). Only asked for plugins with the "peer" permission. */
+  peersFor?: (plugin: LoadedPlugin) => PeerMount[];
   /** When set, plugin llm requests tagged with a `stream` descriptor get
    *  their text deltas surfaced live (the kernel generates with streaming
    *  either way — this only routes the deltas to an event sink). */
@@ -248,6 +258,7 @@ export async function runPluginTool(
       embedInfo: results.embedInfo,
       fsAllowed: hasCapAny(plugin, "fs", deps) && !!plugin.fsRoot,
       fsRoot: plugin.fsRoot ?? null,
+      peers: peersOf(plugin, deps),
       netAllowed: caps.net,
       netResults: results.net,
       scriptAllowed: caps.script,
@@ -963,6 +974,7 @@ export async function runPluginRoute(
         llmAllowed: caps.llm,
         fsAllowed: hasCapAny(plugin, "fs", deps) && !!plugin.fsRoot,
         fsRoot: plugin.fsRoot ?? null,
+        peers: peersOf(plugin, deps),
         zipAllowed: zipOk,
         ...(zipOk ? { zipBase64: req.zipBase64! } : {}),
         llmResults: results.llm,
@@ -1039,6 +1051,7 @@ export type PluginPermission =
   | "schedule"
   | "network"
   | "script"
+  | "peer"
   | `fs:${string}`
   | "fs"
   | "register:tools"
@@ -1149,6 +1162,7 @@ async function hookPasses(
       scriptResults: results.script,
       fsAllowed: hasCapAny(plugin, "fs", deps) && !!plugin.fsRoot,
       fsRoot: plugin.fsRoot ?? null,
+      peers: peersOf(plugin, deps),
       ...(limits ?? {}),
     });
 

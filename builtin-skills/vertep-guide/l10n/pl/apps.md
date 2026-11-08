@@ -1,4 +1,4 @@
-<!-- source: d5f38d848a56 -->
+<!-- source: 0ac3e61cd6d8 -->
 # Aplikacje
 
 Jak znajdować, dodawać, aktualizować i usuwać aplikacje. Aplikacje to rzeczy, których faktycznie używasz: Roleplay jest tą główną.
@@ -20,6 +20,10 @@ Pasek narzędzi oferuje:
 
 Na telefonie te trzy znajdują się w menu konta.
 
+## Gdy aplikacja chce czytać inną aplikację
+
+Aplikacja może poprosić o odczyt plików innej aplikacji, na przykład Social czytający Twoje postacie z Roleplay. Za pierwszym otwarciem takiej aplikacji pojawia się pytanie: „Zezwolić aplikacji <app> na odczyt danych <other app>?”, z informacją, do czego to służy, i dokładnymi plikami. „Zezwól” lub „Nie zezwalaj” to odpowiedzi; „Zdecyduję później” pyta ponownie następnym razem. Dostęp jest tylko do odczytu: aplikacja nie może niczego zmienić ani usunąć w drugiej aplikacji i widzi tylko wymienione pliki. Odpowiedź możesz zmienić w dowolnym momencie: na stronie głównej otwórz szczegóły aplikacji i zajrzyj do „Dostęp do innych aplikacji”. Jeśli aktualizacja aplikacji prosi o więcej plików, zapytamy ponownie. Usunięcie którejkolwiek z aplikacji zapomina odpowiedź.
+
 ## Store
 
 „Store” na stronie głównej pokazuje aplikacje od Molfar Vertep (oznaczone „Oficjalna aplikacja”) i od społeczności. Naciśnij „Zainstaluj”: najpierw zobaczysz, co aplikacja zawiera i do czego może sięgać, a nic nie zostanie uruchomione, dopóki nie potwierdzisz. Instaluj tylko to, czemu ufasz, ponieważ aplikacje uruchamiają prawdziwy kod na Twoim komputerze. „Odśwież” pyta o nowe aplikacje, a plakietka zlicza te dodane od Twojego ostatniego spojrzenia.
@@ -31,7 +35,7 @@ Na telefonie te trzy znajdują się w menu konta.
 
 ## Aktualizacje
 
-Ikona pobierania na górnym pasku dostaje kropkę, gdy coś czeka. Wyświetla wszystkie aplikacje ze źródłem aktualizacji i ma „Sprawdź teraz”. „Aktualizuj wszystko” pojawia się, gdy czekają dwie lub więcej aplikacji, i nigdy nie obejmuje samego Molfar Vertep.
+Ikona pobierania na górnym pasku dostaje kropkę, gdy coś czeka. Wyświetla wszystkie aplikacje ze źródłem aktualizacji i ma „Sprawdź teraz”. Aplikacja zainstalowana z pliku (zip) pokazuje „Brak źródła aktualizacji”: nie można jej tu zaktualizować. Aby dostawać aktualizacje, zainstaluj ją ze Store; ta kopia jest osobną aplikacją, więc najpierw wyeksportuj plik, jeśli zawiera dane, które chcesz zachować (ikona kosza usuwa aplikację i jej dane). „Aktualizuj wszystko” pojawia się, gdy czekają dwie lub więcej aplikacji, i nigdy nie obejmuje samego Molfar Vertep.
 
 Twoje własne zmiany są scalane z aktualizacją, a Twoje dane są zachowywane. Tam, gdzie Twoje zmiany nakładają się na nową wersję, nic się jeszcze nie zmienia: wybierasz „Zachowaj moją”, „Przyjmij aktualizację” lub „Poproś Molfara o scalenie”. Aktualizacja, która instaluje nowe pakiety lub prosi o nowe uprawnienia, czeka na Twoją zgodę.
 

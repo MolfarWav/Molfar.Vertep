@@ -10,6 +10,7 @@ import nodeCrypto from "node:crypto";
 import { PluginStoreService } from "../plugins/store.js";
 import { discoverPlugins, discoverAppPlugins, runPluginHook, runPluginHookOutcome, runPluginRoute, runPluginTool, readPluginExport, syncSchedules, stopSchedules, invalidatePluginCache, collectSiblingTools, collectSiblingLlmHooks, collectInsertCeilings, mergeToolBridges, type LoadedPlugin, type PluginRuntimeDeps, type PluginToolBridge } from "../plugins/runtime.js";
 import { McpRegistry, WEB_SEARCH_PRESET, readStdioApprovals, stdioFingerprint, writeStdioApproval, type CredentialMap, type McpServerConfig } from "../mcp/registry.js";
+import { forgetGrants, forgetPeer, moveGrants, peerMounts, readGrants, readState, setGrant, type PeerMount } from "../apps/reads.js";
 import { listApps, readApp, createAppSkeleton, renameAppDir, appTree, validateAppManifest, hashAppTree, type AppInfo } from "../apps/manager.js";
 import { UPDATE_STRATEGIES, applyWrites, discardDir, discardStaleStaging, mergeBrief, restoreWrites, forgetInstall, mergeTrees, moveInstall, readBaseline, readCodeTree, readInstallSource, readPendingUpgrade, recoverBaseline, replaceTree, satisfiesRange, seedDataTemplates, writeBaseline, writeInstallSource, writePendingUpgrade, type InstallSource } from "../apps/update.js";
 import { OFFICIAL_SOURCES, createCatalog, forkOf, isOfficialSource, normalizeGitUrl } from "../apps/store.js";
@@ -207,7 +208,7 @@ export const armLookWatch = (username: string, appsDir: string, bus: EventBus): 
 
 /** Engine routes under /v1/apps/<id>/ that manage the app rather than
  *  being its API. */
-const APP_MANAGEMENT_HEADS = new Set(["tree", "plugins", "rev", "updates", "update", "install", "dev", "build", "activate", "rename", "export", "exports"]);
+const APP_MANAGEMENT_HEADS = new Set(["tree", "plugins", "rev", "updates", "update", "install", "dev", "build", "activate", "rename", "export", "exports", "reads"]);
 
 /** Providers whose sign-in asks more than a single key (project/location/ADC
  *  file, AWS profile, Cloudflare account ids); the settings panel runs the
@@ -249,7 +250,7 @@ export function appBridgeAllows(appId: string, method: string, path: string, tru
     // Management is blocked by its exact shape, plus the two whole subtrees
     // (plugins/, build/). An app route that merely shares a first segment —
     // /export/backup — is the app's own API, not the engine's.
-    const subtree = head === "plugins" || head === "build";
+    const subtree = head === "plugins" || head === "build" || head === "reads";
     if (APP_MANAGEMENT_HEADS.has(head) && (subtree || segments.length === 1)) return false;
     if (head === "mcp" && method !== "GET" && !trusted) return false;
     return true;
@@ -464,7 +465,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         return [];
       }
     };
-    return { store, models: getModels(u), grantsFor, owner: u.username };
+    // what a plugin of an app may read of OTHER apps: the peers the user allowed (apps/reads.ts)
+    const peersFor = (plugin: LoadedPlugin): PeerMount[] => {
+      const info = plugin.appId ? readApp(p.apps, plugin.appId) : null;
+      return info ? peerMounts(info.id, info.manifest.reads, readGrants(p.appReads), p.apps) : [];
+    };
+    return { store, models: getModels(u), grantsFor, peersFor, owner: u.username };
   };
   /** App-route deps with a live-delta sink: plugin llm requests tagged with
    *  `stream:{chatId, name}` stream their text deltas to the user's sockets
@@ -4201,6 +4207,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const appDir = safeResolve(p.apps, id);
     fs.rmSync(appDir, { recursive: true, force: true });
     forgetInstall(p.appUpstream, id);
+    forgetGrants(p.appReads, id);
+    forgetPeer(p.appReads, id);
     invalidatePluginCache();
     try {
       const settings = JSON.parse(fs.readFileSync(p.settings, "utf8")) as { activeApp?: string | null; launchDefault?: string | null; pluginGrants?: Record<string, string[]>; disabledPlugins?: string[]; appMcp?: Record<string, string[]> };
@@ -4241,6 +4249,36 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     return c.json({ ok: true, activeApp: id });
   });
 
+  // What an app asks to read of other apps, and what the user decided (apps/reads.ts). The shell's to read and to change:
+  // an app frame never gets here (the bridge blocks the path, and this refuses a relayed request too).
+  app.get("/v1/apps/:id/reads", (c) => {
+    if (c.get("bridgeApp")) return c.json({ error: "only the shell answers this" }, 403);
+    const p = c.get("paths");
+    const id = c.req.param("id");
+    const info = readApp(p.apps, id);
+    if (!info) return c.json({ error: "app not found" }, 404);
+    const grants = readGrants(p.appReads);
+    const reads = (info.manifest.reads ?? []).map((d) => {
+      const peer = readApp(p.apps, d.app);
+      return { app: d.app, name: peer?.manifest.name ?? d.app, installed: !!peer, paths: d.paths, why: d.why, state: readState(d, grants[id]?.[d.app]) };
+    });
+    return c.json({ reads });
+  });
+  app.put("/v1/apps/:id/reads/:peer", async (c) => {
+    if (c.get("bridgeApp")) return c.json({ error: "only the shell answers this" }, 403);
+    const p = c.get("paths");
+    const id = c.req.param("id");
+    const info = readApp(p.apps, id);
+    if (!info) return c.json({ error: "app not found" }, 404);
+    const decl = (info.manifest.reads ?? []).find((d) => d.app === c.req.param("peer"));
+    if (!decl) return c.json({ error: "the app does not ask to read that app" }, 404);
+    const body = await c.req.json<{ granted?: unknown }>().catch(() => ({}) as { granted?: unknown });
+    if (typeof body.granted !== "boolean") return c.json({ error: "granted must be true or false" }, 400);
+    setGrant(p.appReads, id, decl, body.granted);
+    invalidatePluginCache();
+    return c.json({ ok: true, state: body.granted ? "granted" : "denied" });
+  });
+
   // rename an app: moves its directory; active-app settings follow
   app.post("/v1/apps/:id/rename", async (c) => {
     const u = c.get("user");
@@ -4255,7 +4293,10 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (oldId !== newId && !renameAppDir(p.apps, oldId, newId)) {
       return c.json({ error: `rename failed (does "${newId}" already exist?)` }, 409);
     }
-    if (oldId !== newId) moveInstall(p.appUpstream, oldId, newId);
+    if (oldId !== newId) {
+      moveInstall(p.appUpstream, oldId, newId);
+      moveGrants(p.appReads, oldId, newId);
+    }
     const settings = JSON.parse(fs.readFileSync(p.settings, "utf8")) as { activeApp?: string | null };
     if (settings.activeApp === oldId) {
       settings.activeApp = newId;

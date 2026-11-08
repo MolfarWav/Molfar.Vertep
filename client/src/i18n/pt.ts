@@ -975,6 +975,19 @@ const dict = {
   "{done} of {total}": "{done} de {total}",
   "{n} GB": "{n} GB",
   "{n} MB": "{n} MB",
+  "Allow {app} to read your {peer} data?": "Permitir que {app} leia seus dados de {peer}?",
+  "{app} asks to read these files of {peer}:": "{app} pede para ler estes arquivos de {peer}:",
+  "Read only: {app} cannot change or delete anything in {peer}. You can change this any time on the app's page on Home.": "Somente leitura: {app} não pode alterar nem excluir nada em {peer}. Você pode mudar isso a qualquer momento na página do app em Início.",
+  "Decide later": "Decidir depois",
+  "Don't allow": "Não permitir",
+  "Allow": "Permitir",
+  "Access to other apps": "Acesso a outros apps",
+  "Reads your {peer} data": "Lê seus dados de {peer}",
+  "Allowed": "Permitido",
+  "Not allowed": "Não permitido",
+  "Not decided yet": "Ainda não decidido",
+  "{peer} is not installed, so there is nothing to read yet.": "{peer} não está instalado, então ainda não há nada para ler.",
+  "Stop allowing": "Parar de permitir",
 }
 
 export default dict

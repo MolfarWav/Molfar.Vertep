@@ -66,6 +66,8 @@ export interface SandboxRequest {
   maxStoreBytes?: number;
   fsAllowed?: boolean;
   fsRoot?: string | null;
+  /** Other apps' files this call may read, read only (apps/reads.ts): `host.peer`. Empty: none. */
+  peers?: { app: string; root: string; allow: string[] }[];
   zipAllowed?: boolean;
   zipBase64?: string;
   /** Safe reads may be repeated once when the WASM runtime aborts during teardown. */

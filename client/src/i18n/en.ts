@@ -977,6 +977,19 @@ const en = {
   "{done} of {total}": "",
   "{n} GB": "",
   "{n} MB": "",
+  "Allow {app} to read your {peer} data?": "",
+  "{app} asks to read these files of {peer}:": "",
+  "Read only: {app} cannot change or delete anything in {peer}. You can change this any time on the app's page on Home.": "",
+  "Decide later": "",
+  "Don't allow": "",
+  "Allow": "",
+  "Access to other apps": "",
+  "Reads your {peer} data": "",
+  "Allowed": "",
+  "Not allowed": "",
+  "Not decided yet": "",
+  "{peer} is not installed, so there is nothing to read yet.": "",
+  "Stop allowing": "",
 } as const
 
 export default en
