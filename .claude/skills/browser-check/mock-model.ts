@@ -9,9 +9,11 @@
 // `dropTimes` breaks only that many requests, then the turn answers normally
 // a turn may set `match`: it answers every request whose body contains that text (first match wins) and is not part of the
 // cycle; the cycling turns answer the rest. Used when several callers share the model (a chat reply, an agent's question).
+// POST /__refuse-tools {"on": true} makes a request that carries tools answer 404 "No endpoints found that support tool use" (a free model without tool use)
 // POST .../embeddings answers an embedding of 8 numbers made from the words of each text (texts that share words are near);
 // POST /__embed {"fail": true} makes it answer 500 until {"fail": false}, `delayMs` slows each answer, and GET /__embed counts the requests
 type Turn = ({ text: string } | { tool: string; args?: Record<string, unknown> }) & { delayMs?: number; wordMs?: number; drop?: boolean; dropTimes?: number; match?: string };
+let refuseTools = false;
 const dropped = new Map<number, number>();
 const DEFAULT: Turn[] = [
   { tool: "read_file", args: { path: "AGENTS.md" } },
@@ -38,6 +40,7 @@ Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
     if (url.pathname === "/__log") { if (req.method === "POST") { log.length = 0; return Response.json({ ok: true }); } return Response.json(log); }
+    if (url.pathname === "/__refuse-tools") { if (req.method === "POST") refuseTools = Boolean(((await req.json()) as { on?: boolean }).on); return Response.json({ on: refuseTools }); }
     if (url.pathname === "/__reset") { next = 0; return Response.json({ ok: true }); }
     if (url.pathname === "/__turns") { turns = (await req.json()) as Turn[]; next = 0; return Response.json({ ok: true, turns: turns.length }); }
     if (url.pathname.endsWith("/models")) return Response.json({ data: [{ id: model }] });
@@ -54,6 +57,11 @@ Bun.serve({
       return Response.json({ data: (body.input ?? []).map((t) => ({ embedding: embedding(String(t)) })) });
     }
     const raw = await req.text();
+    // a provider that rejects a request carrying tools (OpenRouter's text for a model without tool use)
+    if (refuseTools && /"tools"\s*:\s*\[\s*\{/.test(raw)) {
+      log.push({ at: Date.now(), match: "refused-tools", bytes: raw.length });
+      return Response.json({ error: { message: "No endpoints found that support tool use. To learn more about provider routing, visit: https://openrouter.ai/docs/provider-routing", code: 404 } }, { status: 404 });
+    }
     const routed = turns.find((x) => x.match && raw.includes(x.match));
     const cycle = turns.filter((x) => !x.match);
     log.push({ at: Date.now(), match: routed?.match ?? null, bytes: raw.length });
