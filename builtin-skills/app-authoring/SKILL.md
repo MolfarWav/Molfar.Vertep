@@ -84,6 +84,9 @@ hot-reload by mtime: nothing to call.
 ## Following the shell's colours
 - An app that wants to wear the shell's theme (Vertep, Dark, Light or a custom one) reads `window.molfarShell.theme()`: `{ id, scheme: "dark" | "light", vars }` (`vars` is the custom theme's hex colours, else null), or null before the handshake. `<html>` also carries `data-shell-scheme` and `data-shell-theme`, and a change fires `window` event `molfar:shell-theme` (`detail` is the same object). Data only; nothing else is reachable through it. Roleplay keeps a theme of its own and ignores it.
 
+## Telling the user something is waiting
+- An official app (installed from MolfarWav's repositories) calls `window.molfarShell.notify({ count, title, text })`: `count` (0 to 999, 0 clears) is the number on the app's tab in the shell; `title` (80 characters) and `text` (200) are a short plain message, shown as a popup or a system notification depending on where the user is. Any of them, at least `count` or `text`. It resolves with `{ shown: "none" | "popup" | "system" }`; the user can switch it off per app, the shell shows at most one message per app every 5 seconds, and nothing is shown while the user looks at the app. Apps that are not official are refused. An engine without the channel has no `notify`: check before calling.
+
 ## Usability
 - The user's rule: a UI change is judged first by how easily people find, understand and use it, on a phone too. Load skill `ux-review` before you add a control and before you call it done.
 - An app with an in-app guide (Roleplay: `src/lib/guide-tips.ts`; its AGENTS.md, "The in-app guide", says how): a feature the user decides with gets a tip in the same change, so the help list and What's new point it out. The tip says only what the code does; check it against your code before done.

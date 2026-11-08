@@ -27,3 +27,29 @@ export function shouldShowNotice(s: NoticeState): boolean {
 
 /** One notification per chat and meaning: a later one replaces the earlier instead of piling up. */
 export const noticeTag = (kind: NoticeKind, chatId: string): string => `molfar-${kind === "ask" ? "ask" : "run"}-${chatId}`
+
+// ---------- messages from apps (issue #310, step 5) ----------
+
+export interface AppNoticeState {
+  /** the user's switch for this app (default on) */
+  appEnabled: boolean
+  /** the user's switch for system notifications in this browser (Settings) */
+  systemEnabled: boolean
+  /** Notification.permission, or "unsupported" */
+  permission: string
+  /** the shell's page is on screen */
+  visible: boolean
+  /** the browser window has the keyboard focus */
+  focused: boolean
+  /** the app's tab is what the user sees (its tab, or beside Molfar in a split) */
+  appOnScreen: boolean
+}
+
+/** How a message from an app reaches the user: nothing (its switch is off, or they are looking at the app, which shows
+ *  it itself), a short popup in the shell's corner (they are in the shell, elsewhere), or a system notification (the
+ *  window is not in front). The count on the app's tab is separate: it follows the app's own number either way. */
+export function appNoticeMode(s: AppNoticeState): "none" | "popup" | "system" {
+  if (!s.appEnabled) return "none"
+  if (s.visible && s.focused) return s.appOnScreen ? "none" : "popup"
+  return s.systemEnabled && s.permission === "granted" ? "system" : "none"
+}

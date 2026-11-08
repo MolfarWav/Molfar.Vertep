@@ -199,6 +199,19 @@
     }
     // the shell's interface language (0.9.5), so an app can start in it
     if (d.op === "locale") return { op: "locale" };
+    // something waits for the user (#310): a number for the app's tab and/or a short message. Plain text, capped; the
+    // shell decides whether and how it is shown (the user's switch per app, the window's state).
+    if (d.op === "notify") {
+      var count = d.count == null ? null : d.count;
+      if (count !== null && !(typeof count === "number" && Number.isInteger(count) && count >= 0 && count <= 999)) return null;
+      var title = d.title == null ? "" : d.title;
+      var text = d.text == null ? "" : d.text;
+      if (typeof title !== "string" || typeof text !== "string" || title.length > 80 || text.length > 200) return null;
+      title = title.replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
+      text = text.replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
+      if (count === null && !text) return null;
+      return { op: "notify", count: count, title: title, text: text };
+    }
     return null;
   }
 

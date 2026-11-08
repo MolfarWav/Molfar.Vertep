@@ -1,4 +1,4 @@
-<!-- source: 0ac3e61cd6d8 -->
+<!-- source: a69bed8dd436 -->
 # Apps
 
 Hoe je apps vindt, toevoegt, bijwerkt en verwijdert. Apps zijn de dingen die je echt gebruikt: Roleplay is de belangrijkste.
@@ -23,6 +23,10 @@ Op een telefoon staan deze drie in het accountmenu.
 ## Wanneer een app een andere app wil lezen
 
 Een app mag vragen om bestanden van een andere app te lezen, bijvoorbeeld Social die je Roleplay-personages leest. De eerste keer dat je zo'n app opent, verschijnt een vraag: "<app> toestemming geven om je <other app>-gegevens te lezen?", met waarvoor het dient en de exacte bestanden. "Toestaan" of "Niet toestaan" zijn antwoorden; "Later beslissen" vraagt de volgende keer opnieuw. Het is alleen-lezen: de app kan niets in de andere app wijzigen of verwijderen en ziet alleen de genoemde bestanden. Je kunt je antwoord altijd wijzigen: open op de startpagina de details van de app en kijk onder "Toegang tot andere apps". Vraagt een update van de app om meer bestanden, dan wordt je opnieuw gevraagd. Het verwijderen van een van beide apps vergeet het antwoord.
+
+## Berichten van apps
+
+Een officiële app, zoals Social, kan Molfar Vertep laten weten dat er iets op je wacht. Er verschijnt een klein getal op het tabblad van de app, en wanneer er iets nieuws binnenkomt zie je een kort bericht: een pop-up rechtsonder terwijl je in Molfar Vertep naar iets anders kijkt, of een systeemmelding wanneer het venster niet voorop staat (de browser vraagt één keer om toestemming; de schakelaar voor systeemmeldingen staat in de instellingen). Er wordt niets getoond terwijl je de app zelf bekijkt. Om dit voor één app uit te zetten, open je de details op de startpagina en haal je het vinkje weg bij "Meldingen van deze app"; het getal verdwijnt dan ook. Klikken op de pop-up opent de app.
 
 ## De Store
 

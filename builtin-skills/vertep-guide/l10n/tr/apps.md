@@ -1,4 +1,4 @@
-<!-- source: 0ac3e61cd6d8 -->
+<!-- source: a69bed8dd436 -->
 # Uygulamalar
 
 Uygulamaları nasıl bulacağın, ekleyeceğin, güncelleyeceğin ve kaldıracağın. Uygulamalar gerçekten kullandığın şeylerdir: Bunlardan en önemlisi Roleplay'dir.
@@ -23,6 +23,10 @@ Telefonda bu üçü hesap menüsünde bulunur.
 ## Bir uygulama başka bir uygulamayı okumak istediğinde
 
 Bir uygulama başka bir uygulamanın dosyalarını okumak için izin isteyebilir; örneğin Social'ın Roleplay karakterlerini okuması gibi. Böyle bir uygulamayı ilk kez açtığında bir soru çıkar: "<app> uygulamasının <other app> verilerinizi okumasına izin verilsin mi?" Soru, uygulamanın bunu neden istediğini ve tam dosyaları da gösterir. "İzin ver" veya "İzin verme" bir cevaptır; "Sonra karar ver" seçeneği bir dahaki sefere yeniden sorar. Salt okunurdur: uygulama diğer uygulamada hiçbir şeyi değiştiremez ya da silemez ve yalnızca listelenen dosyaları görür. Cevabını istediğin zaman değiştirebilirsin: başlangıç sayfasında uygulamanın ayrıntılarını aç ve "Diğer uygulamalara erişim" altına bak. Uygulamanın bir güncellemesi daha fazla dosya isterse yeniden sorulursun. İki uygulamadan birini kaldırmak cevabı unutturur.
+
+## Uygulamalardan mesajlar
+
+Social gibi resmî bir uygulama, Molfar Vertep'e bir şeyin seni beklediğini bildirebilir. Uygulamanın sekmesinde küçük bir sayı belirir ve yeni bir şey geldiğinde kısa bir mesaj görürsün: Molfar Vertep'teyken başka bir şeye bakarken sağ alt köşede açılan bir pencere ya da pencere önde değilken bir sistem bildirimi (tarayıcı izni bir kez ister; sistem bildirimlerinin anahtarı Ayarlar'dadır). Uygulamanın kendisine bakarken hiçbir şey gösterilmez. Bunu tek bir uygulama için kapatmak için başlangıç sayfasında uygulamanın ayrıntılarını aç ve "Bu uygulamadan bildirimler" seçeneğini kaldır; sayı da kaybolur. Açılır pencereye tıklamak uygulamayı açar.
 
 ## Mağaza
 

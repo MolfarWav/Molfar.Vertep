@@ -988,6 +988,9 @@ const dict = {
   "Not decided yet": "Henüz karar verilmedi",
   "{peer} is not installed, so there is nothing to read yet.": "{peer} yüklü değil, bu yüzden henüz okunacak bir şey yok.",
   "Stop allowing": "İzni durdur",
+  "Open {name}": "{name} aç",
+  "Notifications from this app": "Bu uygulamadan bildirimler",
+  "A number on its tab and a short message when it has something new for you.": "Sekmesinde bir sayı ve sizin için yeni bir şey olduğunda kısa bir mesaj.",
 }
 
 export default dict

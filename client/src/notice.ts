@@ -107,3 +107,30 @@ export function showTestNotice(): void {
     // see showNotice
   }
 }
+
+// ---------- messages from apps (issue #310, step 5) ----------
+
+const appKey = (appId: string): string => `molfar-notify-app-${appId}`
+
+/** On by default; the switch is per app and per browser, on the app's page on Home. */
+export const appNoticeEnabled = (appId: string): boolean => prefs.get(appKey(appId)) !== "off"
+export const setAppNoticeEnabled = (appId: string, on: boolean): void => prefs.set(appKey(appId), on ? "on" : "off")
+
+/** The system notification of an app's message; a click brings the shell forward and opens the app. */
+export function showAppSystemNotice(req: { appId: string; title: string; text: string; onOpen: (appId: string) => void }): void {
+  try {
+    const tag = `molfar-app-${req.appId}`
+    const n = new Notification(req.title.slice(0, 80), { body: req.text.slice(0, 200), tag })
+    n.onclick = () => {
+      n.close()
+      window.focus()
+      req.onOpen(req.appId)
+    }
+    n.onclose = () => {
+      if (shown.get(tag) === n) shown.delete(tag)
+    }
+    shown.set(tag, n)
+  } catch {
+    // a browser that refuses (a locked-down profile): the count on the tab still says it
+  }
+}

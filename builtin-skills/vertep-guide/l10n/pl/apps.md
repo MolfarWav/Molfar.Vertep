@@ -1,4 +1,4 @@
-<!-- source: 0ac3e61cd6d8 -->
+<!-- source: a69bed8dd436 -->
 # Aplikacje
 
 Jak znajdować, dodawać, aktualizować i usuwać aplikacje. Aplikacje to rzeczy, których faktycznie używasz: Roleplay jest tą główną.
@@ -23,6 +23,10 @@ Na telefonie te trzy znajdują się w menu konta.
 ## Gdy aplikacja chce czytać inną aplikację
 
 Aplikacja może poprosić o odczyt plików innej aplikacji, na przykład Social czytający Twoje postacie z Roleplay. Za pierwszym otwarciem takiej aplikacji pojawia się pytanie: „Zezwolić aplikacji <app> na odczyt danych <other app>?”, z informacją, do czego to służy, i dokładnymi plikami. „Zezwól” lub „Nie zezwalaj” to odpowiedzi; „Zdecyduję później” pyta ponownie następnym razem. Dostęp jest tylko do odczytu: aplikacja nie może niczego zmienić ani usunąć w drugiej aplikacji i widzi tylko wymienione pliki. Odpowiedź możesz zmienić w dowolnym momencie: na stronie głównej otwórz szczegóły aplikacji i zajrzyj do „Dostęp do innych aplikacji”. Jeśli aktualizacja aplikacji prosi o więcej plików, zapytamy ponownie. Usunięcie którejkolwiek z aplikacji zapomina odpowiedź.
+
+## Wiadomości z aplikacji
+
+Oficjalna aplikacja, na przykład Social, może powiedzieć Molfar Vertep, że coś na Ciebie czeka. Na karcie aplikacji pojawia się mała liczba, a gdy przyjdzie coś nowego, widzisz krótką wiadomość: wyskakujące okienko w prawym dolnym rogu, gdy jesteś w Molfar Vertep i patrzysz na coś innego, albo powiadomienie systemowe, gdy okno nie jest na wierzchu (przeglądarka pyta o zgodę raz; przełącznik powiadomień systemowych jest w Ustawieniach). Nic nie jest pokazywane, gdy patrzysz na samą aplikację. Aby to wyłączyć dla jednej aplikacji, otwórz jej szczegóły na stronie głównej i odznacz "Powiadomienia z tej aplikacji"; liczba też zniknie. Kliknięcie wyskakującego okienka otwiera aplikację.
 
 ## Store
 

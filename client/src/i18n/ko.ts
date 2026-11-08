@@ -988,6 +988,9 @@ const dict = {
   "Not decided yet": "아직 결정하지 않음",
   "{peer} is not installed, so there is nothing to read yet.": "{peer}이(가) 설치되어 있지 않아 아직 읽을 내용이 없습니다.",
   "Stop allowing": "허용 중지",
+  "Open {name}": "{name} 열기",
+  "Notifications from this app": "이 앱의 알림",
+  "A number on its tab and a short message when it has something new for you.": "앱의 탭에 숫자를 표시하고, 새로운 내용이 있으면 짧은 메시지를 보여 줍니다.",
 }
 
 export default dict
