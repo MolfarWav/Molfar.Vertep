@@ -4771,14 +4771,17 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   // Update check for the launcher: one ls-remote per app, in parallel, for
   // the badge on every row. Results are reused for a minute so reopening the
   // launcher does not repeat the round trips; `fresh=1` after an update.
-  const updateChecks = new Map<string, { at: number; signature: string; apps: { id: string; available: boolean; remoteHead?: string | null; error?: string; restored?: RestoredState }[] }>();
+  const updateChecks = new Map<string, { at: number; signature: string; apps: { id: string; available: boolean; remoteHead?: string | null; error?: string; restored?: RestoredState; noSource?: true }[] }>();
   app.get("/v1/apps/updates", async (c) => {
     const u = c.get("user");
     const p = c.get("paths");
-    const entries = listApps(p.apps)
-      .map((app) => ({ app, source: installSourceOf(p, app) }))
-      .filter((e): e is { app: AppInfo; source: InstallSource } => e.source !== null);
-    const signature = entries.map((e) => `${e.app.id}:${e.source.git}:${e.source.ref}:${e.app.manifest.source?.head ?? ""}:${e.source.restored ? "r" : ""}`).join("|");
+    const all = listApps(p.apps).map((app) => ({ app, source: installSourceOf(p, app) }));
+    const entries = all.filter((e): e is { app: AppInfo; source: InstallSource } => e.source !== null);
+    // An app that names a repository but has no source was installed from a
+    // file or copied in: it is listed so the dialog can say why it has no
+    // update. An app with no repository at all (made here) is not.
+    const noSource = all.filter((e) => e.source === null && /^https?:\/\//.test(e.app.manifest.repository ?? "")).map((e) => ({ id: e.app.id, available: false, noSource: true as const }));
+    const signature = entries.map((e) => `${e.app.id}:${e.source.git}:${e.source.ref}:${e.app.manifest.source?.head ?? ""}:${e.source.restored ? "r" : ""}`).join("|") + "#" + noSource.map((n) => n.id).join(",");
     const cached = updateChecks.get(u.username);
     if (c.req.query("fresh") !== "1" && cached?.signature === signature && Date.now() - cached.at < 60_000) {
       return c.json({ apps: cached.apps });
@@ -4796,8 +4799,9 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
         return { id: app.id, available: false, error: (e as Error).message, ...flag };
       }
     }));
-    updateChecks.set(u.username, { at: Date.now(), signature, apps });
-    return c.json({ apps });
+    const listed = [...apps, ...noSource];
+    updateChecks.set(u.username, { at: Date.now(), signature, apps: listed });
+    return c.json({ apps: listed });
   });
 
   // Update check: asks the app's repository for its head (ls-remote only).

@@ -570,6 +570,19 @@ describe("installing from the store", () => {
     expect(await check()).toEqual([{ id, available: true, remoteHead: expect.any(String) }]);
   }, 60_000);
 
+  it("lists an app installed from a file, so the Updates dialog can say it has no source", async () => {
+    const p = userPaths(dataDir, "alice");
+    const make = (id: string, manifest: Record<string, unknown>) => {
+      fs.mkdirSync(path.join(p.apps, id), { recursive: true });
+      fs.writeFileSync(path.join(p.apps, id, "manifest.json"), JSON.stringify({ name: id, version: "1", kind: "app", ...manifest }));
+    };
+    make("from-zip", { repository: "https://example.com/owner/from-zip" });
+    make("made-here", {});
+    const apps = ((await (await call("/v1/apps/updates?fresh=1")).json()) as { apps: { id: string; available: boolean; noSource?: boolean }[] }).apps;
+    expect(apps.find((a) => a.id === "from-zip")).toEqual({ id: "from-zip", available: false, noSource: true });
+    expect(apps.find((a) => a.id === "made-here")).toBeUndefined();
+  });
+
   it("adopts an install an earlier engine shipped, and only that", async () => {
     const p = userPaths(dataDir, "alice");
     const make = (id: string) => {

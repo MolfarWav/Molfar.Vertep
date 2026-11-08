@@ -30,7 +30,7 @@ On a phone these three sit in the account menu.
 
 ## Updates
 
-The download icon in the top bar gets a dot when something is waiting. It lists every app with an update source and has "Check now". "Update all" appears when two or more apps wait, and never includes Molfar Vertep itself.
+The download icon in the top bar gets a dot when something is waiting. It lists every app with an update source and has "Check now". An app that was installed from a file (a zip) shows "No update source": it cannot be updated here. To get updates, install it from the Store; that copy is a separate app, so export the file one first if it holds data you want to keep (the trash icon deletes an app and its data). "Update all" appears when two or more apps wait, and never includes Molfar Vertep itself.
 
 Your own edits are merged into an update, and your data is kept. Where your edits overlap with the new version, nothing changes yet: you choose "Keep mine", "Take update" or "Ask Molfar to merge". An update that installs new packages or asks for new permissions waits for your OK.
 

@@ -268,6 +268,8 @@ const dict = {
   "No speech endpoints. OpenAI, Groq or a local server (Kokoro, openedai-speech) all speak /audio/speech.": "Konuşma uç noktası yok. OpenAI, Groq veya yerel bir sunucu (Kokoro, openedai-speech) /audio/speech konuşur.",
   "No system role (later system messages are sent as user)": "Sistem rolü yok (sonraki sistem mesajları kullanıcı olarak gönderilir)",
   "None of your apps has an update source.": "Uygulamalarının hiçbirinin güncelleme kaynağı yok.",
+  "No update source.": "Güncelleme kaynağı yok.",
+  "Installed from a file, so it cannot be updated here. Install it from the Store to get updates; that copy is a separate app.": "Bir dosyadan kurulduğu için burada güncellenemez. Güncelleme almak için Store'dan kur; o kopya ayrı bir uygulamadır.",
   "OAuth · subscription": "OAuth · abonelik",
   "Off": "Kapalı",
   "Official App": "Resmî uygulama",
