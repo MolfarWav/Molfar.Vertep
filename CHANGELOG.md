@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- **Apps can read other apps, with your say (#310, step 2).** An app's manifest may list files of another app it wants to read (`reads`). The first time such an app opens you are asked once ("Allow <app> to read your <other app> data?"); the answer is kept outside the workspace (an app cannot grant itself access), covers only the files that were shown, and is changed any time on the app's page on Home ("Access to other apps"). A plugin with the new `peer` permission then gets read-only `host.peer.read/list/stat/apps` for exactly those files: no links followed, 2 MB per file, no host paths in errors. New shell-only routes `GET /v1/apps/:id/reads` and `PUT /v1/apps/:id/reads/:peer`, blocked for app frames. Not on Windows-only paths: the symlink cases of the new tests need a Linux/CI run.
+- **Apps can follow the shell's theme (#310, step 7).** Every app frame is told the shell's colour theme at the handshake and on each change: `window.molfarShell.theme()` ({ id, scheme, vars }), `data-shell-scheme` on the root and a `molfar:shell-theme` event. Data only.
+
 ## 1.12.2 (2026-11-08)
 
 - Docs: the guide page "Settings" is translated again in all 13 languages (it had been stale since 1.11.0; the reader showed English). The browser-check mock model can answer "No endpoints found that support tool use" (`POST /__refuse-tools`), for checking how a chat behaves with a model that refuses tools. No engine code changed.

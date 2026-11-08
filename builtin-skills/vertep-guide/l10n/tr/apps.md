@@ -1,4 +1,4 @@
-<!-- source: d5f38d848a56 -->
+<!-- source: 0ac3e61cd6d8 -->
 # Uygulamalar
 
 Uygulamaları nasıl bulacağın, ekleyeceğin, güncelleyeceğin ve kaldıracağın. Uygulamalar gerçekten kullandığın şeylerdir: Bunlardan en önemlisi Roleplay'dir.
@@ -20,6 +20,10 @@ Araç çubuğu şunları sunar:
 
 Telefonda bu üçü hesap menüsünde bulunur.
 
+## Bir uygulama başka bir uygulamayı okumak istediğinde
+
+Bir uygulama başka bir uygulamanın dosyalarını okumak için izin isteyebilir; örneğin Social'ın Roleplay karakterlerini okuması gibi. Böyle bir uygulamayı ilk kez açtığında bir soru çıkar: "<app> uygulamasının <other app> verilerinizi okumasına izin verilsin mi?" Soru, uygulamanın bunu neden istediğini ve tam dosyaları da gösterir. "İzin ver" veya "İzin verme" bir cevaptır; "Sonra karar ver" seçeneği bir dahaki sefere yeniden sorar. Salt okunurdur: uygulama diğer uygulamada hiçbir şeyi değiştiremez ya da silemez ve yalnızca listelenen dosyaları görür. Cevabını istediğin zaman değiştirebilirsin: başlangıç sayfasında uygulamanın ayrıntılarını aç ve "Diğer uygulamalara erişim" altına bak. Uygulamanın bir güncellemesi daha fazla dosya isterse yeniden sorulursun. İki uygulamadan birini kaldırmak cevabı unutturur.
+
 ## Mağaza
 
 Başlangıç sayfasındaki "Mağaza", Molfar Vertep'ten ( "Resmî uygulama" olarak işaretli) ve topluluktan uygulamaları listeler. "Yükle"ye bas: önce uygulamanın neler içerdiğini ve nelere erişebileceğini görürsün ve sen onaylayana kadar hiçbir şey çalışmaz. Uygulamalar bilgisayarında gerçek kod çalıştırdığı için yalnızca güvendiğin şeyleri yükle. "Yenile" yeni uygulamaları ister ve son bakışından bu yana eklenenleri bir rozet sayar.
@@ -31,7 +35,7 @@ Başlangıç sayfasındaki "Mağaza", Molfar Vertep'ten ( "Resmî uygulama" olar
 
 ## Güncellemeler
 
-Üst çubuktaki indirme simgesi, bekleyen bir şey olduğunda bir nokta alır. Güncelleme kaynağı olan her uygulamayı listeler ve "Şimdi denetle" içerir. "Tümünü güncelle", iki veya daha fazla uygulama beklediğinde görünür ve asla Molfar Vertep'in kendisini içermez.
+Üst çubuktaki indirme simgesi, bekleyen bir şey olduğunda bir nokta alır. Güncelleme kaynağı olan her uygulamayı listeler ve "Şimdi denetle" içerir. Bir dosyadan (zip) kurulan uygulama "Güncelleme kaynağı yok" olarak görünür ve burada güncellenemez. Güncelleme almak için Store'dan yükle; bu kopya ayrı bir uygulamadır, bu yüzden tutmak istediğin verileri varsa önce dosyayı dışa aktar (çöp kutusu simgesi uygulamayı ve verilerini siler). "Tümünü güncelle", iki veya daha fazla uygulama beklediğinde görünür ve asla Molfar Vertep'in kendisini içermez.
 
 Kendi düzenlemelerin bir güncellemeyle birleştirilir ve verilerin korunur. Düzenlemelerin yeni sürümle çakıştığı yerde henüz hiçbir şey değişmez: "Benimkini tut", "Güncellemeyi al" veya "Molfar'dan birleştirmesini iste" seçeneklerini seçersin. Yeni paketler kuran veya yeni izinler isteyen bir güncelleme senin onayını bekler.
 

@@ -1,4 +1,4 @@
-<!-- source: d5f38d848a56 -->
+<!-- source: 0ac3e61cd6d8 -->
 # Apps
 
 So findest, fügst, aktualisierst und entfernst du Apps. Apps sind das, was du tatsächlich nutzt: Roleplay ist die wichtigste.
@@ -20,6 +20,10 @@ Die Werkzeugleiste bietet:
 
 Auf dem Handy liegen diese drei im Kontomenü.
 
+## Wenn eine App eine andere App lesen möchte
+
+Eine App darf Dateien einer anderen App lesen, zum Beispiel liest Social deine Roleplay-Charaktere. Beim ersten Öffnen einer solchen App erscheint eine Frage: „<app> Daten von <other app> lesen lassen?“, mit dem Zweck und den genauen Dateien. „Erlauben“ und „Nicht erlauben“ sind Antworten; „Später entscheiden“ fragt beim nächsten Mal erneut. Der Zugriff ist nur lesend: Die App kann in der anderen App nichts ändern oder löschen und sieht nur die aufgelisteten Dateien. Du kannst deine Antwort jederzeit ändern: Öffne auf der Startseite die Details der App und schau unter „Zugriff auf andere Apps“. Fragt ein Update der App nach mehr Dateien, wirst du erneut gefragt. Wird eine der beiden Apps entfernt, ist die Antwort vergessen.
+
 ## Der Store
 
 „Store“ auf der Startseite zeigt Apps von Molfar Vertep (gekennzeichnet „Offizielle App“) und aus der Community. Drücke „Installieren“: Du siehst zuerst, was die App mitbringt und worauf sie zugreifen kann, und nichts läuft, bis du bestätigst. Installiere nur, was du für vertrauenswürdig hältst, denn Apps führen echten Code auf deinem Computer aus. „Aktualisieren“ fragt nach neuen Apps, und ein Zähler zeigt an, wie viele seit deinem letzten Blick hinzugekommen sind.
@@ -31,7 +35,7 @@ Auf dem Handy liegen diese drei im Kontomenü.
 
 ## Updates
 
-Das Download-Symbol in der oberen Leiste bekommt einen Punkt, wenn etwas ansteht. Es listet jede App mit Update-Quelle und hat „Jetzt prüfen“. „Alle aktualisieren“ erscheint, wenn zwei oder mehr Apps warten, und schließt Molfar Vertep selbst nie ein.
+Das Download-Symbol in der oberen Leiste bekommt einen Punkt, wenn etwas ansteht. Es listet jede App mit Update-Quelle und hat „Jetzt prüfen“. Eine App, die aus einer Datei (einer ZIP-Datei) installiert wurde, zeigt „Keine Update-Quelle“: Sie lässt sich hier nicht aktualisieren. Für Updates installiere sie aus dem Store; diese Kopie ist eine eigene App, exportiere also vorher die Datei, wenn sie Daten enthält, die du behalten willst (das Papierkorb-Symbol löscht eine App und ihre Daten). „Alle aktualisieren“ erscheint, wenn zwei oder mehr Apps warten, und schließt Molfar Vertep selbst nie ein.
 
 Deine eigenen Änderungen werden in ein Update eingearbeitet, und deine Daten bleiben erhalten. Wo deine Änderungen sich mit der neuen Version überschneiden, ändert sich zuerst nichts: Du wählst „Meine behalten“, „Update übernehmen“ oder „Molfar zum Zusammenführen bitten“. Ein Update, das neue Pakete installiert oder neue Rechte verlangt, wartet auf dein OK.
 

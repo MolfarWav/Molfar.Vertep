@@ -1,4 +1,4 @@
-<!-- source: d5f38d848a56 -->
+<!-- source: 0ac3e61cd6d8 -->
 # Apps
 
 Comment trouver, ajouter, mettre à jour et supprimer des apps. Les apps sont ce que vous utilisez réellement : Roleplay est la principale.
@@ -20,6 +20,10 @@ La barre d’outils propose :
 
 Sur un téléphone, ces trois boutons se trouvent dans le menu du compte.
 
+## Quand une app veut lire une autre app
+
+Une app peut demander à lire les fichiers d’une autre app, par exemple Social lisant vos personnages Roleplay. La première fois que vous ouvrez une telle app, une question apparaît : « Autoriser <app> à lire vos données <other app> ? », avec son usage et les fichiers exacts. « Autoriser » ou « Ne pas autoriser » sont des réponses ; « Décider plus tard » redemande la prochaine fois. L’accès est en lecture seule : l’app ne peut rien modifier ni supprimer dans l’autre app, et elle ne voit que les fichiers listés. Vous pouvez changer votre réponse à tout moment : sur la page d’accueil, ouvrez les détails de l’app et regardez sous « Accès aux autres apps ». Si une mise à jour de l’app demande plus de fichiers, on vous redemande. Supprimer l’une ou l’autre app efface la réponse.
+
 ## Le Store
 
 « Store » sur la page d’accueil liste les apps de Molfar Vertep (marquées « App officielle ») et de la communauté. Appuyez sur « Installer » : vous voyez d’abord ce que l’app contient et ce à quoi elle peut accéder, et rien ne s’exécute avant votre confirmation. N’installez que ce qui vous inspire confiance, car les apps exécutent du vrai code sur votre ordinateur. « Actualiser » demande les nouvelles apps, et un badge compte celles ajoutées depuis votre dernière visite.
@@ -31,7 +35,7 @@ Sur un téléphone, ces trois boutons se trouvent dans le menu du compte.
 
 ## Mises à jour
 
-L’icône de téléchargement dans la barre supérieure reçoit un point quand quelque chose attend. Elle liste chaque app ayant une source de mise à jour et propose « Vérifier maintenant ». « Tout mettre à jour » apparaît quand deux apps ou plus attendent, et n’inclut jamais Molfar Vertep lui-même.
+L’icône de téléchargement dans la barre supérieure reçoit un point quand quelque chose attend. Elle liste chaque app ayant une source de mise à jour et propose « Vérifier maintenant ». Une app installée depuis un fichier (un zip) affiche « Pas de source de mise à jour » : elle ne peut pas être mise à jour ici. Pour recevoir des mises à jour, installez-la depuis le Store ; cette copie est une app à part, donc exportez d’abord le fichier si elle contient des données à garder (l’icône corbeille supprime une app et ses données). « Tout mettre à jour » apparaît quand deux apps ou plus attendent, et n’inclut jamais Molfar Vertep lui-même.
 
 Vos propres modifications sont fusionnées dans une mise à jour, et vos données sont conservées. Là où vos modifications chevauchent la nouvelle version, rien ne change encore : vous choisissez « Garder la mienne », « Prendre la mise à jour » ou « Demander à Molfar de fusionner ». Une mise à jour qui installe de nouveaux paquets ou demande de nouvelles permissions attend votre accord.
 

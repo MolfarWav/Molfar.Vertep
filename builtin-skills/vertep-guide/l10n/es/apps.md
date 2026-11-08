@@ -1,4 +1,4 @@
-<!-- source: d5f38d848a56 -->
+<!-- source: 0ac3e61cd6d8 -->
 # Apps
 
 Cómo buscar, añadir, actualizar y quitar apps. Las apps son lo que de verdad usas: Roleplay es la principal.
@@ -20,6 +20,10 @@ La barra de herramientas ofrece:
 
 En un teléfono, estas tres opciones están en el menú de cuenta.
 
+## Cuando una app quiere leer otra app
+
+Una app puede pedir leer archivos de otra app, por ejemplo Social leyendo tus personajes de Roleplay. La primera vez que abres una app así, aparece una pregunta: «¿Permitir que <app> lea tus datos de <other app>?», con para qué sirve y los archivos exactos. «Permitir» o «No permitir» son respuestas; «Decidir más tarde» vuelve a preguntar la próxima vez. Es solo de lectura: la app no puede cambiar ni borrar nada de la otra app, y solo ve los archivos listados. Puedes cambiar tu respuesta cuando quieras: en la página de inicio, abre los detalles de la app y mira en «Acceso a otras apps». Si una actualización de la app pide más archivos, se te vuelve a preguntar. Quitar cualquiera de las dos apps olvida la respuesta.
+
 ## La Store
 
 «Store» en la página de inicio muestra apps de Molfar Vertep (marcadas como «App oficial») y de la comunidad. Pulsa «Instalar»: primero ves qué incluye la app y a qué puede acceder, y nada se ejecuta hasta que confirmas. Instala solo lo que te dé confianza, porque las apps ejecutan código real en tu ordenador. «Actualizar» pide apps nuevas, y una insignia cuenta las añadidas desde la última vez que miraste.
@@ -31,7 +35,7 @@ En un teléfono, estas tres opciones están en el menú de cuenta.
 
 ## Actualizaciones
 
-El icono de descarga en la barra superior recibe un punto cuando hay algo pendiente. Muestra cada app con fuente de actualización y tiene «Comprobar ahora». «Actualizar todo» aparece cuando dos o más apps esperan, y nunca incluye a Molfar Vertep en sí.
+El icono de descarga en la barra superior recibe un punto cuando hay algo pendiente. Muestra cada app con fuente de actualización y tiene «Comprobar ahora». Una app instalada desde un archivo (un zip) muestra «Sin fuente de actualización»: no se puede actualizar aquí. Para recibir actualizaciones, instálala desde la Store; esa copia es una app aparte, así que exporta antes el archivo si contiene datos que quieres conservar (el icono de la papelera borra una app y sus datos). «Actualizar todo» aparece cuando dos o más apps esperan, y nunca incluye a Molfar Vertep en sí.
 
 Tus propios cambios se combinan con una actualización, y tus datos se conservan. Donde tus cambios se solapan con la versión nueva, nada cambia todavía: eliges «Conservar la mía», «Aceptar actualización» o «Pedir a Molfar que combine». Una actualización que instala paquetes nuevos o pide permisos nuevos espera tu aprobación.
 

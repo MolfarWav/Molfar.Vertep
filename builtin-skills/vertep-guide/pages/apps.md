@@ -19,6 +19,10 @@ The toolbar offers:
 
 On a phone these three sit in the account menu.
 
+## When an app wants to read another app
+
+An app may ask to read files of another app, for example Social reading your Roleplay characters. The first time you open such an app, a question appears: "Allow <app> to read your <other app> data?", with what it is for and the exact files. "Allow" or "Don't allow" is an answer; "Decide later" asks again next time. It is read only: the app cannot change or delete anything in the other app, and it sees only the files listed. You can change your answer any time: on the start page, open the app's details and look under "Access to other apps". If an update of the app asks for more files, you are asked again. Removing either app forgets the answer.
+
 ## The Store
 
 "Store" on the start page lists apps from Molfar Vertep (marked "Official App") and from the community. Press "Install": you first see what the app bundles and what it can reach, and nothing runs until you confirm. Install only what you trust, because apps run real code on your computer. "Refresh" asks for new apps, and a badge counts those added since you last looked.
