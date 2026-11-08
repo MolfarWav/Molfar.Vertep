@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.12.0 (2026-11-08)
+
+- No engine code changed. This release carries **Roleplay 4.100.0** as an app update (Molfar.Vertep#288): a story of many chats keeps its beginning (the three nearest earlier chats are read whole, every older one comes in as one condensed part; a setting for its share), **turning points** (events the story turns on, kept nearly word for word with how each character feels about them, a new Library tab, a chapter you marked always proposes one, one built on a lie is marked untrue for everyone who does not believe it), a Data Bank book of an earlier chat now reaches the whole chain, the far part is its own source in What fired, the lorebook entry panel opens from the left over the whole book, and World settings look like the Litopys settings. See the Roleplay CHANGELOG (4.100.0).
+
 ## 1.11.8 (2026-11-08)
 
 - No engine code changed. This release carries **Roleplay 4.99.0** as an app update (Molfar.Vertep#263 and #293): a finished story can be **archived** (a status on the chat, read only, out of the list and Home), the earlier chat of a continuation is archived by itself (Canvas link, Continue in a new chat, the new-chat step; a switch in Library > Litopys settings, on by default, with an Undo toast), a long quiet chat gets a "Long chat · archive?" tag, an archived chat costs no model call, and the guide's translations in 13 languages were refreshed.
