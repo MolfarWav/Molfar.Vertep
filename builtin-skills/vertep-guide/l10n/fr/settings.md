@@ -1,4 +1,4 @@
-<!-- source: 4eb88ddd311d -->
+<!-- source: 51d046c99c83 -->
 # Plan des Paramètres
 
 Paramètres est la fenêtre propre au shell, partagée par toutes les apps. Ouvrez-la avec l’engrenage dans la barre supérieure, ou sur un téléphone depuis le menu du compte en haut à droite. Cette page liste chaque section pour que vous sachiez où chercher.
@@ -21,7 +21,7 @@ Paramètres est la fenêtre propre au shell, partagée par toutes les apps. Ouvr
   - « Instructions de Molfar », vos préférences permanentes pour lui ;
   - la liste des fichiers protégés.
   Voir [[molfar]].
-- **Mémoire.** Comment les apps retiennent et retrouvent les choses d’un chat à l’autre. Elle peut faire correspondre par le sens, pas seulement par mots exacts, avec un modèle d’embedding économique. C’est facultatif.
+- **Mémoire.** Comment les apps retiennent et retrouvent les choses d’un chat à l’autre. Elle peut faire correspondre par le sens, pas seulement par mots exacts, avec un modèle d’embeddings économique. C’est facultatif. Par défaut, Molfar Vertep choisit le modèle lui-même : d’abord un modèle sur votre ordinateur (LM Studio, Ollama, sans clé), puis une connexion API avec une clé, puis OpenRouter. Si aucun n’est configuré, la mémoire le signale et ne fait correspondre que par mots. Vous pouvez aussi télécharger un modèle sur votre ordinateur en un clic : dans **Sur cet ordinateur (facultatif)**, choisissez **bge-m3** (recommandé, le meilleur en ukrainien, russe et anglais) ou **EmbeddingGemma 2** (plus petit), puis appuyez sur **Télécharger et connecter**. Le moteur installe d’abord le programme qui fait tourner le modèle (environ 85 Mo, une seule fois), puis télécharge le modèle (587 Mo ou 346 Mo) et le connecte. Le téléchargement continue si vous fermez la fenêtre, et un téléchargement interrompu reprend là où il s’était arrêté. Ensuite il est gratuit, rien ne part sur internet, et le modèle n’occupe de la mémoire (environ 1,1 Go ou 0,6 Go) que pendant qu’il travaille. **Supprimer** rend l’espace disque. Il faut un ordinateur qui fait tourner le moteur avec Bun, pas un lanceur de téléphone ; la connexion en ligne reste en secours, et si vous changez de modèle, la mémoire refait ses vecteurs d’elle-même.
 - **Serveurs MCP.** Des serveurs d’outils que Molfar et vos apps peuvent appeler. Les apps démarrent avec chacun éteint et activent ce dont elles ont besoin.
 - **Développeur.** Affiche l’état de compilation de chaque app et le rechargement à chaud, qui est toujours actif.
 

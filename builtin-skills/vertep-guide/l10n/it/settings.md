@@ -1,4 +1,4 @@
-<!-- source: 4eb88ddd311d -->
+<!-- source: 51d046c99c83 -->
 # Mappa delle Impostazioni
 
 Impostazioni è la finestra della shell stessa, condivisa da tutte le app. Aprila con l'ingranaggio nella barra superiore, o su un telefono dal menu account in alto a destra. Questa pagina elenca ogni sezione così sai dove guardare.
@@ -21,7 +21,7 @@ Impostazioni è la finestra della shell stessa, condivisa da tutte le app. April
   - "Istruzioni di Molfar", le tue preferenze permanenti per lui;
   - l'elenco dei file protetti.
   Vedi [[molfar]].
-- **Memoria.** Come le app ricordano e ritrovano le cose tra le chat. Può trovare per significato, non solo per parole esatte, con un modello di embedding economico. È opzionale.
+- **Memoria.** Come le app ricordano e ritrovano le cose tra le chat. Può trovare per significato, non solo per parole esatte, con un unico modello di embedding economico. È opzionale. Per impostazione predefinita Molfar Vertep sceglie lui il modello: prima uno sul tuo computer (LM Studio, Ollama, senza bisogno di chiave), poi una connessione API con una chiave, poi OpenRouter. Se non ne è configurato nessuno, la memoria lo dice e trova solo per parole. Puoi anche scaricare un modello sul tuo computer con un clic: in **Su questo computer (facoltativo)** scegli **bge-m3** (consigliato, il migliore per ucraino, russo e inglese) oppure **EmbeddingGemma 2** (più piccolo) e premi **Scarica e connetti**. Il motore installa prima il programma che fa girare il modello (circa 85 MB, una sola volta), poi scarica il modello (587 MB o 346 MB) e lo collega. Il download prosegue se chiudi la finestra, e uno interrotto riprende da dove si era fermato. Dopo, è gratuito, nulla va su internet, e il modello occupa memoria (circa 1,1 GB o 0,6 GB) solo mentre lavora. **Elimina** restituisce lo spazio su disco. Serve un computer che fa girare il motore con Bun, non un launcher da telefono; la connessione online resta come riserva, e se cambi modello la memoria ricrea da sola i suoi vettori.
 - **Server MCP.** Server di strumenti che Molfar e le tue app possono chiamare. Le app partono con ognuno spento e attivano ciò che serve.
 - **Sviluppatore.** Mostra lo stato di compilazione di ogni app e il ricaricamento a caldo, sempre attivo.
 
