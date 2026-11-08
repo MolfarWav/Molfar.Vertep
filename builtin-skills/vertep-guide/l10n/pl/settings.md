@@ -1,4 +1,4 @@
-<!-- source: 4eb88ddd311d -->
+<!-- source: 51d046c99c83 -->
 # Mapa Ustawień
 
 Ustawienia to własne okno powłoki, wspólne dla wszystkich aplikacji. Otwórz je kołem zębatym na górnym pasku, a na telefonie z menu konta w prawym górnym rogu. Ta strona wymienia każdą sekcję, żebyś wiedział, gdzie szukać.
@@ -21,7 +21,7 @@ Ustawienia to własne okno powłoki, wspólne dla wszystkich aplikacji. Otwórz 
   - „Instrukcje Molfara”, Twoje stałe preferencje dla niego;
   - lista chronionych plików.
   Zobacz [[molfar]].
-- **Pamięć.** Jak aplikacje pamiętają i odnajdują rzeczy między czatami. Mogą dopasowywać według znaczenia, nie tylko dokładnych słów, jednym tanim modelem embeddingowym. To opcjonalne.
+- **Pamięć.** Jak aplikacje pamiętają i odnajdują rzeczy między czatami. Mogą dopasowywać według znaczenia, nie tylko dokładnych słów, jednym tanim modelem embeddingowym. To opcjonalne. Domyślnie Molfar Vertep sam wybiera model: najpierw ten na twoim komputerze (LM Studio, Ollama, bez klucza), potem połączenie API z kluczem, a na końcu OpenRouter. Jeśli nic nie jest skonfigurowane, pamięć to mówi i dopasowuje tylko po słowach. Model możesz też pobrać na swój komputer jednym kliknięciem: w **Na tym komputerze (opcjonalnie)** wybierz **bge-m3** (zalecany, najlepszy dla ukraińskiego, rosyjskiego i angielskiego) albo **EmbeddingGemma 2** (mniejszy) i naciśnij **Pobierz i połącz**. Silnik najpierw instaluje program uruchamiający model (około 85 MB, jednorazowo), potem pobiera model (587 MB albo 346 MB) i go łączy. Pobieranie trwa dalej, gdy zamkniesz okno, a przerwane wznawia się od miejsca, w którym stanęło. Potem jest darmowe, nic nie trafia do internetu, a model zajmuje pamięć (około 1,1 GB albo 0,6 GB) tylko podczas pracy. **Usuń** zwraca miejsce na dysku. Potrzebny jest komputer, na którym silnik działa z Bunem, a nie launcher na telefonie; połączenie online zostaje jako zapas, a jeśli zmienisz model, pamięć sama tworzy wektory od nowa.
 - **Serwery MCP.** Serwery narzędzi, które Molfar i Twoje aplikacje mogą wywoływać. Aplikacje zaczynają z każdym wyłączonym i włączają to, czego potrzebują.
 - **Programista.** Pokazuje stan budowania każdej aplikacji i przeładowanie na żywo, które jest zawsze włączone.
 
