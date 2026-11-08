@@ -978,6 +978,7 @@ describe("A2 the bridge's second lock (server side)", () => {
     const shellRequest = (win.MolfarBridgeHost as { shellRequest: (t: boolean, d: unknown) => unknown }).shellRequest;
     expect(shellRequest(true, { op: "ask-molfar", text: "make a card", extra: "x" })).toEqual({ op: "ask-molfar", text: "make a card" });
     expect(shellRequest(true, { op: "apps" })).toEqual({ op: "apps" });
+    expect(shellRequest(true, { op: "open-home", appId: "x", extra: 1 })).toEqual({ op: "open-home" });
     expect(shellRequest(true, { op: "open-app", appId: "notes" })).toEqual({ op: "open-app", appId: "notes" });
     expect(shellRequest(true, { op: "open-settings" })).toEqual({ op: "open-settings" });
     expect(shellRequest(true, { op: "open-settings", model: "nanogpt/deepseek/deepseek-v4-flash", x: 1 })).toEqual({ op: "open-settings", model: "nanogpt/deepseek/deepseek-v4-flash" });
@@ -991,6 +992,7 @@ describe("A2 the bridge's second lock (server side)", () => {
     for (const d of [
       { op: "ask-molfar", text: "hi" },
       { op: "apps" },
+      { op: "open-home" },
       { op: "open-settings" },
       { op: "locale" },
       { op: "notify", count: 1 }, { op: "notify", text: "hi" },

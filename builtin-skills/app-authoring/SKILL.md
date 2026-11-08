@@ -87,6 +87,9 @@ hot-reload by mtime: nothing to call.
 ## Telling the user something is waiting
 - An official app (installed from MolfarWav's repositories) calls `window.molfarShell.notify({ count, title, text })`: `count` (0 to 999, 0 clears) is the number on the app's tab in the shell; `title` (80 characters) and `text` (200) are a short plain message, shown as a popup or a system notification depending on where the user is. Any of them, at least `count` or `text`. It resolves with `{ shown: "none" | "popup" | "system" }`; the user can switch it off per app, the shell shows at most one message per app every 5 seconds, and nothing is shown while the user looks at the app. Apps that are not official are refused. An engine without the channel has no `notify`: check before calling.
 
+## Pointing the user to the shell
+- An official app can send the user to a screen it cannot draw itself: `window.molfarShell.openHome()` switches the shell to Home (the launcher, where an app's details and its "Access to other apps" setting live), `openSettingsTab(tab)` to a Settings tab, `openApp(id)` to another installed app. Only the app on screen is heard. Use them for a link or a button with a plain label; an engine older than the call has no such function, so check before calling and keep a text hint as the fallback.
+
 ## Usability
 - The user's rule: a UI change is judged first by how easily people find, understand and use it, on a phone too. Load skill `ux-review` before you add a control and before you call it done.
 - An app with an in-app guide (Roleplay: `src/lib/guide-tips.ts`; its AGENTS.md, "The in-app guide", says how): a feature the user decides with gets a tip in the same change, so the help list and What's new point it out. The tip says only what the code does; check it against your code before done.
