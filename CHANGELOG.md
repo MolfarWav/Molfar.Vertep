@@ -7,6 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.12.2 (2026-11-08)
+
+- Docs: the guide page "Settings" is translated again in all 13 languages (it had been stale since 1.11.0; the reader showed English). The browser-check mock model can answer "No endpoints found that support tool use" (`POST /__refuse-tools`), for checking how a chat behaves with a model that refuses tools. No engine code changed.
+- This release carries **Roleplay 4.103.0** as an app update (#235, #274, #304): six new Help articles (the Canvas chat shelf, the World tabs, the Constellation map, the card-task model, the opening hint of a continued chat, the /gallery dialog), the guide pages Canvas, Litopys, Long chats, Memory and World DM translated again in 13 languages, Enter saves a number field in the Litopys settings.
+
 ## 1.12.1 (2026-11-08)
 
 - No engine code changed. This release carries **Roleplay 4.102.0** as an app update (Molfar.Vertep#264): **deep memory over the archived chats of a story**. A chat that continues another now finds, by its words, the original messages of the earlier chats of the same story and brings one or two word-for-word passages into the reply (on by default; the index is made when the earlier chat goes to the Archive; a switch in Library > Litopys settings), What fired counts it over the whole chat, and an experimental switch, off by default, lets the meaning of a chapter open an old chapter as well. See the Roleplay CHANGELOG (4.101.0 and 4.102.0).
