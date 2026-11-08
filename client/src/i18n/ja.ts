@@ -988,6 +988,9 @@ const dict = {
   "Not decided yet": "まだ決めていません",
   "{peer} is not installed, so there is nothing to read yet.": "{peer} はインストールされていないため、まだ読み取るものがありません。",
   "Stop allowing": "許可を取り消す",
+  "Open {name}": "{name} を開く",
+  "Notifications from this app": "このアプリからの通知",
+  "A number on its tab and a short message when it has something new for you.": "アプリのタブに数字を表示し、新しいものがあるときは短いメッセージでお知らせします。",
 }
 
 export default dict

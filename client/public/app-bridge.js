@@ -157,6 +157,17 @@
     openSettingsTab: function (tab) { return shellCall("open-settings", { tab: String(tab) }); },
     /** The shell's interface language, e.g. "uk" or "en". */
     locale: function () { return shellCall("locale", {}); },
+    /** Tell the shell something waits for the user: { count } puts a number on this app's tab (0 clears it), { title, text } is a
+     *  short message (a popup, or a system notification when the window is not in front); either or both. Official apps only,
+     *  and the user can switch it off per app. Resolves with { shown: "none" | "popup" | "system" }. */
+    notify: function (n) {
+      n = n || {};
+      var p = {};
+      if (n.count != null) p.count = n.count;
+      if (n.title != null) p.title = n.title;
+      if (n.text != null) p.text = n.text;
+      return shellCall("notify", p);
+    },
     /** The shell's colour theme now: { id, scheme: "dark" | "light", vars }, or null before the handshake. Changes arrive as the "molfar:shell-theme" event. */
     theme: function () { return shellTheme ? JSON.parse(JSON.stringify(shellTheme)) : null; },
   });

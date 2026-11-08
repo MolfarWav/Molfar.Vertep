@@ -988,6 +988,9 @@ const dict = {
   "Not decided yet": "Пока не решено",
   "{peer} is not installed, so there is nothing to read yet.": "{peer} не установлено, поэтому читать пока нечего.",
   "Stop allowing": "Перестать разрешать",
+  "Open {name}": "Открыть {name}",
+  "Notifications from this app": "Уведомления от этого приложения",
+  "A number on its tab and a short message when it has something new for you.": "Число на его вкладке и короткое сообщение, когда появится что-то новое для вас.",
 }
 
 export default dict

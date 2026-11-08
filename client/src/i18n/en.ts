@@ -990,6 +990,9 @@ const en = {
   "Not decided yet": "",
   "{peer} is not installed, so there is nothing to read yet.": "",
   "Stop allowing": "",
+  "Open {name}": "",
+  "Notifications from this app": "",
+  "A number on its tab and a short message when it has something new for you.": "",
 } as const
 
 export default en

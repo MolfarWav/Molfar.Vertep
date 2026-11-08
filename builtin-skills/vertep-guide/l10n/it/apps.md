@@ -1,4 +1,4 @@
-<!-- source: 0ac3e61cd6d8 -->
+<!-- source: a69bed8dd436 -->
 # App
 
 Come trovare, aggiungere, aggiornare e rimuovere le app. Le app sono ciò che usi davvero: Roleplay è quella principale.
@@ -23,6 +23,10 @@ Su un telefono questi tre si trovano nel menu account.
 ## Quando un'app vuole leggere un'altra app
 
 Un'app può chiedere di leggere i file di un'altra app, per esempio Social che legge i tuoi personaggi di Roleplay. La prima volta che apri una di queste app compare una domanda: "Consentire a <app> di leggere i tuoi dati di <other app>?", con a cosa serve e i file esatti. "Consenti" o "Non consentire" sono risposte; "Decidi più tardi" chiede di nuovo la volta successiva. È sola lettura: l'app non può cambiare né cancellare nulla nell'altra app, e vede solo i file elencati. Puoi cambiare la risposta in qualsiasi momento: nella pagina iniziale apri i dettagli dell'app e guarda sotto "Accesso ad altre app". Se un aggiornamento dell'app chiede più file, ti viene chiesto di nuovo. Rimuovere una delle due app cancella la risposta.
+
+## Messaggi dalle app
+
+Un’app ufficiale, come Social, può dire a Molfar Vertep che qualcosa ti sta aspettando. Sulla scheda dell’app compare un piccolo numero e, quando arriva qualcosa di nuovo, vedi un breve messaggio: un popup in basso a destra mentre sei in Molfar Vertep e guardi altro, oppure una notifica di sistema quando la finestra non è in primo piano (il browser chiede il permesso una sola volta; l’interruttore delle notifiche di sistema è nelle Impostazioni). Non viene mostrato nulla mentre guardi l’app stessa. Per disattivarle per una singola app, apri i suoi dettagli nella pagina iniziale e deseleziona "Notifiche da questa app"; anche il numero scompare. Un clic sul popup apre l’app.
 
 ## Lo Store
 

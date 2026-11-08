@@ -983,15 +983,22 @@ describe("A2 the bridge's second lock (server side)", () => {
     expect(shellRequest(true, { op: "open-settings", model: "nanogpt/deepseek/deepseek-v4-flash", x: 1 })).toEqual({ op: "open-settings", model: "nanogpt/deepseek/deepseek-v4-flash" });
     expect(shellRequest(true, { op: "open-settings", tab: "memory" })).toEqual({ op: "open-settings", tab: "memory" });
     expect(shellRequest(true, { op: "locale", x: 1 })).toEqual({ op: "locale" });
+    // messages from apps (#310): a count for the tab and/or a short plain message, nothing else rides along
+    expect(shellRequest(true, { op: "notify", count: 3, title: "Social", text: "New reply", extra: "x" })).toEqual({ op: "notify", count: 3, title: "Social", text: "New reply" });
+    expect(shellRequest(true, { op: "notify", count: 0 })).toEqual({ op: "notify", count: 0, title: "", text: "" });
+    expect(shellRequest(true, { op: "notify", text: "hi" })).toEqual({ op: "notify", count: null, title: "", text: "hi" });
+    expect(shellRequest(true, { op: "notify", text: "a\u0000b\nc\u007f<img src=x onerror=1>" })).toEqual({ op: "notify", count: null, title: "", text: "a b c <img src=x onerror=1>" }); // markup stays text, controls become spaces
     for (const d of [
       { op: "ask-molfar", text: "hi" },
       { op: "apps" },
       { op: "open-settings" },
       { op: "locale" },
+      { op: "notify", count: 1 }, { op: "notify", text: "hi" },
     ]) expect(shellRequest(false, d), "untrusted").toBeNull();
     for (const d of [
       { op: "ask-molfar", text: "   " }, { op: "ask-molfar", text: "x".repeat(4001) }, { op: "ask-molfar", text: 5 },
       { op: "open-app", appId: "../x" }, { op: "open-app" }, { op: "open-settings", model: "no slash" }, { op: "open-settings", model: 5 }, { op: "open-settings", model: "a/" + "b".repeat(300) }, { op: "send-molfar", text: "hi" }, null, "apps",
+      { op: "notify" }, { op: "notify", count: -1 }, { op: "notify", count: 1000 }, { op: "notify", count: 1.5 }, { op: "notify", count: "3" }, { op: "notify", count: NaN }, { op: "notify", title: "t" }, { op: "notify", text: "   " }, { op: "notify", text: "x".repeat(201) }, { op: "notify", text: "ok", title: "t".repeat(81) }, { op: "notify", text: 5 }, { op: "notify", text: "ok", title: {} },
       { op: "open-settings", tab: "users" }, { op: "open-settings", tab: "server" }, { op: "open-settings", tab: "memory", model: "a/b" }, { op: "open-settings", tab: 1 },
     ]) expect(shellRequest(true, d), JSON.stringify(d)).toBeNull();
   });

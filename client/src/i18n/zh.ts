@@ -988,6 +988,9 @@ const dict = {
   "Not decided yet": "尚未决定",
   "{peer} is not installed, so there is nothing to read yet.": "未安装 {peer},因此暂时没有可读取的内容。",
   "Stop allowing": "停止允许",
+  "Open {name}": "打开 {name}",
+  "Notifications from this app": "来自此应用的通知",
+  "A number on its tab and a short message when it has something new for you.": "在其标签页上显示数字，并在有新内容时显示简短消息。",
 }
 
 export default dict

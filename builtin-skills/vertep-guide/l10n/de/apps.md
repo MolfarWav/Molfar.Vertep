@@ -1,4 +1,4 @@
-<!-- source: 0ac3e61cd6d8 -->
+<!-- source: a69bed8dd436 -->
 # Apps
 
 So findest, fügst, aktualisierst und entfernst du Apps. Apps sind das, was du tatsächlich nutzt: Roleplay ist die wichtigste.
@@ -23,6 +23,10 @@ Auf dem Handy liegen diese drei im Kontomenü.
 ## Wenn eine App eine andere App lesen möchte
 
 Eine App darf Dateien einer anderen App lesen, zum Beispiel liest Social deine Roleplay-Charaktere. Beim ersten Öffnen einer solchen App erscheint eine Frage: „<app> Daten von <other app> lesen lassen?“, mit dem Zweck und den genauen Dateien. „Erlauben“ und „Nicht erlauben“ sind Antworten; „Später entscheiden“ fragt beim nächsten Mal erneut. Der Zugriff ist nur lesend: Die App kann in der anderen App nichts ändern oder löschen und sieht nur die aufgelisteten Dateien. Du kannst deine Antwort jederzeit ändern: Öffne auf der Startseite die Details der App und schau unter „Zugriff auf andere Apps“. Fragt ein Update der App nach mehr Dateien, wirst du erneut gefragt. Wird eine der beiden Apps entfernt, ist die Antwort vergessen.
+
+## Nachrichten von Apps
+
+Eine offizielle App, etwa Social, kann Molfar Vertep mitteilen, dass auf dich etwas wartet. Auf dem Tab der App erscheint eine kleine Zahl, und wenn etwas Neues eintrifft, siehst du eine kurze Meldung: ein Popup unten rechts, während du in Molfar Vertep etwas anderes ansiehst, oder eine Systembenachrichtigung, wenn das Fenster nicht im Vordergrund ist (der Browser fragt einmal nach der Erlaubnis; der Schalter für Systembenachrichtigungen liegt in den Einstellungen). Solange du die App selbst ansiehst, wird nichts angezeigt. Um das für eine App auszuschalten, öffne ihre Details auf der Startseite und schalte „Benachrichtigungen von dieser App“ aus; die Zahl verschwindet dann ebenfalls. Ein Klick auf das Popup öffnet die App.
 
 ## Der Store
 

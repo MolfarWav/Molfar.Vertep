@@ -14,6 +14,7 @@ import { SettingsBody, type TabValue } from "./settings"
 import { EngineUpdateButton } from "./server-settings"
 import { AppUpdateBanner, useAppUpdate, useAppUpdates, type AppUpdates } from "./app-update"
 import { AppReadsPanel, AppReadsPrompt } from "./app-reads"
+import { AppNoticeSwitch, AppToasts, TabCount, useAppNotices } from "./app-notices"
 import { UpdatesDialog, useEngineRelease } from "./updates-panel"
 import { BugReportDialog, recordClientError } from "./bug-report"
 import { InstallDialog, promptInstall, useInstallWay } from "./pwa"
@@ -398,8 +399,14 @@ function Shell(props: { theme: ThemeControl }) {
   // Apps ask the shell for a few things over the bridge (the allowlist is
   // shellRequest in app-bridge-host.js: trusted apps only). Heard only from
   // the app on screen, and Molfar gets an unsent draft, never a sent message.
-  const shellNow = useRef({ active, pinned, launch, openApp, openAgent, askAgent, openSettings })
-  shellNow.current = { active, pinned, launch, openApp, openAgent, askAgent, openSettings }
+  // messages from apps: a count on their tab, a popup or a system notification (app-notices.tsx)
+  const appNotices = useAppNotices({
+    onScreen: () => [active?.kind === "app" ? active.id : "", pinned?.id ?? ""].filter(Boolean),
+    nameOf: (id) => appName(id),
+    openApp,
+  })
+  const shellNow = useRef({ active, pinned, launch, openApp, openAgent, askAgent, openSettings, notify: appNotices.notify })
+  shellNow.current = { active, pinned, launch, openApp, openAgent, askAgent, openSettings, notify: appNotices.notify }
   const lastShellDraft = useRef(0)
   useEffect(() => {
     const host = window.MolfarBridgeHost
@@ -408,6 +415,8 @@ function Shell(props: { theme: ThemeControl }) {
       // a read that changes nothing: apps ask for it while they boot, often in a tab not on screen
       if (req.op === "locale") return getLocale()
       const now = shellNow.current
+      // an app tells the shell something is waiting: heard from any open app tab, on screen or not
+      if (req.op === "notify") return now.notify(appId, req)
       const onScreen = document.visibilityState === "visible" && (now.active?.id === appId || now.pinned?.id === appId)
       if (!onScreen) throw new Error("only the app on screen may do this")
       const apps = now.launch?.apps ?? []
@@ -564,6 +573,7 @@ function Shell(props: { theme: ThemeControl }) {
                     >
                       {t.kind === "agent" ? <MolfarAvatar size={18} /> : null}
                       <span className="truncate">{t.name}</span>
+                      {t.kind === "app" ? <TabCount n={appNotices.counts[t.id] ?? 0} /> : null}
                       <span
                         role="button"
                         aria-label={tr("Close {name}", { name: t.name })}
@@ -741,6 +751,14 @@ function Shell(props: { theme: ThemeControl }) {
             repository: launch?.engine?.repository ?? null,
             app: active?.kind === "app" ? { id: active.id, name: active.name } : null,
           }}
+        />
+        <AppToasts
+          toasts={appNotices.toasts}
+          onOpen={(id, toastId) => {
+            appNotices.dismiss(toastId)
+            openApp(id)
+          }}
+          onClose={appNotices.dismiss}
         />
         <ModalDialog open={settingsOpen} onClose={() => setSettingsOpen(false)}>
           <SettingsBody onClose={() => setSettingsOpen(false)} me={user} initialTab={settingsTab} initialModel={settingsModel} onLogout={() => { setSettingsOpen(false); void logout() }} />
@@ -1933,6 +1951,7 @@ function AppDetail(props: {
       {exportErr ? <div className="border-b border-line px-4 py-1.5 text-11 text-danger">{tr("Export failed: {message}", { message: exportErr })}</div> : null}
       <AppUpdateBanner update={update} />
       <AppReadsPanel appId={props.appId} />
+      {props.official ? <AppNoticeSwitch appId={props.appId} /> : null}
       {!detail.loading ? <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 font-mono text-12">
           <TreeRows nodes={detail.data?.tree?.children ?? []} depth={0} open={open} toggle={toggle} />
         </div> : <div className="p-4 text-13 text-ink-faint">{tr("Reading app files…")}</div>}
