@@ -7,6 +7,10 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.12.1 (2026-11-08)
+
+- No engine code changed. This release carries **Roleplay 4.102.0** as an app update (Molfar.Vertep#264): **deep memory over the archived chats of a story**. A chat that continues another now finds, by its words, the original messages of the earlier chats of the same story and brings one or two word-for-word passages into the reply (on by default; the index is made when the earlier chat goes to the Archive; a switch in Library > Litopys settings), What fired counts it over the whole chat, and an experimental switch, off by default, lets the meaning of a chapter open an old chapter as well. See the Roleplay CHANGELOG (4.101.0 and 4.102.0).
+
 ## 1.12.0 (2026-11-08)
 
 - No engine code changed. This release carries **Roleplay 4.100.0** as an app update (Molfar.Vertep#288): a story of many chats keeps its beginning (the three nearest earlier chats are read whole, every older one comes in as one condensed part; a setting for its share), **turning points** (events the story turns on, kept nearly word for word with how each character feels about them, a new Library tab, a chapter you marked always proposes one, one built on a lie is marked untrue for everyone who does not believe it), a Data Bank book of an earlier chat now reaches the whole chain, the far part is its own source in What fired, the lorebook entry panel opens from the left over the whole book, and World settings look like the Litopys settings. See the Roleplay CHANGELOG (4.100.0).
