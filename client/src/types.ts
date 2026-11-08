@@ -45,4 +45,6 @@ export interface AppUpdate {
   error?: string
   /** an official app restored from a file that is not official yet */
   restored?: "differs" | "unchecked"
+  /** installed from a file: names a repository but has no update source */
+  noSource?: boolean
 }

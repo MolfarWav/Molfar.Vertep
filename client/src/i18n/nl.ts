@@ -268,6 +268,8 @@ const dict = {
   "No speech endpoints. OpenAI, Groq or a local server (Kokoro, openedai-speech) all speak /audio/speech.": "Geen spraak-endpoints. OpenAI, Groq of een lokale server (Kokoro, openedai-speech) spreken allemaal /audio/speech.",
   "No system role (later system messages are sent as user)": "Geen systeemrol (latere systeemberichten worden als gebruiker verzonden)",
   "None of your apps has an update source.": "Geen van je apps heeft een updatebron.",
+  "No update source.": "Geen updatebron.",
+  "Installed from a file, so it cannot be updated here. Install it from the Store to get updates; that copy is a separate app.": "Geïnstalleerd vanuit een bestand, dus hier niet bij te werken. Installeer de app uit de Store om updates te krijgen; die kopie is een aparte app.",
   "OAuth · subscription": "OAuth · abonnement",
   "Off": "Uit",
   "Official App": "Officiële app",
