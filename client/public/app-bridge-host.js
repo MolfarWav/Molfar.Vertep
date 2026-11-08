@@ -183,6 +183,22 @@
   var SHELL_TEXT_MAX = 4000;
   var SHELL_APP_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
   var SHELL_SETTINGS_TABS = ["api", "models", "memory", "backup"];
+  /** Control characters (a run of them) become one space; the ends are trimmed. A loop, not a regex: the linter forbids control characters in one. */
+  function plainLine(str) {
+    var out = "";
+    var gap = false;
+    for (var i = 0; i < str.length; i++) {
+      var c = str.charCodeAt(i);
+      if (c < 32 || c === 127) {
+        if (!gap) out += " ";
+        gap = true;
+      } else {
+        out += str.charAt(i);
+        gap = false;
+      }
+    }
+    return out.trim();
+  }
   function shellRequest(trusted, d) {
     if (trusted !== true || !d || typeof d.op !== "string") return null;
     if (d.op === "ask-molfar") {
@@ -207,8 +223,8 @@
       var title = d.title == null ? "" : d.title;
       var text = d.text == null ? "" : d.text;
       if (typeof title !== "string" || typeof text !== "string" || title.length > 80 || text.length > 200) return null;
-      title = title.replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
-      text = text.replace(/[\u0000-\u001f\u007f]+/g, " ").trim();
+      title = plainLine(title);
+      text = plainLine(text);
       if (count === null && !text) return null;
       return { op: "notify", count: count, title: title, text: text };
     }
