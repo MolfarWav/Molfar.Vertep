@@ -578,7 +578,7 @@ describe("installing from the store", () => {
     };
     make("from-zip", { repository: "https://example.com/owner/from-zip" });
     make("made-here", {});
-    const apps = ((await (await call("/v1/apps/updates?fresh=1")).json()) as { apps: { id: string; noSource?: boolean }[] }).apps;
+    const apps = ((await (await call("/v1/apps/updates?fresh=1")).json()) as { apps: { id: string; available: boolean; noSource?: boolean }[] }).apps;
     expect(apps.find((a) => a.id === "from-zip")).toEqual({ id: "from-zip", available: false, noSource: true });
     expect(apps.find((a) => a.id === "made-here")).toBeUndefined();
   });
