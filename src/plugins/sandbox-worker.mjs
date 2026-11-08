@@ -123,7 +123,7 @@ if (typeof fn === "function") { out = fn(env.ctx, env.host); }`);
 }
 
 port.on("message", async (msg) => {
-  const { id, source, hook, ctx, storeSnapshot = {}, llmResults = {}, netResults = {}, netAllowed = false, scriptAllowed = false, scriptResults = {}, maxStoreBytes = 1024 * 1024, storeAllowed = true, llmAllowed = true, fsAllowed = false, fsRoot = null, zipAllowed = false, zipBase64 = null, siblingToolDefs = null, siblingCeilings = null, embedResults = {}, embedInfo = {}, executionTimeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = msg;
+  const { id, source, hook, ctx, storeSnapshot = {}, llmResults = {}, netResults = {}, netAllowed = false, scriptAllowed = false, scriptResults = {}, maxStoreBytes = 1024 * 1024, storeAllowed = true, llmAllowed = true, fsAllowed = false, fsRoot = null, peers = [], zipAllowed = false, zipBase64 = null, siblingToolDefs = null, siblingCeilings = null, embedResults = {}, embedInfo = {}, executionTimeoutMs = 10_000, memoryLimitBytes = 64 * 1024 * 1024 } = msg;
   const logs = [];
   const llmRequests = [];
   const netRequests = [];
@@ -435,7 +435,78 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
         },
       };
     })();
+    // Read-only view of OTHER apps' files (src/apps/reads.ts): the host passes only the peers the user allowed, each with
+    // the patterns its manifest declared. Same jail as fs, on the peer's data dir, plus: no symlink anywhere on the path
+    // (the real path must be the path asked for), the path must match a declared pattern, a size cap, no writes at all.
+    const peerSvc = (() => {
+      const mounts = Array.isArray(peers) ? peers : [];
+      const refuse = (why) => { throw new Error("peer read refused: " + why); };
+      const seg = (s) => new RegExp("^" + s.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*") + "$");
+      const clean = (rel) => {
+        if (typeof rel !== "string" || rel.length > 300 || /[\\\0]/.test(rel)) return null;
+        const s = rel.replace(/^\/+/, "").replace(/\/+$/, "");
+        if (s === "") return "";
+        const parts = s.split("/");
+        return parts.every((x) => x !== "" && x !== "." && x !== "..") ? parts.join("/") : null;
+      };
+      const matches = (m, rel) => m.allow.some((p) => { const ps = p.split("/"); const rs = rel.split("/"); return ps.length === rs.length && ps.every((x, i) => seg(x).test(rs[i])); });
+      const mount = (app) => {
+        const m = mounts.find((x) => x && x.app === app);
+        if (!m || typeof m.root !== "string" || !Array.isArray(m.allow)) refuse("no access to app " + JSON.stringify(String(app).slice(0, 40)));
+        return m;
+      };
+      const realRoot = (m) => { try { return fs.realpathSync(m.root); } catch { return null; } };
+      /** The real file or folder for a clean relative path, only when nothing on the way is a link. */
+      const resolve = (m, rel) => {
+        const root = realRoot(m);
+        if (!root) refuse("the app has no data yet");
+        const full = path.resolve(root, rel);
+        if (full !== root && !full.startsWith(root + path.sep)) refuse("path escapes the app's data");
+        let real;
+        try { real = fs.realpathSync(full); } catch { return null; }
+        if (path.relative(root, real).split(path.sep).join("/") !== rel) refuse("path goes through a link");
+        return real;
+      };
+      const pick = (app, rel) => {
+        const m = mount(app);
+        const r = clean(rel);
+        if (r === null) refuse("bad path");
+        return { m, r };
+      };
+      const MAX_READ = 2 * 1024 * 1024;
+      return {
+        apps: () => mounts.map((m) => ({ app: m.app, paths: m.allow.slice() })),
+        read: (app, rel) => {
+          const { m, r } = pick(app, rel);
+          if (r === "" || !matches(m, r)) refuse("path is not one the app declared");
+          const real = resolve(m, r);
+          if (!real) throw new Error("peer read: not found");
+          const st = fs.statSync(real);
+          if (!st.isFile()) refuse("not a file");
+          if (st.size > MAX_READ) refuse("file too large (2MB)");
+          return fs.readFileSync(real, "utf8");
+        },
+        list: (app, rel = "") => {
+          const { m, r } = pick(app, rel);
+          const d = r === "" ? [] : r.split("/");
+          const open = m.allow.some((p) => { const ps = p.split("/"); return ps.length > d.length && d.every((x, i) => seg(ps[i]).test(x)); });
+          if (!open) refuse("folder is not one the app declared");
+          const real = resolve(m, r);
+          if (!real) throw new Error("peer read: not found");
+          return fs.readdirSync(real).filter((n) => m.allow.some((p) => { const ps = p.split("/"); return ps.length > d.length && d.every((x, i) => seg(ps[i]).test(x)) && seg(ps[d.length]).test(n); })).sort();
+        },
+        stat: (app, rel) => {
+          const { m, r } = pick(app, rel);
+          if (r === "" || !matches(m, r)) refuse("path is not one the app declared");
+          const real = resolve(m, r);
+          if (!real) return null;
+          const st = fs.statSync(real);
+          return { size: st.isDirectory() ? 0 : st.size, mtimeMs: Math.floor(st.mtimeMs), dir: st.isDirectory() };
+        },
+      };
+    })();
     host.fs = fsSvc;
+    host.peer = peerSvc;
     host.zip = zipSvc;
     if (siblingToolDefs) host.siblingTools = siblingToolDefs;
     if (siblingCeilings) host.insertCeilings = siblingCeilings;

@@ -12,6 +12,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { isDiscardDir } from "../paths.js";
+import { parseReads, type AppRead } from "./reads.js";
 
 /** App shape: "web" is a UI the builder builds, "app"/"skin" are backend
  *  only. Older manifests carry "vite" for a UI; it reads as "web". */
@@ -44,6 +45,8 @@ export interface AppManifest {
   /** Engine versions the app runs on (">=1.2.0", "^1.0.0"). An update
    *  that needs a newer engine is not offered. */
   engine?: string;
+  /** Files of other apps this app asks to read (the user decides, once; see apps/reads.ts). */
+  reads?: AppRead[];
 }
 
 export interface AppInfo {
@@ -81,6 +84,7 @@ export function validateAppManifest(raw: unknown): AppManifest | null {
     ...(source ? { source } : {}),
     ...(typeof m.repository === "string" && /^https:\/\/[^\s]+$/.test(m.repository) ? { repository: m.repository } : {}),
     ...(typeof m.engine === "string" && m.engine.trim() && m.engine.length <= 64 ? { engine: m.engine.trim() } : {}),
+    ...(parseReads((raw as { reads?: unknown }).reads).length ? { reads: parseReads((raw as { reads?: unknown }).reads) } : {}),
   };
 }
 

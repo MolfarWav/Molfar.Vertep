@@ -975,6 +975,19 @@ const dict = {
   "{done} of {total}": "{done} van {total}",
   "{n} GB": "{n} GB",
   "{n} MB": "{n} MB",
+  "Allow {app} to read your {peer} data?": "{app} toestemming geven om je {peer}-gegevens te lezen?",
+  "{app} asks to read these files of {peer}:": "{app} vraagt om deze bestanden van {peer} te lezen:",
+  "Read only: {app} cannot change or delete anything in {peer}. You can change this any time on the app's page on Home.": "Alleen lezen: {app} kan niets in {peer} wijzigen of verwijderen. Je kunt dit altijd wijzigen op de pagina van de app op Start.",
+  "Decide later": "Later beslissen",
+  "Don't allow": "Niet toestaan",
+  "Allow": "Toestaan",
+  "Access to other apps": "Toegang tot andere apps",
+  "Reads your {peer} data": "Leest je {peer}-gegevens",
+  "Allowed": "Toegestaan",
+  "Not allowed": "Niet toegestaan",
+  "Not decided yet": "Nog niet beslist",
+  "{peer} is not installed, so there is nothing to read yet.": "{peer} is niet geïnstalleerd, dus er is nog niets om te lezen.",
+  "Stop allowing": "Toestemming intrekken",
 }
 
 export default dict

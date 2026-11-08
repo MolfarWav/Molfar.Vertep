@@ -975,6 +975,19 @@ const dict = {
   "{done} of {total}": "{done} / {total}",
   "{n} GB": "{n} GB",
   "{n} MB": "{n} MB",
+  "Allow {app} to read your {peer} data?": "{app} に {peer} のデータの読み取りを許可しますか?",
+  "{app} asks to read these files of {peer}:": "{app} が {peer} の次のファイルの読み取りを求めています:",
+  "Read only: {app} cannot change or delete anything in {peer}. You can change this any time on the app's page on Home.": "読み取りのみ: {app} は {peer} の内容を変更・削除できません。この設定はホームのアプリのページからいつでも変更できます。",
+  "Decide later": "あとで決める",
+  "Don't allow": "許可しない",
+  "Allow": "許可",
+  "Access to other apps": "他のアプリへのアクセス",
+  "Reads your {peer} data": "{peer} のデータを読み取ります",
+  "Allowed": "許可済み",
+  "Not allowed": "未許可",
+  "Not decided yet": "まだ決めていません",
+  "{peer} is not installed, so there is nothing to read yet.": "{peer} はインストールされていないため、まだ読み取るものがありません。",
+  "Stop allowing": "許可を取り消す",
 }
 
 export default dict

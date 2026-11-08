@@ -19,6 +19,8 @@ export interface UserPaths {
   /** Baseline copies of installed apps, one per app: the version each was
    *  installed or last updated from. Updates merge against them. */
   appUpstream: string;
+  /** What each app was allowed to read of other apps (apps/reads.ts). Outside the workspace: an app must not grant itself access. */
+  appReads: string;
   /** The agent sandbox's settings (internet access). */
   sandbox: string;
   apps: string;
@@ -186,6 +188,7 @@ export function userPaths(dataDir: string, username: string): UserPaths {
     // Outside the workspace for the same reason: a baseline rewritten to match
     // the user's edits would make the next update replace them without asking.
     appUpstream: path.join(dataDir, "credentials", username, "app-upstream"),
+    appReads: path.join(dataDir, "credentials", username, "app-reads.json"),
     // The agent could otherwise switch its own internet access back on.
     sandbox: path.join(dataDir, "credentials", username, "sandbox.json"),
     apps: path.join(root, "apps"),

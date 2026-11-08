@@ -975,6 +975,19 @@ const dict = {
   "{done} of {total}": "{done} / {total}",
   "{n} GB": "{n} GB",
   "{n} MB": "{n} MB",
+  "Allow {app} to read your {peer} data?": "{app}이(가) {peer} 데이터를 읽도록 허용하시겠습니까?",
+  "{app} asks to read these files of {peer}:": "{app}이(가) {peer}의 다음 파일을 읽으려고 합니다:",
+  "Read only: {app} cannot change or delete anything in {peer}. You can change this any time on the app's page on Home.": "읽기 전용: {app}은(는) {peer}의 내용을 변경하거나 삭제할 수 없습니다. 홈의 앱 페이지에서 언제든지 바꿀 수 있습니다.",
+  "Decide later": "나중에 결정",
+  "Don't allow": "허용 안 함",
+  "Allow": "허용",
+  "Access to other apps": "다른 앱에 대한 접근",
+  "Reads your {peer} data": "{peer} 데이터를 읽습니다",
+  "Allowed": "허용됨",
+  "Not allowed": "허용 안 됨",
+  "Not decided yet": "아직 결정하지 않음",
+  "{peer} is not installed, so there is nothing to read yet.": "{peer}이(가) 설치되어 있지 않아 아직 읽을 내용이 없습니다.",
+  "Stop allowing": "허용 중지",
 }
 
 export default dict

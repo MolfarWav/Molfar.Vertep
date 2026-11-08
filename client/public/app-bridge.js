@@ -71,13 +71,49 @@
     });
   }
 
+  // ---------- the shell's theme ----------
+  // The shell tells the frame which colour theme it wears (at the handshake and on every change), so an app can
+  // follow it: window.molfarShell.theme() = { id, scheme: "dark" | "light", vars } (null before the handshake),
+  // <html data-shell-scheme="..." data-shell-theme="...">, and a "molfar:shell-theme" event on window (detail = the
+  // same object). Data only; vars is hex colours.
+  var HEX = /^#[0-9a-f]{3,8}$/i;
+  var shellTheme = null;
+  function applyShellTheme(t) {
+    if (!t || typeof t !== "object") return;
+    var theme = {
+      id: typeof t.id === "string" ? t.id.slice(0, 80) : "vertep",
+      scheme: t.scheme === "light" ? "light" : "dark",
+      vars: null,
+    };
+    if (t.vars && typeof t.vars === "object") {
+      theme.vars = {};
+      Object.keys(t.vars).slice(0, 60).forEach(function (k) {
+        if (/^[a-z][a-z0-9-]{0,40}$/.test(k) && typeof t.vars[k] === "string" && HEX.test(t.vars[k])) theme.vars[k] = t.vars[k];
+      });
+    }
+    shellTheme = theme;
+    try {
+      var root = document.documentElement;
+      if (root && root.setAttribute) {
+        root.setAttribute("data-shell-scheme", theme.scheme);
+        root.setAttribute("data-shell-theme", theme.id);
+      }
+    } catch (err) { /* no document yet */ }
+    try { window.dispatchEvent(new CustomEvent("molfar:shell-theme", { detail: theme })); } catch (err) { /* no CustomEvent */ }
+  }
+
   window.addEventListener("message", function (e) {
     if (!parentWin || e.source !== parentWin) return;
     var d = e.data;
     if (!d || (d.__molfar !== 1 && d.__chrysalis !== 1)) return;
+    if (d.type === "shell-theme") {
+      applyShellTheme(d.theme);
+      return;
+    }
     if (d.type === "init") {
       nonce = d.nonce;
       ready = true;
+      applyShellTheme(d.theme);
       if (d.storage && typeof d.storage === "object") reconcileStorage(d.storage);
       var q = initQueue;
       initQueue = [];
@@ -121,6 +157,8 @@
     openSettingsTab: function (tab) { return shellCall("open-settings", { tab: String(tab) }); },
     /** The shell's interface language, e.g. "uk" or "en". */
     locale: function () { return shellCall("locale", {}); },
+    /** The shell's colour theme now: { id, scheme: "dark" | "light", vars }, or null before the handshake. Changes arrive as the "molfar:shell-theme" event. */
+    theme: function () { return shellTheme ? JSON.parse(JSON.stringify(shellTheme)) : null; },
   });
 
   // ---------- fetch ----------

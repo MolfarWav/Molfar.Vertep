@@ -116,11 +116,18 @@ export function applyStoredTheme(): void {
 }
 
 /** Phones paint the status bar (and an installed app its title bar) in the
- *  page's theme-color: keep it on the header's colour of the current theme. */
+ *  page's theme-color: keep it on the header's colour of the current theme.
+ *  Every theme change ends here, so the app frames hear of it here too (an
+ *  app that follows the shell's colours repaints; see app-bridge.js). */
 function syncThemeColor(): void {
   const meta = document.querySelector('meta[name="theme-color"]')
   const panel = getComputedStyle(document.documentElement).getPropertyValue("--c-panel").trim()
   if (meta && panel) meta.setAttribute("content", panel)
+  try {
+    window.MolfarBridgeHost?.pushTheme?.()
+  } catch {
+    // no bridge host (a test page): nothing to tell
+  }
 }
 
 applyStoredTheme()

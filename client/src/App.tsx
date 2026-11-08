@@ -13,6 +13,7 @@ import { api, prefs, authApi, appPluginsApi, confirmAppFile, exportApp, previewA
 import { SettingsBody, type TabValue } from "./settings"
 import { EngineUpdateButton } from "./server-settings"
 import { AppUpdateBanner, useAppUpdate, useAppUpdates, type AppUpdates } from "./app-update"
+import { AppReadsPanel, AppReadsPrompt } from "./app-reads"
 import { UpdatesDialog, useEngineRelease } from "./updates-panel"
 import { BugReportDialog, recordClientError } from "./bug-report"
 import { InstallDialog, promptInstall, useInstallWay } from "./pwa"
@@ -1136,6 +1137,8 @@ function AppCanvas(props: {
     // phones: the app fills the pane edge to edge under the one shell bar;
     // this toolbar's actions ride in the account menu there (see UserMenu)
     <div className="m-2 ml-0 flex min-h-0 min-w-0 flex-1 flex-col self-stretch overflow-hidden rounded-[10px] bg-base shadow-[var(--s-raised)] max-md:m-0 max-md:rounded-none max-md:border-t max-md:border-line max-md:shadow-none">
+      {/* an app that asks to read another app's files is answered here, once, before it does */}
+      <AppReadsPrompt appId={props.tab.id} appName={props.tab.name || props.tab.id} />
       {/* the app toolbar lives in the shell bar (one row): this pane renders
           its buttons into the bar's slot while it is the one in charge. Phones
           carry the same actions in the account menu (see UserMenu). */}
@@ -1929,6 +1932,7 @@ function AppDetail(props: {
       </div>
       {exportErr ? <div className="border-b border-line px-4 py-1.5 text-11 text-danger">{tr("Export failed: {message}", { message: exportErr })}</div> : null}
       <AppUpdateBanner update={update} />
+      <AppReadsPanel appId={props.appId} />
       {!detail.loading ? <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 font-mono text-12">
           <TreeRows nodes={detail.data?.tree?.children ?? []} depth={0} open={open} toggle={toggle} />
         </div> : <div className="p-4 text-13 text-ink-faint">{tr("Reading app files…")}</div>}

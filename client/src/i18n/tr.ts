@@ -975,6 +975,19 @@ const dict = {
   "{done} of {total}": "{done} / {total}",
   "{n} GB": "{n} GB",
   "{n} MB": "{n} MB",
+  "Allow {app} to read your {peer} data?": "{app} uygulamasının {peer} verilerinizi okumasına izin verilsin mi?",
+  "{app} asks to read these files of {peer}:": "{app}, {peer} uygulamasının şu dosyalarını okumak istiyor:",
+  "Read only: {app} cannot change or delete anything in {peer}. You can change this any time on the app's page on Home.": "Yalnızca okuma: {app}, {peer} içinde hiçbir şeyi değiştiremez ya da silemez. Bunu istediğiniz zaman Ana sayfadaki uygulama sayfasından değiştirebilirsiniz.",
+  "Decide later": "Sonra karar ver",
+  "Don't allow": "İzin verme",
+  "Allow": "İzin ver",
+  "Access to other apps": "Diğer uygulamalara erişim",
+  "Reads your {peer} data": "{peer} verilerinizi okur",
+  "Allowed": "İzin verildi",
+  "Not allowed": "İzin verilmedi",
+  "Not decided yet": "Henüz karar verilmedi",
+  "{peer} is not installed, so there is nothing to read yet.": "{peer} yüklü değil, bu yüzden henüz okunacak bir şey yok.",
+  "Stop allowing": "İzni durdur",
 }
 
 export default dict

@@ -8,6 +8,10 @@ declare global {
       allowedRequest(appId: string, method: string, path: string, trusted?: boolean): boolean;
       eventAllowed(appId: string, trusted: boolean, raw: string): boolean;
       storageKey(username: string, appId: string): string;
+      /** Tell every app frame the shell's colour theme (called after a theme change). */
+      pushTheme?(): void;
+      /** The shell's theme as an app sees it. */
+      shellTheme?(): { id: string; scheme: "dark" | "light"; vars: Record<string, string> | null };
       /** The bridge's allowlist for app-to-shell actions: the cleaned request, or null. */
       shellRequest(trusted: boolean, d: unknown): ShellRequest | null;
       /** Set by the shell: answers an app's allowed shell action (throw to refuse). */

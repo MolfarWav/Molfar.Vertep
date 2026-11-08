@@ -975,6 +975,19 @@ const dict = {
   "{done} of {total}": "{done} / {total}",
   "{n} GB": "{n} GB",
   "{n} MB": "{n} MB",
+  "Allow {app} to read your {peer} data?": "允许 {app} 读取你的 {peer} 数据吗?",
+  "{app} asks to read these files of {peer}:": "{app} 请求读取 {peer} 的以下文件:",
+  "Read only: {app} cannot change or delete anything in {peer}. You can change this any time on the app's page on Home.": "仅读取:{app} 无法更改或删除 {peer} 中的任何内容。你可以随时在主页上该应用的页面中更改此设置。",
+  "Decide later": "稍后决定",
+  "Don't allow": "不允许",
+  "Allow": "允许",
+  "Access to other apps": "其他应用的访问权限",
+  "Reads your {peer} data": "读取你的 {peer} 数据",
+  "Allowed": "已允许",
+  "Not allowed": "未允许",
+  "Not decided yet": "尚未决定",
+  "{peer} is not installed, so there is nothing to read yet.": "未安装 {peer},因此暂时没有可读取的内容。",
+  "Stop allowing": "停止允许",
 }
 
 export default dict

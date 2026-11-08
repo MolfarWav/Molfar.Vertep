@@ -975,6 +975,19 @@ const dict = {
   "{done} of {total}": "{done} з {total}",
   "{n} GB": "{n} ГБ",
   "{n} MB": "{n} МБ",
+  "Allow {app} to read your {peer} data?": "Дозволити застосунку {app} читати ваші дані {peer}?",
+  "{app} asks to read these files of {peer}:": "{app} просить читати ці файли {peer}:",
+  "Read only: {app} cannot change or delete anything in {peer}. You can change this any time on the app's page on Home.": "Лише читання: {app} не може нічого змінювати чи видаляти в {peer}. Це можна змінити будь-коли на сторінці застосунку на Головній.",
+  "Decide later": "Вирішити пізніше",
+  "Don't allow": "Не дозволяти",
+  "Allow": "Дозволити",
+  "Access to other apps": "Доступ до інших застосунків",
+  "Reads your {peer} data": "Читає ваші дані {peer}",
+  "Allowed": "Дозволено",
+  "Not allowed": "Не дозволено",
+  "Not decided yet": "Ще не вирішено",
+  "{peer} is not installed, so there is nothing to read yet.": "{peer} не встановлено, тому читати поки нічого.",
+  "Stop allowing": "Припинити дозвіл",
 }
 
 export default dict

@@ -59,7 +59,7 @@
       // Management is blocked by its exact shape, plus the two whole
       // subtrees (plugins/, build/). An app route that merely shares a first
       // segment — /export/backup — is the app's own API, not the engine's.
-      var subtree = head === "plugins" || head === "build";
+      var subtree = head === "plugins" || head === "build" || head === "reads";
       if (MANAGEMENT_HEADS.has(head) && (subtree || segments.length === 1)) return false;
       // which engine MCP servers an app may call is the user's decision; an
       // imported app switching them on for itself would hand itself tools
@@ -90,7 +90,7 @@
     }
     return false;
   }
-  var MANAGEMENT_HEADS = new Set(["tree", "plugins", "rev", "updates", "update", "install", "dev", "build", "activate", "rename", "export", "exports"]);
+  var MANAGEMENT_HEADS = new Set(["tree", "plugins", "rev", "updates", "update", "install", "dev", "build", "activate", "rename", "export", "exports", "reads"]);
 
   /** Bus events a frame may receive. The engine broadcasts every user-scope
    *  event on /v1/ws; without this filter an app would read the agent's
@@ -366,6 +366,32 @@
     }
   }
 
+  /** The shell's colour theme as an app may see it: the theme's id, its scheme ("dark" or "light") and, for a
+   *  custom theme, its colours (hex values only). Read from the same keys the shell's theme module writes
+   *  (client/src/theme.ts). Pure data: it gives an app no access to anything. */
+  var HEX = /^#[0-9a-f]{3,8}$/i;
+  function shellTheme() {
+    var id = "vertep";
+    var scheme = "dark";
+    var vars = null;
+    try {
+      id = String(localStorage.getItem("molfar-theme") || "vertep").slice(0, 80);
+      if (id === "light") scheme = "light";
+      else if (id !== "vertep" && id !== "dark") {
+        scheme = localStorage.getItem("molfar-theme-scheme") === "light" ? "light" : "dark";
+        var raw = JSON.parse(localStorage.getItem("molfar-theme-vars") || "null");
+        if (raw && typeof raw === "object") {
+          vars = {};
+          var n = 0;
+          Object.keys(raw).forEach(function (k) {
+            if (n < 60 && /^[a-z][a-z0-9-]{0,40}$/.test(k) && typeof raw[k] === "string" && HEX.test(raw[k])) { vars[k] = raw[k]; n++; }
+          });
+        }
+      }
+    } catch (err) { /* blocked or unreadable site data: the default theme */ }
+    return { id: id, scheme: scheme, vars: vars };
+  }
+
   window.addEventListener("message", function (e) {
     var record = frames.get(e.source);
     if (!record) return;
@@ -374,7 +400,7 @@
     if (d.type === "hello") {
       // the shell's copy of the app's storage rides along: a frame that
       // reloaded itself from an older hash snapshot catches up with it
-      send(e.source, { __molfar: 1, type: "init", nonce: record.nonce, storage: readStorage(record.username, record.appId) });
+      send(e.source, { __molfar: 1, type: "init", nonce: record.nonce, storage: readStorage(record.username, record.appId), theme: shellTheme() });
       return;
     }
     // storage is accepted BEFORE the handshake: a write followed immediately
@@ -430,6 +456,15 @@
     frames.set(iframe.contentWindow, record);
     return function unserve() { frames.delete(iframe.contentWindow); };
   };
+
+  /** The shell changed its theme: every app frame hears of it (an app that follows the shell repaints). */
+  CH.pushTheme = function () {
+    var theme = shellTheme();
+    frames.forEach(function (_record, win) {
+      send(win, { __molfar: 1, type: "shell-theme", theme: theme });
+    });
+  };
+  CH.shellTheme = shellTheme;
 
   CH.allowedRequest = allowedRequest;
   CH.eventAllowed = eventAllowed;
