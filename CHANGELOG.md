@@ -5,7 +5,7 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
-## Unreleased
+## 1.13.0 (2026-11-09)
 
 - **Apps can tell you something is waiting (#310, step 5).** An official app calls `window.molfarShell.notify({ count, title, text })`: the number goes on its tab in the shell, and the message shows as a short popup in the bottom right corner (or as a system notification when the window is not in front; nothing while you look at the app). A switch per app on its page on Home ("Notifications from this app", on by default); the browser's own permission and the Settings switch for system notifications still decide the system notification. Official apps only; plain text, capped (80 and 200 characters), one message per app every 5 seconds.
 - **Apps can read other apps, with your say (#310, step 2).** An app's manifest may list files of another app it wants to read (`reads`). The first time such an app opens you are asked once ("Allow <app> to read your <other app> data?"); the answer is kept outside the workspace (an app cannot grant itself access), covers only the files that were shown, and is changed any time on the app's page on Home ("Access to other apps"). A plugin with the new `peer` permission then gets read-only `host.peer.read/list/stat/apps` for exactly those files: no links followed, 2 MB per file, no host paths in errors. New shell-only routes `GET /v1/apps/:id/reads` and `PUT /v1/apps/:id/reads/:peer`, blocked for app frames. Not on Windows-only paths: the symlink cases of the new tests need a Linux/CI run.
