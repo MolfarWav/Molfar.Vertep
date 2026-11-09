@@ -405,8 +405,8 @@ function Shell(props: { theme: ThemeControl }) {
     nameOf: (id) => appName(id),
     openApp,
   })
-  const shellNow = useRef({ active, pinned, launch, openApp, openAgent, askAgent, openSettings, notify: appNotices.notify })
-  shellNow.current = { active, pinned, launch, openApp, openAgent, askAgent, openSettings, notify: appNotices.notify }
+  const shellNow = useRef({ active, pinned, launch, openApp, goHome, openAgent, askAgent, openSettings, notify: appNotices.notify })
+  shellNow.current = { active, pinned, launch, openApp, goHome, openAgent, askAgent, openSettings, notify: appNotices.notify }
   const lastShellDraft = useRef(0)
   useEffect(() => {
     const host = window.MolfarBridgeHost
@@ -424,6 +424,10 @@ function Shell(props: { theme: ThemeControl }) {
       if (req.op === "open-app") {
         if (!apps.some((a) => a.id === req.appId)) throw new Error("no such app")
         now.openApp(req.appId)
+        return null
+      }
+      if (req.op === "open-home") {
+        now.goHome()
         return null
       }
       if (req.op === "open-settings") {

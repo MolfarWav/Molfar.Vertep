@@ -205,6 +205,8 @@
       return typeof d.text === "string" && d.text.trim() && d.text.length <= SHELL_TEXT_MAX ? { op: "ask-molfar", text: d.text } : null;
     }
     if (d.op === "apps") return { op: "apps" };
+    // Home (the launcher): where an app's details and its access settings live (#310)
+    if (d.op === "open-home") return { op: "open-home" };
     if (d.op === "open-app") return typeof d.appId === "string" && SHELL_APP_ID.test(d.appId) ? { op: "open-app", appId: d.appId } : null;
     // Settings > API connections, on one model's panel when a "<provider>/<model>" ref is given; or
     // (0.9.5) one of the few tabs an app may point at

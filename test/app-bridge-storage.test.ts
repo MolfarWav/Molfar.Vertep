@@ -199,6 +199,7 @@ describe("app storage: acknowledgements and catching up after a reload", () => {
     expect(f.win.molfarShell).toBe(f.win.chrysalisShell);
     expect(f.win.molfarStorage).toBe(f.win.chrysalisStorage);
     expect(typeof f.win.molfarShell.askMolfar).toBe("function");
+    expect(typeof f.win.molfarShell.openHome).toBe("function");
   });
 
   it("an unsaved write is announced under both event names", () => {

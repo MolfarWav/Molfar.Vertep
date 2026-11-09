@@ -155,6 +155,8 @@
     openSettings: function (model) { return shellCall("open-settings", model ? { model: String(model) } : {}); },
     /** Open the shell's Settings on one tab: "api", "models", "memory" or "backup". */
     openSettingsTab: function (tab) { return shellCall("open-settings", { tab: String(tab) }); },
+    /** Switch the shell to Home (the launcher: the apps and their access settings). */
+    openHome: function () { return shellCall("open-home", {}); },
     /** The shell's interface language, e.g. "uk" or "en". */
     locale: function () { return shellCall("locale", {}); },
     /** Tell the shell something waits for the user: { count } puts a number on this app's tab (0 clears it), { title, text } is a

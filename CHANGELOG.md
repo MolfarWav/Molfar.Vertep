@@ -5,6 +5,10 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## Unreleased
+
+- **Apps can send you Home.** An official app calls `window.molfarShell.openHome()` and the shell switches to Home, where each app's details and its "Access to other apps" setting are. Social uses it in the "no access" dialog of the Roleplay import. Only the app on screen is heard; an engine without the call has no `openHome`, and the app keeps its text hint.
+
 ## 1.13.0 (2026-11-09)
 
 - **Apps can tell you something is waiting (#310, step 5).** An official app calls `window.molfarShell.notify({ count, title, text })`: the number goes on its tab in the shell, and the message shows as a short popup in the bottom right corner (or as a system notification when the window is not in front; nothing while you look at the app). A switch per app on its page on Home ("Notifications from this app", on by default); the browser's own permission and the Settings switch for system notifications still decide the system notification. Official apps only; plain text, capped (80 and 200 characters), one message per app every 5 seconds.
