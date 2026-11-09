@@ -5,7 +5,7 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
-## Unreleased
+## 1.13.1 (2026-11-09)
 
 - **Apps can send you Home.** An official app calls `window.molfarShell.openHome()` and the shell switches to Home, where each app's details and its "Access to other apps" setting are. Social uses it in the "no access" dialog of the Roleplay import. Only the app on screen is heard; an engine without the call has no `openHome`, and the app keeps its text hint.
 
