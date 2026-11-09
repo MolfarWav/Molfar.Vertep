@@ -24,6 +24,9 @@ Shipped in Social 0.6.0 (2026-11-09). This is the recipe, so a second pack (the 
 - The real path: Social installed in the throwaway engine, Playwright: card shows, button adds the packs, picker lists them, a sticker sends, emoji draw inline. Phone-width runs need the shell tours skipped (`[data-guide-overlay]`).
 - `test/stickers-molfar.test.ts` (Social) compares the table with the folder (animated, under the limit).
 
-## 5. Ideas not done
+## 5. The catalog of free packs (done in Social 0.7.0, #348)
+A third-party pack goes into `catalog/` of the Social repo: pictures, `preview.png`, the licence text and an entry in `index.json` (rules in `catalog/README.md`, checked by `test/stickers-catalog.test.ts`). Only CC0, CC BY or MIT; resize large animations (Noto came at 512 px and 600 KB, so 160 px, every second frame and lossy WebP made 50 to 150 KB); keep the folder small, every Social update downloads it.
+
+## 6. Ideas not done
 - A catalog of free packs (#347 part 2: CC0, CC-BY or MIT only, author and licence on the card): the frame cannot fetch from outside, so it needs an engine route or a plugin with `network`.
 - A second Molfar set from sheets 05 and 06 (three-quarter views); more moods; the contact-list and forum-search previews still show raw `:pack/item:` tokens.
