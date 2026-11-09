@@ -668,6 +668,8 @@ const dict = {
   "{shown} shown · {total} available": "{shown} mostrados · {total} disponibles",
   "Star = quick switch, sliders = this model's settings": "Estrella = cambio rápido, controles = ajustes del modelo",
   "App name": "Nombre de la app",
+  "App settings": "Ajustes de las apps",
+  "Opens the app's own settings page": "Abre la página de ajustes de la propia app",
   "Author (shown as “by …”)": "Autor (se muestra como «por …»)",
   "e.g. Recipe book": "p. ej. Libro de recetas",
   "e.g. your name": "p. ej. tu nombre",

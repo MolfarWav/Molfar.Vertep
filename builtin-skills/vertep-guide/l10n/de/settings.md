@@ -1,4 +1,4 @@
-<!-- source: 51d046c99c83 -->
+<!-- source: 3e8eaf6fcf3f -->
 # Einstellungen im Überblick
 
 Einstellungen ist das eigene Fenster der Shell, das alle Apps gemeinsam nutzen. Öffne es mit dem Zahnrad in der oberen Leiste oder auf dem Handy über das Kontomenü oben rechts. Diese Seite listet jeden Abschnitt auf, damit du weißt, wo du suchen musst.
@@ -30,8 +30,8 @@ Einstellungen ist das eigene Fenster der Shell, das alle Apps gemeinsam nutzen. 
 - **Server.** Wie Molfar Vertep auf diesem Computer läuft: Port, Browser beim Start öffnen, andere Geräte in deinem Netzwerk erlauben (mit QR-Code für dein Handy), HTTPS, ob Apps Pakete herunterladen dürfen, die Version und wie man aktualisiert.
 - **Benutzer.** Personen, die sich anmelden können. Jede bekommt einen eigenen Arbeitsbereich, Agenten und Apps.
 
-## Nicht hier
+## App-Einstellungen
 
-Es gibt keinen Abschnitt für einzelne Apps. Die Einstellungen einer App liegen in der App selbst. Siehe [[apps]].
+Ganz oben in der Liste nennt eine Gruppe **App-Einstellungen** jede installierte App, die eine eigene Einstellungsseite hat (Roleplay, dort als „Vertep“ angezeigt, und Social). Drückst du eine davon, schließt sich Einstellungen, und die App öffnet ihre Einstellungsseite: bei Roleplay das Chat-Aussehen, „Chat Behavior“ (Rechtschreibprüfung, Autokorrektur), Streaming, Designs und die übrigen Chat-Einstellungen. Eine App ohne Einstellungsseite wird nicht aufgeführt. Dieselbe Seite gibt es auch innerhalb der App: siehe [[apps]].
 
 > Auf dem Handy zeigt Einstellungen zuerst eine Liste der Abschnitte; tippe einen an, um hineinzugehen, und nutze Zurück, um zurückzukehren.

@@ -670,6 +670,8 @@ const en = {
   "{shown} shown · {total} available": "",
   "Star = quick switch, sliders = this model's settings": "",
   "App name": "",
+  "App settings": "",
+  "Opens the app's own settings page": "",
   "Author (shown as “by …”)": "",
   "e.g. Recipe book": "",
   "e.g. your name": "",

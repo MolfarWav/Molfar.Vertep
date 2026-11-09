@@ -102,6 +102,24 @@
     try { window.dispatchEvent(new CustomEvent("molfar:shell-theme", { detail: theme })); } catch (err) { /* no CustomEvent */ }
   }
 
+  // ---------- a view the shell asks for ----------
+  // The shell's Settings lists an app that declares `settingsView` in its manifest and opens the app on that view:
+  // window.molfarShell.onView(fn) calls fn("settings") (the declared name) when that happens, also for a name that arrived
+  // before fn was registered (the app was still booting). One listener set; fn returns nothing the shell reads.
+  var viewListeners = [];
+  var viewWaiting = null;
+  function deliverView(view) {
+    if (typeof view !== "string" || !/^[a-z][a-z0-9-]{0,31}$/.test(view)) return;
+    if (!viewListeners.length) { viewWaiting = view; return; }
+    viewListeners.slice().forEach(function (fn) { try { fn(view); } catch (err) { /* the app's own error */ } });
+  }
+  function onView(fn) {
+    if (typeof fn !== "function") return function () {};
+    viewListeners.push(fn);
+    if (viewWaiting) { var w = viewWaiting; viewWaiting = null; try { fn(w); } catch (err) { /* the app's own error */ } }
+    return function () { viewListeners = viewListeners.filter(function (x) { return x !== fn; }); };
+  }
+
   window.addEventListener("message", function (e) {
     if (!parentWin || e.source !== parentWin) return;
     var d = e.data;
@@ -110,10 +128,15 @@
       applyShellTheme(d.theme);
       return;
     }
+    if (d.type === "open-view") {
+      deliverView(d.view);
+      return;
+    }
     if (d.type === "init") {
       nonce = d.nonce;
       ready = true;
       applyShellTheme(d.theme);
+      if (d.view) deliverView(d.view);
       if (d.storage && typeof d.storage === "object") reconcileStorage(d.storage);
       var q = initQueue;
       initQueue = [];
@@ -170,6 +193,9 @@
       if (n.text != null) p.text = n.text;
       return shellCall("notify", p);
     },
+    /** Call fn(view) when the shell's Settings sends the user to this app's own settings page: the view name is the manifest's
+     *  `settingsView`. A name that came before fn was registered is delivered at once. Returns a function that stops listening. */
+    onView: onView,
     /** The shell's colour theme now: { id, scheme: "dark" | "light", vars }, or null before the handshake. Changes arrive as the "molfar:shell-theme" event. */
     theme: function () { return shellTheme ? JSON.parse(JSON.stringify(shellTheme)) : null; },
   });

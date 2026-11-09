@@ -29,8 +29,8 @@ Settings is the shell's own dialog, shared by all apps. Open it with the gear in
 - **Server.** How Molfar Vertep runs on this computer: port, opening the browser at start, allowing other devices on your network (with a QR code for your phone), HTTPS, whether apps may download packages, the version and how to update.
 - **Users.** People who can sign in. Each gets their own workspace, agent and apps.
 
-## Not here
+## App settings
 
-There is no section for individual apps. An app's own settings are inside the app. See [[apps]].
+At the top of the list, an **App settings** group names each installed app that has a settings page of its own (Roleplay, shown there as "Vertep", and Social do). Press one and Settings closes and the app opens on its settings page: for Roleplay the chat look, "Chat Behavior" (spell check, autocorrect), streaming, themes and the rest of the chat settings. An app without a settings page is not listed. The same page is also inside the app: see [[apps]].
 
 > On a phone, Settings shows a list of sections first; tap one to go in and use Back to return.

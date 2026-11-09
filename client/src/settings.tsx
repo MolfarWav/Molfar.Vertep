@@ -94,11 +94,20 @@ type ProviderPick = EngineProvider | CustomPick | OAuthPick | LocalPick
 
 export type TabValue = "general" | "backup" | "storage" | "sync" | "api" | "models" | "speech" | "images" | "agent" | "memory" | "mcp" | "developer" | "server" | "users"
 
-export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; initialModel?: string | null; onLogout: () => void }) {
+/** An installed app that has a settings page of its own (manifest `settingsView`): the Settings dialog lists it and
+ *  hands the user over to the app instead of hosting the page (#334). */
+export interface AppSettingsEntry { id: string; name: string; view: string }
+
+export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: TabValue | null; initialModel?: string | null; onLogout: () => void; appSettings?: AppSettingsEntry[]; onOpenAppSettings?: (entry: AppSettingsEntry) => void }) {
   // "models" was its own tab before 0.9.2: it lives in the connections tab now
   const asked = props.initialTab === "models" ? "api" : props.initialTab
   useGuidePlace("shell.settings")
   const [tab, setTab] = useState<TabValue>(asked ?? "api")
+  const appEntries = props.appSettings ?? []
+  const openAppSettings = (entry: AppSettingsEntry) => {
+    props.onClose()
+    props.onOpenAppSettings?.(entry)
+  }
   const tabs: Array<{ value: TabValue; label: string; icon: ReactNode }> = [
     { value: "general", label: tr("General"), icon: <IconSmall name="outline-sliders" /> },
     { value: "backup", label: tr("Backup"), icon: <Icon name="download" /> },
@@ -171,6 +180,24 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
                     onClick={() => props.onClose()}
                   />
                 </div>
+                {appEntries.length ? (
+                  <div className="flex w-full flex-col gap-1.5 border-b border-line pb-3" data-guide="settings.apps">
+                    <Tabs.SectionTitle>{tr("App settings")}</Tabs.SectionTitle>
+                    {appEntries.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        data-slot="tabs-trigger"
+                        data-testid={`app-settings-${a.id}`}
+                        title={tr("Opens the app's own settings page")}
+                        onClick={() => openAppSettings(a)}
+                      >
+                        <span className="min-w-0 flex-1 truncate">{a.name}</span>
+                        <IconSmall name="outline-square-arrow" size="small" />
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="flex w-full flex-col gap-1.5">
                   {tabs.map((t) => (
                       <Tabs.Trigger key={t.value} value={t.value} data-guide={`settings.${t.value}`}>
@@ -253,6 +280,26 @@ export function SettingsBody(props: { onClose: () => void; me: Me; initialTab?: 
                       onClick={() => props.onClose()}
                     />
                   </div>
+                  {appEntries.length ? (
+                    <div className="mb-2 flex flex-col gap-1.5 border-b border-line pb-3" data-guide="settings.apps">
+                      <Tabs.SectionTitle>{tr("App settings")}</Tabs.SectionTitle>
+                      {appEntries.map((a) => (
+                        <button
+                          key={a.id}
+                          type="button"
+                          data-testid={`app-settings-${a.id}`}
+                          className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-14 text-ink transition-colors hover:bg-hover active:bg-pressed"
+                          onClick={() => openAppSettings(a)}
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate">{a.name}</span>
+                            <span className="block truncate text-12 text-ink-muted">{tr("Opens the app's own settings page")}</span>
+                          </span>
+                          <IconSmall name="outline-square-arrow" size="small" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
                   <div className="flex flex-col gap-1.5">
                     {tabs.map((t) => (
                         <button key={t.value}

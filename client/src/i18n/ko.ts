@@ -668,6 +668,8 @@ const dict = {
   "{shown} shown · {total} available": "{shown}개 표시 · {total}개 사용 가능",
   "Star = quick switch, sliders = this model's settings": "별 = 빠른 전환, 슬라이더 = 이 모델의 설정",
   "App name": "앱 이름",
+  "App settings": "앱 설정",
+  "Opens the app's own settings page": "앱 자체의 설정 페이지를 엽니다",
   "Author (shown as “by …”)": "작성자(“by …”로 표시)",
   "e.g. Recipe book": "예: 레시피 북",
   "e.g. your name": "예: 내 이름",

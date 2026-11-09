@@ -1,4 +1,4 @@
-<!-- source: 51d046c99c83 -->
+<!-- source: 3e8eaf6fcf3f -->
 # Instellingenkaart
 
 Instellingen is het eigen venster van de shell, gedeeld door alle apps. Open het met het tandwiel in de bovenste balk, of op een telefoon vanuit het accountmenu rechtsboven. Deze pagina noemt elk gedeelte zodat je weet waar je moet kijken.
@@ -30,8 +30,8 @@ Instellingen is het eigen venster van de shell, gedeeld door alle apps. Open het
 - **Server.** Hoe Molfar Vertep op deze computer draait: poort, de browser openen bij het starten, andere apparaten in je netwerk toestaan (met een QR-code voor je telefoon), HTTPS, of apps pakketten mogen downloaden, de versie en hoe je bijwerkt.
 - **Gebruikers.** Mensen die kunnen inloggen. Elk krijgt een eigen werkruimte, agent en apps.
 
-## Niet hier
+## App-instellingen
 
-Er is geen gedeelte voor individuele apps. De eigen instellingen van een app staan in de app. Zie [[apps]].
+Bovenaan de lijst noemt een groep **App-instellingen** elke geïnstalleerde app die een eigen instellingenpagina heeft (Roleplay, daar getoond als „Vertep“, en Social). Tik je erop, dan sluit Instellingen en opent de app op zijn instellingenpagina: bij Roleplay de chatlook, „Chat Behavior“ (spellingcontrole, automatisch corrigeren), streaming, thema’s en de rest van de chatinstellingen. Een app zonder instellingenpagina staat er niet in. Dezelfde pagina staat ook in de app zelf: zie [[apps]].
 
 > Op een telefoon toont Instellingen eerst een lijst met gedeelten; tik er een aan om naar binnen te gaan en gebruik Terug om terug te keren.

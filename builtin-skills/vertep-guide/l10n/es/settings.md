@@ -1,4 +1,4 @@
-<!-- source: 51d046c99c83 -->
+<!-- source: 3e8eaf6fcf3f -->
 # Mapa de Ajustes
 
 Ajustes es el diálogo propio del shell, compartido por todas las apps. Ábrelo con el engranaje en la barra superior, o en un teléfono desde el menú de cuenta arriba a la derecha. Esta página enumera cada sección para que sepas dónde mirar.
@@ -30,8 +30,8 @@ Ajustes es el diálogo propio del shell, compartido por todas las apps. Ábrelo 
 - **Servidor.** Cómo se ejecuta Molfar Vertep en este ordenador: puerto, abrir el navegador al arrancar, permitir otros dispositivos de tu red (con un código QR para tu teléfono), HTTPS, si las apps pueden descargar paquetes, la versión y cómo actualizar.
 - **Usuarios.** Personas que pueden iniciar sesión. Cada una recibe su propio espacio de trabajo, agente y apps.
 
-## No está aquí
+## Ajustes de las apps
 
-No hay sección para apps individuales. Los ajustes propios de una app están dentro de la app. Consulta [[apps]].
+Arriba de la lista, un grupo **Ajustes de las apps** nombra cada app instalada que tiene una página de ajustes propia (Roleplay, que aparece allí como «Vertep», y Social). Pulsa una y Ajustes se cierra y la app se abre en su página de ajustes: en Roleplay, el aspecto del chat, «Chat Behavior» (corrección ortográfica, autocorrección), la transmisión, los temas y el resto de ajustes del chat. Una app sin página de ajustes no aparece en la lista. La misma página también está dentro de la app: consulta [[apps]].
 
 > En un teléfono, Ajustes muestra primero una lista de secciones; toca una para entrar y usa Atrás para volver.

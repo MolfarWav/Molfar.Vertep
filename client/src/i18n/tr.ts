@@ -668,6 +668,8 @@ const dict = {
   "{shown} shown · {total} available": "{shown} gösteriliyor · {total} kullanılabilir",
   "Star = quick switch, sliders = this model's settings": "Yıldız = hızlı geçiş, kaydırıcılar = bu modelin ayarları",
   "App name": "Uygulama adı",
+  "App settings": "Uygulama ayarları",
+  "Opens the app's own settings page": "Uygulamanın kendi ayarlar sayfasını açar",
   "Author (shown as “by …”)": "Yazar („… tarafından” olarak gösterilir)",
   "e.g. Recipe book": "örn. Yemek tarifleri",
   "e.g. your name": "örn. adınız",

@@ -1,4 +1,4 @@
-<!-- source: 51d046c99c83 -->
+<!-- source: 3e8eaf6fcf3f -->
 # Mapa de Configurações
 
 Configurações é a caixa de diálogo do próprio shell, compartilhada por todos os apps. Abra com a engrenagem na barra superior, ou no celular pelo menu da conta no canto superior direito. Esta página lista cada seção para você saber onde procurar.
@@ -30,8 +30,8 @@ Configurações é a caixa de diálogo do próprio shell, compartilhada por todo
 - **Servidor.** Como o Molfar Vertep roda neste computador: porta, abrir o navegador ao iniciar, permitir outros dispositivos na sua rede (com um código QR para o celular), HTTPS, se os apps podem baixar pacotes, a versão e como atualizar.
 - **Usuários.** Pessoas que podem entrar. Cada uma recebe seu próprio espaço de trabalho, agente e apps.
 
-## O que não está aqui
+## Configurações dos apps
 
-Não há seção para apps individuais. As configurações de um app ficam dentro do app. Veja [[apps]].
+No topo da lista, um grupo **Configurações dos apps** lista cada app instalado que tem uma página de configurações própria (Roleplay, que aparece ali como “Vertep”, e Social). Toque em um: Configurações fecha e o app abre na sua página de configurações. No Roleplay, isso é a aparência do chat, “Chat Behavior” (verificação ortográfica, correção automática), streaming, temas e o restante das configurações do chat. Um app sem página de configurações não aparece. A mesma página também fica dentro do app: veja [[apps]].
 
 > No celular, Configurações mostra primeiro uma lista de seções; toque em uma para entrar e use Voltar para retornar.

@@ -47,7 +47,13 @@ export interface AppManifest {
   engine?: string;
   /** Files of other apps this app asks to read (the user decides, once; see apps/reads.ts). */
   reads?: AppRead[];
+  /** The name of the app's own settings view (a short word, e.g. "settings"). When set, the shell's Settings lists the app
+   *  under "Apps"; a click opens the app and hands it this name (`molfarShell.onView`). Absent = the app has no settings page. */
+  settingsView?: string;
 }
+
+/** A view name an app may declare: a short lowercase word the shell hands back to the app, nothing else. */
+export const APP_VIEW_NAME = /^[a-z][a-z0-9-]{0,31}$/;
 
 export interface AppInfo {
   id: string;
@@ -84,6 +90,7 @@ export function validateAppManifest(raw: unknown): AppManifest | null {
     ...(source ? { source } : {}),
     ...(typeof m.repository === "string" && /^https:\/\/[^\s]+$/.test(m.repository) ? { repository: m.repository } : {}),
     ...(typeof m.engine === "string" && m.engine.trim() && m.engine.length <= 64 ? { engine: m.engine.trim() } : {}),
+    ...(typeof m.settingsView === "string" && APP_VIEW_NAME.test(m.settingsView) ? { settingsView: m.settingsView } : {}),
     ...(parseReads((raw as { reads?: unknown }).reads).length ? { reads: parseReads((raw as { reads?: unknown }).reads) } : {}),
   };
 }

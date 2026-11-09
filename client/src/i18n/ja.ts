@@ -668,6 +668,8 @@ const dict = {
   "{shown} shown · {total} available": "{shown} 件表示 · {total} 件利用可能",
   "Star = quick switch, sliders = this model's settings": "星 = クイック切り替え、スライダー = このモデルの設定",
   "App name": "アプリ名",
+  "App settings": "アプリの設定",
+  "Opens the app's own settings page": "アプリ自身の設定ページを開きます",
   "Author (shown as “by …”)": "作者（「by …」として表示）",
   "e.g. Recipe book": "例: レシピ帳",
   "e.g. your name": "例: あなたの名前",
