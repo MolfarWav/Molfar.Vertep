@@ -5,6 +5,12 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## 1.13.2 (2026-11-09)
+
+- No engine code changed. This release carries **Social 0.3.0** as an app update (#309, #311, #312 to #316, #320, #322): the forum (search, pages, closing and removing topics, Back button), **Life** (a diary per character, first messages in the messenger, an optional daily feed of outside news), an emoji picker with its own colour emoji font, a page for your own personas ("Your profile"), a Model tab and a generated picture for each profile, a week of its own for every character, and the app following the language and theme of the shell. See the Social CHANGELOG (0.3.0).
+- **Social asks to read Roleplay again.** Its manifest now also lists `litopys/portraits.json` in `reads` (so the portrait of a character can come along with an import). A permission you gave before covered only the files that were shown then, so the engine asks again on Home the first time Social opens after the update. Allow it once more.
+- Social's Life plugin is the only plugin of the app with the `network` permission and a list of hosts; by the engine's code an official app's update is applied without the permission review that other apps get (read in the code, not tried on a real update yet).
+
 ## 1.13.1 (2026-11-09)
 
 - **Apps can send you Home.** An official app calls `window.molfarShell.openHome()` and the shell switches to Home, where each app's details and its "Access to other apps" setting are. Social uses it in the "no access" dialog of the Roleplay import. Only the app on screen is heard; an engine without the call has no `openHome`, and the app keeps its text hint.
