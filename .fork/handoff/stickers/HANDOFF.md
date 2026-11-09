@@ -39,3 +39,11 @@ Written 2026-11-09. For the session (another account) that animates the pack. Re
 
 ## Open in #329 (also in the issue)
 Pack size in the manager, a starter pack (this work), tokens in forum board and search previews showing as plain text, which 12 items are listed for packs over 12 (the first 12 now), guide translations for the new text (stale until refreshed before a release), a real model following the marker format, the forum reply path and the manager on a phone in a browser. #345 (fold check on a real model) still waits for a working key.
+
+## Done 2026-11-09 (steps 1 to 3; the owner decides step 4)
+- `tools/animate.py <native dir> <out dir> [heads]` makes the 16 files (sticker x4 and emoji 64 px per head) and frame strips; `tools/build-pack.mjs` uploads them and writes `packs.json`; `tools/verify-pack.mjs` compares the served bytes. On the laptop: `PYLIBS=D:/Claude/pylibs python animate.py work/n04 out`, output in `D:\Claude\molfar-sticker\out` (not in any repo).
+- Results, sizes and what was only looked at: STATE, entry "#329 THE ANIMATED MOLFAR PACK BUILT AND CHECKED".
+- **Step 4 lesson:** an asset PUT with a bare cookie has no owner app and the Social frame gets 404 on it. The bundled pack must be uploaded by the page (the manager's `uploadPicture` path), then saved with `PUT /v1/apps/social/stickers/packs`. Files in the app folder plus a button "Add the Molfar pack" that fetches them from the app's own address and uploads them is still the plan; check the frame's CSP first, and open the issue (with the free-packs catalog) after the owner's yes.
+
+## Step 4 done 2026-11-09 (Social commit 29e7da9, issue #347)
+Built as described in STATE, "#329 STEP 4". The lesson above held: the CSP rules out a fetch, so the files are lazy inline imports. What is left: the release of Social (version bump, CHANGELOG, guide translations, merge, on the owner's word), and the free-packs catalog (#347 part 2, not started: the frame cannot fetch from outside, so it needs an engine route or a plugin with `network`).
