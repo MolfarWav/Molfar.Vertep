@@ -49,6 +49,15 @@ holds the rules that do not change between tasks; the handoff holds the task.
 - Our own catalogs: the Store list is `MolfarWav/Molfar.Vertep-Store` (`apps.json`), official apps are MolfarWav only (`OFFICIAL_SOURCES`).
 - The session's git proxy cannot delete remote branches; the user deletes old ones on GitHub.
 
+## Addons release on their own (user, 2026-11-09)
+- Roleplay and Social (and any later addon) get their own releases from now on. A change only in an addon's repo is shipped by
+  that addon's version bump, CHANGELOG and merge in its repo; it does not need an engine release, and the engine's release notes
+  need not mention it. An engine release happens only when engine code changed.
+- Social has no tags: the Updates dialog compares the repo's head, so its release is `manifest.json` and the changed plugin
+  manifests bumped, the CHANGELOG "Unreleased" renamed to the version, the guide translations refreshed
+  (`bun scripts/guide-l10n.ts --dir <social repo>/.skills/guide --stale`, then a cheap model, then `--stamp`), and the merge to
+  `main`. Its manifest `engine` stays the app contract number, not an engine release.
+
 ## Bugs (user, 2026-10-13)
 - Every bug lives as a GitHub issue in MolfarWav/Molfar.Vertep, label `bug` (Roleplay bugs too). The user brings
   reports (Discord, his own); file each one as an issue in the bug form's shape: where, what happened, steps,
