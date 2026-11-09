@@ -1998,6 +1998,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       apps: apps.map((a) => ({
         id: a.id, name: a.manifest.name, kind: a.manifest.kind,
         author: a.manifest.author ?? null,
+        // the app's own settings page (a view name), listed under "Apps" in the shell's Settings (#334)
+        settingsView: a.manifest.settingsView ?? null,
         official: officialApp(p, a),
         repository: installSourceOf(p, a)?.git ?? null,
         // official code restored from a file, waiting for its check

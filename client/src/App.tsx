@@ -10,7 +10,7 @@ import { Icon } from "./ui/icon"
 import { IconButton } from "./ui/button"
 import { Button } from "./ui/button"
 import { api, prefs, authApi, appPluginsApi, confirmAppFile, exportApp, previewAppFile, type AppImportPreview, type AuthUser, type EngineRelease } from "./api"
-import { SettingsBody, type TabValue } from "./settings"
+import { type AppSettingsEntry, SettingsBody, type TabValue } from "./settings"
 import { EngineUpdateButton } from "./server-settings"
 import { AppUpdateBanner, useAppUpdate, useAppUpdates, type AppUpdates } from "./app-update"
 import { AppReadsPanel, AppReadsPrompt } from "./app-reads"
@@ -452,6 +452,13 @@ function Shell(props: { theme: ThemeControl }) {
   function openApp(id: string) {
     placeTab({ id, kind: "app", name: appName(id) })
   }
+  /** Apps that name a settings page of their own (manifest `settingsView`): the Settings dialog lists them (#334). */
+  const appSettings = (launch?.apps ?? []).flatMap((a) => (a.settingsView ? [{ id: a.id, name: a.name || a.id, view: a.settingsView }] : []))
+  /** Open the app and hand it the name of its settings view; the bridge holds the name until the frame is ready. */
+  function openAppSettings(entry: AppSettingsEntry) {
+    openApp(entry.id)
+    window.MolfarBridgeHost?.openView?.(entry.id, entry.view)
+  }
   /** Clicking a tab in the strip only switches to it — it never rearranges or
    * consumes anything, whatever tab you were on. */
   function focusTab(t: Tab) {
@@ -765,7 +772,7 @@ function Shell(props: { theme: ThemeControl }) {
           onClose={appNotices.dismiss}
         />
         <ModalDialog open={settingsOpen} onClose={() => setSettingsOpen(false)}>
-          <SettingsBody onClose={() => setSettingsOpen(false)} me={user} initialTab={settingsTab} initialModel={settingsModel} onLogout={() => { setSettingsOpen(false); void logout() }} />
+          <SettingsBody onClose={() => setSettingsOpen(false)} me={user} initialTab={settingsTab} initialModel={settingsModel} appSettings={appSettings} onOpenAppSettings={openAppSettings} onLogout={() => { setSettingsOpen(false); void logout() }} />
         </ModalDialog>
         </>
       ) : null}

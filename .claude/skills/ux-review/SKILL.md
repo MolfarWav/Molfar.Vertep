@@ -61,9 +61,11 @@ Then the three questions:
 1. **Find.** Where will the user look for this? Put a control next to the
    thing it changes. A setting that affects one chat sits in that chat's
    panel; one that affects one card sits in the card editor. Settings of a
-   whole app are reachable from the shell's Settings (Apps section, user
-   2026-10-31; before that, 2026-10-11, they lived only inside the apps): an
-   app has no Settings item of its own in its navigation rail.
+   whole app are reachable from the shell's Settings ("App settings" group at
+   the top, built in #334 as a deep link: the app names its page in the
+   manifest `settingsView`; user 2026-10-31, before that, 2026-10-11, they
+   lived only inside the apps): an app has no Settings item of its own in its
+   navigation rail.
 2. **Understand.** Can a user who never read the docs tell what it does from
    the label and one line under it? If not, rename it or add the hint
    (section 3) before adding more UI.

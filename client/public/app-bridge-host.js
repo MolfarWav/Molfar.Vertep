@@ -429,9 +429,13 @@
     var d = e.data;
     if (!d || (d.__molfar !== 1 && d.__chrysalis !== 1)) return;
     if (d.type === "hello") {
+      record.helloed = true;
       // the shell's copy of the app's storage rides along: a frame that
       // reloaded itself from an older hash snapshot catches up with it
-      send(e.source, { __molfar: 1, type: "init", nonce: record.nonce, storage: readStorage(record.username, record.appId), theme: shellTheme() });
+      var init = { __molfar: 1, type: "init", nonce: record.nonce, storage: readStorage(record.username, record.appId), theme: shellTheme() };
+      var waiting = takeView(record.appId);
+      if (waiting) init.view = waiting;
+      send(e.source, init);
       return;
     }
     // storage is accepted BEFORE the handshake: a write followed immediately
@@ -486,6 +490,31 @@
     var record = { appId: appId, username: username, nonce: randomNonce(), trusted: trusted === true };
     frames.set(iframe.contentWindow, record);
     return function unserve() { frames.delete(iframe.contentWindow); };
+  };
+
+  // ---------- a view the shell asks an app to show ----------
+  // The shell's Settings lists an app that declares a settings view (manifest `settingsView`, #334). A click opens the
+  // app and hands it that name. The frame may not exist yet (its tab is only being made) or may still be booting, so the
+  // name waits here until the frame's handshake, for a minute at most; a frame already running hears of it at once.
+  var VIEW_NAME = /^[a-z][a-z0-9-]{0,31}$/;
+  var VIEW_WAIT_MS = 60000;
+  var pendingViews = {};
+  function takeView(appId) {
+    var w = pendingViews[appId];
+    delete pendingViews[appId];
+    return w && Date.now() - w.at < VIEW_WAIT_MS ? w.view : null;
+  }
+  /** Hand `view` (a short name the app declared) to the app's frame. Returns nothing; a bad name is dropped. */
+  CH.openView = function (appId, view) {
+    if (typeof appId !== "string" || typeof view !== "string" || !VIEW_NAME.test(view)) return;
+    var live = false;
+    frames.forEach(function (record, win) {
+      if (record.appId !== appId || !record.helloed) return;
+      live = true;
+      send(win, { __molfar: 1, type: "open-view", view: view });
+    });
+    if (live) delete pendingViews[appId];
+    else pendingViews[appId] = { view: view, at: Date.now() };
   };
 
   /** The shell changed its theme: every app frame hears of it (an app that follows the shell repaints). */

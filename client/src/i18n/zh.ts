@@ -668,6 +668,8 @@ const dict = {
   "{shown} shown · {total} available": "显示 {shown} 个 · 共 {total} 个可用",
   "Star = quick switch, sliders = this model's settings": "星标 = 快速切换，滑块 = 此模型的设置",
   "App name": "应用名称",
+  "App settings": "应用设置",
+  "Opens the app's own settings page": "打开应用自己的设置页面",
   "Author (shown as “by …”)": "作者（显示为“by …”）",
   "e.g. Recipe book": "例如：食谱本",
   "e.g. your name": "例如：你的名字",

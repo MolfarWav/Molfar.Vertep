@@ -5,6 +5,10 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## Unreleased
+
+- **App settings are in the shell's Settings (#334).** Roleplay's chat look and behaviour (Chat Behavior, spell check, streaming, themes) were only on Roleplay's own "Roleplay settings" page, and nothing in the shell's Settings pointed there. An app can now name a settings page of its own in its manifest (`settingsView`); Settings lists such apps in an **App settings** group at the top, and a click opens the app on that page. Apps listen with `window.molfarShell.onView(fn)`; a name sent while the app is still opening waits for up to a minute. Apps that do not name a page are not listed. This needs an app update to show anything: Roleplay and Social name their pages in their next releases.
+
 ## 1.13.2 (2026-11-09)
 
 - No engine code changed. This release carries **Social 0.3.0** as an app update (#309, #311, #312 to #316, #320, #322): the forum (search, pages, closing and removing topics, Back button), **Life** (a diary per character, first messages in the messenger, an optional daily feed of outside news), an emoji picker with its own colour emoji font, a page for your own personas ("Your profile"), a Model tab and a generated picture for each profile, a week of its own for every character, and the app following the language and theme of the shell. See the Social CHANGELOG (0.3.0).

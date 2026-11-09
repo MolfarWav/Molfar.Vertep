@@ -90,6 +90,9 @@ hot-reload by mtime: nothing to call.
 ## Pointing the user to the shell
 - An official app can send the user to a screen it cannot draw itself: `window.molfarShell.openHome()` switches the shell to Home (the launcher, where an app's details and its "Access to other apps" setting live), `openSettingsTab(tab)` to a Settings tab, `openApp(id)` to another installed app. Only the app on screen is heard. Use them for a link or a button with a plain label; an engine older than the call has no such function, so check before calling and keep a text hint as the fallback.
 
+## A settings page of your own
+- An app with a page for its whole-app settings names it in the manifest: `"settingsView": "settings"` (a lowercase word, at most 32 characters, letters, digits and dashes). The shell's Settings then lists the app under "App settings"; a click closes Settings, opens the app and hands it that name. The app listens with `window.molfarShell.onView((view) => ...)` and shows the page; a name that comes while the app is still booting is delivered when the listener is registered. The call returns a function that stops listening. Without `settingsView` the app is not listed. Settings of one chat or one card stay in their own panel.
+
 ## Usability
 - The user's rule: a UI change is judged first by how easily people find, understand and use it, on a phone too. Load skill `ux-review` before you add a control and before you call it done.
 - An app with an in-app guide (Roleplay: `src/lib/guide-tips.ts`; its AGENTS.md, "The in-app guide", says how): a feature the user decides with gets a tip in the same change, so the help list and What's new point it out. The tip says only what the code does; check it against your code before done.

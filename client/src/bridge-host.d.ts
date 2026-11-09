@@ -10,6 +10,8 @@ declare global {
       storageKey(username: string, appId: string): string;
       /** Tell every app frame the shell's colour theme (called after a theme change). */
       pushTheme?(): void;
+      /** Hand an app's frame the name of a view it declared (manifest `settingsView`); held until the frame is ready. */
+      openView?(appId: string, view: string): void;
       /** The shell's theme as an app sees it. */
       shellTheme?(): { id: string; scheme: "dark" | "light"; vars: Record<string, string> | null };
       /** The bridge's allowlist for app-to-shell actions: the cleaned request, or null. */
