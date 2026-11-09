@@ -1,4 +1,4 @@
-<!-- source: 51d046c99c83 -->
+<!-- source: 3e8eaf6fcf3f -->
 # Plan des Paramètres
 
 Paramètres est la fenêtre propre au shell, partagée par toutes les apps. Ouvrez-la avec l’engrenage dans la barre supérieure, ou sur un téléphone depuis le menu du compte en haut à droite. Cette page liste chaque section pour que vous sachiez où chercher.
@@ -30,8 +30,8 @@ Paramètres est la fenêtre propre au shell, partagée par toutes les apps. Ouvr
 - **Serveur.** Comment Molfar Vertep tourne sur cet ordinateur : le port, l’ouverture du navigateur au démarrage, l’autorisation des autres appareils sur votre réseau (avec un code QR pour votre téléphone), HTTPS, si les apps peuvent télécharger des paquets, la version et comment mettre à jour.
 - **Utilisateurs.** Les personnes qui peuvent se connecter. Chacune reçoit son propre espace de travail, agent et apps.
 
-## Pas ici
+## Réglages des apps
 
-Il n’y a pas de section pour les apps individuelles. Les réglages propres d’une app sont dans l’app. Voir [[apps]].
+En haut de la liste, un groupe **Réglages des apps** nomme chaque app installée qui a sa propre page de réglages (Roleplay, affiché là sous le nom « Vertep », et Social). Appuyez sur l’une d’elles : Paramètres se ferme et l’app s’ouvre sur sa page de réglages. Pour Roleplay, il s’agit de l’apparence du chat, de « Chat Behavior » (correction orthographique, correction automatique), du streaming, des thèmes et du reste des réglages du chat. Une app sans page de réglages n’est pas listée. Cette même page se trouve aussi dans l’app : voir [[apps]].
 
 > Sur un téléphone, Paramètres affiche d’abord une liste de sections ; touchez-en une pour entrer et utilisez Retour pour revenir.

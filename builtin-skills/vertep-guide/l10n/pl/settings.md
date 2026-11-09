@@ -1,4 +1,4 @@
-<!-- source: 51d046c99c83 -->
+<!-- source: 3e8eaf6fcf3f -->
 # Mapa Ustawień
 
 Ustawienia to własne okno powłoki, wspólne dla wszystkich aplikacji. Otwórz je kołem zębatym na górnym pasku, a na telefonie z menu konta w prawym górnym rogu. Ta strona wymienia każdą sekcję, żebyś wiedział, gdzie szukać.
@@ -30,8 +30,8 @@ Ustawienia to własne okno powłoki, wspólne dla wszystkich aplikacji. Otwórz 
 - **Serwer.** Jak Molfar Vertep działa na tym komputerze: port, otwieranie przeglądarki przy starcie, zezwalanie innym urządzeniom w Twojej sieci (z kodem QR dla telefonu), HTTPS, czy aplikacje mogą pobierać pakiety, wersja i sposób aktualizacji.
 - **Użytkownicy.** Osoby, które mogą się logować. Każda dostaje własną przestrzeń roboczą, agenta i aplikacje.
 
-## Nie tutaj
+## Ustawienia aplikacji
 
-Nie ma sekcji dla poszczególnych aplikacji. Własne ustawienia aplikacji znajdują się w środku aplikacji. Zobacz [[apps]].
+Na górze listy grupa **Ustawienia aplikacji** wymienia każdą zainstalowaną aplikację, która ma własną stronę ustawień (Roleplay, tam pokazywany jako „Vertep”, oraz Social). Dotknij jednej: Ustawienia się zamkną, a aplikacja otworzy się na swojej stronie ustawień. W Roleplay to wygląd czatu, „Chat Behavior” (sprawdzanie pisowni, autokorekta), strumieniowanie, motywy i reszta ustawień czatu. Aplikacja bez strony ustawień nie jest na liście. Ta sama strona jest też wewnątrz aplikacji: zobacz [[apps]].
 
 > Na telefonie Ustawienia najpierw pokazują listę sekcji; dotknij jedną, aby wejść, i użyj Wstecz, aby wrócić.

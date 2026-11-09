@@ -1,4 +1,4 @@
-<!-- source: 51d046c99c83 -->
+<!-- source: 3e8eaf6fcf3f -->
 # Ayarlar haritası
 
 Ayarlar, kabuğun tüm uygulamalar tarafından paylaşılan kendi iletişim kutusudur. Üst çubuktaki dişliyle veya telefonda sağ üstteki hesap menüsünden aç. Bu sayfa, nereye bakacağını bilmen için her bölümü listeler.
@@ -30,8 +30,8 @@ Ayarlar, kabuğun tüm uygulamalar tarafından paylaşılan kendi iletişim kutu
 - **Sunucu.** Molfar Vertep'in bu bilgisayarda nasıl çalıştığı: bağlantı noktası, başlangıçta tarayıcıyı açma, ağındaki diğer cihazlara izin verme (telefonun için bir QR koduyla), HTTPS, uygulamaların paket indirip indiremeyeceği, sürüm ve nasıl güncelleneceği.
 - **Kullanıcılar.** Oturum açabilecek kişiler. Her biri kendi çalışma alanını, ajanını ve uygulamalarını alır.
 
-## Burada değil
+## Uygulama ayarları
 
-Bireysel uygulamalar için bir bölüm yoktur. Bir uygulamanın kendi ayarları uygulamanın içindedir. Bkz. [[apps]].
+Listenin en üstündeki **Uygulama ayarları** grubu, kendi ayar sayfası olan her kurulu uygulamayı listeler (Roleplay, orada «Vertep» olarak görünür, ve Social). Birine dokunursan Ayarlar kapanır ve uygulama kendi ayar sayfasında açılır: Roleplay için sohbet görünümü, «Chat Behavior» (yazım denetimi, otomatik düzeltme), akış, temalar ve sohbet ayarlarının geri kalanı. Ayar sayfası olmayan uygulama listelenmez. Aynı sayfa uygulamanın içinde de bulunur: bkz. [[apps]].
 
 > Telefonda, Ayarlar önce bölümlerin bir listesini gösterir; birine girmek için dokun ve geri dönmek için Geri'yi kullan.

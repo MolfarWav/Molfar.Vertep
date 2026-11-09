@@ -1,4 +1,4 @@
-<!-- source: 51d046c99c83 -->
+<!-- source: 3e8eaf6fcf3f -->
 # Mappa delle Impostazioni
 
 Impostazioni è la finestra della shell stessa, condivisa da tutte le app. Aprila con l'ingranaggio nella barra superiore, o su un telefono dal menu account in alto a destra. Questa pagina elenca ogni sezione così sai dove guardare.
@@ -30,8 +30,8 @@ Impostazioni è la finestra della shell stessa, condivisa da tutte le app. April
 - **Server.** Come gira Molfar Vertep su questo computer: porta, aprire il browser all'avvio, consentire altri dispositivi sulla tua rete (con un codice QR per il tuo telefono), HTTPS, se le app possono scaricare pacchetti, la versione e come aggiornare.
 - **Utenti.** Le persone che possono accedere. Ognuna riceve il proprio spazio di lavoro, agente e app.
 
-## Non qui
+## Impostazioni delle app
 
-Non c'è una sezione per le singole app. Le impostazioni di un'app sono dentro l'app. Vedi [[apps]].
+In cima all’elenco, un gruppo **Impostazioni delle app** indica ogni app installata che ha una propria pagina di impostazioni (Roleplay, mostrata lì come «Vertep», e Social). Tocca una voce: Impostazioni si chiude e l’app si apre sulla sua pagina di impostazioni. Per Roleplay sono l’aspetto della chat, «Chat Behavior» (controllo ortografico, correzione automatica), lo streaming, i temi e il resto delle impostazioni della chat. Un’app senza pagina di impostazioni non compare nell’elenco. La stessa pagina si trova anche dentro l’app: vedi [[apps]].
 
 > Su un telefono, Impostazioni mostra prima un elenco di sezioni; toccane una per entrare e usa Indietro per tornare.
