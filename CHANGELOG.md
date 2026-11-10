@@ -5,6 +5,11 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## 1.16.0 (2026-11-10)
+
+- **A plugin's file write is atomic (#243).** `host.fs.write` truncated a file and then filled it, so a read that landed in between (the Roleplay engine plugin loading a chat while Dashboard, Litopys, World DM or an agent was rewriting it) saw an empty or half-written transcript. The content now goes to a temp file beside the target and is renamed over it, so a reader gets the old file or the new one; a plugin's settings file (`store/`) is written the same way. On Windows a rename can be refused while another program holds the target open without sharing; it is retried for about 150 ms and then falls back to the old in-place write, so a save is never lost to it. The temp file is `.<name>.<pid>.<random>.tmp` in the same folder and is removed when the write fails.
+- Roleplay 4.110.0 comes with this release as an app update: a name in a lorebook key finds the same name in the other alphabet (Kael / Каел) under the book's Word forms switch (#254); Dashboard, Litopys, World DM and the agents report their own insert ceilings for the history budget, about 0.3 s more per send (#220); the recollection editor shows no wrong limit while the setting loads (#235). Details in `.fork/release-notes/1.16.0.md`.
+
 ## 1.15.0 (2026-11-10)
 
 - **Molfar's mailbox takes skills (#198).** A skill card (`skill_propose`, `skill_edit`) now has Later beside Save and Skip, like a memory card: Later, a card nobody answered and a run with nobody to ask leave the whole skill (with its extra files) in the Mailbox tab of Memory and skills, shown as its full text or as a diff against the skill you have now, and a yes writes it and commits. A Skip is remembered, so the same skill is not asked for again; a revised version is a new proposal. A chat that finished while you were in another chat now waits in the Mailbox too (Open, Dismiss) and counts in the number on the brain button.

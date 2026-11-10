@@ -29,6 +29,7 @@
 import { parentPort } from "node:worker_threads";
 import fs from "node:fs";
 import path from "node:path";
+import { writeFileAtomic } from "./atomic-write.mjs";
 import { unzipSync, zipSync } from "fflate";
 
 const utf8 = new TextDecoder("utf-8");
@@ -381,7 +382,8 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
           if (Buffer.byteLength(content) > 4 * 1024 * 1024) throw new Error("fs.write content too large (4MB)");
           try {
             fs.mkdirSync(path.dirname(full), { recursive: true });
-            fs.writeFileSync(full, content, "utf8");
+            // atomic: a reader (the engine plugin loading a chat, another route) never sees a half-written file (#243)
+            writeFileAtomic(full, content);
           } catch (e) { scrub(e, rel); }
           const relSlash = path.relative(fsRoot, full).split(path.sep).join("/");
           if (!fsWrites.includes(relSlash)) fsWrites.push(relSlash);

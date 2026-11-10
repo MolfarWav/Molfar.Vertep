@@ -5,6 +5,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { writeFileAtomic } from "./atomic-write.mjs";
 
 export class PluginStoreService {
   constructor(private storeDir: string) {}
@@ -25,7 +26,7 @@ export class PluginStoreService {
   private write(pluginId: string, data: Record<string, unknown>): void {
     const file = this.fileFor(pluginId);
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(data, null, 2) + "\n", "utf8");
+    writeFileAtomic(file, JSON.stringify(data, null, 2) + "\n");
   }
 
   namespace(pluginId: string) {
