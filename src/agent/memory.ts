@@ -32,7 +32,7 @@ import * as git from "../git.js";
 import { resourcesDir } from "../install.js";
 import type { UserPaths } from "../paths.js";
 import type { AgentToolOptions } from "./tools.js";
-import { dropMail, getMail, queueMail, rememberDeclined, wasDeclined, type MailDraft } from "./mailbox.js";
+import { dropMail, getMail, queueMail, rememberDeclined, wasDeclined, type MailDraft, type MailItem } from "./mailbox.js";
 import { matchCount, tokens } from "./text-match.js";
 import { estimateTextTokens } from "./context-budget.js";
 
@@ -798,13 +798,79 @@ export async function removeEntry(root: string, username: string, scope: MemoryS
   return { text: `Removed from ${found.file}: ${removed}`, saved: true };
 }
 
+const scopeLabel = (scope: MemoryScope): string => (scope.appId ? `app ${scope.appId}` : scope.projectName ? `project ${scope.projectName}` : "global");
+
+/** What a skill change looks like to the user: the file, what it would replace, the card text and the verb. */
+function skillChange(root: string, scope: MemoryScope, rawScope: string | undefined, name: string, draft: string, extra: { path: string; content: string }[]): { file: string; before: string; detail: string; what: string } {
+  const file = `${scope.skillsDir}/${name}/SKILL.md`;
+  const own = readText(root, file);
+  // a global skill named like a built-in one replaces it: show the change against the built-in text
+  const builtin = !rawScope || rawScope === "global" ? builtinSkills().find((b) => b.name === name) : undefined;
+  const before = own || (builtin ? skillText(root, builtin) : "");
+  const fileNote = extra.length ? `\n\nFiles: ${extra.map((f) => `${f.path} (${f.content.length} chars)`).join(", ")}` : "";
+  const detail = before
+    ? `${skillDiff(file, before, draft) ?? "(SKILL.md unchanged)"}${fileNote}`
+    : `${draft.length > 4000 ? `${draft.slice(0, 4000)}\n… (${draft.length - 4000} more characters)` : draft}${fileNote}`;
+  return { file, before, detail, what: own ? "Update" : builtin ? "Customize the built-in" : "Save" };
+}
+
+/** Write one skill change, no card: the part of a proposal that follows a yes. */
+async function writeSkill(root: string, username: string, c: { file: string; before: string }, draft: string, extra: { path: string; content: string }[], message: string): Promise<string> {
+  writeSkillFiles(root, c.file, draft, extra);
+  await git.commitAll(root, username, message, true).catch(() => undefined);
+  return `Saved ${c.file}${extra.length ? ` and ${extra.length} file(s)` : ""}.`;
+}
+
+/** The confirm-and-save flow of one skill change (skill_propose, skill_edit): the card with Save, Later and Skip, the
+ *  write, the commit. "Later", a card nobody answered and a run with nobody to ask leave it in the mailbox. */
+async function offerSkill(
+  root: string,
+  username: string,
+  ask: AgentToolOptions["ask"] | undefined,
+  p: { scope: MemoryScope; rawScope: string | undefined; name: string; description: string; body: string; files: { path: string; content: string }[]; edit?: boolean },
+): Promise<{ text: string; saved: boolean }> {
+  const draft = composeSkill(p.name, p.description, p.body);
+  const change = skillChange(root, p.scope, p.rawScope, p.name, draft, p.files);
+  const mail: MailDraft = { kind: "skill", scope: p.rawScope?.trim() || "global", name: p.name, description: p.description, body: p.body, files: p.files, from: "later" };
+  if (wasDeclined(root, mail)) return { text: "Not proposed: the user skipped this skill before. Do not propose it again.", saved: false };
+  if (!ask) return leaveInMailbox(root, { ...mail, from: "unanswered" });
+  const answer = (
+    await ask({
+      question: `${change.what} skill "${p.name}" (${scopeLabel(p.scope)})? "Later" leaves it in your mailbox. Any other reply is sent back to me as feedback.`,
+      options: ["Save", "Later", "Skip"],
+      detail: change.detail,
+      ...(change.before ? { detailKind: "diff" as const } : {}),
+    })
+  ).trim();
+  if (answer === "Later" || NO_ANSWER.test(answer)) return leaveInMailbox(root, { ...mail, from: answer === "Later" ? "later" : "unanswered" });
+  if (!answer || answer === "Skip") {
+    rememberDeclined(root, mail);
+    return { text: "Not saved: the user skipped this skill. Do not propose it again.", saved: false };
+  }
+  if (answer !== "Save") return { text: `Not saved. The user's feedback: ${answer}`, saved: false };
+  const saved = await writeSkill(root, username, change, draft, p.files, `skill: ${p.edit ? "edit" : change.before ? "update" : "add"} ${p.name}`);
+  return { text: p.edit ? saved : `${saved} It is in your skills list from the next session; load it with skill_load now if you need it.`, saved: true };
+}
+
+/** What a skill item in the mailbox shows: where it goes and what it would change (a diff against the current text). */
+export function skillMailPreview(root: string, item: Extract<MailItem, { kind: "skill" }>): { scopeLabel: string; what: string; detail: string; diff: boolean } {
+  const scope = resolveScope(root, item.scope);
+  const change = skillChange(root, scope, item.scope, item.name, composeSkill(item.name, item.description, item.body), item.files);
+  return { scopeLabel: scopeLabel(scope), what: change.what, detail: change.detail, diff: Boolean(change.before) };
+}
+
 /** What a yes in the mailbox does: write or remove the entry the item describes, then take it out. `entry` is the user's own wording. */
 export async function acceptMail(root: string, username: string, id: string, entry?: string): Promise<{ text: string; saved: boolean }> {
   const item = getMail(root, id);
   if (!item) throw new Error("that item is not in the mailbox any more");
   const scope = resolveScope(root, item.scope);
   let r: { text: string; saved: boolean };
-  if (item.kind === "retire") {
+  if (item.kind === "skill") {
+    const draft = composeSkill(item.name, item.description, item.body);
+    const extra = checkSkillFiles(item.files);
+    const change = skillChange(root, scope, item.scope, item.name, draft, extra);
+    r = { text: await writeSkill(root, username, change, draft, extra, `skill: ${change.before ? "update" : "add"} ${item.name}`), saved: true };
+  } else if (item.kind === "retire") {
     const found = findEntry(root, scope, item.match);
     if (!found) {
       dropMail(root, id);
@@ -889,23 +955,6 @@ export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<Agen
     },
   };
 
-  /** Ask the user to save a skill change; null means saved, else the reply to return. */
-  const confirm = async (question: string, detail: string, diff: boolean): Promise<string | null> => {
-    if (!opts.ask) return "Not saved: the user is not available to confirm skills right now.";
-    const answer = (
-      await opts.ask({
-        question: `${question} Any other reply is sent back to me as feedback.`,
-        options: ["Save", "Skip"],
-        detail,
-        ...(diff ? { detailKind: "diff" as const } : {}),
-      })
-    ).trim();
-    if (answer === "Save") return null;
-    return !answer || answer === "Skip" || answer === "(no answer)" ? "Not saved: the user skipped this skill." : `Not saved. The user's feedback: ${answer}`;
-  };
-
-  const scopeLabel = (scope: MemoryScope): string => (scope.appId ? `app ${scope.appId}` : scope.projectName ? `project ${scope.projectName}` : "global");
-
   const skillPropose: AgentTool = {
     name: "skill_propose",
     label: "Propose a skill",
@@ -925,23 +974,10 @@ export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<Agen
         name: string; description: string; body: string; scope?: string; files?: { path: string; content: string }[];
       };
       const scope = resolveScope(root, rawScope);
-      const draft = composeSkill(name, description, body);
+      composeSkill(name, description, body);
       const extra = checkSkillFiles(files ?? []);
-      const file = `${scope.skillsDir}/${name}/SKILL.md`;
-      const own = readText(root, file);
-      // a global skill named like a built-in one replaces it: show the change against the built-in text
-      const builtin = !rawScope || rawScope === "global" ? builtinSkills().find((b) => b.name === name) : undefined;
-      const before = own || (builtin ? skillText(root, builtin) : "");
-      const fileNote = extra.length ? `\n\nFiles: ${extra.map((f) => `${f.path} (${f.content.length} chars)`).join(", ")}` : "";
-      const detail = before
-        ? `${skillDiff(file, before, draft) ?? "(SKILL.md unchanged)"}${fileNote}`
-        : `${draft.length > 4000 ? `${draft.slice(0, 4000)}\n… (${draft.length - 4000} more characters)` : draft}${fileNote}`;
-      const what = own ? "Update" : builtin ? "Customize the built-in" : "Save";
-      const refused = await confirm(`${what} skill "${name}" (${scopeLabel(scope)})?`, detail, Boolean(before));
-      if (refused) return text(refused);
-      writeSkillFiles(root, file, draft, extra);
-      await git.commitAll(root, username, `skill: ${before ? "update" : "add"} ${name}`, true).catch(() => undefined);
-      return text(`Saved ${file}${extra.length ? ` and ${extra.length} file(s)` : ""}. It is in your skills list from the next session; load it with skill_load now if you need it.`);
+      const r = await offerSkill(root, username, opts.ask, { scope, rawScope, name, description, body, files: extra });
+      return text(r.text);
     },
   };
 
@@ -973,15 +1009,12 @@ export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<Agen
         if (next.indexOf(e.old, at + 1) !== -1) throw new Error(`edit ${i + 1}: old text appears more than once. Include more surrounding lines.`);
         next = next.slice(0, at) + e.new + next.slice(at + e.old.length);
       }
-      const draft = composeSkill(name, description ?? parsed.description, next);
+      const newDescription = description ?? parsed.description;
+      const draft = composeSkill(name, newDescription, next);
       const file = `${scope.skillsDir}/${name}/SKILL.md`;
-      const diff = skillDiff(file, before, draft);
-      if (!diff) return text("Nothing changed: the edits leave the skill as it was.");
-      const refused = await confirm(`${found.builtin ? "Customize the built-in" : "Update"} skill "${name}" (${scopeLabel(scope)})?`, diff, true);
-      if (refused) return text(refused);
-      writeSkillFiles(root, file, draft, []);
-      await git.commitAll(root, username, `skill: edit ${name}`, true).catch(() => undefined);
-      return text(`Saved ${file}.`);
+      if (!skillDiff(file, before, draft)) return text("Nothing changed: the edits leave the skill as it was.");
+      const r = await offerSkill(root, username, opts.ask, { scope, rawScope, name, description: newDescription, body: next, files: [], edit: true });
+      return text(r.text);
     },
   };
 

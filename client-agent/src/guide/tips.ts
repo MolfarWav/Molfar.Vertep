@@ -234,6 +234,21 @@ export const AGENT_TIPS: Tip[] = [
       uk: "Вкладка «Skills» перелічує, що Мольфар може завантажити для завдання. «New skill» створює навичку, а на її сторінці є «Improve with Molfar». Чип під відповіддю називає навичку, яку цей запуск завантажив, і її токени; клацніть, щоб відкрити. Кожна навичка також є /командою.",
     },
   },
+  {
+    id: "help.memory.mailbox",
+    target: "agent.memory",
+    open: { view: "agent", panel: "memory" },
+    help: "memory",
+    keywords: {
+      en: "mailbox later skip waiting proposal suggestion badge number memory skill accept finished chat dismiss",
+      uk: "скринька пізніше пропустити очікує пропозиція число лічильник пам’ять навичка прийняти завершений чат",
+    },
+    title: { en: "The mailbox", uk: "Скринька" },
+    body: {
+      en: "A card that proposes a memory entry or a skill has Save, Later and Skip. Later (and a card nobody answered) leaves it in the Mailbox tab of Memory and skills, and the number on the brain button says how many wait. A skill shows its whole text, or a diff when it changes an existing one; nothing is saved until you press its button. Skip is remembered, so Molfar does not bring it back. A chat that finished while you were in another one waits there too: Open or Dismiss.",
+      uk: "Картка, що пропонує запис пам’яті чи навичку, має «Save», «Later» і «Skip». «Later» (і картка, на яку ніхто не відповів) лишає пропозицію на вкладці «Mailbox» у «Memory and skills», а число на кнопці з мозком показує, скільки їх чекає. Навичка показана повністю, а якщо змінює наявну, то як різниця; нічого не зберігається, доки ви не натиснете її кнопку. «Skip» запам’ятовується, тож Мольфар не повертає пропозицію. Чат, що завершився, поки ви були в іншому, теж чекає там: «Open» або «Dismiss».",
+    },
+  },
 
   // ---- Projects and chats ----
   {

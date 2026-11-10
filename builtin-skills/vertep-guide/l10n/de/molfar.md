@@ -1,4 +1,4 @@
-<!-- source: c3880a3f342c -->
+<!-- source: 6b5436de93e1 -->
 # Molfar, dein Agent
 
 Molfar ist der KI-Agent, der in Molfar Vertep eingebaut ist. Alles hier sind einfache Dateien, und er bearbeitet diese Dateien für dich. Lies diese Seite, wenn du etwas an deinen Apps ändern willst und es nicht von Hand tun möchtest.
@@ -43,6 +43,14 @@ Unter einer Antwort, die eine App geändert hat, siehst du „<App> geändert ·
 ## Gedächtnis und Skills
 
 Die Gehirn-Schaltfläche öffnet „Gedächtnis und Skills“. Das Gedächtnis hält fest, was er zwischen Chats behält; er schlägt Einträge vor und speichert einen erst, wenn du zustimmst. Skills sind kurze Anweisungen für eine Art von Aufgabe; „Neuer Skill“ schreibt einen, und „Mit Molfar verbessern“ verfeinert ihn. Siehe [[projects-and-chats]] für die projektspezifischen.
+
+### Das Postfach
+
+Eine Karte, die einen Gedächtniseintrag oder einen Skill vorschlägt, hat drei Antworten: „Save“, „Later“ und „Skip“. „Later“ lässt den Vorschlag im Tab „Mailbox“ von „Gedächtnis und Skills“ liegen, ebenso eine Karte, die niemand beantwortet hat, und einen Vorschlag, den Molfar nach einer langen Aufgabe macht. Eine Zahl auf der Gehirn-Schaltfläche zeigt, wie viele warten; wartet etwas, öffnet die Schaltfläche den Tab „Mailbox“.
+
+- Ein Gedächtniseintrag lässt sich vor dem Speichern bearbeiten. Ein Skill wird vollständig gezeigt, oder als Diff, wenn er einen vorhandenen Skill ändert, und so gespeichert, wie er gezeigt wird. Um ihn zu ändern, überspringe ihn und sage Molfar, was er korrigieren soll.
+- „Skip“ wird gemerkt, damit Molfar denselben Vorschlag nicht erneut bringt. „Skip all“ leert die Liste.
+- Ein Chat, der fertig wurde, während du in einem anderen Chat warst, wartet ebenfalls im Tab „Mailbox“, mit „Open“ und „Dismiss“. Die Chatliste markiert ihn genauso.
 
 ## Gut zu wissen
 

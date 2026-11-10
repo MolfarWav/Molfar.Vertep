@@ -7,8 +7,9 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { MAILBOX_MAX, dropMail, getMail, listMail, mailCount, mailSig, queueMail, wasDeclined } from "../src/agent/mailbox.js";
-import { acceptMail, proposeEntry, proposeRetire, readMemory, resolveScope } from "../src/agent/memory.js";
+import { acceptMail, buildMemoryTools, parseSkill, proposeEntry, proposeRetire, readMemory, resolveScope } from "../src/agent/memory.js";
 import { agentWriteDenied, bootstrapUserDir, userPaths } from "../src/paths.js";
+import type { AgentToolOptions } from "../src/agent/tools.js";
 import { UserService } from "../src/users.js";
 import { buildApp } from "../src/server/app.js";
 import { EventBus } from "../src/server/ws.js";
@@ -169,5 +170,83 @@ describe("the mailbox routes", () => {
     expect(mailCount(miaRoot)).toBe(0);
     // another user's mailbox is a different folder
     expect(mailCount(root)).toBe(0);
+  });
+});
+
+describe("skills in the mailbox", () => {
+  const skill = { name: "fix-icons", description: "When an app shows Script error after an icon import", body: "1. Check the icon exists." };
+  const UPDATED = ["1. Check the icon exists.", "2. Run app_check."].join("\n");
+  const tools = (ask?: AgentToolOptions["ask"]) => buildMemoryTools("alice", userPaths(dataDir, "alice"), ask ? { ask } : {});
+  const run = (t: ReturnType<typeof tools>, name: string, args: Record<string, unknown>) =>
+    t.find((x) => x.name === name)!.execute("t", args as never, undefined as never) as Promise<{ content: { text: string }[] }>;
+  const mailSkill = () => listMail(root).find((m) => m.kind === "skill");
+
+  it("a skill card offers Later; Later queues the whole skill and tells the model not to wait", async () => {
+    let options: unknown[] = [];
+    const r = await run(tools(async (q) => { options = q.options ?? []; return "Later"; }), "skill_propose", { ...skill, files: [{ path: "references/a.md", content: "extra" }] });
+    expect(options).toEqual(["Save", "Later", "Skip"]);
+    expect(r.content[0]!.text).toContain("mailbox");
+    expect(fs.existsSync(path.join(root, "skills/fix-icons/SKILL.md"))).toBe(false);
+    const item = mailSkill();
+    expect(item).toMatchObject({ kind: "skill", scope: "global", name: "fix-icons", from: "later", files: [{ path: "references/a.md", content: "extra" }] });
+  });
+  it("with nobody to ask, or a card nobody answered, the skill waits instead of being lost", async () => {
+    await run(tools(), "skill_propose", skill);
+    await run(tools(async () => "(no answer)"), "skill_propose", { ...skill, name: "other-skill" });
+    expect(listMail(root).map((m) => m.from)).toEqual(["unanswered", "unanswered"]);
+  });
+  it("the same skill is not queued twice; a revised one is another proposal", async () => {
+    const t = tools(async () => "Later");
+    await run(t, "skill_propose", skill);
+    const again = await run(t, "skill_propose", skill);
+    expect(again.content[0]!.text).toContain("mailbox");
+    expect(listMail(root)).toHaveLength(1);
+    await run(t, "skill_propose", { ...skill, body: UPDATED });
+    expect(listMail(root)).toHaveLength(2);
+  });
+  it("a Skip is remembered: the same skill is not asked again", async () => {
+    await run(tools(async () => "Skip"), "skill_propose", skill);
+    let asked = false;
+    const again = await run(tools(async () => { asked = true; return "Save"; }), "skill_propose", skill);
+    expect(asked).toBe(false);
+    expect(again.content[0]!.text).toContain("skipped");
+    expect(fs.existsSync(path.join(root, "skills/fix-icons/SKILL.md"))).toBe(false);
+  });
+  it("a yes writes SKILL.md and its files; an edit left for later keeps its result, shown as a diff", async () => {
+    await run(tools(async () => "Later"), "skill_propose", { ...skill, files: [{ path: "scripts/check.py", content: "print(1)" }] });
+    const first = mailSkill()!;
+    const out = await acceptMail(root, "alice", first.id);
+    expect(out.saved).toBe(true);
+    expect(parseSkill(fs.readFileSync(path.join(root, "skills/fix-icons/SKILL.md"), "utf8"))?.body).toBe("1. Check the icon exists.");
+    expect(fs.readFileSync(path.join(root, "skills/fix-icons/scripts/check.py"), "utf8")).toBe("print(1)");
+    expect(mailCount(root)).toBe(0);
+    // skill_edit: the exact pieces become the new text; the preview compares it with what is on disk now
+    await run(tools(async () => "Later"), "skill_edit", { name: "fix-icons", edits: [{ old: "1. Check the icon exists.", new: UPDATED }] });
+    const edit = mailSkill()!;
+    expect(edit).toMatchObject({ kind: "skill", name: "fix-icons", description: skill.description });
+    // the files the skill already has stay when an edit is accepted
+    await acceptMail(root, "alice", edit.id);
+    expect(fs.readFileSync(path.join(root, "skills/fix-icons/SKILL.md"), "utf8")).toContain("2. Run app_check.");
+    expect(fs.readFileSync(path.join(root, "skills/fix-icons/scripts/check.py"), "utf8")).toBe("print(1)");
+  });
+  it("the route lists a skill with its text (new) or a diff (update), and a skip is remembered", async () => {
+    const users = new UserService(dataDir);
+    const token = users.create("mia", "user", { password: "test-pass-1" }).token;
+    const app = buildApp({ users, sessions: new SessionService(dataDir), config: defaultInstanceConfig(), dataDir, bus: new EventBus() });
+    const call = (url: string, body?: unknown) =>
+      app.request(url, { method: body === undefined ? "GET" : "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+    const miaRoot = userPaths(dataDir, "mia").root;
+    const queued = queueMail(miaRoot, { kind: "skill", scope: "global", ...skill, files: [], from: "later" }) as { item: { id: string } };
+    type Row = { id: string; kind: string; what?: string; detail?: string; diff?: boolean; scopeLabel: string };
+    const one = ((await (await call("/v1/agent/mailbox")).json()) as { items: Row[] }).items[0]!;
+    expect(one).toMatchObject({ kind: "skill", what: "Save", diff: false, scopeLabel: "global memory" });
+    expect(one.detail).toContain("Check the icon exists.");
+    expect((await call("/v1/agent/mailbox/accept", { id: queued.item.id })).status).toBe(200);
+    queueMail(miaRoot, { kind: "skill", scope: "global", ...skill, body: UPDATED, files: [], from: "later" });
+    const two = ((await (await call("/v1/agent/mailbox")).json()) as { items: Row[] }).items[0]!;
+    expect(two).toMatchObject({ what: "Update", diff: true });
+    expect(two.detail).toContain("+2. Run app_check.");
+    expect((await call("/v1/agent/mailbox/skip", { id: two.id })).status).toBe(200);
+    expect(wasDeclined(miaRoot, { kind: "skill", scope: "global", ...skill, body: UPDATED, files: [] })).toBe(true);
   });
 });

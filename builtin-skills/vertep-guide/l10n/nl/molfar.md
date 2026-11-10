@@ -1,4 +1,4 @@
-<!-- source: c3880a3f342c -->
+<!-- source: 6b5436de93e1 -->
 # Molfar, je agent
 
 Molfar is de AI-agent die in Molfar Vertep is ingebouwd. Alles hier bestaat uit gewone bestanden en hij bewerkt die bestanden voor je. Lees deze pagina als je iets aan je apps wilt veranderen en het niet met de hand wilt doen.
@@ -43,6 +43,14 @@ Onder een antwoord dat een app veranderde zie je "Gewijzigd <app> · N bestanden
 ## Geheugen en vaardigheden
 
 De hersenknop opent "Geheugen en vaardigheden". Geheugen bevat wat hij tussen chats bewaart; hij stelt items voor en slaat er een pas op als jij akkoord gaat. Vaardigheden zijn korte instructies voor een soort klus; "Nieuwe vaardigheid" schrijft er een en "Verbeteren met Molfar" verfijnt die. Zie [[projects-and-chats]] voor de projectspecifieke.
+
+### De postbus
+
+Een kaart die een geheugenitem of een vaardigheid voorstelt, heeft drie antwoorden: "Save", "Later" en "Skip". "Later" laat het voorstel staan in het tabblad "Mailbox" van "Geheugen en vaardigheden", en dat geldt ook voor een kaart waar niemand op antwoordde en voor een suggestie die Molfar na een lange taak doet. Een getal op de hersenknop laat zien hoeveel er wachten; als er iets wacht, opent de knop op het tabblad "Mailbox".
+
+- Een geheugenitem kun je bewerken voordat je het opslaat. Een vaardigheid wordt volledig getoond, of als diff wanneer ze een vaardigheid wijzigt die je al hebt, en wordt opgeslagen zoals ze getoond wordt. Om haar te wijzigen sla je haar over en vertel je Molfar wat hij moet aanpassen.
+- "Skip" wordt onthouden, zodat Molfar hetzelfde voorstel niet terugbrengt. "Skip all" maakt de lijst leeg.
+- Een chat die klaar was terwijl je in een andere chat zat, wacht ook op het tabblad "Mailbox", met "Open" en "Dismiss". De chatlijst markeert hem op dezelfde manier.
 
 ## Goed om te weten
 

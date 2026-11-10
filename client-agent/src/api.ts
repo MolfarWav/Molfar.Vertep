@@ -354,10 +354,19 @@ export interface AgentMemory {
 /** One proposal Molfar left in the mailbox (#175). */
 export interface MailItem {
   id: string
-  kind: "add" | "replace" | "retire"
+  kind: "add" | "replace" | "retire" | "skill"
   scope: string
   scopeLabel: string
   entry?: string
+  /** a skill item: what it is called, its one-line description, and the card text (the whole skill, or a diff when `diff`) */
+  name?: string
+  description?: string
+  /** "Save" (new), "Update", or "Customize the built-in" */
+  what?: string
+  detail?: string
+  diff?: boolean
+  /** the app or project it was for is gone: it can only be skipped */
+  gone?: boolean
   match?: string
   topic?: string
   /** the memory line a replace or retire touches; absent when it is not in memory any more */

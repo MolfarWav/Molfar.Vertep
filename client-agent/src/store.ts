@@ -171,6 +171,8 @@ export interface AgentState {
   openMemory: (req: { file: string; text: string; scope?: string } | null) => void
   init: () => Promise<void>
   refreshSessions: () => Promise<void>
+  /** forget that a chat finished while another was open, without opening it (the mailbox "Dismiss") */
+  markSeen: (id: string) => void
   refreshMcp: () => Promise<void>
   open: (id: string) => Promise<void>
   reloadCurrent: () => Promise<void>
@@ -465,6 +467,13 @@ export const useAgent = create<AgentState>()((set, get) => {
       } catch {
         // MCP status is decoration; never block the chat on it
       }
+    },
+
+    markSeen: (id) => {
+      const unseen = without(get().unseen, id)
+      if (unseen === get().unseen) return
+      saveUnseen(unseen)
+      set({ unseen })
     },
 
     open: async (id) => {

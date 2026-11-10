@@ -1,4 +1,4 @@
-<!-- source: c3880a3f342c -->
+<!-- source: 6b5436de93e1 -->
 # Molfar, votre agent
 
 Molfar est l’agent IA intégré à Molfar Vertep. Tout ici est constitué de simples fichiers, et il modifie ces fichiers pour vous. Lisez cette page si vous voulez changer quelque chose dans vos apps et ne voulez pas le faire à la main.
@@ -43,6 +43,14 @@ Sous une réponse qui a modifié une app, vous voyez « Modifié <app> · N fich
 ## Mémoire et compétences
 
 Le bouton cerveau ouvre « Mémoire et compétences ». La mémoire contient ce qu’il garde entre les chats ; il propose des entrées et n’en enregistre une que lorsque vous êtes d’accord. Les compétences sont de courtes instructions pour un type de tâche ; « Nouvelle compétence » en écrit une et « Améliorer avec Molfar » la peaufine. Voir [[projects-and-chats]] pour celles propres à un projet.
+
+### La boîte de réception
+
+Une carte qui propose une entrée de mémoire ou une compétence a trois réponses : « Save », « Later » et « Skip ». « Later » laisse la proposition dans l’onglet « Mailbox » de « Mémoire et compétences », tout comme une carte restée sans réponse et une suggestion que Molfar fait après une longue tâche. Un nombre sur le bouton cerveau indique combien attendent ; quand quelque chose attend, le bouton s’ouvre sur l’onglet « Mailbox ».
+
+- Une entrée de mémoire peut être modifiée avant d’être enregistrée. Une compétence est montrée en entier, ou sous forme de diff lorsqu’elle modifie une compétence que vous avez déjà, et elle est enregistrée telle qu’elle est montrée. Pour la changer, ignorez-la et dites à Molfar quoi corriger.
+- « Skip » est retenu, donc Molfar ne ramène pas la même proposition. « Skip all » vide la liste.
+- Un chat terminé pendant que vous étiez dans un autre chat attend aussi dans l’onglet « Mailbox », avec « Open » et « Dismiss ». La liste des chats le signale de la même façon.
 
 ## Bon à savoir
 

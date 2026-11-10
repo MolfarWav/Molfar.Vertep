@@ -43,6 +43,14 @@ Under a reply that changed an app you see "Changed <app> · N files · Undo". Un
 
 The brain button opens "Memory and skills". Memory holds what he keeps between chats; he proposes entries and saves one only when you agree. Skills are short instructions for a kind of job; "New skill" writes one and "Improve with Molfar" refines it. See [[projects-and-chats]] for the project-specific ones.
 
+### The mailbox
+
+A card that proposes a memory entry or a skill has three answers: "Save", "Later" and "Skip". "Later" leaves the proposal in the "Mailbox" tab of "Memory and skills", and so does a card nobody answered, and a suggestion Molfar makes after a long task. A number on the brain button tells you how many wait; when something waits, the button opens on the Mailbox.
+
+- A memory entry can be edited before you save it. A skill is shown whole, or as a diff when it changes a skill you already have, and is saved as it is shown. To change it, skip it and tell Molfar what to fix.
+- "Skip" is remembered, so Molfar does not bring the same proposal back. "Skip all" clears the list.
+- A chat that finished while you were in another chat waits in the Mailbox too, with "Open" and "Dismiss". The chat list marks it the same way.
+
 ## Good to know
 
 - Small or free models: "Small-model mode" in Settings, Molfar sends a shorter prompt.
