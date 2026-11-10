@@ -21,21 +21,36 @@ const ID = /^mb-[a-z0-9]{6,40}$/;
 /** Where an item came from: the after-run pass, the user's "Later", or a card nobody answered. */
 export type MailFrom = "after-run" | "later" | "unanswered";
 
+/** A file that rides with a skill (references/..., scripts/...). */
+export interface MailSkillFile {
+  path: string;
+  content: string;
+}
+
 export type MailItem =
+  | { v: 1; id: string; kind: "skill"; scope: string; name: string; description: string; body: string; files: MailSkillFile[]; from: MailFrom; at: number }
   | { v: 1; id: string; kind: "add"; scope: string; entry: string; topic?: string; from: MailFrom; at: number }
   | { v: 1; id: string; kind: "replace"; scope: string; entry: string; match: string; topic?: string; from: MailFrom; at: number }
   | { v: 1; id: string; kind: "retire"; scope: string; match: string; from: MailFrom; at: number };
 
 /** An item as the caller describes it (the id and the time are added here). */
 export type MailDraft =
+  | { kind: "skill"; scope: string; name: string; description: string; body: string; files: MailSkillFile[]; from: MailFrom }
   | { kind: "add"; scope: string; entry: string; topic?: string | undefined; from: MailFrom }
   | { kind: "replace"; scope: string; entry: string; match: string; topic?: string | undefined; from: MailFrom }
   | { kind: "retire"; scope: string; match: string; from: MailFrom };
 
 const norm = (s: string): string => s.toLowerCase().replace(/\s+/g, " ").trim();
 
-/** What makes two proposals the same: the kind, the scope and the text they would write or remove. */
-export function mailSig(d: Pick<MailDraft, "kind" | "scope"> & { entry?: string; match?: string }): string {
+/** What makes two proposals the same: the kind, the scope and the text they would write or remove. A skill is the
+ *  same proposal when its name and its whole text are the same (a revised version is a new proposal). */
+export function mailSig(d: Pick<MailDraft, "kind" | "scope"> & { entry?: string; match?: string; name?: string; description?: string; body?: string; files?: MailSkillFile[] }): string {
+  if (d.kind === "skill") {
+    const h = crypto.createHash("sha1");
+    h.update(`${d.description ?? ""}|${d.body ?? ""}`);
+    for (const f of d.files ?? []) h.update(`|${f.path}|${f.content}`);
+    return `skill|${d.scope}|${d.name ?? ""}|${h.digest("hex").slice(0, 16)}`;
+  }
   return `${d.kind}|${d.scope}|${norm(d.kind === "retire" ? (d.match ?? "") : (d.entry ?? ""))}`;
 }
 
@@ -53,6 +68,12 @@ function valid(x: unknown): x is MailItem {
   if (!x || typeof x !== "object") return false;
   const o = x as Record<string, unknown>;
   if (typeof o.id !== "string" || !ID.test(o.id) || typeof o.scope !== "string" || !o.scope) return false;
+  if (o.kind === "skill") {
+    return (
+      typeof o.name === "string" && !!o.name && typeof o.description === "string" && typeof o.body === "string" && !!o.body &&
+      Array.isArray(o.files) && o.files.every((f) => !!f && typeof f === "object" && typeof (f as MailSkillFile).path === "string" && typeof (f as MailSkillFile).content === "string")
+    );
+  }
   if (o.kind === "add") return typeof o.entry === "string" && !!o.entry;
   if (o.kind === "replace") return typeof o.entry === "string" && !!o.entry && typeof o.match === "string" && !!o.match;
   return o.kind === "retire" && typeof o.match === "string" && !!o.match;

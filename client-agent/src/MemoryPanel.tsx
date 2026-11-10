@@ -15,7 +15,7 @@ import { ArrowCounterClockwise, ArrowLeft, ArrowsLeftRight, Brain, CaretRight, F
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { getSettings, memoryApi, setAppContractOnDemand, setMemorySuggest, type AgentMemory, type AgentSkill, type AgentSkillDetail, type MemoryHit, type ScopeMemory } from "./api"
 import { useAgent } from "./store"
-import { MailboxTab } from "./MailboxTab"
+import { MailboxTab, useFinishedCount } from "./MailboxTab"
 import { startMailboxPolling, useMailbox } from "./mailbox"
 
 const NAME_RE = /^[a-z0-9][a-z0-9-]{0,47}$/
@@ -594,7 +594,8 @@ function AppContractSwitch({ onError }: { onError: (e: unknown) => void }): Reac
 export function MemoryPanel({ caption }: { caption?: string } = {}): ReactNode {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<"memory" | "skills" | "mailbox">("memory")
-  const waiting = useMailbox((s) => s.items.length)
+  // proposals Molfar left, plus chats that finished while another one was open
+  const waiting = useMailbox((s) => s.items.length) + useFinishedCount()
   useEffect(() => startMailboxPolling(), [])
   // the guide's "Show me" opens and closes this dialog
   useEffect(() => {

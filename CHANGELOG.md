@@ -5,6 +5,12 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## Unreleased
+
+- **Molfar's mailbox takes skills (#198).** A skill card (`skill_propose`, `skill_edit`) now has Later beside Save and Skip, like a memory card: Later, a card nobody answered and a run with nobody to ask leave the whole skill (with its extra files) in the Mailbox tab of Memory and skills, shown as its full text or as a diff against the skill you have now, and a yes writes it and commits. A Skip is remembered, so the same skill is not asked for again; a revised version is a new proposal. A chat that finished while you were in another chat now waits in the Mailbox too (Open, Dismiss) and counts in the number on the brain button.
+- **The mailbox number no longer lags.** The badge read the list every 30 seconds, so it stayed behind after Later or when a run ended; it now reads again half a second after a run ends, a card is answered or a background chat finishes.
+- Help: a tip and the Molfar guide page describe the mailbox.
+
 ## 1.14.1 (2026-11-10)
 
 - **The engine no longer dies when the local embeddings model reloads after a pause (#352).** On Windows the whole engine crashed (Bun: `napi_define_properties`, in `onnxruntime_binding.node`) when a hand-closed scene made Litopys embed new items after the model had been idle for a while. The model ran in a Bun Worker that was let go after 10 idle minutes and made again, which loads the native addon a second time in one process. It now runs in a Bun process of its own: a crash costs only that embedding (the call fails with the process's last words, the next call starts a fresh process), and letting the model go really frees its memory. The cause is a reading of the code and the report, not a reproduction; the real model on Windows was not run through the new process yet.

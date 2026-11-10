@@ -76,6 +76,23 @@ export const TIPS: Tip[] = [
     },
   },
 
+  {
+    id: "new.molfar-mailbox",
+    since: "1.15.0",
+    target: "home.molfar",
+    open: { view: "home" },
+    help: "molfar",
+    keywords: {
+      en: "molfar mailbox later skip memory skill proposal suggestion finished chat badge number waiting",
+      uk: "мольфар скринька пізніше пропустити пам’ять навичка пропозиція готовий чат лічильник число очікує",
+    },
+    title: { en: "Molfar’s mailbox: decide later", uk: "Скринька Мольфара: вирішити пізніше" },
+    body: {
+      en: "When Molfar proposes a memory entry or a skill, the card has a third answer, Later: it waits in the Mailbox tab of Memory and skills (the brain button on his page), and a number on that button says how many wait. Skills show the whole text, or a diff when they change an existing one, and nothing is saved until you press Save. A chat that finishes while you are in another one waits there too, with Open and Dismiss.",
+      uk: "Коли Мольфар пропонує запис пам’яті чи навичку, на картці є третя відповідь «Later»: пропозиція чекає на вкладці «Mailbox» у «Memory and skills» (кнопка з мозком на його сторінці), а число на кнопці показує, скільки їх чекає. Навичку видно повністю, а якщо вона змінює наявну, то як різницю; нічого не зберігається, доки ви не натиснете «Save». Чат, що завершився, поки ви були в іншому, теж чекає там, з кнопками «Open» і «Dismiss».",
+    },
+  },
+
   // ---- Getting started ----
   {
     id: "help.start.home",

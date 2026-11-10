@@ -3127,7 +3127,18 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.get("/v1/agent/mailbox", (c) => {
     const root = userPaths(dataDir, c.get("user").username).root;
     const items = listMail(root).map((m) => {
-      const scope = agentMemory.resolveScope(root, m.scope);
+      let scope: ReturnType<typeof agentMemory.resolveScope>;
+      try {
+        scope = agentMemory.resolveScope(root, m.scope);
+      } catch {
+        // the app or project it was for is gone: the item can still be skipped
+        return { ...m, scopeLabel: m.scope, gone: true };
+      }
+      if (m.kind === "skill") {
+        // what the skill would change: the whole text for a new one, a diff for an update
+        const view = agentMemory.skillMailPreview(root, m);
+        return { ...m, scopeLabel: scope.label, what: view.what, detail: view.detail, diff: view.diff };
+      }
       // what a replace or retire touches, so the panel can show it beside the new text
       const target = m.kind === "add" ? undefined : agentMemory.findEntry(root, scope, m.match)?.line.replace(/^- /, "");
       return { ...m, scopeLabel: scope.label, ...(target ? { target } : {}) };
