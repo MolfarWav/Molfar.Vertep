@@ -8,9 +8,10 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import type { Hono } from "hono";
 import { defaultInstanceConfig } from "../src/config.js";
-import { LocalEmbedder, type LocalEngine } from "../src/embed-local/index.js";
+import { childEngine, LocalEmbedder, type LocalEngine } from "../src/embed-local/index.js";
 import type { LocalModelDef } from "../src/embed-local/catalog.js";
 import { UserModelService } from "../src/models.js";
 import { bootstrapUserDir, userPaths } from "../src/paths.js";
@@ -361,5 +362,54 @@ describe("routes", () => {
     expect((await call("PUT", "/v1/embeddings/config", { provider: "local" })).status).toBe(400);
     await call("POST", "/v1/embeddings/local/download", { model: "bge-m3" }); await finished(local); await Bun.sleep(30);
     expect((await call("PUT", "/v1/embeddings/config", { provider: "local" })).status).toBe(200);
+  });
+});
+
+describe("the model process (#352)", () => {
+  // a stand-in for transformers.js: the extractor answers [length, 1]; a text "CRASH" kills the process, "NOISE" prints to stdout first
+  const stubLib = () => {
+    const f = path.join(dir, "stub-transformers.mjs");
+    fs.writeFileSync(
+      f,
+      `export const env = {};
+export async function pipeline() {
+  return async (texts) => {
+    if (texts.some((t) => t.includes("CRASH"))) process.exit(3);
+    if (texts.some((t) => t.includes("NOISE"))) process.stdout.write("native library chatter\\n");
+    return { tolist: () => texts.map((t) => [t.length, 1]) };
+  };
+}
+`,
+    );
+    return pathToFileURL(f).href;
+  };
+  const loadOpts = (lib: string) => ({ lib, modelsDir: dir + path.sep, repo: "owner/fake", dtype: "q8", textOnly: false });
+
+  it("embeds through a process of its own, ignores what a library prints, and ends with close()", async () => {
+    const eng = childEngine(path.join(dir, "embed-local"));
+    await eng.load(loadOpts(stubLib()));
+    expect(await eng.embed(["ab", "NOISE", "cde"], "cls")).toEqual([[2, 1], [5, 1], [3, 1]]);
+    expect(eng.alive?.()).toBe(true);
+    eng.close();
+    expect(eng.alive?.()).toBe(false);
+  });
+
+  it("a process that dies fails the call with a message, and the embedder starts a fresh one next time", async () => {
+    const lib = stubLib();
+    const e = mk({ createEngine: () => childEngine(path.join(dir, "embed-local")), idleMs: 60_000 });
+    e.download("bge-m3"); await finished(e);
+    // the real runtime is not installed by the fake install: point the engine at the stub through the load options
+    const real = (e as unknown as { createEngine: () => LocalEngine }).createEngine;
+    (e as unknown as { createEngine: () => LocalEngine }).createEngine = () => {
+      const eng = real();
+      const load = eng.load.bind(eng);
+      eng.load = (o) => load({ ...o, lib });
+      return eng;
+    };
+    expect((await e.embed("bge-m3", ["fine"])).length).toBe(1);
+    await expect(e.embed("bge-m3", ["CRASH"])).rejects.toThrow(/model process stopped/);
+    // the engine itself is alive and the next call reloads the model in a new process
+    expect((await e.embed("bge-m3", ["after the crash"]))[0]).toEqual([("D: after the crash").length, 1]);
+    e.close();
   });
 });

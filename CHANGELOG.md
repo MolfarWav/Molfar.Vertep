@@ -5,6 +5,11 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## 1.14.1 (2026-11-10)
+
+- **The engine no longer dies when the local embeddings model reloads after a pause (#352).** On Windows the whole engine crashed (Bun: `napi_define_properties`, in `onnxruntime_binding.node`) when a hand-closed scene made Litopys embed new items after the model had been idle for a while. The model ran in a Bun Worker that was let go after 10 idle minutes and made again, which loads the native addon a second time in one process. It now runs in a Bun process of its own: a crash costs only that embedding (the call fails with the process's last words, the next call starts a fresh process), and letting the model go really frees its memory. The cause is a reading of the code and the report, not a reproduction; the real model on Windows was not run through the new process yet.
+- Roleplay 4.107.0 comes with this release as an app update: **Suggest scenes** (a Scenes card at the top of a chat's record asks the model where the story turns, in the messages no scene holds; you tick the ones to keep and save them), the scene dialog rebuilt as a list of messages (tap the first and the last), the Characters column of the record no longer clips fact cards (#353), a pacing die and dice-reading If rules for the World DM and agents (#155). Nothing else in the engine changed.
+
 ## 1.14.0 (2026-11-09)
 
 - **App settings are in the shell's Settings (#334).** Roleplay's chat look and behaviour (Chat Behavior, spell check, streaming, themes) were only on Roleplay's own "Roleplay settings" page, and nothing in the shell's Settings pointed there. An app can now name a settings page of its own in its manifest (`settingsView`); Settings lists such apps in an **App settings** group at the top, and a click opens the app on that page. Apps listen with `window.molfarShell.onView(fn)`; a name sent while the app is still opening waits for up to a minute. Apps that do not name a page are not listed. This needs an app update to show anything: Roleplay and Social name their pages in their next releases.

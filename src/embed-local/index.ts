@@ -1,6 +1,6 @@
 /**
  * An embeddings model that runs on this computer (#255): downloaded on a click, run by transformers.js in a
- * Bun Worker, loaded when a call comes and let go after ten idle minutes. Everything lives under
+ * Bun process of its own, started when a call comes and let go after ten idle minutes. Everything lives under
  * `<data>/embed-local/` (the machine's, not a user's workspace, so it never lands in a workspace's git):
  *   runtime/            the program that runs a model: transformers.js with its dependencies, from a pinned lockfile
  *   models/<repo>/...   the model files, laid out as on Hugging Face
@@ -10,12 +10,13 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { spawn } from "node:child_process";
+import { spawn, type ChildProcessByStdio } from "node:child_process";
+import type { Readable, Writable } from "node:stream";
 import { pathToFileURL } from "node:url";
 import { INSTALL_KIND } from "../install.js";
 import { findLocalModel, HF_HOST, LOCAL_MODELS, modelBytes, RUNTIME_PACKAGE, type LocalModelDef, type LocalModelId } from "./catalog.js";
 import { RUNTIME_LOCK } from "./runtime-lock.js";
-import { WORKER_SOURCE } from "./worker-source.js";
+import { CHILD_SOURCE } from "./worker-source.js";
 
 export type { LocalModelId } from "./catalog.js";
 
@@ -56,6 +57,8 @@ export interface LocalStatus {
 export interface LocalEngine {
   load(opts: { lib: string; modelsDir: string; repo: string; dtype: string; textOnly: boolean }): Promise<void>;
   embed(texts: string[], pooling: string): Promise<number[][]>;
+  /** False once the process behind it has stopped; the next call then needs a fresh engine. A fake may leave it out. */
+  alive?(): boolean;
   close(): void;
 }
 
@@ -80,44 +83,91 @@ const sizeOf = (p: string): number => {
 
 class JobAborted extends Error {}
 
-/** A Bun Worker made from WORKER_SOURCE; one request at a time is in flight per message id. */
-function workerEngine(): LocalEngine {
-  let worker: Worker | null = null;
+type Piped = ChildProcessByStdio<Writable, Readable, Readable>;
+const NL = String.fromCharCode(10);
+/** Starts every answer line of the model process (see CHILD_SOURCE). */
+const MARK = String.fromCharCode(1);
+
+/** The environment a helper process gets: ours without anything that looks like a secret. */
+function cleanEnv(): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {};
+  for (const [k, v] of Object.entries(process.env)) if (typeof v === "string" && !/(KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL|AUTH)/i.test(k)) env[k] = v;
+  return env;
+}
+
+/**
+ * The model runs in a Bun process of its own (see CHILD_SOURCE for why: a Worker that loads the native addon
+ * a second time crashed the whole engine, #352). One request at a time is in flight per message id. If the
+ * process dies, every waiting call fails with its last words and `alive()` turns false, so the next call
+ * starts a fresh process and loads the model again.
+ */
+export function childEngine(dir: string): LocalEngine {
+  let child: Piped | null = null;
   let seq = 0;
   const waiting = new Map<number, { ok: (v: { vectors?: number[][] }) => void; fail: (e: Error) => void }>();
-  const ensure = (): Worker => {
-    if (worker) return worker;
-    const url = URL.createObjectURL(new Blob([WORKER_SOURCE], { type: "text/javascript" }));
-    const w = new Worker(url);
-    w.onmessage = (e: MessageEvent) => {
-      const m = e.data as { id: number; ok: boolean; vectors?: number[][]; error?: string };
-      const p = waiting.get(m.id);
-      if (!p) return;
-      waiting.delete(m.id);
-      if (m.ok) p.ok(m); else p.fail(new Error(m.error ?? "the model failed"));
+  const failAll = (msg: string) => {
+    for (const p of waiting.values()) p.fail(new Error(msg));
+    waiting.clear();
+  };
+  const ensure = (): Piped => {
+    if (child) return child;
+    fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, "model-process.mjs");
+    if (!fs.existsSync(file) || fs.readFileSync(file, "utf8") !== CHILD_SOURCE) fs.writeFileSync(file, CHILD_SOURCE);
+    const c = spawn(process.execPath, [file], { cwd: dir, env: cleanEnv(), stdio: ["pipe", "pipe", "pipe"] as const, windowsHide: true });
+    let out = "";
+    let err = "";
+    c.stdout.setEncoding("utf8");
+    c.stdout.on("data", (d: string) => {
+      out += d;
+      let i: number;
+      while ((i = out.indexOf(NL)) >= 0) {
+        const line = out.slice(0, i);
+        out = out.slice(i + 1);
+        const at = line.indexOf(MARK);
+        if (at < 0) continue;
+        let m: { id: number; ok: boolean; vectors?: number[][]; error?: string };
+        try { m = JSON.parse(line.slice(at + 1)); } catch { continue; }
+        const p = waiting.get(m.id);
+        if (!p) continue;
+        waiting.delete(m.id);
+        if (m.ok) p.ok(m); else p.fail(new Error(m.error ?? "the model failed"));
+      }
+    });
+    c.stderr.setEncoding("utf8");
+    c.stderr.on("data", (d: string) => { err = (err + d).slice(-600); });
+    c.stdin.on("error", () => { /* the exit handler says what happened */ });
+    const gone = (why: string) => {
+      if (child !== c) return;
+      child = null;
+      const last = err.trim().split(NL).slice(-3).join(" | ");
+      failAll(last ? `the model process stopped (${why}): ${last}` : `the model process stopped (${why})`);
     };
-    w.onerror = (e: ErrorEvent) => {
-      for (const p of waiting.values()) p.fail(new Error(e.message || "the model worker stopped"));
-      waiting.clear();
-      worker = null;
-    };
-    worker = w;
-    return w;
+    c.on("error", (e) => gone(e.message));
+    c.on("exit", (code, signal) => gone(signal ? "signal " + signal : "exit code " + code));
+    child = c;
+    return c;
   };
   const call = (msg: Record<string, unknown>): Promise<{ vectors?: number[][] }> =>
     new Promise((ok, fail) => {
       const id = ++seq;
       waiting.set(id, { ok, fail });
-      ensure().postMessage({ id, ...msg });
+      try {
+        ensure().stdin.write(JSON.stringify({ id, ...msg }) + NL);
+      } catch (e) {
+        waiting.delete(id);
+        fail(e instanceof Error ? e : new Error(String(e)));
+      }
     });
   return {
     async load(o) { await call({ type: "load", ...o }); },
     async embed(texts, pooling) { return (await call({ type: "embed", texts, pooling })).vectors ?? []; },
+    alive() { return child !== null; },
     close() {
-      worker?.terminate();
-      worker = null;
-      for (const p of waiting.values()) p.fail(new Error("the model was closed"));
-      waiting.clear();
+      const c = child;
+      child = null;
+      try { c?.kill(); } catch { /* already gone */ }
+      failAll("the model was closed");
     },
   };
 }
@@ -130,8 +180,7 @@ async function installRuntimeWithBun(runtimeDir: string, signal: AbortSignal): P
     JSON.stringify({ name: "molfar-embed-runtime", private: true, dependencies: { [RUNTIME_PACKAGE.name]: RUNTIME_PACKAGE.version } }, null, 2) + "\n",
   );
   fs.writeFileSync(path.join(runtimeDir, "bun.lock"), RUNTIME_LOCK);
-  const env: NodeJS.ProcessEnv = {};
-  for (const [k, v] of Object.entries(process.env)) if (typeof v === "string" && !/(KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL|AUTH)/i.test(k)) env[k] = v;
+  const env = cleanEnv();
   await new Promise<void>((resolve, reject) => {
     const child = spawn(process.execPath, ["install", "--ignore-scripts", "--production", "--frozen-lockfile"], { cwd: runtimeDir, env, stdio: ["ignore", "pipe", "pipe"] });
     let log = "";
@@ -198,7 +247,7 @@ export class LocalEmbedder {
     this.hfHost = (opts.hfHost ?? HF_HOST).replace(/\/$/, "");
     this.doFetch = opts.fetch ?? fetch;
     this.installRuntime = opts.installRuntime ?? installRuntimeWithBun;
-    this.createEngine = opts.createEngine ?? workerEngine;
+    this.createEngine = opts.createEngine ?? (() => childEngine(this.dir));
     this.idleMs = opts.idleMs ?? 10 * 60_000;
     // the runtime is installed with Bun: a compiled build or the phone launcher has none
     this.supported = opts.supported ?? (INSTALL_KIND === "source" || INSTALL_KIND === "npm");
@@ -376,7 +425,7 @@ export class LocalEmbedder {
 
   private async ensureLoaded(def: LocalModelDef): Promise<LocalEngine> {
     while (this.loading) await this.loading.catch(() => undefined);
-    if (this.engine && this.loaded === def.id) return this.engine;
+    if (this.engine && this.loaded === def.id && this.engine.alive?.() !== false) return this.engine;
     this.release();
     const engine = this.createEngine();
     const lib = pathToFileURL(Bun.resolveSync(RUNTIME_PACKAGE.name, this.runtimeDir)).href;
