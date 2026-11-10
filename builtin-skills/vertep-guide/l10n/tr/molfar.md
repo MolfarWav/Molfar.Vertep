@@ -1,4 +1,4 @@
-<!-- source: c3880a3f342c -->
+<!-- source: 6b5436de93e1 -->
 # Molfar, ajanın
 
 Molfar, Molfar Vertep'e yerleşik yapay zekâ ajanıdır. Buradaki her şey düz dosyalardır ve o bu dosyaları senin için düzenler. Uygulamalarınla ilgili bir şeyi değiştirmek istiyorsan ve elle yapmak istemiyorsan bu sayfayı oku.
@@ -43,6 +43,14 @@ Bir uygulamayı değiştiren bir yanıtın altında "Değişti <Uygulama> · N d
 ## Bellek ve beceriler
 
 Beyin düğmesi "Bellek ve beceriler"i açar. Bellek, sohbetler arasında tuttuğu şeyleri barındırır; girdileri önerir ve yalnızca sen kabul ettiğinde kaydeder. Beceriler, bir iş türü için kısa talimatlardır; "Yeni beceri" bir tane yazar ve "Molfar ile geliştir" onu inceltir. Projeye özel olanlar için bkz. [[projects-and-chats]].
+
+### Posta kutusu
+
+Bir bellek girdisi ya da beceri öneren kartın üç yanıtı vardır: "Save", "Later" ve "Skip". "Later", öneriyi "Bellek ve beceriler" içindeki "Mailbox" sekmesinde bırakır; kimsenin yanıtlamadığı kart ve Molfar'ın uzun bir görevden sonra yaptığı öneri de oraya düşer. Beyin düğmesindeki sayı kaç tanesinin beklediğini gösterir; bir şey beklerken düğme "Mailbox" sekmesinde açılır.
+
+- Bir bellek girdisi kaydetmeden önce düzenlenebilir. Bir beceri tam olarak gösterilir, ya da sahip olduğun bir beceriyi değiştiriyorsa diff olarak gösterilir ve gösterildiği gibi kaydedilir. Değiştirmek için atla ve Molfar'a neyi düzeltmesi gerektiğini söyle.
+- "Skip" hatırlanır, böylece Molfar aynı öneriyi geri getirmez. "Skip all" listeyi boşaltır.
+- Sen başka bir sohbetteyken biten bir sohbet de "Open" ve "Dismiss" ile "Mailbox" sekmesinde bekler. Sohbet listesi de onu aynı şekilde işaretler.
 
 ## Bilinmesi iyi olanlar
 

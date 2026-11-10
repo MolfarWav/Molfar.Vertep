@@ -78,7 +78,7 @@ export const TIPS: Tip[] = [
 
   {
     id: "new.molfar-mailbox",
-    since: "1.14.1",
+    since: "1.15.0",
     target: "home.molfar",
     open: { view: "home" },
     help: "molfar",

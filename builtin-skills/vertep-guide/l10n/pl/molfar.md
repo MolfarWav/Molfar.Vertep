@@ -1,4 +1,4 @@
-<!-- source: c3880a3f342c -->
+<!-- source: 6b5436de93e1 -->
 # Molfar, Twój agent
 
 Molfar to agent AI wbudowany w Molfar Vertep. Wszystko tutaj to zwykłe pliki, a on edytuje te pliki za Ciebie. Przeczytaj tę stronę, jeśli chcesz coś zmienić w swoich aplikacjach i nie chcesz robić tego ręcznie.
@@ -43,6 +43,14 @@ Pod odpowiedzią, która zmieniła aplikację, widzisz „Zmieniono <aplikacja> 
 ## Pamięć i umiejętności
 
 Przycisk mózgu otwiera „Pamięć i umiejętności”. Pamięć trzyma to, co zachowuje między czatami; proponuje wpisy i zapisuje je tylko za Twoją zgodą. Umiejętności to krótkie instrukcje do jednego rodzaju zadania; „Nowa umiejętność” pisze jedną, a „Ulepsz z Molfarem” dopracowuje ją. Zobacz [[projects-and-chats]], aby poznać te specyficzne dla projektu.
+
+### Skrzynka
+
+Karta proponująca wpis pamięci albo umiejętność ma trzy odpowiedzi: „Save”, „Later” i „Skip”. „Later” zostawia propozycję w zakładce „Mailbox” w „Pamięć i umiejętności”, tak samo jak karta, na którą nikt nie odpowiedział, i podpowiedź, którą Molfar daje po długim zadaniu. Liczba na przycisku mózgu pokazuje, ile czeka; gdy coś czeka, przycisk otwiera się na zakładce „Mailbox”.
+
+- Wpis pamięci można edytować przed zapisem. Umiejętność jest pokazana w całości, albo jako diff, gdy zmienia umiejętność, którą już masz, i jest zapisywana tak, jak ją widzisz. Aby ją zmienić, pomiń ją i powiedz Molfarowi, co poprawić.
+- „Skip” jest zapamiętywane, więc Molfar nie przynosi tej samej propozycji ponownie. „Skip all” czyści listę.
+- Czat, który skończył się, gdy byłeś w innym czacie, też czeka w zakładce „Mailbox”, z „Open” i „Dismiss”. Lista czatów oznacza go tak samo.
 
 ## Dobrze wiedzieć
 

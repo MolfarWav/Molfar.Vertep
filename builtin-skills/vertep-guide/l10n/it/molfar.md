@@ -1,4 +1,4 @@
-<!-- source: c3880a3f342c -->
+<!-- source: 6b5436de93e1 -->
 # Molfar, il tuo agente
 
 Molfar è l'agente AI integrato in Molfar Vertep. Qui tutto è file semplici, e lui modifica quei file per te. Leggi questa pagina se vuoi cambiare qualcosa delle tue app e non vuoi farlo a mano.
@@ -43,6 +43,14 @@ Sotto una risposta che ha modificato un'app vedi "Modificata <app> · N file · 
 ## Memoria e competenze
 
 Il pulsante del cervello apre "Memoria e competenze". La memoria contiene ciò che conserva tra le chat; propone le voci e ne salva una solo quando sei d'accordo. Le competenze sono brevi istruzioni per un tipo di lavoro; "Nuova competenza" ne scrive una e "Migliora con Molfar" la rifinisce. Vedi [[projects-and-chats]] per quelle specifiche del progetto.
+
+### La casella
+
+Una scheda che propone una voce di memoria o una competenza ha tre risposte: "Save", "Later" e "Skip". "Later" lascia la proposta nella scheda "Mailbox" di "Memoria e competenze", e lo stesso vale per una scheda a cui nessuno ha risposto e per un suggerimento che Molfar fa dopo un compito lungo. Un numero sul pulsante del cervello indica quante ne aspettano; quando qualcosa aspetta, il pulsante si apre sulla scheda "Mailbox".
+
+- Una voce di memoria si può modificare prima di salvarla. Una competenza viene mostrata per intero, o come diff quando modifica una competenza che hai già, e viene salvata così come è mostrata. Per cambiarla, saltala e di' a Molfar cosa correggere.
+- "Skip" viene ricordato, così Molfar non riporta la stessa proposta. "Skip all" svuota l'elenco.
+- Una chat terminata mentre eri in un'altra chat aspetta anche nella scheda "Mailbox", con "Open" e "Dismiss". L'elenco delle chat la segna allo stesso modo.
 
 ## Buono a sapersi
 

@@ -1,4 +1,4 @@
-<!-- source: c3880a3f342c -->
+<!-- source: 6b5436de93e1 -->
 # Molfar, tu agente
 
 Molfar es el agente de IA integrado en Molfar Vertep. Aquí todo son archivos simples, y él edita esos archivos por ti. Lee esta página si quieres cambiar algo de tus apps y no quieres hacerlo a mano.
@@ -43,6 +43,14 @@ Debajo de una respuesta que cambió una app ves «Cambiada <app> · N archivos �
 ## Memoria y habilidades
 
 El botón del cerebro abre «Memoria y habilidades». La memoria guarda lo que él conserva entre chats; propone entradas y solo guarda una cuando estás de acuerdo. Las habilidades son instrucciones cortas para un tipo de trabajo; «Nueva habilidad» escribe una e «Mejorar con Molfar» la refina. Consulta [[projects-and-chats]] para las específicas del proyecto.
+
+### El buzón
+
+Una tarjeta que propone una entrada de memoria o una habilidad tiene tres respuestas: «Save», «Later» y «Skip». «Later» deja la propuesta en la pestaña «Mailbox» de «Memoria y habilidades», y lo mismo ocurre con una tarjeta que nadie respondió y con una sugerencia que Molfar hace tras una tarea larga. Un número en el botón del cerebro indica cuántas esperan; cuando hay algo pendiente, el botón se abre en la pestaña «Mailbox».
+
+- Una entrada de memoria se puede editar antes de guardarla. Una habilidad se muestra completa, o como diff cuando modifica una habilidad que ya tienes, y se guarda tal como se muestra. Para cambiarla, omítela y dile a Molfar qué corregir.
+- «Skip» se recuerda, así que Molfar no vuelve a traer la misma propuesta. «Skip all» vacía la lista.
+- Un chat que terminó mientras estabas en otro chat también espera en la pestaña «Mailbox», con «Open» y «Dismiss». La lista de chats lo marca igual.
 
 ## Bueno saber
 
