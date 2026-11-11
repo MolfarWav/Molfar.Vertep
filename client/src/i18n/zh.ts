@@ -565,6 +565,7 @@ const dict = {
   "{name} (no key)": "{name}（无密钥）",
   "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "自动模式会先尝试你自己电脑上的模型，然后是有密钥的 API 连接，最后是 OpenRouter。",
   "Embedding model": "嵌入模型",
+  "Vectors for matching by meaning stay on the device that made them and are not synced, so a computer and a phone can use different models. A model that is the same under two names (bge-m3 on this computer and on OpenRouter) keeps its vectors.": "按含义检索的向量留在生成它们的设备上，不会同步，因此电脑和手机可以使用不同的模型。同一个模型的两个名称（本机和 OpenRouter 上的 bge-m3）会保留各自的向量。",
   "Default: {model}": "默认：{model}",
   "Use the default model": "使用默认模型",
   "OpenRouter API key": "OpenRouter API 密钥",

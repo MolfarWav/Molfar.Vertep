@@ -567,6 +567,7 @@ const en = {
   "{name} (no key)": "",
   "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "",
   "Embedding model": "",
+  "Vectors for matching by meaning stay on the device that made them and are not synced, so a computer and a phone can use different models. A model that is the same under two names (bge-m3 on this computer and on OpenRouter) keeps its vectors.": "",
   "Default: {model}": "",
   "Use the default model": "",
   "OpenRouter API key": "",

@@ -565,6 +565,7 @@ const dict = {
   "{name} (no key)": "{name} (키 없음)",
   "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "자동은 먼저 내 컴퓨터의 모델을 시도하고, 그다음 키가 있는 API 연결, 마지막으로 OpenRouter를 시도합니다.",
   "Embedding model": "임베딩 모델",
+  "Vectors for matching by meaning stay on the device that made them and are not synced, so a computer and a phone can use different models. A model that is the same under two names (bge-m3 on this computer and on OpenRouter) keeps its vectors.": "의미 검색용 벡터는 만든 기기에 남고 동기화되지 않으므로, 컴퓨터와 휴대폰이 서로 다른 모델을 쓸 수 있습니다. 이름이 둘인 같은 모델(이 컴퓨터와 OpenRouter의 bge-m3)은 벡터가 그대로 유지됩니다.",
   "Default: {model}": "기본값: {model}",
   "Use the default model": "기본 모델 사용",
   "OpenRouter API key": "OpenRouter API 키",

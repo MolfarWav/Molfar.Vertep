@@ -5,6 +5,7 @@
  */
 import { findLocalModel, type LocalModelId } from "./embed-local/catalog.js";
 import type { LocalEmbedder } from "./embed-local/index.js";
+import { canonicalEmbedModel } from "./embed-model-names.js";
 import fs from "node:fs";
 import path from "node:path";
 import { createModels, getCurrentSystemPrompt, getCurrentTools, getSupportedThinkingLevels, uuidv7, type Api, type AssistantMessage, type AssistantMessageEvent, type Context, type Credential, type CredentialInfo, type Message, type Model, type MutableModels, type Tool as PiTool, type ToolResultMessage, type Usage } from "@earendil-works/pi-ai";
@@ -803,7 +804,7 @@ export class UserModelService {
    *  only; "auto" = local connections first (no key needed there), then the
    *  keyed remote ones, then OpenRouter if it has a key. null when none can
    *  answer: callers fall back to lexical.
-   *  The model that made the vectors is left in embedModelUsed. */
+   *  The model that made the vectors is left in embedModelUsed, under its canonical name (embed-model-names.ts). */
   async embed(texts: string[], model?: string, opts: { kinds?: readonly ("query" | "document")[] } = {}): Promise<number[][] | null> {
     const keep = texts.map((t) => String(t).slice(0, 8000).trim() !== "");
     const clean = texts.map((t) => String(t).slice(0, 8000)).filter((_, i) => keep[i]);
@@ -814,7 +815,8 @@ export class UserModelService {
     const auth = new FileCredentialStore(this.paths.auth);
     const done = (out: number[][], via: string, used: string) => {
       this.embedVia = via;
-      this.embedModelUsed = used;
+      // one name per model, whoever serves it (#374): the apps compare this name with the one stored on a vector
+      this.embedModelUsed = canonicalEmbedModel(used);
       return out;
     };
     // the model downloaded to this computer (Settings > Memory): free and private, so it goes first

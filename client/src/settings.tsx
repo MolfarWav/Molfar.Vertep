@@ -1324,6 +1324,7 @@ function MemoryMeaningSection() {
           )}
         </div>
         {!config.modelSet && <span className="text-11 text-ink-faint">{tr("Default: {model}", { model: config.model })}</span>}
+        <span className="text-11 leading-4 text-ink-faint">{tr("Vectors for matching by meaning stay on the device that made them and are not synced, so a computer and a phone can use different models. A model that is the same under two names (bge-m3 on this computer and on OpenRouter) keeps its vectors.")}</span>
       </div>
 
       {showKeyField && (

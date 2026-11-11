@@ -565,6 +565,7 @@ const dict = {
   "{name} (no key)": "{name} (sans clé)",
   "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "Automatique essaie d’abord un modèle sur votre propre ordinateur, puis vos connexions API avec une clé, puis OpenRouter.",
   "Embedding model": "Modèle d’embedding",
+  "Vectors for matching by meaning stay on the device that made them and are not synced, so a computer and a phone can use different models. A model that is the same under two names (bge-m3 on this computer and on OpenRouter) keeps its vectors.": "Les vecteurs de la recherche par le sens restent sur l’appareil qui les a créés et ne sont pas synchronisés : un ordinateur et un téléphone peuvent donc utiliser des modèles différents. Un modèle qui porte deux noms (bge-m3 sur cet ordinateur et sur OpenRouter) garde ses vecteurs.",
   "Default: {model}": "Par défaut : {model}",
   "Use the default model": "Utiliser le modèle par défaut",
   "OpenRouter API key": "Clé API OpenRouter",
