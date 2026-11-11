@@ -5,6 +5,10 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## Unreleased
+
+- **One name per embeddings model (#374).** The same bge-m3 is `bge-m3` on this computer and `baai/bge-m3` on OpenRouter, and a stored vector of another name is made again, so a laptop on the local model and a phone on OpenRouter's rewrote each other's vectors after every sync. The engine now records the model that made the vectors under one canonical name (`src/embed-model-names.ts`: bge-m3 with its OpenRouter, Hugging Face and Ollama names, and OpenAI's three embedding models with and without the `openai/` prefix); the endpoint still gets the name it knows. Different models stay different. Vectors stored as `baai/bge-m3` are made again once. Settings > Memory says to use the same model on every device that shares a workspace, and the guide page says what happens with different models.
+
 ## 1.16.0 (2026-11-10)
 
 - **A plugin's file write is atomic (#243).** `host.fs.write` truncated a file and then filled it, so a read that landed in between (the Roleplay engine plugin loading a chat while Dashboard, Litopys, World DM or an agent was rewriting it) saw an empty or half-written transcript. The content now goes to a temp file beside the target and is renamed over it, so a reader gets the old file or the new one; a plugin's settings file (`store/`) is written the same way. On Windows a rename can be refused while another program holds the target open without sharing; it is retried for about 150 ms and then falls back to the old in-place write, so a save is never lost to it. The temp file is `.<name>.<pid>.<random>.tmp` in the same folder and is removed when the write fails.

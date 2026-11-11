@@ -565,6 +565,7 @@ const dict = {
   "{name} (no key)": "{name} (anahtar yok)",
   "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "Otomatik, önce kendi bilgisayarındaki bir modeli, sonra anahtarı olan API bağlantılarını, en son OpenRouter’ı dener.",
   "Embedding model": "Embedding modeli",
+  "Use the same model on every device that shares this workspace. Vectors made by the same model carry over when you sync (bge-m3 is one model whether it runs on this computer or on OpenRouter); a different model's vectors are made again.": "Bu çalışma alanını paylaşan her cihazda aynı modeli kullanın. Aynı modelin ürettiği vektörler eşitlemede korunur (bge-m3, bu bilgisayarda da OpenRouter'da da çalışsa tek bir modeldir); başka bir modelin vektörleri yeniden üretilir.",
   "Default: {model}": "Varsayılan: {model}",
   "Use the default model": "Varsayılan modeli kullan",
   "OpenRouter API key": "OpenRouter API anahtarı",

@@ -626,6 +626,15 @@ describe("embeddings through OpenRouter and provider choice", () => {
     expect(probe).toEqual({ ok: true, via: "OpenRouter", model: "qwen/qwen3-embedding-4b" });
   });
 
+  it("OpenRouter's baai/bge-m3 is recorded as bge-m3, the name of the model on this computer (#374)", async () => {
+    const svc = setup({ openrouter: true, orKey: "or-key", settings: { embedProvider: "openrouter", embedModel: "baai/bge-m3" } });
+    expect(await svc.embed(["hello"])).toEqual([[0.5, 0.25]]);
+    // the endpoint still gets the name it knows; only the record of who made the vectors is one name
+    expect(calls[0]).toMatchObject({ url: "https://openrouter.ai/api/v1/embeddings", model: "baai/bge-m3" });
+    expect(svc.embedModelUsed).toBe("bge-m3");
+    expect((await svc.embedProbe()).model).toBe("bge-m3");
+  });
+
   it("provider openrouter without a key or connection: null, and no request goes anywhere", async () => {
     expect(await setup({ openrouter: true, custom: true, settings: { embedProvider: "openrouter" } }).embed(["x"])).toBeNull();
     expect(await setup({ orKey: "stray", custom: true, settings: { embedProvider: "openrouter" } }).embed(["x"])).toBeNull();

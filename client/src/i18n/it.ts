@@ -565,6 +565,7 @@ const dict = {
   "{name} (no key)": "{name} (senza chiave)",
   "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "Automatico prova prima un modello sul tuo computer, poi le tue connessioni API con una chiave, poi OpenRouter.",
   "Embedding model": "Modello di embedding",
+  "Use the same model on every device that shares this workspace. Vectors made by the same model carry over when you sync (bge-m3 is one model whether it runs on this computer or on OpenRouter); a different model's vectors are made again.": "Usa lo stesso modello su ogni dispositivo che condivide questo spazio di lavoro. I vettori creati dallo stesso modello restano validi dopo la sincronizzazione (bge-m3 è un solo modello, sia che giri su questo computer sia su OpenRouter); quelli di un altro modello vengono rifatti.",
   "Default: {model}": "Predefinito: {model}",
   "Use the default model": "Usa il modello predefinito",
   "OpenRouter API key": "Chiave API OpenRouter",

@@ -565,6 +565,7 @@ const dict = {
   "{name} (no key)": "{name}（无密钥）",
   "Automatic tries a model on your own computer first, then your API connections that have a key, then OpenRouter.": "自动模式会先尝试你自己电脑上的模型，然后是有密钥的 API 连接，最后是 OpenRouter。",
   "Embedding model": "嵌入模型",
+  "Use the same model on every device that shares this workspace. Vectors made by the same model carry over when you sync (bge-m3 is one model whether it runs on this computer or on OpenRouter); a different model's vectors are made again.": "共享此工作区的每台设备请使用同一个模型。同一模型生成的向量在同步后仍可使用（bge-m3 无论在本机运行还是通过 OpenRouter，都算同一个模型）；其他模型的向量会重新生成。",
   "Default: {model}": "默认：{model}",
   "Use the default model": "使用默认模型",
   "OpenRouter API key": "OpenRouter API 密钥",
