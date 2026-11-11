@@ -7,7 +7,11 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.16.2 (2026-11-12)
+
 - **Stop works while the prompt is still being built.** A Stop pressed after Send but before the model request opened (a few seconds on a cold start, longer with big memory) was dropped, and the reply was written anyway. The engine now parks that Stop for the chat's running route; the request that opens next is cancelled before it reaches the provider. `/__abort` answers `active: true` only for a generation that is really running (a finished one used to count), plus `pending: true` when it parked a Stop.
+
+- Roleplay 4.114.0 comes with this release as an app update: Continue from someone's view, Dashboard "Not in the scene", the Vertep Medium preset, a Stop that keeps the half-written reply and stays quiet, a warning when the World DM deck comes back short. Docs from the handbook crawl: `.fork/RELEASE.md` now says what the code does; a test records that imported plugins do not run the insert ceilings of the memory plugins (not changed, awaiting a decision).
 
 ## 1.16.1 (2026-11-11)
 
