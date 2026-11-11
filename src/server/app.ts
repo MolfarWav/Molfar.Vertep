@@ -490,6 +490,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
    *  genAborts nothing lingers here, so a page that lost its request (a reload, a phone that
    *  slept) can ask whether its chat is still being written (GitHub #13). */
   const liveGens = new Map<string, number>();
+  /** Chat routes (POST /chats/<id>/...) running right now, by the same key. Between a send arriving and
+   *  its model request opening the engine builds the prompt, which takes seconds on a cold start, and
+   *  nothing in genAborts exists yet to abort. A Stop pressed in that gap is parked in pendingCancels,
+   *  and the request that opens next on the chat is born aborted instead of the Stop being lost. */
+  const chatRoutes = new Map<string, number>();
+  const pendingCancels = new Set<string>();
 
   const getAppDeps = (u: UserRecord, appId: string): PluginRuntimeDeps => {
     const base = getPluginDeps(u);
@@ -502,12 +508,18 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       abortCtlFor: (tag) => {
         const key = abortKey(tag);
         if (!key) return null;
-        // a fresh generation on this chat invalidates any stale cancel flag
-        cancelledGens.delete(key);
+        // a Stop that came while the prompt was still being built belongs to this generation; any other
+        // cancel flag is stale and a fresh generation on this chat clears it
+        const stoppedEarly = pendingCancels.delete(key);
+        if (!stoppedEarly) cancelledGens.delete(key);
         let ctl = genAborts.get(key);
         if (!ctl || ctl.signal.aborted) {
           ctl = new AbortController();
           genAborts.set(key, ctl);
+        }
+        if (stoppedEarly) {
+          cancelledGens.add(key);
+          ctl.abort();
         }
         liveGens.set(key, (liveGens.get(key) ?? 0) + 1);
         return ctl.signal;
@@ -5949,10 +5961,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
     const body = await c.req.json<{ chatId?: string }>().catch(() => ({ chatId: undefined }));
     if (!body.chatId) return c.json({ error: "chatId required" }, 400);
     const key = `${u.username}|${appId}|${body.chatId}`;
+    // nothing is writing to the provider yet but a chat route is running: the prompt is being built, so
+    // park the Stop for the request that opens next (see chatRoutes)
+    if ((liveGens.get(key) ?? 0) === 0) {
+      if ((chatRoutes.get(key) ?? 0) > 0) pendingCancels.add(key);
+      return c.json({ ok: true, active: false, pending: pendingCancels.has(key) });
+    }
     cancelledGens.add(key);
-    const ctl = genAborts.get(key);
-    if (!ctl) return c.json({ ok: true, active: false });
-    ctl.abort();
+    genAborts.get(key)?.abort();
     return c.json({ ok: true, active: true });
   });
 
@@ -6077,6 +6093,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
     const deps = getAppDeps(u, appId);
     const runKey = `${p.root}\u0000${appId}`;
     routesRunning.set(runKey, (routesRunning.get(runKey) ?? 0) + 1);
+    const chatKey = method === "POST" ? /^\/chats\/([^/]+)\//.exec(rel)?.[1] : undefined;
+    const chatRouteKey = chatKey ? `${u.username}|${appId}|${(() => { try { return decodeURIComponent(chatKey); } catch { return chatKey; } })()}` : null;
+    if (chatRouteKey) chatRoutes.set(chatRouteKey, (chatRoutes.get(chatRouteKey) ?? 0) + 1);
     try {
     for (const plugin of enabledAppPlugins(p.apps, appId, p.settings)) {
       const payload = body && typeof body === "object" ? (body as { zipBase64?: string }).zipBase64 : undefined;
@@ -6100,6 +6119,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
       const left = (routesRunning.get(runKey) ?? 1) - 1;
       if (left > 0) routesRunning.set(runKey, left);
       else routesRunning.delete(runKey);
+      if (chatRouteKey) {
+        const rest = (chatRoutes.get(chatRouteKey) ?? 1) - 1;
+        if (rest > 0) chatRoutes.set(chatRouteKey, rest);
+        else {
+          chatRoutes.delete(chatRouteKey);
+          pendingCancels.delete(chatRouteKey); // the route ended without opening a request: nothing to cancel
+        }
+      }
     }
   };
 

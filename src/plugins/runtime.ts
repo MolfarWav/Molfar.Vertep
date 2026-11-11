@@ -892,6 +892,12 @@ async function runPassRequests(
     let sentText = false;
     const delta = onDelta ? (d: string) => { sentText = true; onDelta(d); } : undefined;
     try {
+      // a Stop that came before this request existed: the signal is born aborted, so the provider is never called
+      if (abortSignal?.aborted && streamTag) {
+        deps.consumeCancel?.(streamTag);
+        results.llm[key] = emptyGeneration();
+        return;
+      }
       // source + paramsKey pick the model's parameter block (model-params.ts); set here, after the spread, so a plugin cannot pose as another
       const call = () => deps.models.generate({ ...request, ...toolBridge, ...(onToolEvent ? { onToolEvent } : {}), ...(abortSignal ? { signal: abortSignal } : {}), source: llmSourceOf(plugin), paramsKey: key }, delta, onThinking);
       const out = paced === null ? await call() : await pacerFor(deps.owner).run(call, () => !sentText);
