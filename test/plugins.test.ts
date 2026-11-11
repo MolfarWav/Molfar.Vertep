@@ -638,6 +638,22 @@ export function uiPanel(ctx) {
     expect(rows).toEqual([{ plugin: "echo", id: "asker:chat_9", tokens: 4096 }]);
   }, 60_000);
 
+  // Finding 7 of the handbook crawl: "hooks" is declared and never granted, so
+  // for an imported plugin collectInsertCeilings (which asks hasCapAny(.., "hooks")) never
+  // runs its hook, while collectSiblingLlmHooks (declared hooks + granted llm) does.
+  // `it.failing` pins the bug: it passes while the bug is there and turns red the day the
+  // gate is fixed, which is the cue to change it to a plain `it`.
+  it.failing("insertCeiling: an imported sibling that declares hooks answers on its llm grant, like llmRequest", async () => {
+    writePlugin("asker", { name: "A", version: "1", permissions: ["routes"], origin: "imported" }, `export function handleRoute() { return { status: 200, json: {} }; }`);
+    writePlugin("memory", { name: "M", version: "1", permissions: ["hooks", "llm"], origin: "imported" }, `export function insertCeiling() { return { id: "insert", tokens: 300 }; }`);
+    writePlugin("other", { name: "O", version: "1", permissions: ["hooks", "llm"], origin: "imported" }, `export function insertCeiling() { return { id: "other", tokens: 100 }; }`);
+    const plugins = discoverPlugins(path.join(dir, "plugins"));
+    const asker = plugins.find((p) => p.id === "asker")!;
+    // the grant flows store what a plugin declares minus "hooks"
+    const rows = await collectInsertCeilings(plugins, asker, { chatId: "c1" }, deps(["routes", "llm"]));
+    expect(rows.map((r) => r.plugin)).toEqual(["memory", "other"]);
+  }, 60_000);
+
   it("llmRequest hooks: sibling patches run in priority order and cannot set host-only fields", async () => {
     writePlugin(
       "asker",
