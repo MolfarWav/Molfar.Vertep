@@ -5,6 +5,10 @@ Molfar Vertep is a modified version of [Chrysalis Engine](https://github.com/Pro
 Every change below was made in this fork; the upstream project's own history is in git.
 Versions here count from 0.1.0 and are independent of upstream's.
 
+## Unreleased
+
+- **Stop works while the prompt is still being built.** A Stop pressed after Send but before the model request opened (a few seconds on a cold start, longer with big memory) was dropped, and the reply was written anyway. The engine now parks that Stop for the chat's running route; the request that opens next is cancelled before it reaches the provider. `/__abort` answers `active: true` only for a generation that is really running (a finished one used to count), plus `pending: true` when it parked a Stop.
+
 ## 1.16.1 (2026-11-11)
 
 - **Embeddings: one name per model, and vectors that stay on the device (#374).** The same bge-m3 is `bge-m3` on this computer and `baai/bge-m3` on OpenRouter, and a stored vector of another name is made again, so a laptop on the local model and a phone on OpenRouter rewrote each other's vectors after every sync. The engine now records the model that made the vectors under one canonical name (`src/embed-model-names.ts`: bge-m3 with its OpenRouter, Hugging Face and Ollama names, and OpenAI's three embedding models with and without the `openai/` prefix); the endpoint still gets the name it knows. Different models stay different. Switching one device between the local bge-m3 and OpenRouter's keeps its vectors. Roleplay 4.112.0 (an app update) moves the vectors themselves, and the embeddings status, out of the synced folders into the app's local cache, so a computer and a phone can use different models without touching each other's vectors; the memory itself (chapters, facts, chats) is still synced. Settings > Memory and its guide page say so.

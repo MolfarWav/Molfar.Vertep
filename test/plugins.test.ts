@@ -448,6 +448,36 @@ export function uiPanel(ctx) {
     }
   }, 30_000);
 
+  it("a Stop that came before the model request opened: the provider is never called and the reply is discarded", async () => {
+    writePlugin(
+      "stopped-early",
+      { name: "S", version: "1", permissions: ["routes", "llm"], origin: "local" },
+      `export function handleRoute(req, host) {
+        const r = host.llm.results.a;
+        if (r) return { status: 200, json: { text: r.text, model: r.model } };
+        host.llm.request("a", { messages: [{ role: "user", content: "go" }], stream: { chatId: "c1", name: "x" } });
+        return { __llmPending: true };
+      }`,
+    );
+    const plugin = discoverPlugins(path.join(dir, "plugins"))[0]!;
+    let calls = 0;
+    let consumed = 0;
+    const ended: string[] = [];
+    const ctl = new AbortController();
+    ctl.abort(); // what the engine hands out when a Stop was parked while the prompt was being built
+    const res = await runPluginRoute(plugin, { method: "POST", path: "/go", query: {}, body: {} }, {
+      ...deps(),
+      models: { generate: async () => { calls++; return { text: "OK", model: "fake/model", usage: { input: 1, output: 1, cacheRead: 0, cacheWrite: 0, costTotal: 0 } }; } } as never,
+      abortCtlFor: () => ctl.signal,
+      consumeCancel: () => { consumed++; return true; },
+      genDone: (tag) => { ended.push((tag as { chatId: string }).chatId); },
+    });
+    expect(calls).toBe(0);
+    expect(consumed).toBe(1);
+    expect((res?.json as { model?: string } | undefined)?.model).toBe("error");
+    expect(ended).toEqual(["c1"]); // the route still reports the generation over
+  }, 30_000);
+
   it("llm tool bridge: defs are stripped without the tools permission", async () => {
     writePlugin(
       "toolless",
