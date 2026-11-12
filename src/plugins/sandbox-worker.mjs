@@ -163,7 +163,8 @@ port.on("message", async (msg) => {
             },
             results: llmResults,
             // two-phase embeddings: request(key, {texts, model?}) on pass A,
-            // read embedResults[key] = number[][] | null on the next pass
+            // read embedResults[key] = (number[] | null)[] | null on the next pass: one entry per text,
+            // null where the text was blank (the engine does not embed blank text); null as a whole = no embeddings
             embed: (key, req) => {
               if (typeof key !== "string" || !req || !Array.isArray(req.texts)) throw new Error("llm.embed(key, {texts, model?})");
               if (embedRequests.length >= 8) throw new Error("too many embed requests in one pass");

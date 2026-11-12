@@ -33,3 +33,14 @@ export function canonicalEmbedModel(name: string): string {
   const trimmed = name.trim();
   return BY_ALIAS.get(trimmed.toLowerCase()) ?? trimmed;
 }
+
+/**
+ * Lines up the vectors `ModelService.embed` returned with the texts a plugin asked for. `embed` drops blank
+ * texts (an endpoint refuses them), so its list can be shorter; a plugin pairs `texts[i]` with `vectors[i]`,
+ * so the answer given to plugins has one entry per text, `null` where the text was blank.
+ */
+export function alignEmbeddings(texts: readonly string[], vectors: number[][] | null): (number[] | null)[] | null {
+  if (!vectors) return null;
+  let next = 0;
+  return texts.map((t) => (String(t).slice(0, 8000).trim() === "" ? null : vectors[next++] ?? null));
+}
