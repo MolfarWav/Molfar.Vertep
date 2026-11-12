@@ -7,6 +7,9 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.16.4 (2026-11-12)
+
+- **Plugins get embeddings lined up with the texts they asked for.** The engine does not embed blank text, so its list could be shorter than the plugin's; a plugin that paired `texts[i]` with `vectors[i]` got shifted pairs after the first blank one. `host.llm.embedResults[key]` now has one entry per text, `null` where the text was blank (Roleplay's lorebook embed pass was the one caller that could hit it).
 ## 1.16.3 (2026-11-12)
 
 - **File names with a long dash or Cyrillic download again.** `Content-Disposition` was built from the raw name in four routes (assets, project export, files), and a character outside Latin-1 made the response fail with a 500. `src/server/disposition.ts` sends an ASCII fallback plus the RFC 5987 `filename*` form.
