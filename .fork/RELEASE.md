@@ -1,6 +1,6 @@
 # Releasing Molfar Vertep
 
-Fork-only. The version line is the fork's own (1.16.2 today) and independent of upstream's; nothing is merged from upstream any more.
+Fork-only. The version line is the fork's own (1.16.3 today) and independent of upstream's; nothing is merged from upstream any more.
 An addon (Roleplay, Social) is released from its own repository and needs no engine release; an engine release happens only when engine code changed (`CLAUDE.md`).
 
 ## Steps
