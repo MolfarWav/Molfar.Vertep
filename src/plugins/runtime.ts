@@ -42,6 +42,7 @@ import { PluginSandbox, sandbox, type SandboxResponse } from "./sandbox.js";
 import { runScripts } from "./script-box.js";
 import type { PluginStoreService } from "./store.js";
 import type { UserModelService, GenerateRequest, GenerateResult } from "../models.js";
+import { alignEmbeddings } from "../embed-model-names.js";
 import { log } from "../logger.js";
 import { hookInsertions, mergePromptSources, sanitizePromptSources, uncovered } from "../prompt-sources.js";
 import { assertPublicHost } from "../net-guard.js";
@@ -834,7 +835,8 @@ async function runPassRequests(
         const kinds = Array.isArray(req.kinds) && req.kinds.length === texts.length && req.kinds.every((k) => k === "query" || k === "document")
           ? (req.kinds as ("query" | "document")[])
           : undefined;
-        const vectors = texts.length ? await deps.models.embed(texts, typeof req.model === "string" ? req.model : undefined, kinds ? { kinds } : undefined) : null;
+        // blank texts are dropped by embed(); the plugin gets one entry per text, null for a blank one
+        const vectors = texts.length ? alignEmbeddings(texts, await deps.models.embed(texts, typeof req.model === "string" ? req.model : undefined, kinds ? { kinds } : undefined)) : null;
         results.embed[key] = vectors;
         // vectors of different models never compare: tell the plugin which made these
         if (vectors) results.embedInfo[key] = { model: deps.models.embedModelUsed ?? null, via: deps.models.embedVia ?? null };
