@@ -321,7 +321,7 @@ describe("what a coding agent of your own can reach", () => {
     const ok = await get("projects/comfy/workflow-api.json");
     expect(ok.status).toBe(200);
     expect(await ok.text()).toBe('{"a":1}');
-    expect(ok.headers.get("content-disposition")).toBe("inline; filename*=UTF-8''workflow-api.json");
+    expect(ok.headers.get("content-disposition")).toBe("inline; filename=\"workflow-api.json\"; filename*=UTF-8''workflow-api.json");
     expect((await get("projects/comfy/workflow-api.json", "&download=1")).headers.get("content-disposition")).toStartWith("attachment");
     // code a browser would run is shown as text
     expect((await get("projects/comfy/page.html")).headers.get("content-type")).toStartWith("text/plain");
