@@ -22,6 +22,7 @@ import type { SessionService } from "../sessions.js";
 import type { InstanceConfig } from "../config.js";
 import { APP_API_VERSION, ENGINE_REPOSITORY, ENGINE_VERSION, resourcesDir } from "../install.js";
 import type { ServerSettings } from "./settings.js";
+import { contentDisposition } from "./disposition.js";
 import { latestRelease } from "../updates.js";
 import { SELF_UPDATE, startUpdate, updateState } from "../self-update.js";
 import { agentReadDenied, DEFAULT_PERSONA, restoreWorkspaceAgentsMd, userPaths, safeResolve, workspaceAgentsMdStatus, type UserPaths } from "../paths.js";
@@ -2623,7 +2624,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     return new Response(new Uint8Array(fs.readFileSync(abs)), {
       headers: {
         "content-type": mime,
-        "content-disposition": `${disposition}; filename*=UTF-8''${encodeURIComponent(name).replace(/['()]/g, escape)}`,
+        "content-disposition": contentDisposition(disposition, name),
         "x-content-type-options": "nosniff",
         "content-security-policy": "sandbox; default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'",
         "cache-control": "no-store",
@@ -3699,7 +3700,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       const l = projectOf(c);
       const zip = await projects.exportProject(c.get("paths").root, l);
       c.header("content-type", "application/zip");
-      c.header("content-disposition", `attachment; filename="${l.name}-project-${new Date().toISOString().slice(0, 10)}.zip"`);
+      c.header("content-disposition", contentDisposition("attachment", `${l.name}-project-${new Date().toISOString().slice(0, 10)}.zip`));
       c.header("x-content-type-options", "nosniff");
       return c.body(new Uint8Array(zip));
     } catch (e) {
@@ -4881,9 +4882,19 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (!source) return c.json({ supported: false });
     // restored from a file: checked against the official repository first;
     // what is left ("differs", "unchecked") the shell explains
-    const check = await restoredState(u, p, info, source);
-    const restored = check && check !== "official" ? check : false;
-    const modified = codeModified(p, info);
+    // a check that throws here (an unreadable file, a baseline half written on a phone) answers with the
+    // reason and logs it, instead of the generic 500 that gave the person nothing to report (#390)
+    let restored: false | RestoredState = false;
+    let modified: boolean | null = null;
+    try {
+      const check = await restoredState(u, p, info, source);
+      restored = check && check !== "official" ? check : false;
+      modified = codeModified(p, info);
+    } catch (e) {
+      const err = e as NodeJS.ErrnoException;
+      log.warn(`[apps] ${u.username}/${info.id}: update check failed before asking the repository: ${err.stack ?? err.message}`);
+      return c.json({ supported: true, repository: source.git, restored, error: `could not read the app's files to compare them: ${err.code ?? err.message}` }, 200);
+    }
     const localHead = info.manifest.source?.head ?? null;
     try {
       const remoteHead = await gitRemoteHead(source.git, source.ref);
@@ -6225,7 +6236,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
       "content-type": got.record.mime,
       "x-content-type-options": "nosniff",
       "content-security-policy": "sandbox; default-src 'none'",
-      "content-disposition": `${disposition}; filename="${(got.record.name ?? got.record.id).replace(/["\\]/g, "")}"`,
+      "content-disposition": contentDisposition(disposition, got.record.name ?? got.record.id),
     });
   });
 
@@ -6308,7 +6319,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
       "content-type": inlineImage ? got.record.mime : "application/octet-stream",
       "x-content-type-options": "nosniff",
       "content-security-policy": "sandbox; default-src 'none'",
-      "content-disposition": `${inlineImage ? "inline" : "attachment"}; filename="${(got.record.name ?? got.record.id).replace(/["\\\r\n]/g, "")}"`,
+      "content-disposition": contentDisposition(inlineImage ? "inline" : "attachment", got.record.name ?? got.record.id),
       "cache-control": "no-store",
     });
   });

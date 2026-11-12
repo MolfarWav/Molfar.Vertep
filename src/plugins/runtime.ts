@@ -941,7 +941,9 @@ export async function runPluginRoute(
   // other plugin, and is disposed the moment the import is done.
   const zipBox = zipOk ? new PluginSandbox() : null;
   const box = zipBox ?? sandbox;
-  const zipLimits = zipOk ? { executionTimeoutMs: 120_000, memoryLimitBytes: 512 * 1024 * 1024 } : {};
+  // a read route of a trusted plugin may ask for more than the default 10 s (a slow phone, a big library: #391)
+  const readMs = plugin.manifest.origin === "local" && (req.method === "GET" || req.method === "HEAD") ? readLimits(plugin.manifest.limits).executionMs : 0;
+  const zipLimits = zipOk ? { executionTimeoutMs: 120_000, memoryLimitBytes: 512 * 1024 * 1024 } : readMs > 10_000 ? { executionTimeoutMs: readMs } : {};
   // a generation ends when the ROUTE ends, not when its model call does: the commit comes in a
   // later pass, and a page asking "still generating?" in that gap gave up on a live reply (#13)
   const started: unknown[] = [];
@@ -1089,7 +1091,10 @@ export interface PluginManifest {
    *  route may take (3 to 12, default 3), for a chain of calls that depend on each
    *  other. `concurrency`: the requests of one round run side by side, up to this
    *  many (1 to 4), spaced out, and one the provider refused with a 429 is tried
-   *  again after a pause. Absent: one request after another, as before. */
+   *  again after a pause. Absent: one request after another, as before.
+   *  `executionMs`: how long one read route (GET) may run, 10000 to 30000, default 10000;
+   *  for a plugin that reads a big library on a slow phone. Only a plugin with origin
+   *  "local" gets it: an imported one keeps the default. */
   limits?: PluginLimits;
 }
 
