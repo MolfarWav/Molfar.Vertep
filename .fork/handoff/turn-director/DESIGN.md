@@ -51,6 +51,9 @@ places, each with its own rules:
 - **Split before routing** (question 2): phase 1 splits the sensor and wakes every specialist every turn, so the effect
   of the split is measured apart from the effect of routing.
 - **Signal vocabulary** (question 4): a base set is ours; Forge agents may add their own questions to the same router call.
+- **Quest rules v2 can be taken** (owner, after round 1): the closing rules of the bench (`QUESTS_V2` in
+  `scripts/director-bench.ts`: a "done when" in the text, done / failed / dropped, scene goals end with their scene, a
+  full limit closes first) are a candidate for the #400 fix, tuned so long goals stay open (v3).
 - **Visibility** (question 5): a separate button in the chat header's tool group, next to World DM and Fired
   (`src/components/chat/chat-tools.tsx`), opening what the director did on the last turn.
 
@@ -167,3 +170,51 @@ What it says:
 Next candidates: quest rules v3 in the single prompt (fixes #400 with no extra calls); a better router (sharper
 questions, examples, another model) measured for recall; the owner spot-checks the key; more chats for the matrix
 (single card, group, cast size).
+
+## 8. Phase 0, round 2 (2026-11-12): three chats, a stronger model, hybrid, router v2
+
+Chats: the narrator chat of round 1 (38 replies), a single-character card with NPCs (27 replies), a group chat (16
+replies, one continuous scene). Keys by Claude subagents, not yet spot-checked by the owner. Same cheap flash model
+unless named; "pro" = a stronger model of the same family (same subscription). One run per variant. NanoGPT rate
+limits hit when many runs went side by side; the harness now waits and retries (5-60 s), and the runs with lost turns
+were redone one at a time (the two pro runs of the narrator chat each kept one lost turn). Time per turn depends on the
+provider's load at the moment, so it is only comparable between runs made at the same time.
+
+Signals F1 (micro, 13 signals) / quest closes against the key / mean (open - key open) per turn:
+
+| run | narrator chat | single card + NPCs | group chat |
+|---|---|---|---|
+| baseline (today) | 51% / 7 of 10 / -0.5 | 50% / 2 of 9 / +3.0 | 59% / 2 of 5 / +1.0 |
+| baseline + quest rules v2 | 51% / 8 / -1.9 | 58% / 7 / +4.2 | 62% / 2 / -0.5 |
+| split + v2 | 48% / 6 / -1.2 | 54% / 4 / -0.1 | 63% / 5 / +1.6 |
+| router (signals only) | 64% (v2 wording 68%) | 69% | 77% |
+| pro baseline (today's rules) | 53% / 5 / +1.2 | | |
+| pro baseline + v2 | 51% / 8 / -0.4 | | |
+| hybrid: flash sensor + quests on pro, v2 | 51% / 21 opened-and-closed / +3.7 | | |
+| baseline + quest rules v3 (flash) | 48% / 2 / -0.8 | | |
+
+Input tokens per turn: one sensor 9.2-10.1k; split 22-28k (2.4-2.8x); hybrid 14.3k; router 3.4-4.2k (105 out).
+
+What it says:
+- **Quest rules v2 are the best single change**: no extra cost, more closes in two chats of three (2 to 7 in the single
+  card chat), signals F1 up 0-8 points. The open count is still off (under-tracks in the narrator chat, over-tracks
+  with NPCs). v3 on the flash model swung the other way (2 closes): on this model the rules flip between too eager and
+  too shy.
+- **A stronger model does not detect changes better** (F1 51-53% either way) **but tracks quests best with v2**: the
+  pro + v2 open count follows the key most closely of all runs (-0.4). With today's rules the stronger model is the
+  worst (11 open at the end against 4): it obeys "silence is not resolution" even more.
+- **The split is not worth it as a whole**: 2.4-2.8x tokens, F1 within a few points either way. Its one clear gain:
+  the group chat's quest closes (0% to 60% recall on quest_end).
+- **A quests specialist on its own fills the limit** (hybrid: 29 opened, 8 open at the end against 4, many "wonders
+  why" side threads), though many of its closes land on the key's turn. It needs a "fewer, bigger quests" rule.
+- **The router is the best detector in every chat** (F1 64-77%, precision 59-78%) at a third of a sensor call's
+  tokens, but its recall is 64-76%: as a gate it would drop a quarter or more of real changes. Its quest_end is weak
+  everywhere (0-25%): it judges against the thread list, so it needs a good list first. v2 wording (lies count as
+  binding, a call or return is an entrance) raised its F1 by 4 points.
+- **Known limits of the key**: unnamed NPCs (a guard, a delivery man) are present in the key but never in the
+  sensor's list, so person_enter reads 0-6% for the sensor in the NPC chat; the derived quest_progress signal does not
+  work with v2 texts (they stay the same while the quest moves).
+
+Candidates: ship quest rules v2 for #400 (prompt change only); test the router as hints inside the one sensor call
+(not as a gate); a quests specialist with a "fewer, bigger quests" rule on the stronger model; repeat runs to measure
+noise; field values (not only "noticed a change") in the key.
