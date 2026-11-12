@@ -248,3 +248,29 @@ What it says:
 Takeaway for the owner's setup: the cheapest big gain is the Dashboard model, not new architecture. GLM 5.3 as the
 sensor model, then quest rules v2 or not by a second look at its quest list. A cheaper GLM (5.3 flash) is the next
 candidate to try.
+
+## 10. Phase 0, round 4 (2026-11-12): a third family, and which model to run the sensor on
+
+Owner: "Gemini 2.5 Flash, another family" and "I need to know what to run sensors on, it is a frequent question in the
+Discord". Same narrator chat and key. Gemini 2.5 Flash was reached through NanoGPT outside the subscription (paid from
+its balance): even its "nothinking" variant thinks (about 1000 reasoning tokens on a short answer), which makes it slow
+and costly; the split run lost 9 turns to a DNS failure and does not count.
+
+The one sensor call as it is today, per model ($ at public OpenRouter prices of the day):
+
+| model | signals F1 | recall | quest_end F1 | present | time / turn | output tokens / turn | $ / turn | $ / 100 turns |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| DeepSeek V4 Flash | 51% | 66% | 33% | 0.63 | 16 s | 1.1k | 0.0011 | 0.11 |
+| DeepSeek V4 Pro (+v2) | 51% | 65% | 38% | 0.61 | 15 s | 1.1k | 0.0058 | 0.58 |
+| **GLM 5.3** | **55%** | **76%** | **63%** | **0.76** | 14 s | 1.8k | 0.0032 | 0.32 |
+| Gemini 2.5 Flash (thinks) | 48% | 66% | 63% | 0.71 | 62 s | 4.6k | 0.0144 | 1.44 |
+
+Router (signals only): DeepSeek flash F1 64% (recall 70%), GLM 66% (76%), Gemini 61% with the highest recall, 89%, at
+47% precision and 20 s a turn. A thinking router is the closest to a usable gate so far, at the cost of time.
+
+Answer for users (one chat, one run each, so a direction, not a verdict): GLM 5.3 is the best Dashboard sensor of the
+four, at about $0.003 a turn; DeepSeek V4 Flash is the cheapest and fine for scene basics but weak on quests and on
+who comes and goes; a stronger model of the same family does not help; a thinking model (Gemini 2.5 Flash here) is
+slower and dearer without being better. Without a Dashboard model set, the sensor uses the chat's own model, which is
+often far dearer than these. Next candidates: GLM 5.3 flash (about ten times cheaper than GLM 5.3), the same table on
+the other two chats.
