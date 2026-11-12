@@ -25,12 +25,16 @@ describe("rate limit detection", () => {
 
 describe("manifest limits", () => {
   it("keeps whole numbers inside the bounds and ignores the rest", () => {
-    expect(readLimits(undefined)).toEqual({ passes: 3, concurrency: null });
-    expect(readLimits({ passes: 8, concurrency: 2 })).toEqual({ passes: 8, concurrency: 2 });
-    expect(readLimits({ passes: 99, concurrency: 99 })).toEqual({ passes: 12, concurrency: 4 });
-    expect(readLimits({ passes: 1, concurrency: 0 })).toEqual({ passes: 3, concurrency: 1 });
-    expect(readLimits({ passes: "9", concurrency: NaN })).toEqual({ passes: 3, concurrency: null });
-    expect(readLimits({ passes: 5.9 })).toEqual({ passes: 5, concurrency: null });
+    expect(readLimits(undefined)).toEqual({ passes: 3, concurrency: null, executionMs: 10000 });
+    expect(readLimits({ passes: 8, concurrency: 2 })).toMatchObject({ passes: 8, concurrency: 2 });
+    expect(readLimits({ passes: 99, concurrency: 99 })).toMatchObject({ passes: 12, concurrency: 4 });
+    expect(readLimits({ passes: 1, concurrency: 0 })).toMatchObject({ passes: 3, concurrency: 1 });
+    expect(readLimits({ passes: "9", concurrency: NaN })).toMatchObject({ passes: 3, concurrency: null });
+    expect(readLimits({ passes: 5.9 })).toMatchObject({ passes: 5, concurrency: null });
+    expect(readLimits({ executionMs: 20000 }).executionMs).toBe(20000);
+    expect(readLimits({ executionMs: 600000 }).executionMs).toBe(30000);
+    expect(readLimits({ executionMs: 100 }).executionMs).toBe(10000);
+    expect(readLimits({ executionMs: "9" }).executionMs).toBe(10000);
   });
 });
 

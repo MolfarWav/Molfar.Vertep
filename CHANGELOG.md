@@ -7,6 +7,13 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+## 1.16.3 (2026-11-12)
+
+- **File names with a long dash or Cyrillic download again.** `Content-Disposition` was built from the raw name in four routes (assets, project export, files), and a character outside Latin-1 made the response fail with a 500. `src/server/disposition.ts` sends an ASCII fallback plus the RFC 5987 `filename*` form.
+- **The per-app update check reports why it failed (#390).** `GET /v1/apps/:id/updates` caught nothing before it asked the repository; what `restoredState` or `codeModified` threw became a bare "internal error". It now logs the stack and answers with the error code. The cause on the reporter's phone is not found.
+- **A trusted plugin may ask for up to 30 s on a read route (#391).** `limits.executionMs` (10000 to 30000, default 10000) in the manifest, for `origin: "local"` plugins and GET/HEAD routes only. The Roleplay engine plugin asks for 30000.
+- Roleplay 4.115.0 and Social 0.15.0 come with this release as app updates: Roleplay keeps the vectors of a device that had not updated (#389), a reply from someone's view cuts the scenes that character missed (#392), the Dashboard tells kinds of kiss apart and whose deed an event is (#394), a clearer Scenes count; Social has an `@` popup list in forum replies (#393).
+
 ## 1.16.2 (2026-11-12)
 
 - **Stop works while the prompt is still being built.** A Stop pressed after Send but before the model request opened (a few seconds on a cold start, longer with big memory) was dropped, and the reply was written anyway. The engine now parks that Stop for the chat's running route; the request that opens next is cancelled before it reaches the provider. `/__abort` answers `active: true` only for a generation that is really running (a finished one used to count), plus `pending: true` when it parked a Stop.

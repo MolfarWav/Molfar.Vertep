@@ -25,18 +25,22 @@ export const DEFAULT_PACE: PaceConfig = { minGapMs: 250, retries: 3, baseDelayMs
 export const PASSES_DEFAULT = 3;
 export const PASSES_MAX = 12;
 export const CONCURRENCY_MAX = 4;
+/** How long one read route of a plugin the user trusts may run, in ms (#391). The sandbox default is 10 s. */
+export const EXEC_MS_DEFAULT = 10_000;
+export const EXEC_MS_MAX = 30_000;
 
 export interface PluginLimits {
   passes?: number;
   concurrency?: number;
+  executionMs?: number;
 }
 
 /** What a manifest's `limits` come to: whole numbers inside the bounds, nothing else. */
-export function readLimits(raw: unknown): { passes: number; concurrency: number | null } {
+export function readLimits(raw: unknown): { passes: number; concurrency: number | null; executionMs: number } {
   const l = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const whole = (v: unknown, lo: number, hi: number): number | null =>
     typeof v === "number" && Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.floor(v))) : null;
-  return { passes: whole(l.passes, PASSES_DEFAULT, PASSES_MAX) ?? PASSES_DEFAULT, concurrency: whole(l.concurrency, 1, CONCURRENCY_MAX) };
+  return { passes: whole(l.passes, PASSES_DEFAULT, PASSES_MAX) ?? PASSES_DEFAULT, concurrency: whole(l.concurrency, 1, CONCURRENCY_MAX), executionMs: whole(l.executionMs, EXEC_MS_DEFAULT, EXEC_MS_MAX) ?? EXEC_MS_DEFAULT };
 }
 
 /** Does this error say the provider is refusing for speed? The error text is all that reaches us. */
