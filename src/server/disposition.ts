@@ -5,7 +5,8 @@
  * fallback; browsers read `filename*` (RFC 5987) first and show the real name.
  */
 export function contentDisposition(kind: "inline" | "attachment", name: string): string {
-  const clean = name.replace(/[\x00-\x1f\x7f]/g, "").trim() || "file";
+  // control characters out (a header value cannot carry them), without a control character in a regex
+  const clean = Array.from(name).filter((ch) => ch.charCodeAt(0) > 0x1f && ch.charCodeAt(0) !== 0x7f).join("").trim() || "file";
   const fallback = clean.replace(/[^\x20-\x7e]/g, "_").replace(/["\\]/g, "") || "file";
   const encoded = encodeURIComponent(clean).replace(/['()*]/g, (ch) => `%${ch.charCodeAt(0).toString(16).toUpperCase()}`);
   return `${kind}; filename="${fallback}"; filename*=UTF-8''${encoded}`;
