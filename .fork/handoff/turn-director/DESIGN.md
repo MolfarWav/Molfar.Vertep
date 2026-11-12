@@ -218,3 +218,33 @@ What it says:
 Candidates: ship quest rules v2 for #400 (prompt change only); test the router as hints inside the one sensor call
 (not as a gate); a quests specialist with a "fewer, bigger quests" rule on the stronger model; repeat runs to measure
 noise; field values (not only "noticed a change") in the key.
+
+## 9. Phase 0, round 3 (2026-11-12): another model family on the narrator chat
+
+Owner: "run Campus on another family, GLM 5.3". Same chat and key as rounds 1-2, GLM 5.3 through the same subscription,
+one run per variant, no lost turns that mattered (one failed specialist call in the split).
+
+| run | signals F1 | recall | quest_end R / P | quest closes (key 10) | open - key | present | input / output tokens per turn |
+|---|---:|---:|---|---:|---:|---:|---|
+| flash, today's rules | 51% | 66% | 25% / 50% | 7 | -0.5 | 0.63 | 9.9k / 1.1k |
+| flash + v2 | 51% | 65% | 50% / 57% | 8 | -1.9 | 0.61 | 10.1k / 1.1k |
+| pro + v2 | 51% | 65% | 38% / 38% | 8 | -0.4 | 0.61 | 9.9k / 1.1k |
+| **GLM, today's rules** | **55%** | **76%** | **75% / 55%** | 18 | +1.1 | **0.76** | 9.8k / 1.8k |
+| GLM + v2 | 53% | 69% | 50% / 29% | 17 | -0.5 | 0.71 | 9.7k / 1.8k |
+| GLM split + v2 | 52% | 78% | 88% / 35% | 24 | -0.3 | 0.69 | 26.8k / 2.4k |
+| router flash / GLM | 64% / 66% | 70% / 76% | | | | | 4.2k / 0.1-0.2k |
+
+What it says:
+- **The model family matters more than its strength.** The stronger DeepSeek detected nothing more; GLM is the best
+  sensor of all runs: recall 76%, present list 0.76, vows F1 80% (flash 55%), people leaving 69% (flash 45%).
+- **GLM closes quests even with today's rules** (quest_end recall 75%, 18 closes; the "kept after class" quest closes
+  on the key's turn). It also opens more small ones, so the end count is still over (7 against 4). With v2 its open
+  count follows the key better (-0.5) but its closes get less precise.
+- **The split stays not worth it** on GLM too (2.7x tokens, F1 lower than GLM alone).
+- **The GLM router** finds people coming in far better (87% against 25%) but is no better overall (66%).
+- Quirks: GLM writes 1.6x more output tokens, and wrote some quest texts in the story's language although the rules
+  ask for English.
+
+Takeaway for the owner's setup: the cheapest big gain is the Dashboard model, not new architecture. GLM 5.3 as the
+sensor model, then quest rules v2 or not by a second look at its quest list. A cheaper GLM (5.3 flash) is the next
+candidate to try.
