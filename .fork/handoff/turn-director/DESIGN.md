@@ -128,3 +128,42 @@ text: TypeSafe's "System One" models, reachable through OpenRouter's Decisions A
 run locally (Ollama). A natural fit for the router, but it needs a new call type in the engine (`src/models.ts` and
 the plugin host), the API is alpha, and nothing says how it handles Ukrainian or Russian text. Try it on the phase 0
 bench only after the ordinary model has been measured.
+
+## 7. Phase 0, round 1 (2026-11-12)
+
+Chat: the owner's narrator-card chat (38 replies, about 250k characters, Russian, several scene changes). Answer key: 38
+turns x 13 signals and a ledger of 14 quests (10 closed), labelled by a Claude subagent, not yet spot-checked by the
+owner. Sensor model: the chat's Dashboard model (a cheap flash model through NanoGPT). One run per variant (no
+repeats, temperature 0.2). Harness: Roleplay `scripts/director-bench.ts` and `scripts/director-score.ts` (branch
+`claude/turn-director`); corpus and results outside the repository.
+
+| run | signals F1 (micro, 13) | quest closes (key 10) | open quests at the end (key 4) | present (Jaccard) | time per turn | input tokens per turn |
+|---|---:|---:|---:|---:|---:|---:|
+| baseline (today) | 51% | 7 | 7 | 0.63 | 16.5 s | 9.9k |
+| baseline + quest rules v2 | 51% | 8 | 1 | 0.61 | 15.2 s | 10.1k |
+| split into 5 specialists | 47% | 1 | 8 | 0.71 | 16.9 s | 27.5k |
+| split + quest rules v2 | 48% | 6 | 2 | 0.68 | 17.0 s | 27.7k |
+| router only (signals) | 64% | - | - | - | 4.2 s | 4.2k |
+
+Signals of replay runs are derived from the snapshot changes and the sensor's JSON (a proxy: item churn in the ledger
+counts as a change); the router answers the questions directly, so its column is not fully comparable.
+
+What it says:
+- **The split alone does not fix quests; it made them worse.** A specialist with today's rules closed one quest in the
+  whole chat and ended with 8 open. Today's baseline still had the opening quest of turn 1 (settled at turn 8 in the
+  key) open at the end. The cause is the rules ("silence is not resolution"), which a
+  focused model obeys even more strictly.
+- **The quest rules v2 make quests close** (texts become goals with a "done when", the first quests close on time), but
+  they now under-track: 1-2 open where the key has 3-7. A v3 must keep long goals open and close only scene-bound ones
+  with their scene.
+- **The split costs 2.8x the input tokens and is not faster** (the slowest specialist sets the time). Gains: present
+  list +8 points. Other signals about the same. Not worth it on its own; it can only pay with routing (fewer
+  specialists a turn) or trimmed inputs.
+- **The router on the same cheap model is cheap and quick** (4.2 s, 4.2k tokens, 105 output tokens) and more precise
+  than the sensor-derived signals (P 59% vs 41%), but its recall is 70%: too low to gate specialists by itself. Weak:
+  quest_end 13%, person_enter 25%, vow_said 46%. Strong: place_change, time_jump, scene_cut, clothes_change,
+  secret_learned.
+
+Next candidates: quest rules v3 in the single prompt (fixes #400 with no extra calls); a better router (sharper
+questions, examples, another model) measured for recall; the owner spot-checks the key; more chats for the matrix
+(single card, group, cast size).
