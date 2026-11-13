@@ -1,6 +1,6 @@
 # Ready agents: Repetition guard, Canon guard, Ledger (#396), and Spotlight
 
-Date: 2026-11-13. Roleplay branch `claude/396-ready-agents` (off main 4.119.0). Task file: the owner's
+Date: 2026-11-13. Released as Roleplay 4.120.0 (PR #136, merged; branch `claude/396-ready-agents`). Task file: the owner's
 `TASK-default-agents.md` (kept outside the repo). Everything below was checked in the Roleplay code unless marked.
 
 ## 0. The answers (read before building)
@@ -134,3 +134,7 @@ attention multiply it later.
 - The Help article "Agent editor: three ready agents" is not changed (it names three recipes; its source line numbers
   were already stale: `scripts/validate-help.mjs` reports 430 old errors that this change does not cause).
 - The new-chat offer of agents (#396 item 0) is separate, as the task says.
+
+## 6. After the release
+
+Browser check (subagent, throwaway engine, fake model) passed: Ledger table and hint, hand command without a model call, Canon note and button (the button only fills the message box, the same key is not shown twice, no facts means no run), Repetition guard hint and its disappearance when the repeat leaves the 6-reply window. Findings left as they are: Canon guard counts the greeting among the replies (first run after the second user message), at 1280 px the note sits below the fold until the chat is scrolled, Repetition guard can list two phrases that share one word, the Ledger panel is a fixed 220 px high. The panel title was changed to "Numbers" after the check (it read "Ledger Ledger").
