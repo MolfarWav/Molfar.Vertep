@@ -1,0 +1,3269 @@
+{
+ "_about": "Derived numbers of the turn director bench (Molfar.Vertep #401). Produced by Roleplay scripts/director-analyze.ts from results-*.json of scripts/director-bench.ts; no story text. Chats: narrator = narrator card 38 replies; single-npc = single-character card with NPCs 27 replies; group = group chat 16 replies. Token counts: o200k BPE (Roleplay src/lib/tokens.ts) unless a field says provider.",
+ "generated": "2026-11-13",
+ "narrator": {
+  "keyTurns": 38,
+  "keyQuests": 14,
+  "keyClosed": 10,
+  "inventory": [
+   {
+    "tag": "baseline-v2",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 15248,
+    "inPerTurn": 10084,
+    "outPerTurn": 1096
+   },
+   {
+    "tag": "baseline-v3",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "v3",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 8758,
+    "inPerTurn": 10024,
+    "outPerTurn": 1133
+   },
+   {
+    "tag": "baseline",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 16521,
+    "inPerTurn": 9926,
+    "outPerTurn": 1137
+   },
+   {
+    "tag": "gem-baseline-v2",
+    "mode": "baseline",
+    "model": "nanogpt-paid/gemini-2.5-flash-nothinking",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 50199,
+    "inPerTurn": 9979,
+    "outPerTurn": 4526
+   },
+   {
+    "tag": "gem-baseline",
+    "mode": "baseline",
+    "model": "nanogpt-paid/gemini-2.5-flash-nothinking",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 61714,
+    "inPerTurn": 9735,
+    "outPerTurn": 4604
+   },
+   {
+    "tag": "gem-router",
+    "mode": "router",
+    "model": "nanogpt-paid/gemini-2.5-flash-nothinking",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 19718,
+    "inPerTurn": 3991,
+    "outPerTurn": 1755
+   },
+   {
+    "tag": "gem-split-v2",
+    "mode": "split",
+    "model": "nanogpt-paid/gemini-2.5-flash-nothinking",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 47,
+    "msPerTurn": 60519,
+    "inPerTurn": 18626,
+    "outPerTurn": 9241
+   },
+   {
+    "tag": "glm-baseline-v2",
+    "mode": "baseline",
+    "model": "nanogpt/z-ai/glm-5.3",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 14323,
+    "inPerTurn": 9736,
+    "outPerTurn": 1756
+   },
+   {
+    "tag": "glm-baseline",
+    "mode": "baseline",
+    "model": "nanogpt/z-ai/glm-5.3",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 14070,
+    "inPerTurn": 9842,
+    "outPerTurn": 1786
+   },
+   {
+    "tag": "glm-router",
+    "mode": "router",
+    "model": "nanogpt/z-ai/glm-5.3",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 3040,
+    "inPerTurn": 4154,
+    "outPerTurn": 226
+   },
+   {
+    "tag": "glm-split-v2",
+    "mode": "split",
+    "model": "nanogpt/z-ai/glm-5.3",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 1,
+    "msPerTurn": 18582,
+    "inPerTurn": 26819,
+    "outPerTurn": 2381
+   },
+   {
+    "tag": "hybrid-pro-v2",
+    "mode": "hybrid",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 10489,
+    "inPerTurn": 14343,
+    "outPerTurn": 1312
+   },
+   {
+    "tag": "pro-baseline-v2",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-pro-0813",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 1,
+    "msPerTurn": 14677,
+    "inPerTurn": 9892,
+    "outPerTurn": 1088
+   },
+   {
+    "tag": "pro-baseline",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-pro-0813",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 1,
+    "msPerTurn": 14540,
+    "inPerTurn": 9818,
+    "outPerTurn": 1060
+   },
+   {
+    "tag": "pro-router",
+    "mode": "router",
+    "model": "nanogpt/deepseek/deepseek-v4-pro-0813",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 1,
+    "msPerTurn": 3366,
+    "inPerTurn": 4118,
+    "outPerTurn": 102
+   },
+   {
+    "tag": "pro-split-v2",
+    "mode": "split",
+    "model": "nanogpt/deepseek/deepseek-v4-pro-0813",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 7,
+    "msPerTurn": 12456,
+    "inPerTurn": 26650,
+    "outPerTurn": 1562
+   },
+   {
+    "tag": "router-v2",
+    "mode": "router",
+    "model": "nanogpt/deepseek/deepseek-v4-flash (model of the --from run)",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 5319,
+    "inPerTurn": 4318,
+    "outPerTurn": 105
+   },
+   {
+    "tag": "router",
+    "mode": "router",
+    "model": "nanogpt/deepseek/deepseek-v4-flash (model of the --from run)",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 4193,
+    "inPerTurn": 4232,
+    "outPerTurn": 105
+   },
+   {
+    "tag": "split-v2",
+    "mode": "split",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "v2",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 16980,
+    "inPerTurn": 27669,
+    "outPerTurn": 1697
+   },
+   {
+    "tag": "split",
+    "mode": "split",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "today's",
+    "turns": 38,
+    "callErrors": 0,
+    "msPerTurn": 16864,
+    "inPerTurn": 27496,
+    "outPerTurn": 1709
+   }
+  ],
+  "blocks": [
+   {
+    "k": 2,
+    "blocks": {
+     "Characters": 77,
+     "Previous state": 306,
+     "Notebooks": 37,
+     "Backgrounds": 134,
+     "Word scan": 252,
+     "Card attire": 134,
+     "New messages": 1454
+    },
+    "notebooks": 1,
+    "inputTotal": 2396,
+    "providerPromptTokens": 6874
+   },
+   {
+    "k": 18,
+    "blocks": {
+     "Characters": 77,
+     "Previous state": 323,
+     "Notebooks": 333,
+     "Thread check": 53,
+     "Backgrounds": 134,
+     "Word scan": 529,
+     "Card attire": 134,
+     "New messages": 1502
+    },
+    "notebooks": 1,
+    "inputTotal": 3086,
+    "providerPromptTokens": 7650
+   },
+   {
+    "k": 38,
+    "blocks": {
+     "Characters": 77,
+     "Previous state": 871,
+     "Notebooks": 797,
+     "Thread check": 53,
+     "Backgrounds": 133,
+     "Word scan": 885,
+     "Card attire": 167,
+     "New messages": 4245
+    },
+    "notebooks": 5,
+    "inputTotal": 7232,
+    "providerPromptTokens": 11809
+   },
+   {
+    "k": 56,
+    "blocks": {
+     "Characters": 77,
+     "Previous state": 882,
+     "Notebooks": 703,
+     "Backgrounds": 136,
+     "Word scan": 919,
+     "Card attire": 167,
+     "New messages": 3701
+    },
+    "notebooks": 3,
+    "inputTotal": 6587,
+    "providerPromptTokens": 11097
+   },
+   {
+    "k": 74,
+    "blocks": {
+     "Characters": 77,
+     "Previous state": 530,
+     "Notebooks": 489,
+     "Backgrounds": 136,
+     "Word scan": 1187,
+     "Card attire": 134,
+     "New messages": 3467
+    },
+    "notebooks": 1,
+    "inputTotal": 6021,
+    "providerPromptTokens": 10514
+   }
+  ],
+  "specialistInputs": [
+   {
+    "k": 2,
+    "scene": 1972,
+    "things": 2223,
+    "relations": 1837,
+    "knowledge": 1875,
+    "quests": 1760
+   },
+   {
+    "k": 18,
+    "scene": 2037,
+    "things": 2565,
+    "relations": 1902,
+    "knowledge": 2235,
+    "quests": 1878
+   },
+   {
+    "k": 38,
+    "scene": 5327,
+    "things": 6246,
+    "relations": 5193,
+    "knowledge": 5992,
+    "quests": 5169
+   },
+   {
+    "k": 56,
+    "scene": 4797,
+    "things": 5747,
+    "relations": 4660,
+    "knowledge": 5363,
+    "quests": 4583
+   },
+   {
+    "k": 74,
+    "scene": 4211,
+    "things": 5395,
+    "relations": 4074,
+    "knowledge": 4563,
+    "quests": 3997
+   }
+  ],
+  "system": {
+   "total": 4332,
+   "rules": 2969,
+   "parts": {
+    "role": 94,
+    "language": 76,
+    "truth": 57,
+    "events": 304,
+    "scene": 1129,
+    "direction": 205,
+    "knowledge": 773,
+    "threads": 319,
+    "style": 12
+   },
+   "vocabulary": 644,
+   "outputShape": 712,
+   "oldThreadsPart": 196
+  },
+  "signals": {
+   "baseline-v2": {
+    "quest_progress": {
+     "tp": 3,
+     "fp": 1,
+     "fn": 22
+    },
+    "quest_end": {
+     "tp": 4,
+     "fp": 3,
+     "fn": 4
+    },
+    "new_goal": {
+     "tp": 5,
+     "fp": 3,
+     "fn": 5
+    },
+    "place_change": {
+     "tp": 8,
+     "fp": 2,
+     "fn": 2
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 3,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 6,
+     "fp": 5,
+     "fn": 1
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 18,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 16,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 7,
+     "fp": 8,
+     "fn": 5
+    },
+    "person_leave": {
+     "tp": 6,
+     "fp": 8,
+     "fn": 4
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 18,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 14,
+     "fp": 20,
+     "fn": 1
+    },
+    "vow_said": {
+     "tp": 12,
+     "fp": 13,
+     "fn": 1
+    }
+   },
+   "baseline-v3": {
+    "quest_progress": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 25
+    },
+    "quest_end": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 8
+    },
+    "new_goal": {
+     "tp": 3,
+     "fp": 4,
+     "fn": 7
+    },
+    "place_change": {
+     "tp": 8,
+     "fp": 1,
+     "fn": 2
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 2,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 6,
+     "fp": 4,
+     "fn": 1
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 14,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 12,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 6,
+     "fp": 7,
+     "fn": 6
+    },
+    "person_leave": {
+     "tp": 4,
+     "fp": 7,
+     "fn": 6
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 20,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 20,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 12,
+     "fp": 15,
+     "fn": 1
+    }
+   },
+   "baseline": {
+    "quest_progress": {
+     "tp": 7,
+     "fp": 2,
+     "fn": 18
+    },
+    "quest_end": {
+     "tp": 2,
+     "fp": 2,
+     "fn": 6
+    },
+    "new_goal": {
+     "tp": 5,
+     "fp": 7,
+     "fn": 5
+    },
+    "place_change": {
+     "tp": 9,
+     "fp": 2,
+     "fn": 1
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 7,
+     "fp": 4,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 18,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 7,
+     "fp": 15,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 6,
+     "fp": 8,
+     "fn": 6
+    },
+    "person_leave": {
+     "tp": 5,
+     "fp": 7,
+     "fn": 5
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 20,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 21,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 11,
+     "fp": 16,
+     "fn": 2
+    }
+   },
+   "gem-baseline-v2": {
+    "quest_progress": {
+     "tp": 2,
+     "fp": 2,
+     "fn": 23
+    },
+    "quest_end": {
+     "tp": 6,
+     "fp": 9,
+     "fn": 2
+    },
+    "new_goal": {
+     "tp": 6,
+     "fp": 13,
+     "fn": 4
+    },
+    "place_change": {
+     "tp": 7,
+     "fp": 0,
+     "fn": 3
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 3,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 6,
+     "fp": 7,
+     "fn": 1
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 27,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 19,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 7,
+     "fp": 8,
+     "fn": 5
+    },
+    "person_leave": {
+     "tp": 7,
+     "fp": 9,
+     "fn": 3
+    },
+    "relation_event": {
+     "tp": 8,
+     "fp": 25,
+     "fn": 2
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 21,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 12,
+     "fp": 16,
+     "fn": 1
+    }
+   },
+   "gem-baseline": {
+    "quest_progress": {
+     "tp": 1,
+     "fp": 2,
+     "fn": 24
+    },
+    "quest_end": {
+     "tp": 5,
+     "fp": 3,
+     "fn": 3
+    },
+    "new_goal": {
+     "tp": 6,
+     "fp": 7,
+     "fn": 4
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 2,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 7,
+     "fp": 11,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 27,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 20,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 5,
+     "fp": 10,
+     "fn": 7
+    },
+    "person_leave": {
+     "tp": 8,
+     "fp": 5,
+     "fn": 2
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 24,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 13,
+     "fp": 20,
+     "fn": 2
+    },
+    "vow_said": {
+     "tp": 11,
+     "fp": 15,
+     "fn": 2
+    }
+   },
+   "gem-router": {
+    "quest_progress": {
+     "tp": 25,
+     "fp": 12,
+     "fn": 0
+    },
+    "quest_end": {
+     "tp": 2,
+     "fp": 5,
+     "fn": 6
+    },
+    "new_goal": {
+     "tp": 9,
+     "fp": 19,
+     "fn": 1
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 1,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 5,
+     "fp": 5,
+     "fn": 2
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 11,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 22,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 8,
+     "fp": 3,
+     "fn": 4
+    },
+    "person_leave": {
+     "tp": 9,
+     "fp": 5,
+     "fn": 1
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 26,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 14,
+     "fp": 16,
+     "fn": 1
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 8,
+     "fn": 0
+    }
+   },
+   "gem-split-v2": {
+    "quest_progress": {
+     "tp": 4,
+     "fp": 2,
+     "fn": 21
+    },
+    "quest_end": {
+     "tp": 6,
+     "fp": 16,
+     "fn": 2
+    },
+    "new_goal": {
+     "tp": 8,
+     "fp": 15,
+     "fn": 2
+    },
+    "place_change": {
+     "tp": 6,
+     "fp": 0,
+     "fn": 4
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 4,
+     "fp": 8,
+     "fn": 3
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 24,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 4,
+     "fp": 16,
+     "fn": 4
+    },
+    "person_enter": {
+     "tp": 5,
+     "fp": 4,
+     "fn": 7
+    },
+    "person_leave": {
+     "tp": 7,
+     "fp": 5,
+     "fn": 3
+    },
+    "relation_event": {
+     "tp": 7,
+     "fp": 16,
+     "fn": 3
+    },
+    "secret_learned": {
+     "tp": 11,
+     "fp": 15,
+     "fn": 4
+    },
+    "vow_said": {
+     "tp": 9,
+     "fp": 9,
+     "fn": 4
+    }
+   },
+   "glm-baseline-v2": {
+    "quest_progress": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 23
+    },
+    "quest_end": {
+     "tp": 4,
+     "fp": 10,
+     "fn": 4
+    },
+    "new_goal": {
+     "tp": 8,
+     "fp": 10,
+     "fn": 2
+    },
+    "place_change": {
+     "tp": 9,
+     "fp": 3,
+     "fn": 1
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 2,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 7,
+     "fp": 9,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 23,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 13,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 8,
+     "fp": 8,
+     "fn": 4
+    },
+    "person_leave": {
+     "tp": 9,
+     "fp": 7,
+     "fn": 1
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 16,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 13,
+     "fp": 16,
+     "fn": 2
+    },
+    "vow_said": {
+     "tp": 12,
+     "fp": 4,
+     "fn": 1
+    }
+   },
+   "glm-baseline": {
+    "quest_progress": {
+     "tp": 9,
+     "fp": 5,
+     "fn": 16
+    },
+    "quest_end": {
+     "tp": 6,
+     "fp": 5,
+     "fn": 2
+    },
+    "new_goal": {
+     "tp": 8,
+     "fp": 14,
+     "fn": 2
+    },
+    "place_change": {
+     "tp": 8,
+     "fp": 4,
+     "fn": 2
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 7,
+     "fp": 11,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 23,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 14,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 6,
+     "fp": 6,
+     "fn": 6
+    },
+    "person_leave": {
+     "tp": 9,
+     "fp": 7,
+     "fn": 1
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 17,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 15,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 12,
+     "fp": 5,
+     "fn": 1
+    }
+   },
+   "glm-router": {
+    "quest_progress": {
+     "tp": 22,
+     "fp": 10,
+     "fn": 3
+    },
+    "quest_end": {
+     "tp": 3,
+     "fp": 3,
+     "fn": 5
+    },
+    "new_goal": {
+     "tp": 6,
+     "fp": 4,
+     "fn": 4
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 2,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 4,
+     "fp": 3,
+     "fn": 3
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 6,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 7,
+     "fp": 12,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 10,
+     "fp": 1,
+     "fn": 2
+    },
+    "person_leave": {
+     "tp": 8,
+     "fp": 3,
+     "fn": 2
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 14,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 11,
+     "fp": 8,
+     "fn": 4
+    },
+    "vow_said": {
+     "tp": 5,
+     "fp": 4,
+     "fn": 8
+    }
+   },
+   "glm-split-v2": {
+    "quest_progress": {
+     "tp": 7,
+     "fp": 3,
+     "fn": 18
+    },
+    "quest_end": {
+     "tp": 7,
+     "fp": 13,
+     "fn": 1
+    },
+    "new_goal": {
+     "tp": 9,
+     "fp": 13,
+     "fn": 1
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 6,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 2,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 7,
+     "fp": 11,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 29,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 20,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 8,
+     "fp": 5,
+     "fn": 4
+    },
+    "person_leave": {
+     "tp": 9,
+     "fp": 6,
+     "fn": 1
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 21,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 13,
+     "fp": 20,
+     "fn": 2
+    },
+    "vow_said": {
+     "tp": 12,
+     "fp": 9,
+     "fn": 1
+    }
+   },
+   "hybrid-pro-v2": {
+    "quest_progress": {
+     "tp": 5,
+     "fp": 3,
+     "fn": 20
+    },
+    "quest_end": {
+     "tp": 4,
+     "fp": 7,
+     "fn": 4
+    },
+    "new_goal": {
+     "tp": 7,
+     "fp": 15,
+     "fn": 3
+    },
+    "place_change": {
+     "tp": 9,
+     "fp": 1,
+     "fn": 1
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 3,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 6,
+     "fp": 4,
+     "fn": 1
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 17,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 16,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 7,
+     "fp": 7,
+     "fn": 5
+    },
+    "person_leave": {
+     "tp": 7,
+     "fp": 8,
+     "fn": 3
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 20,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 22,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 11,
+     "fp": 16,
+     "fn": 2
+    }
+   },
+   "pro-baseline-v2": {
+    "quest_progress": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 25
+    },
+    "quest_end": {
+     "tp": 3,
+     "fp": 5,
+     "fn": 5
+    },
+    "new_goal": {
+     "tp": 6,
+     "fp": 7,
+     "fn": 4
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 0,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 6,
+     "fp": 9,
+     "fn": 1
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 17,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 15,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 6,
+     "fp": 8,
+     "fn": 6
+    },
+    "person_leave": {
+     "tp": 5,
+     "fp": 7,
+     "fn": 5
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 21,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 17,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 13,
+     "fn": 0
+    }
+   },
+   "pro-baseline": {
+    "quest_progress": {
+     "tp": 2,
+     "fp": 3,
+     "fn": 23
+    },
+    "quest_end": {
+     "tp": 3,
+     "fp": 2,
+     "fn": 5
+    },
+    "new_goal": {
+     "tp": 7,
+     "fp": 8,
+     "fn": 3
+    },
+    "place_change": {
+     "tp": 9,
+     "fp": 0,
+     "fn": 1
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 7,
+     "fp": 5,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 20,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 7,
+     "fp": 12,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 6,
+     "fp": 6,
+     "fn": 6
+    },
+    "person_leave": {
+     "tp": 8,
+     "fp": 4,
+     "fn": 2
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 25,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 17,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 13,
+     "fn": 0
+    }
+   },
+   "pro-router": {
+    "quest_progress": {
+     "tp": 25,
+     "fp": 11,
+     "fn": 0
+    },
+    "quest_end": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 7
+    },
+    "new_goal": {
+     "tp": 3,
+     "fp": 3,
+     "fn": 7
+    },
+    "place_change": {
+     "tp": 9,
+     "fp": 2,
+     "fn": 1
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 5,
+     "fp": 3,
+     "fn": 2
+    },
+    "clothes_change": {
+     "tp": 1,
+     "fp": 9,
+     "fn": 1
+    },
+    "item_change": {
+     "tp": 7,
+     "fp": 12,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 8,
+     "fp": 2,
+     "fn": 4
+    },
+    "person_leave": {
+     "tp": 8,
+     "fp": 5,
+     "fn": 2
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 17,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 11,
+     "fp": 7,
+     "fn": 4
+    },
+    "vow_said": {
+     "tp": 6,
+     "fp": 3,
+     "fn": 7
+    }
+   },
+   "pro-split-v2": {
+    "quest_progress": {
+     "tp": 7,
+     "fp": 3,
+     "fn": 18
+    },
+    "quest_end": {
+     "tp": 4,
+     "fp": 7,
+     "fn": 4
+    },
+    "new_goal": {
+     "tp": 9,
+     "fp": 16,
+     "fn": 1
+    },
+    "place_change": {
+     "tp": 9,
+     "fp": 1,
+     "fn": 1
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 7,
+     "fp": 8,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 21,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 6,
+     "fp": 24,
+     "fn": 2
+    },
+    "person_enter": {
+     "tp": 9,
+     "fp": 7,
+     "fn": 3
+    },
+    "person_leave": {
+     "tp": 6,
+     "fp": 6,
+     "fn": 4
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 19,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 19,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 12,
+     "fp": 20,
+     "fn": 1
+    }
+   },
+   "router-v2": {
+    "quest_progress": {
+     "tp": 25,
+     "fp": 12,
+     "fn": 0
+    },
+    "quest_end": {
+     "tp": 2,
+     "fp": 3,
+     "fn": 6
+    },
+    "new_goal": {
+     "tp": 5,
+     "fp": 8,
+     "fn": 5
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 2,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 4,
+     "fp": 2,
+     "fn": 3
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 7,
+     "fp": 8,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 6,
+     "fp": 1,
+     "fn": 6
+    },
+    "person_leave": {
+     "tp": 7,
+     "fp": 3,
+     "fn": 3
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 17,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 13,
+     "fp": 5,
+     "fn": 2
+    },
+    "vow_said": {
+     "tp": 6,
+     "fp": 0,
+     "fn": 7
+    }
+   },
+   "router": {
+    "quest_progress": {
+     "tp": 22,
+     "fp": 12,
+     "fn": 3
+    },
+    "quest_end": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 7
+    },
+    "new_goal": {
+     "tp": 4,
+     "fp": 7,
+     "fn": 6
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 2,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 6,
+     "fp": 2,
+     "fn": 1
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 0,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 7,
+     "fp": 12,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 3,
+     "fp": 1,
+     "fn": 9
+    },
+    "person_leave": {
+     "tp": 6,
+     "fp": 3,
+     "fn": 4
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 15,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 14,
+     "fp": 6,
+     "fn": 1
+    },
+    "vow_said": {
+     "tp": 6,
+     "fp": 3,
+     "fn": 7
+    }
+   },
+   "split-v2": {
+    "quest_progress": {
+     "tp": 3,
+     "fp": 3,
+     "fn": 22
+    },
+    "quest_end": {
+     "tp": 2,
+     "fp": 2,
+     "fn": 6
+    },
+    "new_goal": {
+     "tp": 3,
+     "fp": 4,
+     "fn": 7
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 3,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 4,
+     "fp": 3,
+     "fn": 3
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 16,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 20,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 6,
+     "fp": 8,
+     "fn": 6
+    },
+    "person_leave": {
+     "tp": 5,
+     "fp": 7,
+     "fn": 5
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 25,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 20,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 20,
+     "fn": 0
+    }
+   },
+   "split": {
+    "quest_progress": {
+     "tp": 4,
+     "fp": 2,
+     "fn": 21
+    },
+    "quest_end": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 7
+    },
+    "new_goal": {
+     "tp": 5,
+     "fp": 3,
+     "fn": 5
+    },
+    "place_change": {
+     "tp": 10,
+     "fp": 3,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 4,
+     "fp": 4,
+     "fn": 3
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 18,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 23,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 7,
+     "fp": 7,
+     "fn": 5
+    },
+    "person_leave": {
+     "tp": 4,
+     "fp": 8,
+     "fn": 6
+    },
+    "relation_event": {
+     "tp": 9,
+     "fp": 27,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 15,
+     "fp": 21,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 20,
+     "fn": 0
+    }
+   }
+  },
+  "present": {
+   "baseline-v2": {
+    "turns": 37,
+    "missedPerTurn": 0.2,
+    "extraPerTurn": 1.1
+   },
+   "baseline-v3": {
+    "turns": 37,
+    "missedPerTurn": 0.2,
+    "extraPerTurn": 0.9
+   },
+   "baseline": {
+    "turns": 37,
+    "missedPerTurn": 0.2,
+    "extraPerTurn": 1.1
+   },
+   "gem-baseline-v2": {
+    "turns": 37,
+    "missedPerTurn": 0,
+    "extraPerTurn": 0.8
+   },
+   "gem-baseline": {
+    "turns": 37,
+    "missedPerTurn": 0.1,
+    "extraPerTurn": 0.7
+   },
+   "gem-split-v2": {
+    "turns": 37,
+    "missedPerTurn": 0,
+    "extraPerTurn": 0.7
+   },
+   "glm-baseline-v2": {
+    "turns": 37,
+    "missedPerTurn": 0,
+    "extraPerTurn": 0.7
+   },
+   "glm-baseline": {
+    "turns": 37,
+    "missedPerTurn": 0,
+    "extraPerTurn": 0.8
+   },
+   "glm-split-v2": {
+    "turns": 37,
+    "missedPerTurn": 0,
+    "extraPerTurn": 0.9
+   },
+   "hybrid-pro-v2": {
+    "turns": 37,
+    "missedPerTurn": 0.2,
+    "extraPerTurn": 1.2
+   },
+   "pro-baseline-v2": {
+    "turns": 37,
+    "missedPerTurn": 0.2,
+    "extraPerTurn": 1.2
+   },
+   "pro-baseline": {
+    "turns": 37,
+    "missedPerTurn": 0.2,
+    "extraPerTurn": 1.2
+   },
+   "pro-split-v2": {
+    "turns": 37,
+    "missedPerTurn": 0.2,
+    "extraPerTurn": 0.9
+   },
+   "split-v2": {
+    "turns": 37,
+    "missedPerTurn": 0,
+    "extraPerTurn": 1.1
+   },
+   "split": {
+    "turns": 37,
+    "missedPerTurn": 0,
+    "extraPerTurn": 0.9
+   }
+  },
+  "quests": {
+   "baseline-v2": {
+    "meanOpenMinusKey": -1.9,
+    "meanAbsDiff": 1.9,
+    "closes": 8,
+    "openAtEnd": 1
+   },
+   "baseline-v3": {
+    "meanOpenMinusKey": -0.8,
+    "meanAbsDiff": 1.3,
+    "closes": 2,
+    "openAtEnd": 6
+   },
+   "baseline": {
+    "meanOpenMinusKey": -0.5,
+    "meanAbsDiff": 1.4,
+    "closes": 7,
+    "openAtEnd": 7
+   },
+   "gem-baseline-v2": {
+    "meanOpenMinusKey": 0.6,
+    "meanAbsDiff": 1.3,
+    "closes": 22,
+    "openAtEnd": 6
+   },
+   "gem-baseline": {
+    "meanOpenMinusKey": 0.8,
+    "meanAbsDiff": 1,
+    "closes": 13,
+    "openAtEnd": 5
+   },
+   "gem-split-v2": {
+    "meanOpenMinusKey": 0.8,
+    "meanAbsDiff": 1.4,
+    "closes": 41,
+    "openAtEnd": 3
+   },
+   "glm-baseline-v2": {
+    "meanOpenMinusKey": -0.5,
+    "meanAbsDiff": 0.9,
+    "closes": 17,
+    "openAtEnd": 2
+   },
+   "glm-baseline": {
+    "meanOpenMinusKey": 1.1,
+    "meanAbsDiff": 1.5,
+    "closes": 18,
+    "openAtEnd": 7
+   },
+   "glm-split-v2": {
+    "meanOpenMinusKey": -0.3,
+    "meanAbsDiff": 0.9,
+    "closes": 24,
+    "openAtEnd": 4
+   },
+   "hybrid-pro-v2": {
+    "meanOpenMinusKey": 3.7,
+    "meanAbsDiff": 3.7,
+    "closes": 21,
+    "openAtEnd": 8
+   },
+   "pro-baseline-v2": {
+    "meanOpenMinusKey": -0.4,
+    "meanAbsDiff": 0.8,
+    "closes": 8,
+    "openAtEnd": 6
+   },
+   "pro-baseline": {
+    "meanOpenMinusKey": 1.2,
+    "meanAbsDiff": 2.2,
+    "closes": 5,
+    "openAtEnd": 11
+   },
+   "pro-split-v2": {
+    "meanOpenMinusKey": 3.3,
+    "meanAbsDiff": 3.3,
+    "closes": 21,
+    "openAtEnd": 9
+   },
+   "split-v2": {
+    "meanOpenMinusKey": -1.2,
+    "meanAbsDiff": 1.2,
+    "closes": 6,
+    "openAtEnd": 2
+   },
+   "split": {
+    "meanOpenMinusKey": 0.1,
+    "meanAbsDiff": 1.4,
+    "closes": 1,
+    "openAtEnd": 8
+   }
+  },
+  "specialists": {
+   "gem-split-v2": {
+    "scene": {
+     "calls": 38,
+     "errors": 10,
+     "in": 3461,
+     "out": 1288,
+     "ms": 14544
+    },
+    "things": {
+     "calls": 38,
+     "errors": 9,
+     "in": 4250,
+     "out": 1796,
+     "ms": 14324
+    },
+    "relations": {
+     "calls": 38,
+     "errors": 10,
+     "in": 3577,
+     "out": 2090,
+     "ms": 33349
+    },
+    "knowledge": {
+     "calls": 38,
+     "errors": 9,
+     "in": 4213,
+     "out": 2237,
+     "ms": 32634
+    },
+    "quests": {
+     "calls": 38,
+     "errors": 9,
+     "in": 3126,
+     "out": 1829,
+     "ms": 13660
+    }
+   },
+   "glm-split-v2": {
+    "scene": {
+     "calls": 38,
+     "errors": 0,
+     "in": 5054,
+     "out": 411,
+     "ms": 6263
+    },
+    "things": {
+     "calls": 38,
+     "errors": 0,
+     "in": 5997,
+     "out": 493,
+     "ms": 8722
+    },
+    "relations": {
+     "calls": 38,
+     "errors": 0,
+     "in": 5207,
+     "out": 319,
+     "ms": 5970
+    },
+    "knowledge": {
+     "calls": 38,
+     "errors": 1,
+     "in": 6119,
+     "out": 874,
+     "ms": 16553
+    },
+    "quests": {
+     "calls": 38,
+     "errors": 0,
+     "in": 4443,
+     "out": 284,
+     "ms": 4467
+    }
+   },
+   "hybrid-pro-v2": {
+    "sensor": {
+     "calls": 38,
+     "errors": 0,
+     "in": 9822,
+     "out": 1020,
+     "ms": 8717
+    },
+    "quests": {
+     "calls": 38,
+     "errors": 0,
+     "in": 4521,
+     "out": 292,
+     "ms": 7103
+    }
+   },
+   "pro-split-v2": {
+    "scene": {
+     "calls": 38,
+     "errors": 1,
+     "in": 5033,
+     "out": 254,
+     "ms": 6488
+    },
+    "things": {
+     "calls": 38,
+     "errors": 3,
+     "in": 5719,
+     "out": 243,
+     "ms": 6117
+    },
+    "relations": {
+     "calls": 38,
+     "errors": 2,
+     "in": 5117,
+     "out": 179,
+     "ms": 4446
+    },
+    "knowledge": {
+     "calls": 38,
+     "errors": 1,
+     "in": 6178,
+     "out": 561,
+     "ms": 10356
+    },
+    "quests": {
+     "calls": 38,
+     "errors": 0,
+     "in": 4603,
+     "out": 326,
+     "ms": 7134
+    }
+   },
+   "split-v2": {
+    "scene": {
+     "calls": 38,
+     "errors": 0,
+     "in": 5222,
+     "out": 334,
+     "ms": 10218
+    },
+    "things": {
+     "calls": 38,
+     "errors": 0,
+     "in": 6184,
+     "out": 326,
+     "ms": 9214
+    },
+    "relations": {
+     "calls": 38,
+     "errors": 0,
+     "in": 5385,
+     "out": 254,
+     "ms": 7792
+    },
+    "knowledge": {
+     "calls": 38,
+     "errors": 0,
+     "in": 6273,
+     "out": 658,
+     "ms": 16559
+    },
+    "quests": {
+     "calls": 38,
+     "errors": 0,
+     "in": 4605,
+     "out": 125,
+     "ms": 6087
+    }
+   },
+   "split": {
+    "scene": {
+     "calls": 38,
+     "errors": 0,
+     "in": 5211,
+     "out": 311,
+     "ms": 9679
+    },
+    "things": {
+     "calls": 38,
+     "errors": 0,
+     "in": 6168,
+     "out": 334,
+     "ms": 9213
+    },
+    "relations": {
+     "calls": 38,
+     "errors": 0,
+     "in": 5374,
+     "out": 239,
+     "ms": 8034
+    },
+    "knowledge": {
+     "calls": 38,
+     "errors": 0,
+     "in": 6270,
+     "out": 645,
+     "ms": 16420
+    },
+    "quests": {
+     "calls": 38,
+     "errors": 0,
+     "in": 4474,
+     "out": 180,
+     "ms": 7106
+    }
+   }
+  },
+  "router": {
+   "gem-router": {
+    "turns": 37,
+    "wokenPerTurn": 4.3,
+    "neededPerTurn": 2.4,
+    "missedShare": 0,
+    "wastedPerTurn": 2,
+    "missedBy": {},
+    "inputPerTurn": 27884,
+    "routerInputPerTurn": 3991,
+    "baselineInputPerTurn": 9926,
+    "specialistCostsFrom": "split-v2"
+   },
+   "glm-router": {
+    "turns": 37,
+    "wokenPerTurn": 3.2,
+    "neededPerTurn": 2.4,
+    "missedShare": 8,
+    "wastedPerTurn": 1,
+    "missedBy": {
+     "knowledge": 3,
+     "quests": 3,
+     "scene": 1
+    },
+    "inputPerTurn": 21412,
+    "routerInputPerTurn": 4154,
+    "baselineInputPerTurn": 9926,
+    "specialistCostsFrom": "split-v2"
+   },
+   "pro-router": {
+    "turns": 37,
+    "wokenPerTurn": 3.4,
+    "neededPerTurn": 2.4,
+    "missedShare": 8,
+    "wastedPerTurn": 1.2,
+    "missedBy": {
+     "knowledge": 3,
+     "scene": 1,
+     "things": 1,
+     "relations": 1,
+     "quests": 1
+    },
+    "inputPerTurn": 22391,
+    "routerInputPerTurn": 4118,
+    "baselineInputPerTurn": 9926,
+    "specialistCostsFrom": "split-v2"
+   },
+   "router-v2": {
+    "turns": 37,
+    "wokenPerTurn": 3.3,
+    "neededPerTurn": 2.4,
+    "missedShare": 2.3,
+    "wastedPerTurn": 1,
+    "missedBy": {
+     "scene": 1,
+     "knowledge": 1
+    },
+    "inputPerTurn": 21938,
+    "routerInputPerTurn": 4318,
+    "baselineInputPerTurn": 9926,
+    "specialistCostsFrom": "split-v2"
+   },
+   "router": {
+    "turns": 37,
+    "wokenPerTurn": 3.2,
+    "neededPerTurn": 2.4,
+    "missedShare": 8,
+    "wastedPerTurn": 1.1,
+    "missedBy": {
+     "knowledge": 2,
+     "scene": 2,
+     "quests": 3
+    },
+    "inputPerTurn": 21715,
+    "routerInputPerTurn": 4232,
+    "baselineInputPerTurn": 9926,
+    "specialistCostsFrom": "split-v2"
+   }
+  }
+ },
+ "single-npc": {
+  "keyTurns": 27,
+  "keyQuests": 13,
+  "keyClosed": 9,
+  "inventory": [
+   {
+    "tag": "baseline-v2",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "v2",
+    "turns": 27,
+    "callErrors": 0,
+    "msPerTurn": 9683,
+    "inPerTurn": 9433,
+    "outPerTurn": 1410
+   },
+   {
+    "tag": "baseline",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "today's",
+    "turns": 27,
+    "callErrors": 0,
+    "msPerTurn": 15865,
+    "inPerTurn": 9205,
+    "outPerTurn": 1300
+   },
+   {
+    "tag": "router",
+    "mode": "router",
+    "model": "nanogpt/deepseek/deepseek-v4-flash (model of the --from run)",
+    "quests": "today's",
+    "turns": 27,
+    "callErrors": 0,
+    "msPerTurn": 5490,
+    "inPerTurn": 3429,
+    "outPerTurn": 105
+   },
+   {
+    "tag": "split-v2",
+    "mode": "split",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "v2",
+    "turns": 27,
+    "callErrors": 0,
+    "msPerTurn": 12079,
+    "inPerTurn": 22325,
+    "outPerTurn": 1727
+   }
+  ],
+  "blocks": [
+   {
+    "k": 2,
+    "blocks": {
+     "Characters": 23,
+     "Previous state": 207,
+     "Notebooks": 22,
+     "Backgrounds": 241,
+     "Word scan": 862,
+     "Card attire": 199,
+     "New messages": 2073
+    },
+    "notebooks": 1,
+    "inputTotal": 3630,
+    "providerPromptTokens": 8268
+   },
+   {
+    "k": 12,
+    "blocks": {
+     "Characters": 31,
+     "Previous state": 614,
+     "Notebooks": 239,
+     "Backgrounds": 242,
+     "Word scan": 912,
+     "Card attire": 199,
+     "New messages": 2475
+    },
+    "notebooks": 2,
+    "inputTotal": 4716,
+    "providerPromptTokens": 9464
+   },
+   {
+    "k": 26,
+    "blocks": {
+     "Characters": 31,
+     "Previous state": 720,
+     "Notebooks": 467,
+     "Backgrounds": 242,
+     "Word scan": 621,
+     "Card attire": 199,
+     "New messages": 1726
+    },
+    "notebooks": 1,
+    "inputTotal": 4009,
+    "providerPromptTokens": 8589
+   },
+   {
+    "k": 40,
+    "blocks": {
+     "Characters": 31,
+     "Previous state": 728,
+     "Notebooks": 504,
+     "Backgrounds": 242,
+     "Word scan": 1154,
+     "Card attire": 199,
+     "New messages": 1901
+    },
+    "notebooks": 1,
+    "inputTotal": 4762,
+    "providerPromptTokens": 9322
+   },
+   {
+    "k": 52,
+    "blocks": {
+     "Characters": 31,
+     "Previous state": 589,
+     "Notebooks": 514,
+     "Backgrounds": 242,
+     "Word scan": 808,
+     "Card attire": 199,
+     "New messages": 2083
+    },
+    "notebooks": 1,
+    "inputTotal": 4469,
+    "providerPromptTokens": 9131
+   }
+  ],
+  "specialistInputs": [
+   {
+    "k": 2,
+    "scene": 2545,
+    "things": 3365,
+    "relations": 2303,
+    "knowledge": 2326,
+    "quests": 2280
+   },
+   {
+    "k": 12,
+    "scene": 3363,
+    "things": 4232,
+    "relations": 3120,
+    "knowledge": 3361,
+    "quests": 3089
+   },
+   {
+    "k": 26,
+    "scene": 2720,
+    "things": 3298,
+    "relations": 2477,
+    "knowledge": 2945,
+    "quests": 2446
+   },
+   {
+    "k": 40,
+    "scene": 2903,
+    "things": 4014,
+    "relations": 2660,
+    "knowledge": 3165,
+    "quests": 2629
+   },
+   {
+    "k": 52,
+    "scene": 2946,
+    "things": 3711,
+    "relations": 2703,
+    "knowledge": 3218,
+    "quests": 2672
+   }
+  ],
+  "system": {
+   "total": 4332,
+   "rules": 2969,
+   "parts": {
+    "role": 94,
+    "language": 76,
+    "truth": 57,
+    "events": 304,
+    "scene": 1129,
+    "direction": 205,
+    "knowledge": 773,
+    "threads": 319,
+    "style": 12
+   },
+   "vocabulary": 644,
+   "outputShape": 712,
+   "oldThreadsPart": 196
+  },
+  "signals": {
+   "baseline-v2": {
+    "quest_progress": {
+     "tp": 12,
+     "fp": 0,
+     "fn": 14
+    },
+    "quest_end": {
+     "tp": 2,
+     "fp": 3,
+     "fn": 6
+    },
+    "new_goal": {
+     "tp": 9,
+     "fp": 7,
+     "fn": 0
+    },
+    "place_change": {
+     "tp": 12,
+     "fp": 1,
+     "fn": 2
+    },
+    "time_jump": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1
+    },
+    "scene_cut": {
+     "tp": 4,
+     "fp": 3,
+     "fn": 4
+    },
+    "clothes_change": {
+     "tp": 4,
+     "fp": 9,
+     "fn": 5
+    },
+    "item_change": {
+     "tp": 16,
+     "fp": 6,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 17
+    },
+    "person_leave": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 4
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 12,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 4,
+     "fp": 21,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 15,
+     "fp": 6,
+     "fn": 3
+    }
+   },
+   "baseline": {
+    "quest_progress": {
+     "tp": 5,
+     "fp": 0,
+     "fn": 21
+    },
+    "quest_end": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 7
+    },
+    "new_goal": {
+     "tp": 5,
+     "fp": 5,
+     "fn": 4
+    },
+    "place_change": {
+     "tp": 12,
+     "fp": 4,
+     "fn": 2
+    },
+    "time_jump": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1
+    },
+    "scene_cut": {
+     "tp": 4,
+     "fp": 3,
+     "fn": 4
+    },
+    "clothes_change": {
+     "tp": 5,
+     "fp": 10,
+     "fn": 4
+    },
+    "item_change": {
+     "tp": 15,
+     "fp": 9,
+     "fn": 2
+    },
+    "person_enter": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 17
+    },
+    "person_leave": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 4
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 14,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 4,
+     "fp": 22,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 8,
+     "fn": 5
+    }
+   },
+   "router": {
+    "quest_progress": {
+     "tp": 25,
+     "fp": 0,
+     "fn": 1
+    },
+    "quest_end": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 8
+    },
+    "new_goal": {
+     "tp": 5,
+     "fp": 2,
+     "fn": 4
+    },
+    "place_change": {
+     "tp": 11,
+     "fp": 3,
+     "fn": 3
+    },
+    "time_jump": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1
+    },
+    "scene_cut": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 7
+    },
+    "clothes_change": {
+     "tp": 7,
+     "fp": 7,
+     "fn": 2
+    },
+    "item_change": {
+     "tp": 16,
+     "fp": 4,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 9,
+     "fp": 0,
+     "fn": 8
+    },
+    "person_leave": {
+     "tp": 2,
+     "fp": 1,
+     "fn": 3
+    },
+    "relation_event": {
+     "tp": 10,
+     "fp": 9,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 4,
+     "fp": 5,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 4,
+     "fp": 1,
+     "fn": 14
+    }
+   },
+   "split-v2": {
+    "quest_progress": {
+     "tp": 7,
+     "fp": 0,
+     "fn": 19
+    },
+    "quest_end": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 8
+    },
+    "new_goal": {
+     "tp": 4,
+     "fp": 3,
+     "fn": 5
+    },
+    "place_change": {
+     "tp": 13,
+     "fp": 7,
+     "fn": 1
+    },
+    "time_jump": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 1
+    },
+    "scene_cut": {
+     "tp": 3,
+     "fp": 3,
+     "fn": 5
+    },
+    "clothes_change": {
+     "tp": 8,
+     "fp": 9,
+     "fn": 1
+    },
+    "item_change": {
+     "tp": 13,
+     "fp": 8,
+     "fn": 4
+    },
+    "person_enter": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 16
+    },
+    "person_leave": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 4
+    },
+    "relation_event": {
+     "tp": 11,
+     "fp": 15,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 4,
+     "fp": 22,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 18,
+     "fp": 8,
+     "fn": 0
+    }
+   }
+  },
+  "present": {
+   "baseline-v2": {
+    "turns": 26,
+    "missedPerTurn": 1.2,
+    "extraPerTurn": 0
+   },
+   "baseline": {
+    "turns": 26,
+    "missedPerTurn": 1.2,
+    "extraPerTurn": 0
+   },
+   "split-v2": {
+    "turns": 26,
+    "missedPerTurn": 1.3,
+    "extraPerTurn": 0.1
+   }
+  },
+  "quests": {
+   "baseline-v2": {
+    "meanOpenMinusKey": 4.2,
+    "meanAbsDiff": 4.2,
+    "closes": 7,
+    "openAtEnd": 11
+   },
+   "baseline": {
+    "meanOpenMinusKey": 3,
+    "meanAbsDiff": 3,
+    "closes": 2,
+    "openAtEnd": 9
+   },
+   "split-v2": {
+    "meanOpenMinusKey": -0.1,
+    "meanAbsDiff": 0.7,
+    "closes": 4,
+    "openAtEnd": 5
+   }
+  },
+  "specialists": {
+   "split-v2": {
+    "scene": {
+     "calls": 27,
+     "errors": 0,
+     "in": 4273,
+     "out": 249,
+     "ms": 6786
+    },
+    "things": {
+     "calls": 27,
+     "errors": 0,
+     "in": 5314,
+     "out": 327,
+     "ms": 6900
+    },
+    "relations": {
+     "calls": 27,
+     "errors": 0,
+     "in": 4326,
+     "out": 317,
+     "ms": 6218
+    },
+    "knowledge": {
+     "calls": 27,
+     "errors": 0,
+     "in": 4812,
+     "out": 598,
+     "ms": 10732
+    },
+    "quests": {
+     "calls": 27,
+     "errors": 0,
+     "in": 3601,
+     "out": 236,
+     "ms": 5796
+    }
+   }
+  },
+  "router": {
+   "router": {
+    "turns": 26,
+    "wokenPerTurn": 3.8,
+    "neededPerTurn": 3.8,
+    "missedShare": 16.2,
+    "wastedPerTurn": 0.6,
+    "missedBy": {
+     "knowledge": 9,
+     "scene": 5,
+     "relations": 1,
+     "things": 1
+    },
+    "inputPerTurn": 20051,
+    "routerInputPerTurn": 3429,
+    "baselineInputPerTurn": 9205,
+    "specialistCostsFrom": "split-v2"
+   }
+  }
+ },
+ "group": {
+  "keyTurns": 16,
+  "keyQuests": 9,
+  "keyClosed": 5,
+  "inventory": [
+   {
+    "tag": "baseline-v2",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "v2",
+    "turns": 16,
+    "callErrors": 0,
+    "msPerTurn": 10149,
+    "inPerTurn": 9219,
+    "outPerTurn": 1444
+   },
+   {
+    "tag": "baseline",
+    "mode": "baseline",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "today's",
+    "turns": 16,
+    "callErrors": 0,
+    "msPerTurn": 21625,
+    "inPerTurn": 9179,
+    "outPerTurn": 1626
+   },
+   {
+    "tag": "router",
+    "mode": "router",
+    "model": "nanogpt/deepseek/deepseek-v4-flash (model of the --from run)",
+    "quests": "today's",
+    "turns": 16,
+    "callErrors": 0,
+    "msPerTurn": 1969,
+    "inPerTurn": 3364,
+    "outPerTurn": 105
+   },
+   {
+    "tag": "split-v2",
+    "mode": "split",
+    "model": "nanogpt/deepseek/deepseek-v4-flash",
+    "quests": "v2",
+    "turns": 16,
+    "callErrors": 0,
+    "msPerTurn": 11073,
+    "inPerTurn": 23519,
+    "outPerTurn": 2233
+   }
+  ],
+  "blocks": [
+   {
+    "k": 4,
+    "blocks": {
+     "Characters": 90,
+     "Previous state": 459,
+     "Notebooks": 83,
+     "Backgrounds": 119,
+     "Word scan": 789,
+     "Card attire": 190,
+     "New messages": 2049
+    },
+    "notebooks": 3,
+    "inputTotal": 3784,
+    "providerPromptTokens": 8422
+   },
+   {
+    "k": 10,
+    "blocks": {
+     "Characters": 90,
+     "Previous state": 545,
+     "Notebooks": 320,
+     "Backgrounds": 119,
+     "Word scan": 1034,
+     "Card attire": 190,
+     "New messages": 2168
+    },
+    "notebooks": 3,
+    "inputTotal": 4471,
+    "providerPromptTokens": 9128
+   },
+   {
+    "k": 18,
+    "blocks": {
+     "Characters": 90,
+     "Previous state": 771,
+     "Notebooks": 581,
+     "Backgrounds": 119,
+     "Word scan": 1216,
+     "Card attire": 190,
+     "New messages": 2154
+    },
+    "notebooks": 3,
+    "inputTotal": 5126,
+    "providerPromptTokens": 9842
+   },
+   {
+    "k": 26,
+    "blocks": {
+     "Characters": 90,
+     "Previous state": 845,
+     "Notebooks": 772,
+     "Backgrounds": 119,
+     "Word scan": 882,
+     "Card attire": 190,
+     "New messages": 2462
+    },
+    "notebooks": 3,
+    "inputTotal": 5365,
+    "providerPromptTokens": 10040
+   },
+   {
+    "k": 32,
+    "blocks": {
+     "Characters": 90,
+     "Previous state": 875,
+     "Notebooks": 1010,
+     "Backgrounds": 119,
+     "Word scan": 640,
+     "Card attire": 190,
+     "New messages": 1357
+    },
+    "notebooks": 3,
+    "inputTotal": 4286,
+    "providerPromptTokens": 8836
+   }
+  ],
+  "specialistInputs": [
+   {
+    "k": 4,
+    "scene": 2718,
+    "things": 3578,
+    "relations": 2598,
+    "knowledge": 2684,
+    "quests": 2508
+   },
+   {
+    "k": 10,
+    "scene": 2923,
+    "things": 4028,
+    "relations": 2803,
+    "knowledge": 3126,
+    "quests": 2713
+   },
+   {
+    "k": 18,
+    "scene": 3135,
+    "things": 4422,
+    "relations": 3015,
+    "knowledge": 3599,
+    "quests": 2925
+   },
+   {
+    "k": 26,
+    "scene": 3517,
+    "things": 4470,
+    "relations": 3397,
+    "knowledge": 4172,
+    "quests": 3307
+   },
+   {
+    "k": 32,
+    "scene": 2442,
+    "things": 3153,
+    "relations": 2322,
+    "knowledge": 3335,
+    "quests": 2232
+   }
+  ],
+  "system": {
+   "total": 4332,
+   "rules": 2969,
+   "parts": {
+    "role": 94,
+    "language": 76,
+    "truth": 57,
+    "events": 304,
+    "scene": 1129,
+    "direction": 205,
+    "knowledge": 773,
+    "threads": 319,
+    "style": 12
+   },
+   "vocabulary": 644,
+   "outputShape": 712,
+   "oldThreadsPart": 196
+  },
+  "signals": {
+   "baseline-v2": {
+    "quest_progress": {
+     "tp": 3,
+     "fp": 0,
+     "fn": 12
+    },
+    "quest_end": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 5
+    },
+    "new_goal": {
+     "tp": 4,
+     "fp": 0,
+     "fn": 6
+    },
+    "place_change": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 1,
+     "fp": 2,
+     "fn": 1
+    },
+    "item_change": {
+     "tp": 7,
+     "fp": 4,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 3
+    },
+    "person_leave": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2
+    },
+    "relation_event": {
+     "tp": 12,
+     "fp": 1,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 4,
+     "fp": 10,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 3,
+     "fn": 0
+    }
+   },
+   "baseline": {
+    "quest_progress": {
+     "tp": 5,
+     "fp": 1,
+     "fn": 10
+    },
+    "quest_end": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 5
+    },
+    "new_goal": {
+     "tp": 4,
+     "fp": 2,
+     "fn": 6
+    },
+    "place_change": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1
+    },
+    "item_change": {
+     "tp": 3,
+     "fp": 4,
+     "fn": 5
+    },
+    "person_enter": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 3
+    },
+    "person_leave": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2
+    },
+    "relation_event": {
+     "tp": 12,
+     "fp": 2,
+     "fn": 1
+    },
+    "secret_learned": {
+     "tp": 4,
+     "fp": 11,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 3,
+     "fn": 0
+    }
+   },
+   "router": {
+    "quest_progress": {
+     "tp": 14,
+     "fp": 1,
+     "fn": 1
+    },
+    "quest_end": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 5
+    },
+    "new_goal": {
+     "tp": 7,
+     "fp": 1,
+     "fn": 3
+    },
+    "place_change": {
+     "tp": 0,
+     "fp": 2,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 1
+    },
+    "item_change": {
+     "tp": 7,
+     "fp": 7,
+     "fn": 1
+    },
+    "person_enter": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 2
+    },
+    "person_leave": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1
+    },
+    "relation_event": {
+     "tp": 11,
+     "fp": 2,
+     "fn": 2
+    },
+    "secret_learned": {
+     "tp": 4,
+     "fp": 1,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 11,
+     "fp": 1,
+     "fn": 2
+    }
+   },
+   "split-v2": {
+    "quest_progress": {
+     "tp": 3,
+     "fp": 1,
+     "fn": 12
+    },
+    "quest_end": {
+     "tp": 3,
+     "fp": 1,
+     "fn": 2
+    },
+    "new_goal": {
+     "tp": 5,
+     "fp": 2,
+     "fn": 5
+    },
+    "place_change": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 0
+    },
+    "time_jump": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 0
+    },
+    "scene_cut": {
+     "tp": 0,
+     "fp": 1,
+     "fn": 0
+    },
+    "clothes_change": {
+     "tp": 2,
+     "fp": 8,
+     "fn": 0
+    },
+    "item_change": {
+     "tp": 8,
+     "fp": 5,
+     "fn": 0
+    },
+    "person_enter": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 3
+    },
+    "person_leave": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 2
+    },
+    "relation_event": {
+     "tp": 13,
+     "fp": 2,
+     "fn": 0
+    },
+    "secret_learned": {
+     "tp": 4,
+     "fp": 11,
+     "fn": 0
+    },
+    "vow_said": {
+     "tp": 13,
+     "fp": 3,
+     "fn": 0
+    }
+   }
+  },
+  "present": {
+   "baseline-v2": {
+    "turns": 16,
+    "missedPerTurn": 0.4,
+    "extraPerTurn": 0.1
+   },
+   "baseline": {
+    "turns": 16,
+    "missedPerTurn": 0.4,
+    "extraPerTurn": 0.1
+   },
+   "split-v2": {
+    "turns": 16,
+    "missedPerTurn": 0.4,
+    "extraPerTurn": 0.1
+   }
+  },
+  "quests": {
+   "baseline-v2": {
+    "meanOpenMinusKey": -0.5,
+    "meanAbsDiff": 0.5,
+    "closes": 2,
+    "openAtEnd": 3
+   },
+   "baseline": {
+    "meanOpenMinusKey": 1,
+    "meanAbsDiff": 1.1,
+    "closes": 2,
+    "openAtEnd": 5
+   },
+   "split-v2": {
+    "meanOpenMinusKey": 1.6,
+    "meanAbsDiff": 1.6,
+    "closes": 5,
+    "openAtEnd": 5
+   }
+  },
+  "specialists": {
+   "split-v2": {
+    "scene": {
+     "calls": 16,
+     "errors": 0,
+     "in": 4376,
+     "out": 356,
+     "ms": 5134
+    },
+    "things": {
+     "calls": 16,
+     "errors": 0,
+     "in": 5493,
+     "out": 407,
+     "ms": 4137
+    },
+    "relations": {
+     "calls": 16,
+     "errors": 0,
+     "in": 4557,
+     "out": 364,
+     "ms": 4771
+    },
+    "knowledge": {
+     "calls": 16,
+     "errors": 0,
+     "in": 5324,
+     "out": 838,
+     "ms": 8871
+    },
+    "quests": {
+     "calls": 16,
+     "errors": 0,
+     "in": 3770,
+     "out": 268,
+     "ms": 3054
+    }
+   }
+  },
+  "router": {
+   "router": {
+    "turns": 16,
+    "wokenPerTurn": 3.8,
+    "neededPerTurn": 3.5,
+    "missedShare": 12.5,
+    "wastedPerTurn": 0.7,
+    "missedBy": {
+     "relations": 2,
+     "knowledge": 2,
+     "scene": 2,
+     "things": 1
+    },
+    "inputPerTurn": 21063,
+    "routerInputPerTurn": 3364,
+    "baselineInputPerTurn": 9179,
+    "specialistCostsFrom": "split-v2"
+   }
+  }
+ }
+}

@@ -1,5 +1,7 @@
 # Turn director: design note (Roleplay)
 
+All measured numbers in one place: `MEASUREMENTS.md` (and `measurements.json`) next to this note.
+
 Status 2026-11-12: design only, no code. The owner agreed to the scheme and answered the questions in the thread
 (**Decided**). Roleplay code lives in the Roleplay fork (MolfarWav/Molfar.Vertep-Roleplay); this repo carries the notes.
 Issues: #401 (this design, label `enhancement`), #400 (quests never close, label `bug`; fixed by phase 1).
