@@ -3,6 +3,9 @@
 Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-11-13.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 
+## #396 READY AGENTS: Repetition guard, Canon guard, Ledger (2026-11-13; Roleplay branch `claude/396-ready-agents` off main 4.119.0, no engine change; NOT merged, no version bump)
+Owner: "беремо ісю 396 далі: відповідь на питання 0 і завдання зі створення агентів" (task file kept outside the repo). Answers to the pre-build questions A to H, the three agents, every difference from the task, and the Spotlight plan are in `.fork/handoff/issue-396-small/READY-AGENTS.md`. Built: three recipes in `.skills/agent-craft/references/` (+ `forge-recipes.ts` synced), `test/rp-ready-agents.test.ts`, skill, guide page `agents`, CHANGELOG Unreleased. Found: there is NO way to install an agent without the user (B; the offer in the new-chat step is #396 item 0, over `PUT /agents/install` with `grant`); the Ask card skips when a source is missing (#403); no Dashboard date for agents (#402); Spotlight is #294 (plan written, waits for the owner). Not done: nothing run on a real model, guide translations stale, Help article untouched.
+
 ## RELEASE ROLEPLAY 4.119.0 PREPARED (2026-11-13, owner: "коміт та ПР зараз, і реліз"): Roleplay PR 135 (branch `release/4.119.0` off main 4.118.0), carries #396 (below); NOT merged. Order: the owner merges the Roleplay PR (publishes 4.119.0), then Update on Roleplay; no engine release (engine code unchanged). After it: a comment on #396 (what shipped, what is left); #396 stays OPEN (items 0, 1, 3, 5 and the later steps of the portrait remain). Guide pages `agents` and `memory` translated into 13 languages by a cheap model (not read by a native speaker). What's new tip `new.growth`.
 
 ## #396 AGENT FORGE FROM THE MARINARA COMPARISON (2026-11-13; Roleplay branch `release/4.119.0` off main 4.118.0, no engine change)
