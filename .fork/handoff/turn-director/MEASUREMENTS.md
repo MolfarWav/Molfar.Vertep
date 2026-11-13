@@ -3,12 +3,12 @@
 ```yaml
 doc: measurements of the Roleplay Dashboard sensor, its split into specialists, a router, quest rules and models
 issue: MolfarWav/Molfar.Vertep#401 (design and rounds), #400 (quest bug, closed by Roleplay 4.117.0)
-dates: 2026-11-12 (all runs), 2026-11-13 (analysis)
+dates: 2026-11-12 (phase 0 runs), 2026-11-13 (analysis, phase 1 runs)
 design_note: .fork/handoff/turn-director/DESIGN.md (sections 7-10 are the round write-ups this doc consolidates)
 machine_readable: .fork/handoff/turn-director/measurements.json (every derived number below, per chat and run)
 code: Roleplay repo scripts/director-bench.ts (replay), scripts/director-score.ts (score), scripts/director-analyze.ts (this doc's numbers)
 corpora: outside any repo, on the owner's laptop under D:\Claude\tmp\director-bench* (chat copies, answer keys, raw results)
-status: phase 0 done; outcome shipped = quest rules v2 (Roleplay 4.117.0); split and router-gating not adopted
+status: phase 0 done (quest rules v2 shipped, Roleplay 4.117.0; split and router-gating not adopted); phase 1 done (section 11: noise band, ask-first, calibrated, flags as the director; nothing adopted, GLM ask-first to repeat)
 ```
 
 ## 0. How to read this
@@ -462,12 +462,12 @@ Dashboard model set, the sensor uses the chat's own model (`str(cfg.sensorModel)
 ## 9. Open
 
 - Owner spot check of the answer keys (most doubtful turns: C 14, 18, 24, 58, 74; A 8, 14-16, 28-30, 36, 50; S 2, 4, 10-18).
-- Repeat runs to measure noise (all numbers are single runs).
+- Repeat runs to measure noise: done for Flash on C in 11.1 (band 49-53% micro F1); A and S by one control pair; GLM not measured.
 - GLM 5.3 flash (about ten times cheaper than GLM 5.3) and the model table on A and S.
 - Field values, not only "noticed a change": the outfit text, the event id, the place name, the note content.
-- Sensor over-reporting of `secret_learned`, `relation_event`, `vow_said` (3.2) is a prompt issue independent of the
-  architecture.
-- The router as a trigger for rare costly jobs (5.3).
+- Sensor over-reporting of `secret_learned`, `relation_event`, `vow_said` (3.2): wording with base rates and quotas did not cure it (11.3); next a code-side downgrade of `weight` or a small separate decision.
+- The router as a trigger for rare costly jobs (5.3): answered in 11.4, a code-derived signal from the sensor output gives 88% recall on Flash.
+- `ask-first` on GLM 5.3 three times (its band), and GLM on the other fields (11.2).
 
 ## 10. Reproduce
 
@@ -481,3 +481,221 @@ bun scripts/director-analyze.ts <corpus>... --out analysis.json
 
 Providers in the bench: `nanogpt/` (subscription), `nanogpt-paid/` (balance), `openrouter/`. Keys are read from
 `~/.claude/skills/ask-model/keys.env`; never printed.
+
+## 11. Phase 1 (2026-11-13): noise band, `ask-first`, `calibrated`, the flags as the director
+
+Plan: `.fork/handoff/turn-director/TURN-DIRECTOR-NEXT-EXPERIMENTS.md`. Code: Roleplay `scripts/director-bench.ts` (`--ask-first`,
+`--calibrated`, both on the baseline mode with `--quests v2`), `scripts/director-score.ts --json`, `scripts/director-phase1.ts`
+(every table below). Numbers per run and chat: `measurements.json` key `phase1`. Same chats, keys and harness as section 1;
+the plugin is unchanged, variants patch the sensor's system prompt in the bench. Runs: DeepSeek V4 Flash on C, A, S for each
+variant; GLM 5.3 for `ask-first` and for `baseline-v2` on A and S (C's `glm-baseline-v2` is from phase 0). Runs went in waves of
+three to five in parallel, so wall time differs between waves (see 11.6).
+
+### 11.1 Experiment 0: the noise band (C, Flash, `baseline-v2` repeated three times)
+
+| signal | key + | noise-1 | noise-2 | noise-3 | baseline-v2 | mean | min | max |
+|---|---:|---|---|---|---|---:|---:|---:|
+| quest_progress | 25 | 20% (3/2/22) | 14% (2/1/23) | 21% (3/1/22) | 21% (3/1/22) | 18% | 14% | 21% |
+| quest_end | 8 | 53% (4/3/4) | 46% (3/2/5) | 31% (2/3/6) | 53% (4/3/4) | 43% | 31% | 53% |
+| new_goal | 10 | 60% (6/4/4) | 40% (3/2/7) | 33% (3/5/7) | 56% (5/3/5) | 44% | 33% | 60% |
+| place_change | 10 | 95% (9/0/1) | 86% (9/2/1) | 90% (9/1/1) | 80% (8/2/2) | 90% | 86% | 95% |
+| time_jump | 1 | 67% (1/1/0) | 67% (1/1/0) | 67% (1/1/0) | 40% (1/3/0) | 67% | 67% | 67% |
+| scene_cut | 7 | 74% (7/5/0) | 63% (6/6/1) | 63% (6/6/1) | 67% (6/5/1) | 67% | 63% | 74% |
+| clothes_change | 2 | 18% (2/18/0) | 17% (2/19/0) | 17% (2/20/0) | 18% (2/18/0) | 17% | 17% | 18% |
+| item_change | 8 | 55% (8/13/0) | 57% (8/12/0) | 52% (8/15/0) | 50% (8/16/0) | 55% | 52% | 57% |
+| person_enter | 12 | 40% (5/8/7) | 43% (5/6/7) | 50% (7/9/5) | 52% (7/8/5) | 44% | 40% | 50% |
+| person_leave | 10 | 57% (6/5/4) | 60% (6/4/4) | 42% (5/9/5) | 50% (6/8/4) | 53% | 42% | 60% |
+| relation_event | 10 | 50% (10/20/0) | 49% (9/18/1) | 47% (10/23/0) | 49% (9/18/1) | 48% | 47% | 50% |
+| secret_learned | 15 | 59% (15/21/0) | 64% (15/17/0) | 59% (15/21/0) | 57% (14/20/1) | 60% | 59% | 64% |
+| vow_said | 13 | 62% (12/14/1) | 56% (10/13/3) | 68% (13/12/0) | 63% (12/13/1) | 62% | 56% | 68% |
+| **all 13 (micro)** | 131 | 53% (88/114/43) | 50% (79/103/52) | 49% (84/126/47) | 51% (85/118/46) | 51% | 49% | 53% |
+
+- Micro F1 (state proxy) over the three repeats **49-53%** (mean 51%; the phase-0 run: 51%); micro recall **60-67%**; micro precision 40-44%.
+- Per signal the band is wide on the small ones: quest_end F1 31-53%, new_goal 33-60%, person_leave 42-60%, scene_cut 63-74%. The large
+  fields are stable: relation_event FP 18-23, secret_learned FP 17-21, vow_said FP 12-14, clothes_change FP 18-20, item_change FP 12-16.
+- Cost per turn: 15.2-16.3 s, 10.0-10.1k provider input tokens, 1.06-1.15k output tokens.
+- A and S were not repeated three times; a control pair later in the day (`ctl-baseline-v2`, run beside `ctl-ask-first`) gave micro
+  F1 A 52% (phase-0 run 58%), S 61% (62%); recall A 52% (61%), S 57% (59%). So A's band is about 6 points of F1 and 9 of recall, S's about 1-2.
+- Read every later difference against these bands: a change of 3-4 points of micro F1 on one chat is not a result.
+
+### 11.2 Experiment 1: `ask-first` (one call; `changed` first, write only the sections whose question is true)
+
+What the prompt got (bench patch, about 150 rule tokens, +270 provider tokens a turn): a "Changed" block with the 13 questions in
+the router-v2 wording ("when unsure, answer true"), the key `"changed": {13 booleans}` as the first key of the output shape, and the
+mapping of flags to sections: place_change / time_jump / scene_cut / person_enter / person_leave -> place, weather, time, day, date,
+scene, present, struck, userAt, at; clothes_change / item_change -> outfit, holding, objects; relation_event -> events, edges;
+secret_learned / vow_said -> learned, said, told, retire, people, blindSpot; the three quest signals -> threads; always written:
+minutes, names, and per present character mood, condition, goal, leads, contact, thought. The plugin already treats a missing key as
+"unchanged" (its own rule: "When the new text shows nothing for a key, leave the key out"), so no shim was needed.
+
+Micro F1 / recall / precision, state proxy (same scoring as 3.4):
+
+| run | C | A | S | pooled |
+|---|---|---|---|---|
+| baseline-v2 | 51% / 65% / 42% | 58% / 61% / 56% | 62% / 59% / 66% | 56% / 62% / 51% |
+| **ask-first** | 49% / 51% / 47% | 45% / 37% / 57% | 52% / 47% / 59% | **48% / 44% / 53%** |
+| ctl-baseline-v2 (A, S, later) | | 52% / 52% / 52% | 61% / 57% / 66% | 55% / 54% / 56% |
+| ctl-ask-first (A, S, later) | | 49% / 42% / 58% | 53% / 47% / 60% | 50% / 44% / 59% |
+| glm-baseline-v2 | 53% / 69% / 43% | 60% / 69% / 53% | 63% / 73% / 56% | 58% / 70% / 49% |
+| **glm-ask-first** | 57% / 70% / 48% | 62% / 68% / 56% | 66% / 71% / 62% | **61% / 69% / 54%** |
+
+Per signal TP/FP/FN pooled over C, A, S (state proxy; quest_progress is blind for v2 texts, see 3.1):
+
+| signal | baseline-v2 | ask-first | glm-baseline-v2 | glm-ask-first |
+|---|---|---|---|---|
+| quest_progress | 18/1/48 | 6/1/60 | 17/0/49 | 16/2/50 |
+| quest_end | 6/8/15 | 3/2/18 | 12/19/9 | 13/15/8 |
+| new_goal | 18/10/11 | 9/3/20 | 23/21/6 | 17/18/12 |
+| place_change | 20/3/4 | 21/5/3 | 23/15/1 | 23/10/1 |
+| time_jump | 1/3/1 | 1/2/1 | 1/2/1 | 1/1/1 |
+| scene_cut | 10/9/5 | 7/8/8 | 13/23/2 | 12/15/3 |
+| clothes_change | 7/29/6 | 9/28/4 | 12/46/1 | 13/40/0 |
+| item_change | 31/26/2 | 29/29/4 | 30/27/3 | 29/23/4 |
+| person_enter | 7/9/25 | 7/8/25 | 13/9/19 | 17/11/15 |
+| person_leave | 7/8/10 | 5/6/12 | 13/9/4 | 14/6/3 |
+| relation_event | 31/31/3 | 31/25/3 | 31/30/3 | 32/31/2 |
+| secret_learned | 22/51/1 | 11/21/12 | 21/44/2 | 21/28/2 |
+| vow_said | 40/22/4 | 18/2/26 | 39/10/5 | 37/8/7 |
+
+Output tokens and time per turn (provider tokens; the whole turn in seconds):
+
+| run | C s / in / out | A s / in / out | S s / in / out |
+|---|---|---|---|
+| baseline-v2 | 15.2 / 10084 / 1096 | 9.7 / 9433 / 1410 | 10.1 / 9219 / 1444 |
+| ask-first | 13.7 / 10357 / 1039 | 12.9 / 9807 / 1090 | 18.0 / 9648 / 1589 |
+| ctl-baseline-v2 | | 14.3 / 9292 / 1233 | 16.0 / 9200 / 1513 |
+| ctl-ask-first | | 11.9 / 9734 / 1055 | 20.5 / 9822 / 1614 |
+| glm-baseline-v2 | 14.3 / 9736 / 1756 | 37.0 / 8958 / 2172 | 39.7 / 8969 / 2523 |
+| glm-ask-first | 32.8 / 10353 / 1904 | 41.4 / 9746 / 2468 | 42.2 / 9644 / 2612 |
+
+How the output followed the flags (Flash `ask-first`, pooled, 81 turns; "written" = the group's keys present and not empty):
+
+| group | flag true, written | flag true, left out | flag false, written | flag false, left out |
+|---|---:|---:|---:|---:|
+| scene (place, scene, present ...) | 45 | 0 | 36 | 0 |
+| things (outfit, holding, objects) | 54 | 0 | 26 | 1 |
+| relations (events, edges) | 57 | 0 | 14 | 10 |
+| knowledge (learned, said ...) | 23 | 0 | 38 | 20 |
+| threads | 68 | 0 | 9 | 4 |
+
+GLM (80 turns): flag false and left out: scene 0 of 32, things 7 of 26, relations 1 of 22, knowledge 6 of 25, threads 5 of 13.
+
+The flags as an answer (scored against the key like a router run, pooled): Flash micro F1 / recall / precision **65% / 60% / 70%**
+(router-v2 Flash on C alone: 68% / 75%), GLM **71% / 76% / 67%**. Where the flag is false and the key says it happened (price of
+skipping), Flash: vow_said 30 of 44, secret_learned 16 of 23, quest_end 18 of 21, new_goal 22 of 29, person_enter 16 of 32, scene_cut 8 of
+15, person_leave 9 of 17, item_change 7 of 33, place_change 4 of 24, relation_event 3 of 34. GLM: person_enter 13 of 32, new_goal 15 of 29,
+quest_end 12 of 21, quest_progress 11 of 66, vow_said 9 of 44, secret_learned 6 of 23, scene_cut 4 of 15.
+
+Reading:
+- **Flash: recall fell from 62% to 44% pooled (C 65 -> 51, A 61 -> 37, S 59 -> 47); the control pair repeats it (54 -> 44)**. That is well
+  outside the bands (11.1). The FP that fell (secret_learned 51 -> 21, vow_said 22 -> 2) fell because the knowledge keys were not
+  written on 20 of 58 turns where the flag was false: FN rose with them (secret 1 -> 12, vow 4 -> 26). The model says "false" for a binding
+  statement or a secret on the turns where it then used to write one.
+- The saving is small: output tokens C -5%, A -23% (ctl -14%), S +10% (ctl +7%); input +3%. Time per turn has no consistent sign (A -17% in the control,
+  S +28% in both pairs); wall times move with provider load.
+- The ledger churn of clothes and items did not fall (clothes FP 29 -> 28, item 26 -> 29): the model writes the things group on 26 of 27
+  turns with a false flag, and the scene group on every turn. Skipping works mostly where it hurts (knowledge, relations).
+- **GLM 5.3 follows the prompt better**: pooled F1 58% -> 61%, recall 70% -> 69%; FP secret_learned 44 -> 28, clothes 46 -> 40, item 27 -> 23,
+  place 15 -> 10, scene_cut 23 -> 15; FN +1 to +4 on a few signals, person_enter FN 19 -> 15. Output tokens +8% / +14% / +4%, so no saving; times
+  are not comparable (the GLM baselines on A and S ran at 37-40 s beside four other runs). GLM's own noise band was not measured: +3 points of F1 is inside the
+  Flash band of 4.
+- Adoption rule of the plan (recall not beyond the band, and FP, output tokens or time falling clearly): **not met on Flash** (recall), **not
+  clearly met on GLM** (FP falls, tokens and time do not, F1 gain within a plausible band). Not adopted. A GLM repeat with three runs would settle it.
+
+### 11.3 Experiment 2: `calibrated` (base rates and quotas in the rules; alone and with `ask-first`)
+
+Base rates in the answer keys (share of scored turns; C 37 turns, A 26, S 16; pooled 79):
+
+| field | C | A | S | pooled |
+|---|---:|---:|---:|---:|
+| secret_learned | 15 (41%) | 4 (15%) | 4 (25%) | 23 (29%) |
+| relation_event | 10 (27%) | 11 (42%) | 13 (81%) | 34 (43%) |
+| vow_said | 13 (35%) | 18 (69%) | 13 (81%) | 44 (56%) |
+
+The rates differ a lot by chat, so the prompt got generic words, not the numbers of one chat, and none of the keys' turns as examples. Pooled,
+the sensor reports secret_learned on 92% of turns ((22 + 51) of 79 scored turns in the state proxy), relation_event on 78%, vow_said on 78%.
+Three sentences were appended to the existing rules: after the note-weight line ("Most notes are everyday: in a story like this about one
+turn in four has a note that is important or key, and key is rare (a handful in a whole story). At most one note a turn may be marked
+important or key."); after the event-weight line ("Ordinary talk, small help, teasing and flirting are routine. In a story like this about
+two turns in five have a significant event and pivotal is rare. At most one event a turn may be significant or pivotal."); after the
+`said` rule ("In a story like this about every second turn has one; a promise of the moment, an ordinary refusal or an order nobody must
+obey is not one. Report at most one per turn.").
+
+| run | micro F1 / recall / precision pooled | secret_learned | relation_event | vow_said | clothes_change | item_change |
+|---|---|---|---|---|---|---|
+| baseline-v2 | 56% / 62% / 51% | 22/51/1 | 31/31/3 | 40/22/4 | 7/29/6 | 31/26/2 |
+| **calibrated** | 53% / 56% / 50% | 23/45/0 | 29/25/5 | 38/27/6 | 8/28/5 | 29/29/4 |
+| ask-first | 48% / 44% / 53% | 11/21/12 | 31/25/3 | 18/2/26 | 9/28/4 | 29/29/4 |
+| **ask-first + calibrated** | 49% / 42% / 57% | 10/10/13 | 26/13/8 | 11/2/33 | 8/26/5 | 30/25/3 |
+
+(fields as TP/FP/FN.) Per chat micro F1 / recall: calibrated C 52% / 64%, A 52% / 50%, S 57% / 52%; ask-first + calibrated C 50% / 49%,
+A 46% / 37%, S 51% / 41%. Output tokens per turn: calibrated C 1153, A 1144, S 1632; combined 910, 918, 1412 (baseline 1096, 1410, 1444).
+
+Reading:
+- **`calibrated` alone: FP secret_learned -12% (51 -> 45), relation_event -19% (31 -> 25), vow_said +23% (22 -> 27)**. The bar of the plan was
+  one third with FN inside the band: not met. The sentences move relation_event and secret_learned a little; the model does not count
+  turns. Recall fell 6 points pooled (A 61 -> 50), at the edge of the band. Not adopted.
+- Together with `ask-first` FP fall further (secret 10, relation 13, vow 2), but they fall the same way as in 11.2: by leaving the keys out, with
+  recall 42%. The combination is the lowest-recall run of the phase.
+- The over-reporting of these three fields is therefore not cured by wording at this strength. What is left to try is a separate decision on the
+  `weight` field (a second call, or code that downgrades notes by itself), not a longer rule.
+
+### 11.4 Experiment 3: the flags as the director (a reading of 11.2; recall of 70% is enough for a trigger)
+
+Trigger quality against the key (pooled over C, A, S; 81 turns Flash, 80 GLM; a false wake is a turn where the flag is true and the key is false):
+
+| source | trigger | real | caught | missed | recall | false wakes | wakes per 100 turns |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Flash ask-first flags | scene_cut | 15 | 7 | 8 | 47% | 4 | 14 |
+| Flash ask-first flags | place_change | 24 | 20 | 4 | 83% | 4 | 30 |
+| Flash ask-first flags | time_jump | 2 | 1 | 1 | 50% | 0 | 1 |
+| Flash ask-first + calibrated flags | scene_cut | 15 | 9 | 6 | 60% | 4 | 16 |
+| GLM ask-first flags | scene_cut | 15 | 11 | 4 | 73% | 12 | 29 |
+| GLM ask-first flags | place_change | 24 | 23 | 1 | 96% | 5 | 35 |
+| GLM ask-first flags | time_jump | 2 | 1 | 1 | 50% | 1 | 3 |
+
+Any of the three together (one wake for "the scene changed"), against the same key:
+
+| source | real | caught | missed | recall | false wakes | wakes per 100 turns |
+|---|---:|---:|---:|---:|---:|---:|
+| Flash baseline-v2, the sensor's own signals (`scene.new`, place text, minutes) | 25 | 22 | 3 | 88% | 6 | 35 |
+| Flash ask-first flags | 25 | 21 | 4 | 84% | 4 | 32 |
+| Flash ask-first + calibrated flags | 25 | 21 | 4 | 84% | 6 | 34 |
+| GLM baseline-v2, the sensor's own signals | 25 | 24 | 1 | 96% | 25 | 62 |
+| GLM ask-first flags | 25 | 24 | 1 | 96% | 9 | 42 |
+
+Reading:
+- As a trigger for World DM `onPlace`/`onTransition`, Litopys scene close and the background picker the criterion (recall 70%+) holds for
+  place_change and for the three together on both models. time_jump has two cases in the keys: no reading. scene_cut alone is weak on Flash (47-60%).
+- **The flags add nothing on Flash**: the sensor's own output already gives 88% recall at 35 wakes per 100 turns; `ask-first` gives 84%.
+  A trigger from the existing snapshot diff and `scene.new` is available today, with no prompt change. On GLM the flags cut false wakes
+  from 25 to 9 (62 -> 42 wakes per 100 turns) at equal recall: the one clear gain of the phase, bought with the `ask-first` prompt whose other
+  effects are in 11.2.
+- Open idea answered for 5.3 and DESIGN.md section 0: the "decided in four places" problem can be settled by one derived signal
+  (place changed, or `scene.new`, or minutes above 30) computed in code after the sensor call, with no router; a flag from the model is
+  optional and only worth it on a model that follows the format.
+
+### 11.5 Caching probe (the plan's "one look"; not a run)
+
+NanoGPT's subscription endpoint reports `prompt_tokens_details.cached_tokens` and caches by itself: a second call with the same 5.1k-token
+system prompt returned 4864 cached of 5107 (DeepSeek V4 Flash) and 5032 of 5056 (GLM 5.3); the first call 0. The fixed rules sit first in the
+prompt, so their 4.3k tokens are the cacheable prefix. The bench runs did not log cached tokens, so how much of the phase's turns hit the cache
+is not measured; the price column of section 7 counts them as ordinary input.
+
+### 11.6 Caveats of phase 1
+
+- One run per variant and chat; the only repeats are Flash `baseline-v2` on C (three) and the control pair on A and S. GLM has no noise band.
+- Wall time is not comparable across waves: three to five runs ran side by side, and the same variant took 10 s in one wave and 16-20 s in
+  another (S `baseline-v2` 10.1 s, later 16.0 s). Use output tokens, not seconds, for the effect of a prompt.
+- The answer keys are still the labellers' (not checked by the owner); the state proxy for clothes and items counts text rewrites as changes (3.1).
+- The three chats are the owner's own, in two languages; the base rates differ by chat (11.3).
+
+### 11.7 Decisions after phase 1
+
+| item | decision | evidence |
+|---|---|---|
+| `ask-first` on the cheap model | not adopted: recall 62% -> 44% | 11.2 |
+| `ask-first` on GLM 5.3 | candidate; repeat three times to get its band before any change | 11.2, 11.4 |
+| `calibrated` base-rate sentences | not adopted: FP -12% / -19% / +23%, below the one third bar | 11.3 |
+| A scene-change trigger for rare jobs | derive it in code from the sensor's own output (88% recall on Flash); no router, no new prompt | 11.4 |
+| The model's `weight` over-reporting (secret_learned, relation_event) | wording does not cure it; next: a code-side downgrade or a separate small decision | 11.3 |

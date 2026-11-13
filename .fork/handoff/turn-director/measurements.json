@@ -3265,5 +3265,924 @@
     "specialistCostsFrom": "split-v2"
    }
   }
+ },
+ "phase1": {
+  "_about": "Phase 1 (2026-11-13): noise band, ask-first, calibrated, flags as the director; produced by Roleplay scripts/director-phase1.ts from results-*.json; the tables are in MEASUREMENTS.md section 11. Per-chat keys inside runs: C = narrator, A = single-npc, S = group. flash = DeepSeek V4 Flash (ask-first, calibrated, ask-first-calibrated against baseline-v2, noise = three baseline-v2 repeats on C), glm = GLM 5.3 (glm-ask-first against glm-baseline-v2), ctl = control pair on A and S run side by side later in the day.",
+  "flash": {
+   "noise": {
+    "quest_progress": {
+     "f1": [
+      0.2,
+      0.14285714285714285,
+      0.20689655172413793,
+      0.20689655172413793
+     ],
+     "repeats": [
+      0.2,
+      0.14285714285714285,
+      0.20689655172413793
+     ]
+    },
+    "quest_end": {
+     "f1": [
+      0.5333333333333333,
+      0.46153846153846156,
+      0.3076923076923077,
+      0.5333333333333333
+     ],
+     "repeats": [
+      0.5333333333333333,
+      0.46153846153846156,
+      0.3076923076923077
+     ]
+    },
+    "new_goal": {
+     "f1": [
+      0.6,
+      0.4,
+      0.3333333333333333,
+      0.5555555555555556
+     ],
+     "repeats": [
+      0.6,
+      0.4,
+      0.3333333333333333
+     ]
+    },
+    "place_change": {
+     "f1": [
+      0.9473684210526315,
+      0.8571428571428571,
+      0.9,
+      0.8
+     ],
+     "repeats": [
+      0.9473684210526315,
+      0.8571428571428571,
+      0.9
+     ]
+    },
+    "time_jump": {
+     "f1": [
+      0.6666666666666666,
+      0.6666666666666666,
+      0.6666666666666666,
+      0.4
+     ],
+     "repeats": [
+      0.6666666666666666,
+      0.6666666666666666,
+      0.6666666666666666
+     ]
+    },
+    "scene_cut": {
+     "f1": [
+      0.7368421052631579,
+      0.631578947368421,
+      0.631578947368421,
+      0.6666666666666666
+     ],
+     "repeats": [
+      0.7368421052631579,
+      0.631578947368421,
+      0.631578947368421
+     ]
+    },
+    "clothes_change": {
+     "f1": [
+      0.18181818181818182,
+      0.17391304347826086,
+      0.16666666666666666,
+      0.18181818181818182
+     ],
+     "repeats": [
+      0.18181818181818182,
+      0.17391304347826086,
+      0.16666666666666666
+     ]
+    },
+    "item_change": {
+     "f1": [
+      0.5517241379310345,
+      0.5714285714285714,
+      0.5161290322580645,
+      0.5
+     ],
+     "repeats": [
+      0.5517241379310345,
+      0.5714285714285714,
+      0.5161290322580645
+     ]
+    },
+    "person_enter": {
+     "f1": [
+      0.4,
+      0.43478260869565216,
+      0.5,
+      0.5185185185185185
+     ],
+     "repeats": [
+      0.4,
+      0.43478260869565216,
+      0.5
+     ]
+    },
+    "person_leave": {
+     "f1": [
+      0.5714285714285714,
+      0.6,
+      0.4166666666666667,
+      0.5
+     ],
+     "repeats": [
+      0.5714285714285714,
+      0.6,
+      0.4166666666666667
+     ]
+    },
+    "relation_event": {
+     "f1": [
+      0.5,
+      0.4864864864864865,
+      0.46511627906976744,
+      0.4864864864864865
+     ],
+     "repeats": [
+      0.5,
+      0.4864864864864865,
+      0.46511627906976744
+     ]
+    },
+    "secret_learned": {
+     "f1": [
+      0.5882352941176471,
+      0.6382978723404256,
+      0.5882352941176471,
+      0.5714285714285714
+     ],
+     "repeats": [
+      0.5882352941176471,
+      0.6382978723404256,
+      0.5882352941176471
+     ]
+    },
+    "vow_said": {
+     "f1": [
+      0.6153846153846154,
+      0.5555555555555556,
+      0.6842105263157895,
+      0.631578947368421
+     ],
+     "repeats": [
+      0.6153846153846154,
+      0.5555555555555556,
+      0.6842105263157895
+     ]
+    },
+    "**all 13 (micro)**": {
+     "f1": [
+      0.5285285285285285,
+      0.5047923322683706,
+      0.49266862170087977,
+      0.5089820359281437
+     ],
+     "repeats": [
+      0.5285285285285285,
+      0.5047923322683706,
+      0.49266862170087977
+     ]
+    }
+   },
+   "runs": {
+    "baseline-v2": {
+     "C": {
+      "f1": 0.5089820359281437,
+      "recall": 0.648854961832061,
+      "precision": 0.4187192118226601
+     },
+     "A": {
+      "f1": 0.5836065573770491,
+      "recall": 0.6054421768707483,
+      "precision": 0.5632911392405063
+     },
+     "S": {
+      "f1": 0.6197183098591549,
+      "recall": 0.5866666666666667,
+      "precision": 0.6567164179104478
+     },
+     "fields": {
+      "secret_learned": {
+       "tp": 22,
+       "fp": 51,
+       "fn": 1,
+       "pos": 23
+      },
+      "relation_event": {
+       "tp": 31,
+       "fp": 31,
+       "fn": 3,
+       "pos": 34
+      },
+      "vow_said": {
+       "tp": 40,
+       "fp": 22,
+       "fn": 4,
+       "pos": 44
+      },
+      "clothes_change": {
+       "tp": 7,
+       "fp": 29,
+       "fn": 6,
+       "pos": 13
+      },
+      "item_change": {
+       "tp": 31,
+       "fp": 26,
+       "fn": 2,
+       "pos": 33
+      }
+     }
+    },
+    "ask-first": {
+     "C": {
+      "f1": 0.4908424908424908,
+      "recall": 0.5114503816793893,
+      "precision": 0.47183098591549294
+     },
+     "A": {
+      "f1": 0.45267489711934156,
+      "recall": 0.3741496598639456,
+      "precision": 0.5729166666666666
+     },
+     "S": {
+      "f1": 0.5223880597014925,
+      "recall": 0.4666666666666667,
+      "precision": 0.5932203389830508
+     },
+     "fields": {
+      "secret_learned": {
+       "tp": 11,
+       "fp": 21,
+       "fn": 12,
+       "pos": 23
+      },
+      "relation_event": {
+       "tp": 31,
+       "fp": 25,
+       "fn": 3,
+       "pos": 34
+      },
+      "vow_said": {
+       "tp": 18,
+       "fp": 2,
+       "fn": 26,
+       "pos": 44
+      },
+      "clothes_change": {
+       "tp": 9,
+       "fp": 28,
+       "fn": 4,
+       "pos": 13
+      },
+      "item_change": {
+       "tp": 29,
+       "fp": 29,
+       "fn": 4,
+       "pos": 33
+      }
+     }
+    },
+    "calibrated": {
+     "C": {
+      "f1": 0.5185185185185185,
+      "recall": 0.6412213740458015,
+      "precision": 0.43523316062176165
+     },
+     "A": {
+      "f1": 0.5211267605633803,
+      "recall": 0.5034013605442177,
+      "precision": 0.5401459854014599
+     },
+     "S": {
+      "f1": 0.5652173913043478,
+      "recall": 0.52,
+      "precision": 0.6190476190476191
+     },
+     "fields": {
+      "secret_learned": {
+       "tp": 23,
+       "fp": 45,
+       "fn": 0,
+       "pos": 23
+      },
+      "relation_event": {
+       "tp": 29,
+       "fp": 25,
+       "fn": 5,
+       "pos": 34
+      },
+      "vow_said": {
+       "tp": 38,
+       "fp": 27,
+       "fn": 6,
+       "pos": 44
+      },
+      "clothes_change": {
+       "tp": 8,
+       "fp": 28,
+       "fn": 5,
+       "pos": 13
+      },
+      "item_change": {
+       "tp": 29,
+       "fp": 29,
+       "fn": 4,
+       "pos": 33
+      }
+     }
+    },
+    "ask-first-calibrated": {
+     "C": {
+      "f1": 0.5,
+      "recall": 0.48854961832061067,
+      "precision": 0.512
+     },
+     "A": {
+      "f1": 0.4576271186440678,
+      "recall": 0.3673469387755102,
+      "precision": 0.6067415730337079
+     },
+     "S": {
+      "f1": 0.512396694214876,
+      "recall": 0.41333333333333333,
+      "precision": 0.6739130434782609
+     },
+     "fields": {
+      "secret_learned": {
+       "tp": 10,
+       "fp": 10,
+       "fn": 13,
+       "pos": 23
+      },
+      "relation_event": {
+       "tp": 26,
+       "fp": 13,
+       "fn": 8,
+       "pos": 34
+      },
+      "vow_said": {
+       "tp": 11,
+       "fp": 2,
+       "fn": 33,
+       "pos": 44
+      },
+      "clothes_change": {
+       "tp": 8,
+       "fp": 26,
+       "fn": 5,
+       "pos": 13
+      },
+      "item_change": {
+       "tp": 30,
+       "fp": 25,
+       "fn": 3,
+       "pos": 33
+      }
+     }
+    }
+   },
+   "flags": {
+    "ask-first-flags": {
+     "f1": 0.6483180428134556,
+     "recall": 0.6005665722379604,
+     "precision": 0.7043189368770764
+    },
+    "ask-first-calibrated-flags": {
+     "f1": 0.6258064516129033,
+     "recall": 0.5495750708215298,
+     "precision": 0.7265917602996255
+    },
+    "ask-first:scene": {
+     "tw": 45,
+     "tl": 0,
+     "fw": 36,
+     "fl": 0
+    },
+    "ask-first:things": {
+     "tw": 54,
+     "tl": 0,
+     "fw": 26,
+     "fl": 1
+    },
+    "ask-first:relations": {
+     "tw": 57,
+     "tl": 0,
+     "fw": 14,
+     "fl": 10
+    },
+    "ask-first:knowledge": {
+     "tw": 23,
+     "tl": 0,
+     "fw": 38,
+     "fl": 20
+    },
+    "ask-first:threads": {
+     "tw": 68,
+     "tl": 0,
+     "fw": 9,
+     "fl": 4
+    },
+    "ask-first-calibrated:scene": {
+     "tw": 45,
+     "tl": 0,
+     "fw": 36,
+     "fl": 0
+    },
+    "ask-first-calibrated:things": {
+     "tw": 47,
+     "tl": 0,
+     "fw": 31,
+     "fl": 3
+    },
+    "ask-first-calibrated:relations": {
+     "tw": 51,
+     "tl": 0,
+     "fw": 12,
+     "fl": 18
+    },
+    "ask-first-calibrated:knowledge": {
+     "tw": 19,
+     "tl": 0,
+     "fw": 20,
+     "fl": 42
+    },
+    "ask-first-calibrated:threads": {
+     "tw": 50,
+     "tl": 0,
+     "fw": 26,
+     "fl": 5
+    }
+   },
+   "director": {
+    "ask-first:scene_cut": {
+     "tp": 7,
+     "fp": 4,
+     "fn": 8,
+     "pos": 15,
+     "recall": 0.4666666666666667,
+     "turns": 79
+    },
+    "ask-first:place_change": {
+     "tp": 20,
+     "fp": 4,
+     "fn": 4,
+     "pos": 24,
+     "recall": 0.8333333333333334,
+     "turns": 79
+    },
+    "ask-first:time_jump": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1,
+     "pos": 2,
+     "recall": 0.5,
+     "turns": 79
+    },
+    "ask-first-calibrated:scene_cut": {
+     "tp": 9,
+     "fp": 4,
+     "fn": 6,
+     "pos": 15,
+     "recall": 0.6,
+     "turns": 79
+    },
+    "ask-first-calibrated:place_change": {
+     "tp": 20,
+     "fp": 6,
+     "fn": 4,
+     "pos": 24,
+     "recall": 0.8333333333333334,
+     "turns": 79
+    },
+    "ask-first-calibrated:time_jump": {
+     "tp": 1,
+     "fp": 0,
+     "fn": 1,
+     "pos": 2,
+     "recall": 0.5,
+     "turns": 79
+    },
+    "union:baseline-v2 (state proxy)": {
+     "pos": 25,
+     "tp": 22,
+     "fn": 3,
+     "fp": 6,
+     "turns": 79,
+     "recall": 0.88
+    },
+    "union:ask-first flags": {
+     "pos": 25,
+     "tp": 21,
+     "fn": 4,
+     "fp": 4,
+     "turns": 79,
+     "recall": 0.84
+    },
+    "union:ask-first-calibrated flags": {
+     "pos": 25,
+     "tp": 21,
+     "fn": 4,
+     "fp": 6,
+     "turns": 79,
+     "recall": 0.84
+    }
+   }
+  },
+  "glm": {
+   "noise": {},
+   "runs": {
+    "glm-baseline-v2": {
+     "C": {
+      "f1": 0.5306122448979592,
+      "recall": 0.6946564885496184,
+      "precision": 0.42924528301886794
+     },
+     "A": {
+      "f1": 0.6017699115044248,
+      "recall": 0.6938775510204082,
+      "precision": 0.53125
+     },
+     "S": {
+      "f1": 0.632183908045977,
+      "recall": 0.7333333333333333,
+      "precision": 0.5555555555555556
+     },
+     "fields": {
+      "secret_learned": {
+       "tp": 21,
+       "fp": 44,
+       "fn": 2,
+       "pos": 23
+      },
+      "relation_event": {
+       "tp": 31,
+       "fp": 30,
+       "fn": 3,
+       "pos": 34
+      },
+      "vow_said": {
+       "tp": 39,
+       "fp": 10,
+       "fn": 5,
+       "pos": 44
+      },
+      "clothes_change": {
+       "tp": 12,
+       "fp": 46,
+       "fn": 1,
+       "pos": 13
+      },
+      "item_change": {
+       "tp": 30,
+       "fp": 27,
+       "fn": 3,
+       "pos": 33
+      }
+     }
+    },
+    "glm-ask-first": {
+     "C": {
+      "f1": 0.573208722741433,
+      "recall": 0.7022900763358778,
+      "precision": 0.4842105263157895
+     },
+     "A": {
+      "f1": 0.6172839506172839,
+      "recall": 0.6802721088435374,
+      "precision": 0.5649717514124294
+     },
+     "S": {
+      "f1": 0.6583850931677019,
+      "recall": 0.7066666666666667,
+      "precision": 0.6162790697674418
+     },
+     "fields": {
+      "secret_learned": {
+       "tp": 21,
+       "fp": 28,
+       "fn": 2,
+       "pos": 23
+      },
+      "relation_event": {
+       "tp": 32,
+       "fp": 31,
+       "fn": 2,
+       "pos": 34
+      },
+      "vow_said": {
+       "tp": 37,
+       "fp": 8,
+       "fn": 7,
+       "pos": 44
+      },
+      "clothes_change": {
+       "tp": 13,
+       "fp": 40,
+       "fn": 0,
+       "pos": 13
+      },
+      "item_change": {
+       "tp": 29,
+       "fp": 23,
+       "fn": 4,
+       "pos": 33
+      }
+     }
+    }
+   },
+   "flags": {
+    "glm-ask-first-flags": {
+     "f1": 0.712401055408971,
+     "recall": 0.7648725212464589,
+     "precision": 0.6666666666666666
+    },
+    "glm-ask-first:scene": {
+     "tw": 48,
+     "tl": 0,
+     "fw": 32,
+     "fl": 0
+    },
+    "glm-ask-first:things": {
+     "tw": 54,
+     "tl": 0,
+     "fw": 19,
+     "fl": 7
+    },
+    "glm-ask-first:relations": {
+     "tw": 57,
+     "tl": 1,
+     "fw": 21,
+     "fl": 1
+    },
+    "glm-ask-first:knowledge": {
+     "tw": 55,
+     "tl": 0,
+     "fw": 19,
+     "fl": 6
+    },
+    "glm-ask-first:threads": {
+     "tw": 67,
+     "tl": 0,
+     "fw": 8,
+     "fl": 5
+    }
+   },
+   "director": {
+    "glm-ask-first:scene_cut": {
+     "tp": 11,
+     "fp": 12,
+     "fn": 4,
+     "pos": 15,
+     "recall": 0.7333333333333333,
+     "turns": 79
+    },
+    "glm-ask-first:place_change": {
+     "tp": 23,
+     "fp": 5,
+     "fn": 1,
+     "pos": 24,
+     "recall": 0.9583333333333334,
+     "turns": 79
+    },
+    "glm-ask-first:time_jump": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 1,
+     "pos": 2,
+     "recall": 0.5,
+     "turns": 79
+    },
+    "union:glm-baseline-v2 (state proxy)": {
+     "pos": 25,
+     "tp": 24,
+     "fn": 1,
+     "fp": 25,
+     "turns": 79,
+     "recall": 0.96
+    },
+    "union:glm-ask-first flags": {
+     "pos": 25,
+     "tp": 24,
+     "fn": 1,
+     "fp": 9,
+     "turns": 79,
+     "recall": 0.96
+    }
+   }
+  },
+  "ctl": {
+   "noise": {},
+   "runs": {
+    "ctl-baseline-v2": {
+     "A": {
+      "f1": 0.5220338983050847,
+      "recall": 0.5238095238095238,
+      "precision": 0.5202702702702703
+     },
+     "S": {
+      "f1": 0.6142857142857143,
+      "recall": 0.5733333333333334,
+      "precision": 0.6615384615384615
+     },
+     "fields": {
+      "secret_learned": {
+       "tp": 8,
+       "fp": 30,
+       "fn": 0,
+       "pos": 8
+      },
+      "relation_event": {
+       "tp": 22,
+       "fp": 14,
+       "fn": 2,
+       "pos": 24
+      },
+      "vow_said": {
+       "tp": 29,
+       "fp": 10,
+       "fn": 2,
+       "pos": 31
+      },
+      "clothes_change": {
+       "tp": 5,
+       "fp": 9,
+       "fn": 6,
+       "pos": 11
+      },
+      "item_change": {
+       "tp": 20,
+       "fp": 11,
+       "fn": 5,
+       "pos": 25
+      }
+     }
+    },
+    "ctl-ask-first": {
+     "A": {
+      "f1": 0.4881889763779528,
+      "recall": 0.4217687074829932,
+      "precision": 0.5794392523364486
+     },
+     "S": {
+      "f1": 0.5263157894736842,
+      "recall": 0.4666666666666667,
+      "precision": 0.603448275862069
+     },
+     "fields": {
+      "secret_learned": {
+       "tp": 7,
+       "fp": 10,
+       "fn": 1,
+       "pos": 8
+      },
+      "relation_event": {
+       "tp": 23,
+       "fp": 14,
+       "fn": 1,
+       "pos": 24
+      },
+      "vow_said": {
+       "tp": 13,
+       "fp": 3,
+       "fn": 18,
+       "pos": 31
+      },
+      "clothes_change": {
+       "tp": 8,
+       "fp": 14,
+       "fn": 3,
+       "pos": 11
+      },
+      "item_change": {
+       "tp": 21,
+       "fp": 13,
+       "fn": 4,
+       "pos": 25
+      }
+     }
+    }
+   },
+   "flags": {
+    "ctl-ask-first-flags": {
+     "f1": 0.6858513189448441,
+     "recall": 0.6441441441441441,
+     "precision": 0.7333333333333333
+    },
+    "ctl-ask-first:scene": {
+     "tw": 26,
+     "tl": 0,
+     "fw": 17,
+     "fl": 0
+    },
+    "ctl-ask-first:things": {
+     "tw": 36,
+     "tl": 0,
+     "fw": 5,
+     "fl": 2
+    },
+    "ctl-ask-first:relations": {
+     "tw": 36,
+     "tl": 0,
+     "fw": 3,
+     "fl": 4
+    },
+    "ctl-ask-first:knowledge": {
+     "tw": 16,
+     "tl": 0,
+     "fw": 16,
+     "fl": 11
+    },
+    "ctl-ask-first:threads": {
+     "tw": 42,
+     "tl": 0,
+     "fw": 1,
+     "fl": 0
+    }
+   },
+   "director": {
+    "ctl-ask-first:scene_cut": {
+     "tp": 1,
+     "fp": 1,
+     "fn": 7,
+     "pos": 8,
+     "recall": 0.125,
+     "turns": 42
+    },
+    "ctl-ask-first:place_change": {
+     "tp": 10,
+     "fp": 5,
+     "fn": 4,
+     "pos": 14,
+     "recall": 0.7142857142857143,
+     "turns": 42
+    },
+    "ctl-ask-first:time_jump": {
+     "tp": 0,
+     "fp": 0,
+     "fn": 1,
+     "pos": 1,
+     "recall": 0,
+     "turns": 42
+    },
+    "union:ctl-baseline-v2 (state proxy)": {
+     "pos": 14,
+     "tp": 13,
+     "fn": 1,
+     "fp": 4,
+     "turns": 42,
+     "recall": 0.9285714285714286
+    },
+    "union:ctl-ask-first flags": {
+     "pos": 14,
+     "tp": 10,
+     "fn": 4,
+     "fp": 5,
+     "turns": 42,
+     "recall": 0.7142857142857143
+    }
+   }
+  },
+  "base_rates": {
+   "keys_scored_turns": {
+    "C": 37,
+    "A": 26,
+    "S": 16
+   },
+   "secret_learned": {
+    "C": 15,
+    "A": 4,
+    "S": 4
+   },
+   "relation_event": {
+    "C": 10,
+    "A": 11,
+    "S": 13
+   },
+   "vow_said": {
+    "C": 13,
+    "A": 18,
+    "S": 13
+   }
+  },
+  "cache_probe": {
+   "deepseek-v4-flash": {
+    "prompt": 5107,
+    "cached": 4864
+   },
+   "glm-5.3": {
+    "prompt": 5056,
+    "cached": 5032
+   }
+  }
  }
 }
