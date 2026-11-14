@@ -11,7 +11,8 @@ had reached 488 KB). One file per period, newest first inside each. Nothing here
 | `2026-11-01-to-11-07.md` | 2026-11-01 to 2026-11-07: engine 1.9.0 to 1.11.7, Roleplay 4.80 to 4.98 |
 | `2026-10-24-to-10-31.md` | 2026-10-24 to 2026-10-31: engine 1.3.5 to 1.8.1, Roleplay 4.65 to 4.79 |
 | `2026-10-17-to-10-23.md` | 2026-10-17 to 2026-10-23: engine 1.2.0 to 1.3.5 |
-| `2026-10-11-to-10-17.md` | 2026-10-02 to 2026-10-17, plus the old reference blocks that were replaced by the live file: engine 0.9.x to 1.2.0 (the oldest part of the file, including "Repos", "Open, from 0.9.4-0.9.6", "Released") |
+| `2026-10-11-to-10-17.md` | 2026-10-02 to 2026-10-17, plus three old reference blocks that no longer describe the project: engine 0.9.x to 1.2.0 (the oldest part of the file, including "Repos", "Open, from 0.9.4-0.9.6", "Released") |
+| `START-queue-until-2026-11-14.md` | the old queue of `.fork/handoff/START.md`: 24 "release prepared" lines and the plans of October |
 
 ## When to look here
 - Before proposing a fix or a design (CLAUDE.md, "Look at what was already done"): `grep -ri "<keyword>" .fork/state-archive .fork/STATE.md`.
