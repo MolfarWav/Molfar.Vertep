@@ -6,6 +6,7 @@ An addon (Roleplay, Social) is released from its own repository and needs no eng
 ## Steps
 1. **Pick the number.** A significant change is a minor bump (1.16.0 -> 1.17.0); a small fix is a patch (1.16.0 -> 1.16.1).
 2. **Checks pass** on the branch: `bun run typecheck`, `bun run test` (on Windows a known set fails on `main` too: symlinks, file modes, the release installer, store/builder, sandbox shell; see the checks lines in `.fork/STATE.md`), `bun run build:client`.
+2a. **Handbook check:** `node .fork/tools/check-handbook.mjs .fork/handbook engine=. roleplay=<Roleplay clone> social=<Social clone>` must report 0 missing. A page that fails does not block the release; it is fixed in the next change that touches its system and listed in `.fork/handbook/INDEX.md` under "Stale pages" until then.
 3. **Bump `package.json` `version` before the tag.** Update checks compare the release's `tag_name` (a leading `v` is dropped) with this version; a mismatch makes every copy offer the update forever, and `release.yml` refuses a tag that does not match.
 4. **CHANGELOG.md:** rename `## Unreleased` to `## X.Y.Z (YYYY-MM-DD)` and start a new empty `## Unreleased` above it.
 5. **Release notes:** write `.fork/release-notes/X.Y.Z.md`, the body of the GitHub release. `release.yml` uses it; without it GitHub generates notes from commits. It is a full, correct preview for users, not a copy of the CHANGELOG (the user's rule, 2026-10-02):
