@@ -7,6 +7,7 @@ had reached 488 KB). One file per period, newest first inside each. Nothing here
 
 | File | Covers |
 | --- | --- |
+| `2026-11-13-to-11-14.md` | 2026-11-13 to 2026-11-14: Roleplay 4.119 to 4.122 (the Agent forge, ready agents, group dynamics, the Dashboard clock); moved on 2026-11-16 because STATE.md passed 60 KB, a little earlier than the one-week rule |
 | `2026-11-11-to-11-12.md` | 2026-11-11 to 2026-11-12: Roleplay 4.114 to 4.118, engine 1.16.2 to 1.16.4 (prepared or released), turn director design |
 | `2026-11-08-to-11-11.md` | 2026-11-08 to 2026-11-11: Roleplay 4.103 to 4.113, engine 1.12.2 to 1.16.1 (prepared or released) |
 | `2026-11-01-to-11-07.md` | 2026-11-01 to 2026-11-07: engine 1.9.0 to 1.11.7, Roleplay 4.80 to 4.98 |

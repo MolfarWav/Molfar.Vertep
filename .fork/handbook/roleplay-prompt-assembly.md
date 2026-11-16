@@ -21,7 +21,7 @@ Verified at: molfar.vertep-roleplay 27e146c (4.131.0) (the "Cast" part); molfar.
 - roleplay: `plugins/engine/plugin.js` `cleanPromptBoard`: drops switch keys not in `PROMPT_BOARD_OFF_KEYS`.
 - roleplay: `plugins/litopys/plugin.js` `llmRequest`: Litopys inserts, placed by `withInsert` and `withTailInsert`.
 - roleplay: `plugins/relations/plugin.js` `llmRequest`: Dashboard inserts, placed by its own `withTailInsert`.
-- roleplay: `plugins/world/plugin.js` `llmRequest`: World DM, dice, pace, life, and "Cast" (a person coming back, #424: a firm note, one at a time, at every level but off); `withLast` joins them to the newest user message.
+- roleplay: `plugins/world/plugin.js` `llmRequest`: World DM, dice, pace, life, and "Cast" (a person coming back, or a new one from the cast deck with the card's text, #424: a firm note, one at a time, at every level but off); `withLast` joins them to the newest user message.
 - roleplay: `plugins/agents/plugin.js` `llmRequest`: agent hints; `withLastUser` joins them the same way.
 - roleplay: `src/lib/engine.ts` `promptPreview`: client call for the peek.
 - roleplay: `src/components/chat/prompt-peek-dialog.tsx` `PromptPeekDialog` (opened from the Request size popup with a `cache` prop, it marks where the provider's cache ends: `src/lib/cache-boundary.ts` `cacheBoundary`, `blockStates`, `partStates`; `src/components/chat/request-cache.tsx` is the popup's cache section); `src/components/chat/prompt-sources.tsx` `PromptSourcesPanel`, `MarkedPre`; `src/lib/tokens.ts` `estimateTokens` (BPE count, peek only).

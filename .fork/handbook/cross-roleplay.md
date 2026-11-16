@@ -276,6 +276,7 @@ Traps:
 ## From `roleplay-world-dm.md`
 
 Change X, touch Y:
+- Cast fields, thresholds or bands: `cleanEntity`, `cleanEntrance`, `CAST_SILENCE`, `CAST_GAP`, `rollEntrance`, `docs/DATA-FORMATS.md` ("Cast"), the guide page `world-dm`, and the `world cast` row of `insertCeiling` here and of `hookInsertBreakdown` in `plugins/engine/plugin.js`.
 - Clock sizes or front fields: `cleanFront`, `applyLevel`, `clockStage`, `docs/DATA-FORMATS.md`.
 - Dice bands or tilts: `DICE_BANDS`, `DICE_TILTS`, `diceOutcome`, `src/lib/world.ts`, `dice-log.tsx`.
 - Record kinds or fields: `KINDS`, `cleanEntity`, `applyReport`, `entryOf`, and `docs/COUPLINGS.md`, "World DM and Dashboard shared ids".
@@ -283,6 +284,10 @@ Change X, touch Y:
 - Deck size: `DECK_MIN`, `DECK_MAX`, `cleanDeck`, `DECK_SYSTEM`.
 
 Traps:
+- The cast reads the chat and the Dashboard's snapshots every request (`castContext`, `silencesOf` looks back 400 messages) and stores no counter, so a swipe cannot corrupt it. Without the Dashboard (no snapshots) only the names count. With one, a name in a message that has a snapshot is only a mention: if the sensor leaves a speaking character out of `present`, the cast thinks they are away. A carrier reply whose snapshot is not written yet is judged by the name (so `came`). A chat whose state file is older than the cast has `settings.cast` absent, which reads as off.
+- `entrance` is not `event`: it has its own judge (`judgeEntrance`, by code, no model) and works at the chronicler level too. It still rides `reconcile` (a carrier reply that is gone sends it again).
+- A name of 5 or more letters matches with a short ending and a changed last letter; a shorter one exactly. A shared nickname (one the registry gives to two people) counts for nobody.
+- A default profile reaches a chat only through `startSettings`, at the first state of a chat that has no file. A chat that already has a state file never takes a new default, and a default that was deleted or never existed falls back to the chronicler quietly.
 - `DECK_MIN` (8) is a request in the deck prompt, not a limit: `deckRoute` keeps whatever the model returns (even one card) and only flags `short: true`, which the client shows as a warning. No retry.
 - The roll_dice tool in `plugins/tools/plugin.js` uses Math.random and is not logged by World. World's dice are seeded per chat, message and swipe.
 - `llmRequest` marks the event sent before the reply exists. A reply that never lands is caught later by `eventLost`.
@@ -290,3 +295,14 @@ Traps:
 - A deck card is used up only when an event is set. A catch-up run leaves the deck alone.
 - `undoFrom` keeps records the player edited after the snapshot, so a deleted reply does not undo hand edits.
 - A chat with no state file counts as on at chronicler; only level `off` in a state file keeps it off.
+
+- The DM's input shrinks by id sets: a record the DM cannot see in full is not updated by it unless it is named, and a named record is always in full, so the DM does not overwrite text it cannot read. The fuzzy name pattern (`namesPattern`) can name a record by a lookalike word; that only costs tokens, never hides a record.
+
+- A card becomes a record in the `llmRequest` hook, at the next request after the carrier reply, so a rollback past that moment takes the record away and puts the card back (both are in `CORE_KEYS`). If the sensor has not written the carrier's snapshot yet, the name counts and the result is `came`.
+- The deck's note carries the card's text (up to 1200 characters), so the `world cast` insert ceiling row is the longest card's room when the switch is on (`deckNoteTokens` here and the same rule in the engine plugin's table; `test/rp-insert-ceiling.test.ts`).
+- A card whose tie is empty ("loose") is kept on purpose (small models often name nobody who exists); the draw prefers cards whose tie is in the scene. "Tied to the scene's place" is read as: the place record lists the faction among its `members` or its text names it.
+- The refill is called by the app after a run (`castRefill`), not by the run itself: a route makes one model call per pass. A chat nobody has open does not refill.
+- The tidy-up counts a thing by its name or alias in the reply text, so a thing the story calls by a short word the DM never made an alias of is counted as not named. `namesPattern` matches a whole name with a short ending, so "noodles" does not name "Cup of noodles". A thing named only in the player's messages is not counted.
+- The tidy-up runs inside `updateRoute` before the early returns (no new text, not due), so it works whenever the client asks; it is not a snapshot of a run, so a deleted reply does not undo an archive (the wake rule heals it).
+- `signals` are written only for a chat (the records route with `lib` set writes none). Restoring a resting thing takes it out of `state.tidy.seen`, so it is judged again only after a full pass.
+- The chat panel's tiles read `kinds`, `notes` and `archive` from `GET /world/state`; `records` is still the active count (notes included).
