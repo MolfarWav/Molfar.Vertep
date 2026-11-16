@@ -10,7 +10,7 @@ Before touching a system, read its page in `.fork/handbook/INDEX.md`.
 The queue is GitHub: `gh issue list --state open --label enhancement` and `--label bug`. The owner picks the order unless it is
 written here. Bugs are fixed in the Tuesday batch (CLAUDE.md, "Bugs"). Where the next work stands (2026-11-14):
 
-- **Roleplay, the owner's current line, first:** the cast and the world book rework (#424, #425). Step 2 is released (4.131.0); continue from `.fork/handoff/cast-bench/NEXT.md` (done, open checks, next steps, traps, the browser-check script).
+- **Roleplay, the owner's current line:** the cast and the world book rework (#424, #425, #428) is released and closed (Roleplay 4.130.0 to 4.136.0). What is left is #430 (live-model tests of the bench and the deck, scene boundary, the bench reading the cards, neglect); context in `.fork/handoff/cast-bench/NEXT.md`.
 - **Roleplay, also:** group dynamics (#404, #405: member voices, check on real free models, tune the wording),
   the turn director (#401: design is in STATE, no code yet),
   Agent forge follow-ups (#396 items left, #402, #403), the persona frame on a real model (#398), the lorebook budget question (#397).
