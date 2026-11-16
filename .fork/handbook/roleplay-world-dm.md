@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay 6aa85a0 (branch claude/cast-stage, unreleased 4.132.2; sections: Owners, Data, Traps, Tests: cast stage and the DM's input; tests run, the card checked in a browser with a mock model, not on a live model); molfar.vertep-roleplay 27e146c (4.131.0) (Owners, Data, Traps, Tests: cast); 1c71ed1 (Owners, Data); e09c2ed (Traps); the rest at 91eec33
+Verified at: molfar.vertep-roleplay c224bc5 (branch claude/cast-book, unreleased; sections: Owners, Data, Traps, Tests: the book's tidy-up, reasons, kinds, signals and tiles; tests run, not checked in a browser yet); molfar.vertep-roleplay 6aa85a0 (branch claude/cast-stage, unreleased 4.132.2; sections: Owners, Data, Traps, Tests: cast stage and the DM's input; tests run, the card checked in a browser with a mock model, not on a live model); molfar.vertep-roleplay 27e146c (4.131.0) (Owners, Data, Traps, Tests: cast); 1c71ed1 (Owners, Data); e09c2ed (Traps); the rest at 91eec33
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
@@ -14,10 +14,13 @@ Verified at: molfar.vertep-roleplay 6aa85a0 (branch claude/cast-stage, unrelease
 - `plugins/world/plugin.js`, `startSettings`: the level, own profile id and numbers a chat starts with when the DM switches itself on for it (`autoOn`, no state file): the default profile's, else the chronicler's. Used by `stateRoute`, `settingsRoute` and `updateRoute`.
 - `plugins/world/plugin.js`, `configRoute`, `saveConfig`, `cleanConfig`: `PUT /world/config`, including `defaultProfile` (refused when no such profile); `listProfiles` marks `default`, and deleting the default profile clears it.
 - `plugins/world/plugin.js`, `applyReport`: writes the model's add, update and retire ops as records.
-- `plugins/world/plugin.js`, `cleanEntity`: record shape; an unknown kind becomes `fact`. Also `relation`, `weight`, `link`, `noReturn` (person and group only) and the `dormant` status (#424).
+- `plugins/world/plugin.js`, `cleanEntity`: record shape; an unknown kind drops the record (it used to become `fact`; `fact` is read only now, `WRITE_KINDS` is what may be written). A thing may carry `why` (`WHYS`). Also `relation`, `weight`, `link`, `noReturn` (person and group only) and the `dormant` status (#424).
 - `plugins/world/plugin.js`, `castIdentity`, `silencesOf`, `silenceOf`, `seenIn`, `namedIn`: cast (#424). Who a person record is for the cast (registry id first, names after; a name the registry gives to another person is dropped) and two silences: `stage` (replies since the Dashboard's scene had them; a message with no snapshot counts by the name in the text) and `mentioned` (since named or on stage, shown only). `silenceOf` = `stage`.
 - `plugins/world/plugin.js`, `castThreshold`, `rollEntrance`, `benchDue`, `benchSoon`, `castGap`, `planEntrance`: Frequency's silence with a per-person jitter, the 2d6 + silence + weight roll and its three bands, who is due (on `stage`), who is due within one cadence (`benchSoon`, for the DM's input), the gap after the last return (half after a medium or big mention), a new entrance (or one from the Life die's tier; at least medium after such a mention, `floor`).
 - `plugins/world/plugin.js`, `entranceInsert`, `sendEntrance`, `judgeEntrance`, `markCastResult`, `castLog`: the firm note, putting it into the request, judging the carrier reply (came = on stage / mentioned = only named, no second try / asked again / given up), and the line in `world/dice/<chatId>.json`.
+- `plugins/world/plugin.js`, `tidyBook`, `runTidy`, `tidyStatus`, `tidyRoute`, `tidyNote`: the code tidy-up of things (#424, step 3): every `TIDY_EVERY` (10) replies a thing named by fewer than 3 of the last 10 replies, that belongs to nobody named and is neither pinned nor kept for a reason (`TIDY_EXEMPT`: clue, hidden, promise), goes `dormant`; named twice it wakes. `state.tidy { n, seen }` and `state.tidyLog`, both in `CORE_KEYS`; the setting `tidy`; `GET`/`POST /world/tidy`. `applyReport` wakes a dormant thing the DM names again.
+- `plugins/world/plugin.js`, `noteSignal`, `cleanSignal`, `removedNames`: step 0 of the DM's memory: what the player did to the book (`state.signals`, never rewound); `applyReport` drops an add of a name the player deleted, `dmInput` tells the DM the newest 30 (`removed`).
+- `src/components/world/world-so-far.tsx` (type tiles that open the book), `world-records.tsx` (`WorldRecords` with `initialKind`, the Archive chip, old notes: fold or to the Litopys), `world-tidy.tsx` (`TidyCard`), `world-controls.tsx` (the book dialog).
 - `plugins/world/plugin.js`, `dmInput`, `fullRecordIds`, `entityLine`, `entityBrief`: the DM's user message. `updateRoute` builds the set of ids read in full (named in the new part, pinned, the scene's place with its parent and spots, things there or held by people in the scene, the people in the scene, bench people from `benchSoon`); every other active record is one line `id · kind · name` plus `BRIEF_NOTE`. No set = all in full.
 - `plugins/world/plugin.js`, `castStatus`, `castRoute`: `GET /world/cast`, the bench as the chat stands (for the panel and for testing).
 - `plugins/world/plugin.js`, `benchEntries`, `benchInput`, `applyBench`, `joinPeople`, `benchRoute`: adoption of the cards' lorebook people as linked records (one build call; `POST /world/bench`, and the Start step `{ bench: true }`).
@@ -43,7 +46,7 @@ Verified at: molfar.vertep-roleplay 6aa85a0 (branch claude/cast-stage, unrelease
 - `plugins/world/plugin.js`, `undoFrom`: restores the core keys and keeps the player's own edits.
 - `plugins/world/plugin.js`, `rollbackRoute`: POST /world/rollback, which calls settle.
 - `plugins/world/plugin.js`, `systemFor`: builds the DM system prompt from profile blocks and level rules.
-- `plugins/world/plugin.js`, `sweepCandidates`: lists places and things the book lacks.
+- `plugins/world/plugin.js`, `sweepCandidates`: lists the places the book lacks (things are not offered any more: a thing the DM records needs a reason).
 - `plugins/tools/plugin.js`, `rollDice`: the roll_dice tool a model may call; separate from World's dice (two kinds on purpose; `docs/COUPLINGS.md`, "Two kinds of dice": roll_dice is unseeded and read by the model, World's check is seeded, rolled by code, and re-rolls on a swipe; the roll log is not rewound).
 - `plugins/world/plugin.js`, `deckRoute` answers `short: true, min: 8` when fewer than `DECK_MIN` cards came back; the cards are kept either way (Roleplay branch `claude/handbook-findings`, 9fab294). `DECK_MIN` is a request in the prompt, not a limit.
 - `src/lib/world.ts`, `triggerWorldUpdate`: client call after a reply.
@@ -55,7 +58,7 @@ Verified at: molfar.vertep-roleplay 6aa85a0 (branch claude/cast-stage, unrelease
 - `src/components/world/world-settings.tsx`, `WorldSettingsDialog`: level, cadence and other settings.
 
 ## Data
-- `world/state/<chatId>.json`: settings (also `cast` and `castShow`), cursors (lastKey, levelKey), `entities` (ids like `n3`), `fronts` (ids `f1`), `event`, `entrance` and `lastEntrance` (a person coming back, and the last one judged, with `res`: came, mentioned or missed), `deck` (`[{ id: "e1", text }]`), `carry`, `clockReplies`, `log`, `usage`.
+- `world/state/<chatId>.json`: settings (also `cast`, `castShow` and `tidy`), `tidy` and `tidyLog`, `signals`, cursors (lastKey, levelKey), `entities` (ids like `n3`), `fronts` (ids `f1`), `event`, `entrance` and `lastEntrance` (a person coming back, and the last one judged, with `res`: came, mentioned or missed), `deck` (`[{ id: "e1", text }]`), `carry`, `clockReplies`, `log`, `usage`.
 - `world/snaps/<chatId>.json`: up to 8 snapshots `{ upTo, at, head, core }`.
 - `world/dice/<chatId>.json`: the newest 60 rolls, and the returns of the cast (`kind: "cast"`, with who, why, the dice and the `result`).
 - `lorebooks/world-<chatId>.json`: the world book; one entry per record, memo `world:<id>`.
@@ -108,6 +111,11 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 
 - The DM's input shrinks by id sets: a record the DM cannot see in full is not updated by it unless it is named, and a named record is always in full, so the DM does not overwrite text it cannot read. The fuzzy name pattern (`namesPattern`) can name a record by a lookalike word; that only costs tokens, never hides a record.
 
+- The tidy-up counts a thing by its name or alias in the reply text, so a thing the story calls by a short word the DM never made an alias of is counted as not named. `namesPattern` matches a whole name with a short ending, so "noodles" does not name "Cup of noodles". A thing named only in the player's messages is not counted.
+- The tidy-up runs inside `updateRoute` before the early returns (no new text, not due), so it works whenever the client asks; it is not a snapshot of a run, so a deleted reply does not undo an archive (the wake rule heals it).
+- `signals` are written only for a chat (the records route with `lib` set writes none). Restoring a resting thing takes it out of `state.tidy.seen`, so it is judged again only after a full pass.
+- The chat panel's tiles read `kinds`, `notes` and `archive` from `GET /world/state`; `records` is still the active count (notes included).
+
 ## Tests that guard it
 - `test/rp-world.test.ts`: tickClocks, clockStep, clockStage, rollFate, diceOutcome, llmRequest, applyLevel.
 - `test/rp-world-rollback.test.ts`: reconcile, firstGone, eventLost, the rollback route.
@@ -115,6 +123,7 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - `test/rp-world-stage3.test.ts`: deck cards.
 - `test/rp-world-ids.test.ts`, `test/rp-registry-bridges.test.ts`: applyReport and applyLevel with the registry.
 - `test/rp-tools.test.ts`: rollDice.
+- `test/rp-world-tidy.test.ts`: kinds and `why`, the sweep, the tidy pass (first pass, judged set, exemptions, wake, switch, Tidy now), the DM naming a resting thing, signals and removed names, the routes. `test/rp-world-tidy-line.test.ts`: the log line. `test/rp-world-panel-render.test.tsx`: the tiles. `test/rp-world-stage2.test.ts`: the list logic (All, Archive, search over text).
 - `test/rp-world-dminput.test.ts`: `fullRecordIds`, `dmInput` with a set, `benchSoon`, and the update route sending the short input.
 - `test/rp-world-cast-stage.test.ts`: two silences, the judge's `mentioned`, the half gap and the medium floor, and the hook the whole way. `test/rp-world-cast-line.test.ts`: the log line.
 - `test/rp-world-cast.test.ts`: record shape, silence by id and by names, the die and the bands, who is due, the note, the whole way through `llmRequest` (sent, came, missed, swipe, Life), the bench route and the Start step, the status route, the player's edits.
