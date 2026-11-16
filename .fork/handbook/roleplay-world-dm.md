@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay 5135fc2 (branch claude/cast-deck, unreleased; sections: Owners, Data, Traps, Tests: the cast deck; tests and typecheck run, the UI not yet checked in a browser); molfar.vertep-roleplay 24564af (branch claude/cast-book, 4.133.0; sections: Owners, Data, Traps, Tests: the book's tidy-up, reasons, kinds, signals and tiles; full suite run, the UI checked in a browser with a mock model, not on a live model); molfar.vertep-roleplay 6aa85a0 (branch claude/cast-stage, unreleased 4.132.2; sections: Owners, Data, Traps, Tests: cast stage and the DM's input; tests run, the card checked in a browser with a mock model, not on a live model); molfar.vertep-roleplay 27e146c (4.131.0) (Owners, Data, Traps, Tests: cast); 1c71ed1 (Owners, Data); e09c2ed (Traps); the rest at 91eec33
+Verified at: molfar.vertep-roleplay 5135fc2 (branch claude/cast-deck, unreleased; sections: Owners, Data, Traps, Tests: the cast deck; tests and typecheck run, the UI checked in a browser with a mock model); molfar.vertep-roleplay 24564af (branch claude/cast-book, 4.133.0; sections: Owners, Data, Traps, Tests: the book's tidy-up, reasons, kinds, signals and tiles; full suite run, the UI checked in a browser with a mock model, not on a live model); molfar.vertep-roleplay 6aa85a0 (branch claude/cast-stage, unreleased 4.132.2; sections: Owners, Data, Traps, Tests: cast stage and the DM's input; tests run, the card checked in a browser with a mock model, not on a live model); molfar.vertep-roleplay 27e146c (4.131.0) (Owners, Data, Traps, Tests: cast); 1c71ed1 (Owners, Data); e09c2ed (Traps); the rest at 91eec33
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
@@ -142,7 +142,7 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - `test/rp-world-cast.test.ts`: record shape, silence by id and by names, the die and the bands, who is due, the note, the whole way through `llmRequest` (sent, came, missed, swipe, Life), the bench route and the Start step, the status route, the player's edits.
 
 ## Not verified
-- The cast deck on a live model: does a small model write usable cards with a real tie, does the firm note bring a new person in, are the numbers (the bench's) right for a deck. The UI of the deck was not yet looked at in a browser when this was written.
+- The cast deck on a live model: does a small model write usable cards with a real tie, does the firm note bring a new person in, are the numbers (the bench's) right for a deck. The UI was walked in a browser with a mock model (dark, Daylight, 390 px) on 2026-11-16.
 - The Dashboard scene sensor (sceneOf, directionOf, sensorCarry): only called.
 - Level rules beyond living and director, and the default profile blocks.
 - writeBook and bindBook; sweepDue; the stagnation factors.
