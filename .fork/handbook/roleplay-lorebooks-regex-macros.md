@@ -1,5 +1,5 @@
 # Lorebooks, regex scripts and macros
-Verified at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; The scan step 8 (how a key is matched, its cost) at 5edf108 (branch claude/wi-scan-speed)
+Verified at: molfar.vertep-roleplay 46495dd (branch claude/npc-gone-428; The scan: world book `mutes`); molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; The scan step 8 (how a key is matched, its cost) at 5edf108 (branch claude/wi-scan-speed)
 
 ## What it does
 Lorebook entries enter the prompt by keys, by constant status, or by a vector match over a threshold. One server function runs the scan, budget and placement. Regex scripts rewrite text on save, on edit, in the prompt, or only for display. Macros are expanded on the server. The browser shows why each entry fired and runs a keyword test through the same scanner.
@@ -39,6 +39,7 @@ Fields the scan reads (book shape in `docs/DATA-FORMATS.md`, "Lorebooks"):
 - Book: `settings` (`scanDepth`, `contextPercent`, `budgetCap`, `minActivations`, `maxRecursion`, `recursiveScan`, `includeNames`, `insertionStrategy`) and `vectorized` (`topK`, `thresholdMode`, `scoreThreshold`).
 
 ## The scan, step by step
+- Before the steps (#428): the chat's own world book (`ownerChatId` = the chat) may list `mutes`, `<book id>#<uid>` of card entries linked to people who left the story; `activateWorldInfo` skips those entries in that chat only (like a disabled one). The card's book is not changed. Written by the World plugin's `writeBook` (`bookMutes`).
 1. Books in scope: those listed in `meta.lorebookIds`, plus `worldBookOf`. `readBoundBooks` reads only these. The app fills `meta.lorebookIds` before each send.
 2. Budget starts at the `wiBudgetChars` value. A book's `contextPercent` can raise it, and its `budgetCap` clamps it.
 3. Scan depth: `cfg.scanDepth`, else the largest book `scanDepth`, else 4. Recursion passes (`maxPasses`): `cfg.recursionDepth`, else the largest `maxRecursion`, else 3.

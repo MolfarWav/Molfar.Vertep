@@ -1,6 +1,6 @@
 # Prompt assembly for a Roleplay reply, and the prompt inspector
 
-Verified at: molfar.vertep-roleplay 27e146c (4.131.0) (the "Cast" part); molfar.vertep-roleplay efead2b (Order, step 6); the rest at 4.127.0 (branch claude/cache-keepalive-112), molfar.vertep 4004846 + cache branch
+Verified at: molfar.vertep-roleplay 46495dd (branch claude/npc-gone-428; the World part "World · wishes" and its ceiling row); molfar.vertep-roleplay 27e146c (4.131.0) (the "Cast" part); molfar.vertep-roleplay efead2b (Order, step 6); the rest at 4.127.0 (branch claude/cache-keepalive-112), molfar.vertep 4004846 + cache branch
 
 ## What it does
 - The engine plugin's `assemble` builds a reply's messages from the preset, card, persona, lorebooks, regex, macros and history. It also returns `sources`, which records where each part came from.
@@ -45,7 +45,7 @@ Verified at: molfar.vertep-roleplay 27e146c (4.131.0) (the "Cast" part); molfar.
 - `llmRequest(ctx, host)` answers only for `ctx.key === "reply"` and returns a patch with `messages` and optionally `promptSources`.
 - The runtime keeps only `LLM_PATCH_FIELDS` (messages, systemPrompt, model and a few more). A sibling needs the `hooks` and `llm` permissions; a crashing hook is skipped.
 - A hook's own labels are kept. Text it added that no label covers gets the plugin's name, kind `plugin`.
-- Users: Litopys (memory, story, recollections, who-knows, hidden plan), Dashboard (relationship, journal, said, fast sensor), World DM (event, "World · here", dice, pace, life, cast), agents ("Agent: <label>"). Tools arrive only when the request sets `wantsTools`, through `siblingTools`.
+- Users: Litopys (memory, story, recollections, who-knows, hidden plan), Dashboard (relationship, journal, said, fast sensor), World DM (event, "World · here", "World · wishes" (#428, the player's story rules), dice, pace, life, cast), agents ("Agent: <label>"). Tools arrive only when the request sets `wantsTools`, through `siblingTools`.
 
 ## Budgets and what gets cut
 - Window: the model's context (`presetMaxCtx`). Reply reserve: the preset's max-output setting, else 1024.
