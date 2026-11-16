@@ -10,7 +10,7 @@ Reply in Ukrainian, code and repo files in English (CLAUDE.md).
 |---|---|
 | 1. default profile | Roleplay 4.130.0 (and 4.130.1: spinner, guide translated) |
 | 2. record shape, entrances, bench ("лавка й поява") | **Roleplay 4.131.0, released 2026-11-16**: PR MolfarWav/Molfar.Vertep-Roleplay#152, merge `27e146c`, branch `claude/cast-bench` (merged, can be deleted). The owner presses Update on Roleplay. No engine release. |
-| 2.5. repair: the DM's short input (v7-7), mention against stage (v7-2) | **built 2026-11-16, not released**: Roleplay branch `claude/cast-stage` (local, `585526d`, `b727cb5`, `590e85a`), tests and typecheck pass, docs and the handbook page updated. Not checked in a browser, on a live model or on a real Dashboard chat. The owner has not run any of the "Open, not checked" items below (answered 2026-11-16: none). Release only on the owner's word (version, "What's new" tip, guide translations, PR). |
+| 2.5. repair: the DM's short input (v7-7), mention against stage (v7-2) | **built 2026-11-16, not released**: Roleplay branch `claude/cast-stage` (local, `585526d`, `b727cb5`, `590e85a`, `6aa85a0`), tests and typecheck pass, docs and the handbook page updated, browser check done with a mock model (`cast-stage-check.mjs` in this folder: dark, Daylight, 390 px). Not checked on a live model or on a real Dashboard chat. The owner has not run any of the "Open, not checked" items below (answered 2026-11-16: none). Release only on the owner's word (version, "What's new" tip, guide translations, PR). |
 | 3. book rework + DM memory step 0 | not started |
 | 4. cast deck | not started |
 | 5. DM tab, Memory view (#425) | not started |
@@ -48,6 +48,8 @@ Issue #424 is still open (steps 3 and 4 remain). A comment with what shipped is 
 - Decisions taken with the owner (2026-11-16): due and the 2d6 modifier use `stage`; a mention ends the entrance for every band (no stricter second try, that stays for a total miss); people in the scene's `present` are always in full; "due soon" = within one `everyN` of the threshold on the stage silence. Added on my own, for the log: `seen` in the log line and `floor` (shown as "raised to medium").
 - Known risk: the judge reads the carrier's snapshot at the next request; if the sensor has not written it yet the name counts and the result is `came`. And a sensor that leaves a speaking character out of `present` makes the cast think they are away.
 - `test/type-scale.test.ts` fails on `origin/main` itself (603 literals, baseline 599). Not from this work; fix it or lift the baseline in its own small change.
+
+- Browser harness notes for the next run: use `getByRole("button", { name: /World DM/ })` for the chat sheet (the label becomes "World DM: last run failed" when the mock cannot answer JSON); `setAppTheme(page, app, "Daylight")` works only from Home (the chat view has no settings button); for a second light shot reinstall is not needed: copy the changed `src` file into `$DATA/apps/roleplay/src`, click Rebuild in the shell and wait about 60 s. Write the carrier reply's Dashboard snapshot by hand between the two turns (the mock sensor returns no scene).
 
 ## Left out of step 2 on purpose (later steps or small follow-ups)
 

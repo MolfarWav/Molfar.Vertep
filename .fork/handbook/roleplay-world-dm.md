@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay 590e85a (branch claude/cast-stage, unreleased 4.132.2; sections: Owners, Data, Traps, Tests: cast stage and the DM's input; read in the code, tests listed and run, not checked on a live model or in a browser); molfar.vertep-roleplay 27e146c (4.131.0) (Owners, Data, Traps, Tests: cast); 1c71ed1 (Owners, Data); e09c2ed (Traps); the rest at 91eec33
+Verified at: molfar.vertep-roleplay 6aa85a0 (branch claude/cast-stage, unreleased 4.132.2; sections: Owners, Data, Traps, Tests: cast stage and the DM's input; tests run, the card checked in a browser with a mock model, not on a live model); molfar.vertep-roleplay 27e146c (4.131.0) (Owners, Data, Traps, Tests: cast); 1c71ed1 (Owners, Data); e09c2ed (Traps); the rest at 91eec33
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
