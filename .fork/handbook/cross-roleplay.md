@@ -281,6 +281,7 @@ Change X, touch Y:
 - Dice bands or tilts: `DICE_BANDS`, `DICE_TILTS`, `diceOutcome`, `src/lib/world.ts`, `dice-log.tsx`.
 - Record kinds or fields: `KINDS`, `cleanEntity`, `applyReport`, `entryOf`, and `docs/COUPLINGS.md`, "World DM and Dashboard shared ids".
 - Anything that must rewind on swipe: `CORE_KEYS`, `undoFrom`, and the coupling in `docs/COUPLINGS.md`, "World DM rollback follows the chat's line".
+- A lever of the DM's memory: `LEARN_LEVERS`, `leverValid`, `leverStricter`, `learnEvidence`, `LEARN_THRESHOLDS`, the strings `world.mem.*` and `world.learn.*` in `src/lib/i18n.ts`, `docs/DATA-FORMATS.md`, the guide page `world-dm`.
 - Deck size: `DECK_MIN`, `DECK_MAX`, `cleanDeck`, `DECK_SYSTEM`.
 
 Traps:
@@ -302,6 +303,8 @@ Traps:
 - The deck's note carries the card's text (up to 1200 characters), so the `world cast` insert ceiling row is the longest card's room when the switch is on (`deckNoteTokens` here and the same rule in the engine plugin's table; `test/rp-insert-ceiling.test.ts`).
 - A card whose tie is empty ("loose") is kept on purpose (small models often name nobody who exists); the draw prefers cards whose tie is in the scene. "Tied to the scene's place" is read as: the place record lists the faction among its `members` or its text names it.
 - The refill is called by the app after a run (`castRefill`), not by the run itself: a route makes one model call per pass. A chat nobody has open does not refill.
+- `state.learned` and `state.signals` are not rewound by a swipe (the player's answers). A rule for all chats reaches a chat in `loadState`, in memory: a chat that is only read keeps it unsaved, which is the same result every time; the first save keeps it. A rule is never loosened by `syncGlobalRules` (it only tightens), and a value the player set by hand after the rule is never touched. `startSettings` may overwrite `cast` from the profile after the rule was applied to a brand-new chat; the next `loadState` applies it again.
+- The cast lever counts deletes of people with `src` `deck` or `bench` (a `link`): a person the DM wrote on its own is not counted. A proposal is asked again only on signals newer than the last answer about that lever.
 - The tidy-up counts a thing by its name or alias in the reply text, so a thing the story calls by a short word the DM never made an alias of is counted as not named. `namesPattern` matches a whole name with a short ending, so "noodles" does not name "Cup of noodles". A thing named only in the player's messages is not counted.
 - The tidy-up runs inside `updateRoute` before the early returns (no new text, not due), so it works whenever the client asks; it is not a snapshot of a run, so a deleted reply does not undo an archive (the wake rule heals it).
 - `signals` are written only for a chat (the records route with `lib` set writes none). Restoring a resting thing takes it out of `state.tidy.seen`, so it is judged again only after a full pass.
