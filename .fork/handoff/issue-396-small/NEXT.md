@@ -4,11 +4,10 @@ Built in Roleplay branch `claude/396-forge-finish` (PR to be opened): item 0 (th
 item 1 (batching with a fallback, run log tokens, the Agents tab's "newest reply" line), the portrait's hand button, the
 reminder switch and the carries chip. Not built, with the reasons and the shape each would take.
 
-## Portrait in group chats
-Needs an owner decision. In a group the prompt is built per speaker, so injection would read `ctx.turn.speakerId` and add that
-member's portrait (nothing in narrator mode, where no one speaks). Proposals need to know WHICH member a block is about: a new
-optional `who` port on `write.growth`, resolved against the members' card names (an unknown name refused). The ready agent and the
-hand button would need a member picker. Decide: does a narrator-mode group show every member's portrait, or none?
+## Portrait in group chats: built (owner: every member, one shared room)
+Done in the same branch: swap = the speaker's portrait, narrator and append = every member's under their names with one shared room,
+`who` input on `write.growth`, the hand button from a group chat. Left: the ready agent Character growth is still one-character only
+(it would need the member's name in its answer), and the carries strip shows no portrait chip in a group chat.
 
 ## Item 3: search by meaning for an agent
 Shape: a new Input source `litopysMatch` (passages and facts of the chat's record that fit the last messages), no new card type.

@@ -17,7 +17,7 @@ Verified at: molfar.vertep-roleplay 059e5ec (Owners, Data, Traps: offer, batchin
 - `plugins/agents/plugin.js` `runBefore`: the run before a reply, called from the request hook.
 - `plugins/agents/plugin.js` `stepRun`: asks the models and scripts in rounds and collects the answers. Ask cards with the same `batchKey` and model go as one `bt_<n>` request (`batchPrompt`, `splitBatchAnswer`); a reply that does not split falls back to single requests.
 - `plugins/agents/plugin.js` `inspectRoute`: `POST /agents/inspect`, what files would be, writes nothing (the new-chat offer).
-- `plugins/agents/plugin.js` `growthUpdateRoute`, `growthRemind`: the portrait's hand button (`POST /agents/growth/update`) and the opt-in reminder at the end of the prompt.
+- `plugins/agents/plugin.js` `growthUpdateRoute`, `growthPart`, `groupInfo`: the portrait's hand button (`POST /agents/growth/update`) and what a solo or group chat carries (a group shares one room).
 - `src/components/chat/agent-offer.tsx`, `src/lib/agent-offer.ts`, `agent-offer-install.ts`: the "Agents (optional)" fold in the new-chat step; the rules, and the only writer (install with grant on Start).
 - `plugins/agents/plugin.js` `commitRun`: writes state, Dashboard changes, run log and hints.
 - `plugins/agents/plugin.js` `applyDashWrites`: applies Dashboard writes and logs them for undo.
