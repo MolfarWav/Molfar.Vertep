@@ -35,6 +35,7 @@ Change X, touch Y:
 - `patternMatches` in `src/apps/reads.ts`: also `seg` and `matches` in `peerSvc` in `src/plugins/sandbox-worker.mjs`.
 - `parseReads` or the `reads` manifest shape: also `validateAppManifest` in `src/apps/manager.ts`, `peerMounts`, and `test/app-reads.test.ts`.
 - `userPaths` in `src/paths.ts`: also `readGrants` and `writeGrants` in `src/apps/reads.ts`.
+- `GET /v1/apps/:id/build` answers `built` (dist/index.html exists); `src/builder/browser/host.ts` puts it on an error status so the shell and the standalone page can say "nothing to show yet" instead of "last good build" when no build ever finished (#337).
 - The delete and rename routes in `buildApp`: keep calling `forgetGrants`, `forgetPeer` and `moveGrants`.
 
 Traps:
@@ -80,9 +81,10 @@ Change X, touch Y:
 - `writeFileAtomic`: also used by `src/plugins/store.ts`; `test/atomic-write.test.ts`.
 
 Traps:
+- A full pool queues a call on the least loaded worker, and the worker's message handler is async: the two calls take turns on its one thread in small slices, and each one's clock runs for both. Measured with one worker: two calls of 1.5 s of work each both took 5.6 s. Calls of one app with `fs` cannot meet this way during a write (the gate gives a write the data folder alone), but reads of one app can, and so can calls of different apps or without `fs`.
 - Clocks apply per pass. A route with three model rounds makes three worker calls, and `runPluginRoute` sets no overall limit.
 - Store writes from a failed pass still apply: `applyStoreWrites` runs before the `!r.ok` check. Files written before a crash stay on disk, and a 500 queues no commit.
-- `insertCeiling` checks for a `hooks` grant. Imported plugins get no `hooks` from the approve defaults or `declaredPermissions`, so the hook silently does not run. Confirmed on `main` at 8310b23: a test in `test/plugins.test.ts` (`it.failing`, branch `claude/handbook-findings`, d8ef627) pins it. The Roleplay repository's manifests say `origin: "local"`, but an installed or updated app has every bundled plugin rewritten to `imported`, so installed Roleplay plugins are imported too (whether their `insertCeiling` runs then depends on the official install's grants: not checked, #422). The `llmRequest` loop gates on a declared `hooks` plus a granted `llm`; the proposed fix is the same gate here. Not changed: security code, waiting for review.
+- `insertCeiling` checks for a `hooks` grant. Imported plugins get no `hooks` from the approve defaults or `declaredPermissions`, so the hook silently does not run. Confirmed on `main` at 8310b23: a test in `test/plugins.test.ts` (`it.failing`, branch `claude/handbook-findings`, d8ef627) pins it. The Roleplay repository's manifests say `origin: "local"`, but installing or updating an app from its repository rewrites every bundled plugin to `imported` (`src/apps/store.ts`, `src/server/app.ts`), so installed Roleplay plugins are imported too; whether their `insertCeiling` runs depends on the grants an official install gives ("granted roleplay's bundled plugins the permissions they declare" in the log): not checked. The `llmRequest` loop gates on a declared `hooks` plus a granted `llm`; the proposed fix is the same gate here. Not changed: security code, waiting for review.
 - A manifest without `origin` is trusted: `hasCapAny` asks for grants only when origin is `imported`.
 - `PluginPermission` lists `fs:${string}`, but `hasCapAny` matches only the exact name `fs`.
 

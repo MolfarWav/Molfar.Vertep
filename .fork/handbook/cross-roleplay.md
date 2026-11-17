@@ -62,6 +62,8 @@ Traps:
 - `summary` passes the checker as an Input source, but `sourceValue` returns nothing for it. `preGenInjections` and `parallelResults` are refused by `UNSUPPORTED_NEEDS`.
 - `docs/DATA-FORMATS.md` says the `before` and `parallel` triggers are not yet run. The code runs them (`pickAgents`, `runBefore`), so that note looks stale.
 - A regenerated reply restores state from before, so a rerun does not count twice.
+- The new-chat step is skipped for one preset, no options and no sets; `startChatAndOpen` opens it once (`rp.agentOfferShown` in the browser) so the offer is seen. A chat started with the offer has its own agent list (`own`), not the set.
+- A batch answer is split by marker lines; a model that ignores them costs one extra pass, never a lost run.
 - `.skills/agent-craft/SKILL.md` names paths under `apps/roleplay/`, which do not match this repo.
 
 

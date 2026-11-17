@@ -1,5 +1,5 @@
 # Forge agents: custom agents built on the Canvas and run during play
-Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dashboard); rest 91eec33
+Verified at: molfar.vertep-roleplay 059e5ec (Owners, Data, Traps: offer, batching, inspect, portrait update); Card types: Input and Write to Dashboard c603c31; rest 91eec33
 
 ## What it does
 - An agent is one Canvas file of kind `agent`, saved as `data/agents/<id>.vertep-agent.json`. Its cards are wired together on the Agents board. The file is data, not code.
@@ -15,7 +15,10 @@ Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dash
 - `plugins/agents/plugin.js` `blocker`: names why an installed agent may not run (errors, unsupported needs, missing permission, call cap).
 - `plugins/agents/plugin.js` `runRoute`: `POST /agents/run`, the run after a reply, beside it, or by hand.
 - `plugins/agents/plugin.js` `runBefore`: the run before a reply, called from the request hook.
-- `plugins/agents/plugin.js` `stepRun`: asks the models and scripts in rounds and collects the answers.
+- `plugins/agents/plugin.js` `stepRun`: asks the models and scripts in rounds and collects the answers. Ask cards with the same `batchKey` and model go as one `bt_<n>` request (`batchPrompt`, `splitBatchAnswer`); a reply that does not split falls back to single requests.
+- `plugins/agents/plugin.js` `inspectRoute`: `POST /agents/inspect`, what files would be, writes nothing (the new-chat offer).
+- `plugins/agents/plugin.js` `growthUpdateRoute`, `growthRemind`: the portrait's hand button (`POST /agents/growth/update`) and the opt-in reminder at the end of the prompt.
+- `src/components/chat/agent-offer.tsx`, `src/lib/agent-offer.ts`, `agent-offer-install.ts`: the "Agents (optional)" fold in the new-chat step; the rules, and the only writer (install with grant on Start).
 - `plugins/agents/plugin.js` `commitRun`: writes state, Dashboard changes, run log and hints.
 - `plugins/agents/plugin.js` `applyDashWrites`: applies Dashboard writes and logs them for undo.
 - `plugins/agents/plugin.js` `sourceValue`: the Input card's readers (history, card, persona, Litopys facts, lorebook).
@@ -57,7 +60,7 @@ Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dash
 - `data/agents/grants/<id>.json`: `{ v, needs, asked }`, permissions the user confirmed.
 - `data/agents/config.json`: model choices and `byAgent` (`maxCalls`, `everyN`).
 - `data/agents/state/<chatId>/<id>.json`: `{ v, own, last, memo, n, before }`.
-- `data/agents/runs/<chatId>.json`: `{ v, runs }`, newest 100.
+- `data/agents/runs/<chatId>.json`: `{ v, runs }`, newest 100; a run may carry `tokens` and `batched`.
 - `data/agents/inserts/<chatId>.json`: `{ v, items }`, hints for the next reply.
 - `dashboard/agent/<chatId>.json`: ledger of Dashboard writes, for undo.
 
@@ -89,10 +92,12 @@ Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dash
 - `summary` passes the checker as an Input source, but `sourceValue` returns nothing for it. `preGenInjections` and `parallelResults` are refused by `UNSUPPORTED_NEEDS`.
 - `docs/DATA-FORMATS.md` says the `before` and `parallel` triggers are not yet run. The code runs them (`pickAgents`, `runBefore`), so that note looks stale.
 - A regenerated reply restores state from before, so a rerun does not count twice.
+- The new-chat step is skipped for one preset, no options and no sets; `startChatAndOpen` opens it once (`rp.agentOfferShown` in the browser) so the offer is seen. A chat started with the offer has its own agent list (`own`), not the set.
+- A batch answer is split by marker lines; a model that ignores them costs one extra pass, never a lost run.
 - `.skills/agent-craft/SKILL.md` names paths under `apps/roleplay/`, which do not match this repo.
 
 ## Tests that guard it
-All under `test/`: `rp-agents-plugin.test.ts` (generated block, routes), `rp-agent-run.test.ts`, `rp-agent-check-sandbox.test.ts`, `rp-agent-dry.test.ts`, `rp-agents-dry.test.ts`, `rp-agent-board.test.ts`, `rp-agent-script.test.ts`, `rp-agent-permissions.test.ts`, `rp-dash-agent-writes.test.ts`, `rp-agent-if-memory.test.ts`, `rp-forge.test.ts`, `rp-agent-craft-skill.test.ts`.
+All under `test/`: `rp-agents-plugin.test.ts` (generated block, routes), `rp-agent-run.test.ts`, `rp-agent-check-sandbox.test.ts`, `rp-agent-dry.test.ts`, `rp-agents-dry.test.ts`, `rp-agent-board.test.ts`, `rp-agent-script.test.ts`, `rp-agent-permissions.test.ts`, `rp-dash-agent-writes.test.ts`, `rp-agent-if-memory.test.ts`, `rp-forge.test.ts`, `rp-agent-craft-skill.test.ts`, `rp-agent-offer.test.ts`, `rp-agent-batch.test.ts`, `rp-agent-growth.test.ts`.
 
 ## Not verified
 - The app code that calls `POST /agents/run` after a reply, and the chat UI (`agents-panel.tsx`, `agent-block.tsx`).
