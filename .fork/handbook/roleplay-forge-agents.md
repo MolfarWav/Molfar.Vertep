@@ -1,5 +1,5 @@
 # Forge agents: custom agents built on the Canvas and run during play
-Verified at: molfar.vertep-roleplay 059e5ec (Owners, Data, Traps: offer, batching, inspect, portrait update); Card types: Input and Write to Dashboard c603c31; rest 91eec33
+Verified at: molfar.vertep-roleplay 1577223 (Owners, Data, Traps: offer, batching, inspect, portrait update); Card types: Input and Write to Dashboard c603c31; rest 91eec33
 
 ## What it does
 - An agent is one Canvas file of kind `agent`, saved as `data/agents/<id>.vertep-agent.json`. Its cards are wired together on the Agents board. The file is data, not code.
