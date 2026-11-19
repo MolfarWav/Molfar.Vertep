@@ -150,7 +150,10 @@ export interface CatalogSearch {
   kind?: string;
   /** Every tag listed must be on the entry. */
   tags?: string[];
-  culture?: string;
+  /** At least one of these tags must be on the entry (a style that may be several genres). */
+  anyTags?: string[];
+  /** One culture, or a list of which the entry has one. */
+  culture?: string | string[];
   part?: string;
   gender?: string;
   pack?: string;
@@ -167,11 +170,12 @@ export function searchEntries(entries: CatalogEntry[], s: CatalogSearch, rand: (
   const words = (s.q ?? "").toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6);
   let list = entries.filter((e) => {
     if (s.kind && e.kind !== s.kind) return false;
-    if (s.culture && e.culture !== s.culture) return false;
+    if (s.culture?.length && !(Array.isArray(s.culture) ? s.culture : [s.culture]).includes(e.culture ?? "")) return false;
     if (s.part && e.part !== s.part) return false;
     if (s.gender && e.gender !== s.gender) return false;
     if (s.pack && e.pack !== s.pack) return false;
     if (s.tags?.length && !s.tags.every((t) => e.tags.includes(t))) return false;
+    if (s.anyTags?.length && !s.anyTags.some((t) => e.tags.includes(t))) return false;
     if (words.length) {
       const hay = [e.name, e.desc, ...Object.values(e.aliases).flat()].join(" ").toLowerCase();
       if (!words.every((w) => hay.includes(w))) return false;

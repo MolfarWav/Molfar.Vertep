@@ -281,6 +281,7 @@ Change X, touch Y:
 - Dice bands or tilts: `DICE_BANDS`, `DICE_TILTS`, `diceOutcome`, `src/lib/world.ts`, `dice-log.tsx`.
 - Record kinds or fields: `KINDS`, `cleanEntity`, `applyReport`, `entryOf`, and `docs/COUPLINGS.md`, "World DM and Dashboard shared ids".
 - Anything that must rewind on swipe: `CORE_KEYS`, `undoFrom`, and the coupling in `docs/COUPLINGS.md`, "World DM rollback follows the chat's line".
+- The names pool or the catalog queries: `src/lib/names-pool.ts`, `test/rp-names-pool.test.ts`, `test/rp-world-names.test.ts`, `docs/DATA-FORMATS.md` ("Names from the shared catalog"), `docs/COUPLINGS.md`, and the engine's `engine-catalog.md`.
 - Deck size: `DECK_MIN`, `DECK_MAX`, `cleanDeck`, `DECK_SYSTEM`.
 
 Traps:

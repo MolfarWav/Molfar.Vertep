@@ -2103,7 +2103,8 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const found = searchEntries(s.entries, {
       kind: q.kind,
       tags: q.tags ? q.tags.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 8) : undefined,
-      culture: q.culture,
+      culture: q.culture ? q.culture.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 8) : undefined,
+      anyTags: q.anyTags ? q.anyTags.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 8) : undefined,
       part: q.part,
       gender: q.gender,
       pack: q.pack,

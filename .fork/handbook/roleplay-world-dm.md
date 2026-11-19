@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec33
+Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec33; the names-from-the-catalog lines (#373, step 3) on Roleplay branch claude/social-memory-m4-catalog-373
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
@@ -44,8 +44,13 @@ Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec
 - `src/components/world/dice-log.tsx`, `DiceLog`: shows the roll log.
 - `src/components/world/world-settings.tsx`, `WorldSettingsDialog`: level, cadence and other settings.
 
+- `plugins/world/plugin.js`, `cleanPool`, `poolWithout`, `poolNote`: the names pool a run or a Start may carry (#373): cleaned, minus the names in use, as one prompt block.
+- `src/lib/names-pool.ts`, `fetchNamePool`, `loadCatalogInfo`, `poolFor`: the app reads the engine's catalog routes and builds the pool; every failure gives no pool.
+- `src/components/world/world-names.tsx`, `NamesCard`: the sheet's card (switch, style and culture chips, the unavailable state).
+
 ## Data
 - `world/state/<chatId>.json`: settings, cursors (lastKey, levelKey), `entities` (ids like `n3`), `fronts` (ids `f1`), `event`, `deck` (`[{ id: "e1", text }]`), `carry`, `clockReplies`, `log`, `usage`.
+- Settings (#373): `names`, `namesGenres`, `namesCultures` in `settings`; a Start keeps `draft.pool`. No record points at a catalog entry.
 - `world/snaps/<chatId>.json`: up to 8 snapshots `{ upTo, at, head, core }`.
 - `world/dice/<chatId>.json`: the newest 60 rolls.
 - `lorebooks/world-<chatId>.json`: the world book; one entry per record, memo `world:<id>`.
@@ -75,11 +80,17 @@ Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec
 - "Dice": a 2d6 FATE line, when the gate passes. "Pace" and "Life" are the other two rolls.
 The DM's system prompt is never sent with the reply. Records reach the reply through the world book.
 
+## Names from the catalog (#373, step 3)
+- The client (`runWorld`, `beginWorldStart` in `src/lib/world.ts`) calls `poolFor(view.settings)`: nothing when the chat's `names` switch is off, else six random searches of the engine's catalog (people by culture, places, groups and things by style), 4 s each, failing soft. The pool rides `POST /world/update` and a Start's `begin` as `pool`.
+- `updateRoute` builds `poolText` once (`poolNote(poolWithout(cleanPool(b.pool), entities, cards and user)))` and appends it to the DM's user message; the three `__llmPending` stashes carry it as `stash.pool`, so a retry after a rate limit or a thinking-only answer keeps the same block. `startRoute` stores the cleaned pool in `draft.pool` only when `names` is on and adds the block to the records and cast steps.
+- It is a nudge: code never checks the answer, and no record gets a pointer to the entry.
+
 ## If you change X, also touch Y
 - Clock sizes or front fields: `cleanFront`, `applyLevel`, `clockStage`, `docs/DATA-FORMATS.md`.
 - Dice bands or tilts: `DICE_BANDS`, `DICE_TILTS`, `diceOutcome`, `src/lib/world.ts`, `dice-log.tsx`.
 - Record kinds or fields: `KINDS`, `cleanEntity`, `applyReport`, `entryOf`, and `docs/COUPLINGS.md`, "World DM and Dashboard shared ids".
 - Anything that must rewind on swipe: `CORE_KEYS`, `undoFrom`, and the coupling in `docs/COUPLINGS.md`, "World DM rollback follows the chat's line".
+- The names pool or the catalog queries: `src/lib/names-pool.ts`, `test/rp-names-pool.test.ts`, `test/rp-world-names.test.ts`, `docs/DATA-FORMATS.md` ("Names from the shared catalog"), `docs/COUPLINGS.md`, and the engine's `engine-catalog.md`.
 - Deck size: `DECK_MIN`, `DECK_MAX`, `cleanDeck`, `DECK_SYSTEM`.
 
 ## Traps
@@ -98,6 +109,7 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - `test/rp-world-stage3.test.ts`: deck cards.
 - `test/rp-world-ids.test.ts`, `test/rp-registry-bridges.test.ts`: applyReport and applyLevel with the registry.
 - `test/rp-tools.test.ts`: rollDice.
+- `test/rp-world-names.test.ts`, `test/rp-names-pool.test.ts`: the names pool (settings, cleaning, the block in a run, the retry, a Start, the app's queries).
 
 ## Not verified
 - The Dashboard scene sensor (sceneOf, directionOf, sensorCarry): only called.

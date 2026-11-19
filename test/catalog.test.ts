@@ -82,6 +82,9 @@ describe("search and look-up", () => {
     expect(searchEntries(entries, { tags: ["dark_fantasy", "medieval"] }).total).toBe(1);
     expect(searchEntries(entries, { tags: ["dark_fantasy", "fantasy"] }).total).toBe(0);
     expect(searchEntries(entries, { kind: "name", part: "given", gender: "f", culture: "ukrainian" }).items.map((e) => e.name)).toEqual(["Олена"]);
+    expect(searchEntries(entries, { anyTags: ["fantasy", "medieval"] }).items.map((e) => e.name)).toEqual(["Ash Gate", "Gate Key"]);
+    expect(searchEntries(entries, { kind: "name", culture: ["polish", "ukrainian"], part: "family" }).items.map((e) => e.name)).toEqual(["Коваленко"]);
+    expect(searchEntries(entries, { culture: ["polish"] }).total).toBe(0);
     expect(searchEntries(entries, { q: "ash gate" }).total).toBe(2);
     expect(searchEntries(entries, { q: "попелясті" }).total).toBe(1);
     expect(searchEntries(entries, { pack: "molfar/other" }).total).toBe(0);
@@ -221,6 +224,8 @@ describe("the routes", () => {
     expect(r.body.items[0]).toMatchObject({ ref: "molfar/general:olena", name: "Олена", author: "Molfar", license: "CC0-1.0" });
     expect((await get(app, "/v1/catalog/search?tags=dark_fantasy,medieval")).body.items[0].name).toBe("Ash Gate");
     expect((await get(app, "/v1/catalog/search?limit=abc")).status).toBe(200);
+    expect((await get(app, "/v1/catalog/search?kind=name&culture=polish,ukrainian&part=given&gender=f")).body.total).toBe(1);
+    expect((await get(app, "/v1/catalog/search?anyTags=fantasy,dark_fantasy&kind=place")).body.total).toBe(1);
   });
 
   it("looks a name up and fetches one entry by its ref", async () => {

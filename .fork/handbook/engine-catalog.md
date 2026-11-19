@@ -14,6 +14,8 @@ Verified at: molfar.vertep branch claude/social-memory-m4-catalog-373 (step 2 of
 - `src/server/app.ts` `buildApp`: the routes `GET /v1/catalog`, `/v1/catalog/search`, `/v1/catalog/lookup`, `/v1/catalog/entry`, and `catalogOf` (one reader per base URL).
 - `src/server/app.ts` `appBridgeAllows` and `client/public/app-bridge-host.js` `allowedRequest`: both list GET `/v1/catalog` and `/v1/catalog/*` for apps.
 
+- Consumers: Roleplay's World DM (the `names-pool` module of its client) searches with `kind`, `part`, `gender`, `culture` (a list), `anyTags`, `random=1`, `limit` and reads `items[].name`, and `/v1/catalog` for the vocabulary and counts (#373, step 3).
+
 ## Data
 - Remote, in the Store repo: `catalog/index.json` (packs with `file`, `hash`, licence, counts; written by the repo's script), `catalog/tags.json` (the vocabulary), `catalog/packs/<author>/<pack>.json`. An entry: `id`, `kind` (name, place, organization, item), `name`, `desc`, `aliases` {lang: [names]}, `tags` (genres), and for a name `culture`, `part` (given, family), `gender` (f, m, n). Its reference is `<author>/<pack>:<id>`.
 - Local cache: `<data dir>/catalog/index.json` ({at, index, tags}) and `catalog/packs/<author>__<pack>.json` ({hash, pack}); derived data, so it is safe to delete.
@@ -26,7 +28,7 @@ Never. Look-up is by words; embeddings are a possible later step.
 2. The first run loads the disk copy as the starting point, so an offline start still has data.
 3. `index.json` is fetched (at most 256 KB) and cleaned by `parseIndex`: a row counts only when `file` has the exact shape `packs/<author>/<pack>.json`, its `id` equals that path, the hash is 16 hex characters and the licence is CC0-1.0 or CC-BY-4.0. At most 200 packs.
 4. For each row whose hash differs from the cached one the pack file is fetched (at most 400 KB); its SHA-256 prefix must equal the index hash and its `id` the path, else it is skipped and named in `error`. A pack no longer in the index is dropped.
-5. `GET /v1/catalog/search` takes `kind`, `tags` (comma list, all must match), `culture`, `part`, `gender`, `pack`, `q` (words in name, alias or description), `random=1`, `limit` (1 to 100, default 20), `offset`. Every entry in an answer carries `author` and `license` of its pack, so a CC-BY credit can be shown.
+5. `GET /v1/catalog/search` takes `kind`, `tags` (comma list, all must match), `culture` (one or a comma list), `part`, `gender`, `pack`, `anyTags` (at least one of a comma list; `tags` needs all), `q` (words in name, alias or description), `random=1`, `limit` (1 to 100, default 20), `offset`. Every entry in an answer carries `author` and `license` of its pack, so a CC-BY credit can be shown.
 6. `GET /v1/catalog/lookup?name=&kind=` answers up to 10 `{match: "name" | "alias" | "words", entry}`: the exact name (letters only, any case), an alias, then entries that share all their words with the asked name (one contained in the other, at least two words).
 7. `GET /v1/catalog/entry?ref=author/pack:id` answers one entry or 404; a ref of another shape is 400.
 
