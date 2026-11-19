@@ -1,6 +1,6 @@
 # Personas, the character Profile and Soul, and the small plugins (profile, polish, tools)
 
-Verified at: molfar.vertep-roleplay 607147f
+Verified at: molfar.vertep-roleplay 607147f (the Personas section and the Lorebooks tab at branch claude/personas-import-463, 4ac7ac0)
 
 ## What it does
 - A persona is the user's side of a chat, stored as `data/personas/<id>.json`; its description reaches the prompt in a knowledge frame.
@@ -29,7 +29,9 @@ Verified at: molfar.vertep-roleplay 607147f
 - `plugins/engine/plugin.js` `toolX`: copies a reply's tool trace onto the message. `src/lib/types.ts` `tools?:` holds it.
 
 ## Personas
-- The file is `personas/<id>.json`. Fields: `name` (it stands for `{{user}}`), `description`, `title`, `pronouns`, `avatar`, `lorebookIds`, `binding`, `boundCharacterIds`, `autoLock`, `folderId`, `createdAt`, and an optional `profile`.
+- The file is `personas/<id>.json`. Fields: `name` (it stands for `{{user}}`), `description`, `title`, `pronouns`, `avatar`, `lorebookIds`, `binding`, `boundCharacterIds`, `autoLock`, `folderId`, `createdAt`, and an optional `profile`, `ownLorebookId` and (in an exported file only) `lorebook` (#463).
+- The Lorebooks tab is the shared `BookLinks` list (`src/components/lore/book-links.tsx`, also the card's tab): the books the persona carries, not the whole library; an id the library lacks shows as a "Not in your library" row to unlink. `ownLorebookId` marks the one linked book that is the persona's own: it is also in `lorebookIds`, so the prompt engine is unchanged. `src/lib/persona-book.ts`: `bookSetOf` / `bookPatchOf` (tab to file), `personaForExport` (Export, Backup, the page's Export: the own book inline as `lorebook`), `adoptInlineBook` + `storeInlineBook` (import: a new id, a free name `Name (2)`, linked first, the old own id dropped). Restoring a backup over the same persona refills its own book instead of making a second one, unless a card or another persona carries it (`addRecords` in `personas-view.tsx`).
+- Import (`importFiles`, `parsePersonaFile` in `src/lib/persona-new.ts`): an array is a backup and keeps its records whole; one object with a `name` and a `description` is one persona from another app and goes through `foreignPersona` (only name, description, title, pronouns, tags (also a JSON text), `lorebookIds`, a hex `dialogueColor`, `profile`); an object whose values are all strings is a `{ name: description }` map; any other object is refused. A persona that names books the library lacks is imported with a warning naming them. The New persona dialog's From a file uses the same reader.
 - Made in three ways. Blank: the default values in the new-persona dialog. Interview: the idea or picture goes to `/profile/persona-ideas`, the chosen draft is saved with `addPersona`, then `structurePersona` files a structure draft and `fillPersona` (merge) adds the sections `fieldsFor` picks. Questionnaire: the numbered form in `PersonaQuestionnaire`.
 - Binding modes: `default` (picked by hand), `character` ("Lock to character", for the characters ticked in `boundCharacterIds`), and `chat` (saved, but it does not change which persona a new chat starts with).
 - `autoLock`: when two personas are bound to one character, the auto-locked one wins. `newChat` takes the auto-locked bound persona, else the first bound one, else the default.
