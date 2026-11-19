@@ -79,6 +79,38 @@ Notes: the object must not contain magenta or pink (a rose-coloured roof or a pi
 | room | a cosy room interior cut-away: a bed, a table with a candle and a window |
 | place | a round brass map pin with a small white flag |
 
+## Map pictures (the board behind the icons)
+
+A second, separate set: a picture that goes under the places (gear in the map header, "Upload a map picture"). It is an ordinary
+opaque picture, no magenta. The icons stand on top of it and the owner drags each place to its spot, so the picture must be a calm,
+empty ground with the roads and the land, not a finished scene.
+
+Rules that matter for the board: landscape 16:9 (the board is 16:10, the picture is fitted with its aspect kept); mid-tone and low
+contrast, so a round icon and its name stay readable on top; no text, no labels, no compass, no scale bar, no frame, no pins, no
+icons, no buildings drawn in detail (at most flat roof footprints or empty plots where an icon can stand). Light from the top left,
+same hand-painted fantasy look as the icons. Attach one finished icon as a style reference ("same painting style as the attached icon").
+
+### The map prompt (replace SUBJECT)
+
+```
+A top-down hand-painted fantasy map background in the style of an old illustrated game map: soft dark ink outlines, warm muted colours, gentle light from the top left, visible painted texture. Seen straight from above like a plan. It is only the ground: land, water, roads and open empty spaces where buildings could stand later, because small icons will be placed on top of it. Calm, low-contrast, mid-tone colours, no strong dark or white areas. No text, no letters, no labels, no compass, no scale bar, no border, no frame, no pins, no markers, no icons, no characters. Wide landscape 16:9.
+Subject: SUBJECT
+```
+
+| file | subject |
+|---|---|
+| map-city.jpg | a medieval walled town plan: a ring wall with a gate on each side, a main street crossing in the middle to a central open square, narrow side streets in a loose grid, a river along one edge with a stone bridge, empty cobbled blocks and small green gardens between the streets where houses can stand |
+| map-city-port.jpg | a harbour town plan: a curved quay and wooden piers on the lower side, a market square behind the harbour, streets climbing in a fan to a hill with an empty plateau on top, a stream through the middle with one bridge, empty plots between the streets |
+| map-village.jpg | a small village plan: one dirt road through the middle with a green common and a well in the centre, footpaths branching to empty plots, fenced gardens and fields around, a pond and a few round trees at the edge |
+| map-region.jpg | a fantasy region: a forest in the north-west, a mountain range in the north, rolling hills and meadows in the middle, a river from the mountains to a lake and on to a sea coast in the south-east, a winding dirt road between clearings, plenty of open ground |
+| map-wilds.jpg | wild country with no towns: dense forest with a few clearings, a stream with a ford, a rocky ridge, marsh patches and one old dirt track, a small lake, mostly open ground |
+| map-coast.jpg | a coast and islands: a curved shoreline, a bay, three small islands, shallow turquoise water near the land and deep blue farther out, a sandy beach strip, cliffs on one side, no ships |
+| map-underground.jpg | an underground cavern system seen from above: winding tunnels and wider chambers cut into dark grey-brown rock, a small underground stream, empty floor space in the chambers, soft warm torch-lit tone, readable, not black |
+| map-interior.jpg | the floor plan of a large house or inn: wooden plank floors, rooms and a corridor and a hall divided by thin walls, a staircase, empty rooms with no furniture, seen straight from above |
+
+Two or three runs of each is normal: pick the one with the most open ground. If the model draws houses anyway, add: "leave all
+building plots empty, no houses, no roofs" and run again.
+
 ## After the pictures exist (my side)
 - `scripts/place-icons.ts`: keys out the magenta (distance from the corner colour with a soft edge, then removes the magenta tint from the
   rim), crops to the content, pads to a square and writes WebP 128 and 256 px with alpha to `builtin-assets/place-icons/<id>.webp`.
