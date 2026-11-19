@@ -1,5 +1,5 @@
 # Dashboard: the sensor pass, relations, the character journal, the clock
-Verified at: molfar.vertep-roleplay 92638da (parts); rest 1f0a99f; event table and stage at c603c31
+Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at branch claude/dashboard-demand-461 (2f9a08e); rest 1f0a99f; event table and stage at c603c31
 
 ## What it does
 - After a reply, a sensor model call reads the new messages and returns one JSON report: present people, clock, scene, events, each character's mood, condition, outfit, holding and goal, what each learned, what was said or promised, threads (quests), journal lines and edges between people.
@@ -27,6 +27,7 @@ Verified at: molfar.vertep-roleplay 92638da (parts); rest 1f0a99f; event table a
 - `plugins/relations/plugin.js` `applyNotebook`: what each character saw, heard or guessed.
 - `plugins/relations/plugin.js` `applySaid`: vows, promises, threats and similar lines, limited per turn.
 - `plugins/relations/plugin.js` `applyThreads`: quests (main, side, everyday) and their steps.
+- Threads rules of the sensor prompt: `QUEST_RULES_3` (the current default's Threads block, #461) over `QUEST_RULES_2` (#400) and `QUEST_RULES`; every older default is a `SENSOR_PROMPT_<n>` rebuilt from the newer one by one `.replace` and listed in `PAST_DEFAULT_PROMPTS.sensor` (newest last), so a saved copy of a past default follows the new default. #461: a demand on the user's character (an answer, a confession, a proof) closes as dropped once answered, refused or turned aside, is never written as the character's goal, and a question nobody put is never opened. Not measured on the turn director bench; the report that the demand starts on the first reply is not explained by this. A new past default shifts every `.at(-N)` on `PAST_DEFAULT_PROMPTS.sensor` in the tests by one (`rp-dashboard`, `rp-dash-journal`, `rp-dash-said`, `rp-prompts`, `rp-quests`, `rp-relations-contact`).
 - `plugins/relations/plugin.js` `applyJournal`: stores up to `JOURNAL_PER_TURN` (2) journal lines per turn.
 - `plugins/relations/plugin.js` `keepJournalLines`: keeps the newest `JOURNAL_KEEP` (4) sensor lines per character and person.
 - `plugins/relations/plugin.js` `journalPreviousLines`: the people lines shown to the sensor, never a thought.

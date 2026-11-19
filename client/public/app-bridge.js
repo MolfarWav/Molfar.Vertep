@@ -647,11 +647,18 @@
       return all;
     });
   }
+  var SVG_PICTURE = { image: 1, feimage: 1 };
   function rewriteElement(el) {
     if (!el || el.nodeType !== 1) return;
     if (el.hasAttribute("src") && isAssetUrl(el.getAttribute("src"))) rewriteValue(el, "src", el.getAttribute("src"));
     if (el.hasAttribute("poster") && isAssetUrl(el.getAttribute("poster"))) rewriteValue(el, "poster", el.getAttribute("poster"));
     if (el.hasAttribute("srcset")) rewriteSrcset(el, el.getAttribute("srcset"));
+    // an SVG picture names its file in href (or the older xlink:href), not src (#460)
+    if (SVG_PICTURE[String(el.localName || el.tagName).toLowerCase()]) {
+      ["href", "xlink:href"].forEach(function (a) {
+        if (el.hasAttribute(a) && isAssetUrl(el.getAttribute(a))) rewriteValue(el, a, el.getAttribute(a));
+      });
+    }
     if (el.hasAttribute("style") && el.getAttribute("style").indexOf("/v1/") >= 0) rewriteCss(el.getAttribute("style"));
     if (el.tagName === "STYLE" && el.textContent && el.textContent.indexOf("/v1/") >= 0) rewriteCss(el.textContent);
   }
@@ -659,7 +666,7 @@
     if (!root || root.nodeType !== 1) return;
     rewriteElement(root);
     if (root.querySelectorAll) {
-      root.querySelectorAll("img,source,video,audio,[style],[poster],style").forEach(rewriteElement);
+      root.querySelectorAll("img,source,video,audio,[style],[poster],style,image,feImage").forEach(rewriteElement);
     }
   }
   try {
@@ -676,7 +683,7 @@
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ["src", "srcset", "style", "poster"],
+      attributeFilter: ["src", "srcset", "style", "poster", "href", "xlink:href"],
     });
   } catch { /* no observer */ }
 

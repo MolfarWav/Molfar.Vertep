@@ -1,5 +1,5 @@
 # Social: the city (places, homes, who is where)
-Verified at: molfar.vertep-social 8d6971c (main, Social 0.18.1)
+Verified at: molfar.vertep-social 8d6971c (main, Social 0.18.1); the rearranging lines at branch claude/social-458-remains (bb0dcd3)
 
 ## What it does
 A town the characters live in. By rules, with no model call, it gives every profile a flat and works out, once per 3-hour band, where each character is. The user can look, listen, walk in and make places and districts of their own (issue 445, C1 to C3), and other plugins read where a character is (C4). #452 adds a wide picture to places and districts; #453 adds workplaces, shared flats, rooms that share the day's caps and stock names in the page's language. C5 draws each district as an isometric plate above the tiles. Packs (C6) are a later phase.
@@ -15,7 +15,7 @@ A town the characters live in. By rules, with no model call, it gives every prof
 - `plugins/city/plugin.js`, `placeRoute`, `districtRoute`, `gridFromHours`, `hoursOf`: C3, the user's places and districts (`POST /city/place|place/remove|district|district/remove|reset`); a stock one the user edits becomes `by: "you"`.
 - `src/screens/city/editors.tsx`: the place and district forms; `WidePicture`, `placePrompt`, `districtPrompt`; the picture is the profile's picture window in its `wide` mode (`src/screens/profiles/picture-dialog.tsx`).
 - `src/screens/city/index.tsx` `Detail` (the place's `background` behind the opened card, `.ct-detail.has-bd`); Homes has "Edit district" for its name and picture.
-- `src/screens/city/iso.ts` (`isoFrame`, `isoLots`, `isoAllLots`, `isoGrid`, `isoPin`, `isoHeight`, `KIND_LOOK`, `ISO_MAX`) and `src/screens/city/iso-map.tsx` (`IsoMap`, `isoSvg`): C5, the drawn district; `index.tsx` builds `mapSpots` and `pickOnMap` (opens the place, scrolls to `ct-cell-<id>` or, in Homes, `ct-b-<id>`). A district's `background` replaces the drawing under the same pins. Layout (0.18.1): `.ct-body` holds `.ct-map-col` and `.ct-list-col`; from 1000 px on desktop they sit side by side and the map column is sticky; on a phone the map column is hidden while a form is open.
+- `src/screens/city/iso.ts` (`isoFrame`, `isoLots`, `isoAllLots`, `isoSlots`, `isoGrid`, `isoPin`, `isoHeight`, `KIND_LOOK`, `ISO_MAX`) and `src/screens/city/iso-map.tsx` (`IsoMap`, `isoSvg`): C5, the drawn district; `index.tsx` builds `mapSpots` and `pickOnMap` (opens the place, scrolls to `ct-cell-<id>` or, in Homes, `ct-b-<id>`). A district's `background` replaces the drawing under the same pins. Layout (0.18.1): `.ct-body` holds `.ct-map-col` and `.ct-list-col`; from 1000 px on desktop they sit side by side and the map column is sticky; on a phone the map column is hidden while a form is open.
 - `plugins/city/plugin.js`, `workplaceOf`: (#453) the profile's `workplace`, else that of the first tied boss, subordinate or colleague (by id); `whereAll` passes it to `placeAt` as `c.workplace`.
 - `plugins/city/plugin.js`, `homeGroups`, `assignHomes(homes, ids, groups)`: (#453) shared flats from ties marked `home: true` (`HOME_TIES`), either side.
 - `plugins/clubs/plugin.js`, `endRoom`, `roomCounts`, `roomPicture`: (#453) rooms share the day's counts in `clubs/state.json` `rooms`; (#452) a room's view carries `room.picture`.
@@ -69,10 +69,10 @@ Not by the city itself (a test uses a model that throws on any use). A room is a
 - Shared flats: one side's mark is enough (a romantic tie is one way); a group is at most 6; the first holder by id keeps the flat when the mark goes.
 - Clearing all profiles leaves `city/` until a new profile appears (the tick does nothing on an empty list).
 - The place plate is cosmetic: tiles show everyone in a place anyway.
-- The drawing is set with `dangerouslySetInnerHTML`: `isoSvg` must stay numbers and theme tokens only, never a name (a test checks for text and hex colours). At most 25 places are drawn; the rest only in the list. A building's spot follows the tiles' order, so a removed place shifts the ones after it.
+- The drawing is set with `dangerouslySetInnerHTML`: `isoSvg` must stay numbers and theme tokens only, never a name (a test checks for text and hex colours). At most 25 places are drawn; the rest only in the list. A building's spot follows the tiles' order unless the user moved it: Rearrange (#458) saves `lots: { g, at: { <place id>: lot index } }` on the district (`POST /city/layout`, `layoutRoute`, `cleanLots` in `plugins/city/plugin.js`; `isoSlots` reads it), never on the place, because saving a place marks it `by: "you"`. A layout made for another grid size `g` is ignored, so a district that gains a place and grows a row is drawn in the tiles' order again; Homes cannot be rearranged. Without a layout a removed place shifts the ones after it.
 
 ## Tests that guard it
-`test/city.test.ts`, `test/rooms.test.ts`, `test/city-places.test.ts`, `test/city-readers.test.ts`, `test/city-452-453.test.ts`, `test/city-iso.test.ts`.
+`test/city.test.ts`, `test/rooms.test.ts`, `test/city-places.test.ts`, `test/city-readers.test.ts`, `test/city-452-453.test.ts`, `test/city-iso.test.ts`, `test/city-layout.test.ts`.
 
 ## Not verified
 Real generated or uploaded pictures in a real engine (#452; the preview uses drawn placeholders), the room and chat backdrop with a real place picture, workplaces and shared flats over a real day (#453). Earlier: Whether the place line changes how characters write with a real model; Drawing or uploading a picture for a place in a real engine; A real engine across a band change; the room's header with "Leave the room" in a browser (the preview has no room); a real model in a room; a phone; how the weights feel with real profiles; the guide translations.

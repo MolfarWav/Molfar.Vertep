@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- **An engine picture in an SVG `<image>` loads inside an app (#460).** The app frame swaps a `/v1/` address for a `blob:` URL (a plain load in the frame carries no session) but only did it for `src`, `poster`, `srcset` and `style`, so an SVG `<image href="/v1/assets/...">` showed the broken-image icon. It now also rewrites `href` and `xlink:href` of `<image>` and `<feImage>`, including ones an app adds or changes later. Social's relationship map had worked around it. Tests: `test/app-bridge-assets.test.ts`.
+
 - **An app reads another app's file of any size, in pieces (#467).** `host.peer.read(app, path)` refuses a file over 2 MB, so an app with read access to Roleplay could not open a long chat (one 717-message chat is 3.8 MB). `host.peer.read(app, path, { offset, maxBytes })` now returns one piece of at most 2 MB, cut after its last line break (or before a character it would split), with `next` for the following piece and the file's `size` and `mtimeMs`, so the pieces join back into the file and a change between them shows. The same checks run as before (declared paths, the peer's folder, no links), each call still holds at most 2 MB, and a call without the third argument works as it did. Tests: `test/app-reads.test.ts`.
 
 ## 1.18.1 (2026-11-19)
