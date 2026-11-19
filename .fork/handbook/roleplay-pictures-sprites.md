@@ -1,5 +1,5 @@
 # Pictures in Roleplay: portraits, sprites and outfits, backgrounds, scene pictures, voice
-Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite windows (#456) on branch claude/sprite-windows-456 (not merged yet)
+Verified at: molfar.vertep-roleplay 9ca09bf (branch claude/sprites-phone-464, Roleplay 4.139.1: the phone lines and the prose-narrator emotion); Backgrounds at 89fedb8
 
 ## What it does
 - A card has one portrait (its avatar) and an optional set of sprites: small pictures per emotion, sorted by outfit and, for a Narrator card, by voice.
@@ -17,8 +17,8 @@ Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite wind
 - `src/lib/expressions.ts` `parseSpriteFile`: reads emotion, voice and copy number from a file name.
 - `src/lib/expressions.ts` `resolveSprite`: picks a sprite from matched labels, within one outfit.
 - `src/lib/sprite-pick.ts` `pickSprite`: the sprite a reply shows. `pickSpriteFor`: the sprite of one known speaker, which `pickSprite` and the windows end in.
-- `src/lib/sprite-stage.ts`: the pure parts of the sprite windows: `stageMembers` (who can be shown), `contributions` (a member's last line), `speakerOf`, `sceneKeys`, `assignSlots`, `resolveWindows`, `arrange`, `loadLayout` / `saveLayout`, `outfitsFor`.
-- `src/components/chat/expression-panel.tsx` `ExpressionPanel`, `SpriteWindow`, `StageMenu`: the floating windows and their gear menu.
+- `src/lib/sprite-stage.ts`: the pure parts of the sprite windows: `stageMembers` (who can be shown), `contributions` (a member's last line; `linesOf` reads a voice's labelled lines, else the sentences that name them), `speakerOf`, `sceneKeys`, `assignSlots`, `resolveWindows`, `arrange`, `fitIn` (a box moved the least that puts it inside an area), `loadLayout` / `saveLayout`, `outfitsFor`.
+- `src/components/chat/expression-panel.tsx` `ExpressionPanel`, `SpriteWindow`, `StageMenu`, `CastStrip`, `useComposer`: the floating windows, their gear menu, a phone's row of chips, and the phone's reading of the message box.
 - `src/lib/sprite-batch.ts` `planBatch`: what a batch of dropped files adds or replaces.
 - `src/components/character/sprites-panel.tsx` `SpritesPanel`: the Sprites tab of the card editor.
 - `src/components/character/sprite-batch-dialog.tsx` `SpriteBatchDialog`: the dialog for many files at once.
@@ -50,14 +50,14 @@ Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite wind
 
 ## Sprite windows (#456)
 - A window shows one character. `stageMembers` lists who can be shown: a group's members that own sprites, a Narrator card's voices that own sprites (plus the card itself when it has shared sprites), or the one card. Keys: `m:<card id>`, `v:<voice>`, `c:<card id>`.
-- A member's emotion comes from their last line (`contributions`, 40 assistant messages back): their own message, or their `Name:` lines in a narrator message. It stays until they speak again. A settled message is read once (`lineCache`).
+- A member's emotion comes from their last line (`contributions`, 40 assistant messages back): their own message, or their `Name:` lines in a narrator message; a Narrator card's voice with no labelled line in a message takes the sentences that name them (`linesOf`, only for members without an owner, ranked below any label and by where the name first stands). `memberSprite` falls back to the whole message when the lines show no emotion, as `pickSprite` does. It stays until they speak again. A settled message is read once (`lineCache`).
 - A window's `who` is `speaker`, `auto` or a member key. A `speaker` window is the spotlight: the `auto` windows show the others. An `auto` window keeps its member while they are in the scene (`assignSlots`, kept in the layout's `slots`); a leaver blanks it, a newcomer takes a free one.
 - The scene is the Dashboard's `present` names when they match members (`sameName`: equal, or a first word equal to the other name), else the members who spoke in the last 6 assistant messages, else everyone.
 - The layout (`StageLayout`: windows with position, height, folded, transparent; `hideEmpty`; `slots`) is in `localStorage` under `rp.stage.<chat id>`, per browser. A chat with none starts from the old single window's keys (`expr-panel-pos`, `expr-panel-height`, `expr-panel-minimized`).
 - `arrange` and `addWindow` place windows inside the chat column (`[data-chat-id]`), from an estimated sprite width of 0.6 of the height.
 - A transparent window is `pointer-events: none` except its buttons; it is moved by its grip.
 - `StageLayout.place`: `front` (windows over the chat text, as before), `behind` (each window is two boxes: the picture at `z-[5]`, under the chat log's `z-10`, and a copy at `z-30` whose picture is invisible and which carries the buttons; the grip moves it) or `reserve` (the chat log gets `margin-bottom: var(--stage-reserve)`, set by `ExpressionPanel` on `[data-chat-id]` to the tallest shown window plus 8 px, at most 60% of the chat; the windows are anchored to the strip's bottom, `anchorBottom`, and move sideways only). In `behind`, `ExpressionPanel` sets `data-stage-behind` and `--stage-scrim` (percent, `StageLayout.scrim`, default 55) on `[data-chat-id]`; `globals.css` gives `.look-stage .ls-col` a page-colour backing (`color-mix` with `--background`) of that strength, as wide as the text (`fit-content`). `StageLayout.visible` (35 to 100, default 100) is the share of each picture that shows from the top: the window is `overflow-hidden` and `h` is the visible height, the picture is drawn `h * 100 / visible` tall; `arrange` widens its width estimate by the same factor. A phone ignores `place` and `visible`. The row preset takes a smaller window height in a strip (`rowHeight` of `arrange`). `stageArea` lays windows out across the message column (`[data-chat-log]`), not the Dashboard strip beside it.
-- A phone shows window 1 and a strip of chips (`CastStrip`); a tap pins that character in the window until tapped again (not saved).
+- A phone (#464) shows window 1 and a row of chips (`CastStrip`: an Auto pill, then everyone in the scene in chat order, a ring on the shown one, a pin on the pinned one). A tap pins that character; a tap on the pinned one or on Auto releases it (not saved). `useComposer` reads the top of `[data-chat-composer]` (the root of `composer.tsx`) and the top of `[data-chat-log]`, and whether a composer text field holds a draft; the window and the row return null while one does. The window stands above the box: default `right: 0.5rem; bottom: innerHeight - boxTop + 6`, height shrunk to the room (min 96), a placed window pulled inside by a layout effect (`fitIn`, transient patch), the drag clamp the same. The picture is `pointer-events-none` (a swipe scrolls the chat), the window moves by its grip, the gear sits under the grip (`max-md:` classes). Unfolding fits the window into the screen (it used to keep the chip's corner and leave it); a press moving under `TAP_SLOP` (8 px) is a tap.
 - A group member's outfit choice is `spriteOutfits["@<card id>"]`; a solo card keeps `""`, a voice its name (`outfitsFor`, `memberSprite`).
 
 ## Backgrounds
@@ -101,6 +101,7 @@ Text to speech has three modes: None, browser voices, or the engine's speech end
 test/rp-expressions.test.ts, test/rp-sprite-sets.test.ts, test/rp-sprite-stage.test.ts, test/rp-portrait-prompt.test.ts, test/rp-dash-portraits.test.tsx, test/rp-autobg-draw.test.ts, test/rp-world-backgrounds.test.ts, test/rp-image-style.test.ts, test/rp-image-error.test.ts, test/rp-message-image.test.ts, test/rp-dialogue-voices.test.ts, test/rp-tools.test.ts. (File names only; I did not open them.)
 
 ## Not verified
+- Phone behaviour (#464) was run only in headless Chromium with touch emulation at 390 px: no Android keyboard (a keyboard that resizes the page is not covered), no real device.
 - Sprite windows were run in a browser only with drawn test sprites and a group seeded by hand: no real art, no real Dashboard scene, no streaming reply over several windows, no touch device.
 - How a generate_image call becomes a drawn picture after the reply. I saw only the comment in `handleTool`.
 - Where the engine stores the drawn file. `src/lib/image-gen.ts` says the engine keeps it in its asset store; I did not trace this in the engine repo.
