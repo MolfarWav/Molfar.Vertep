@@ -1,5 +1,5 @@
 # Apps: the shell bridge, read access between apps, app notifications
-Verified at: molfar.vertep 9b8c1fc (the storage line in Traps); the rest at: molfar.vertep 8310b23 (bridge limit line read at 0d2e559, the build route line at 2c6d4d0)
+Verified at: molfar.vertep 9b8c1fc (the storage line in Traps); the peer read pieces at branch peer-read-chunks; the rest at: molfar.vertep 8310b23 (bridge limit line read at 0d2e559, the build route line at 2c6d4d0)
 
 ## What it does
 An app runs in a sandboxed frame and calls the shell through `window.molfarShell` (also `chrysalisShell`). The shell's host script accepts a frame message only when its nonce matches the frame's record. Engine requests from a frame are relayed by the shell and checked twice, in the browser and on the server. An app may read declared files of another app only after the user allows it. Shell actions and notifications are for trusted (official) apps only.
@@ -37,7 +37,7 @@ An app runs in a sandboxed frame and calls the shell through `window.molfarShell
   - Both return 403 when the request came through the bridge (`bridgeApp` is set).
   - `DELETE /v1/apps/:id` calls `forgetGrants` and `forgetPeer`. `POST /v1/apps/:id/rename` calls `moveGrants`.
 - File: `credentials/<user>/app-reads.json`, written only by the functions in `src/apps/reads.ts`. It sits outside the workspace, so an app cannot write its own grant.
-- Limits: 4 peer apps and 10 patterns per app, at most 6 segments per pattern. The worker refuses files over 2 MB and has no write method.
+- Limits: 4 peer apps and 10 patterns per app, at most 6 segments per pattern. A whole read refuses a file over 2 MB; `read(app, path, { offset, maxBytes })` reads a file of any size in pieces of at most 2 MB (`readPiece`): each piece ends after its last line break (with none, before a character the window would split) and returns `{ text, next, size, mtimeMs, done }`, so the caller passes `next` back and sees the file change between pieces by `mtimeMs`. There is no write method.
 
 ## Flow
 1. App calls `openApp`:
@@ -50,7 +50,7 @@ An app runs in a sandboxed frame and calls the shell through `window.molfarShell
    1. `validateAppManifest` in `src/apps/manager.ts` runs `parseReads` on the manifest's `reads`.
    2. The shell lists them with `GET /v1/apps/:id/reads` and answers with `PUT /v1/apps/:id/reads/:peer`. `setGrant` writes `app-reads.json`.
    3. A plugin run calls `peersFor` in `buildApp`, which calls `peerMounts`. Only granted peers with a `manifest.json` are mounted, rooted at `apps/<peer>/data`.
-   4. `peerSvc` in `src/plugins/sandbox-worker.mjs` checks the path is clean, matches a declared pattern, has no symlink on the way, and is at most 2 MB.
+   4. `peerSvc` in `src/plugins/sandbox-worker.mjs` checks the path is clean, matches a declared pattern, has no symlink on the way, and is at most 2 MB; with `{ offset, maxBytes }` it reads one piece of at most 2 MB instead.
 3. App sends a notification:
    1. `molfarShell.notify` sends the op. A frame that is not trusted gets "not allowed for this app".
    2. `shellRequest` checks and cleans the fields.

@@ -1,5 +1,5 @@
 # App plugins: the sandbox, the host API, hooks and limits
-Verified at: molfar.vertep 9b8c1fc (the `writeFileAtomic` lines, #440); the rest at: molfar.vertep 1593219; Timing and the Traps on a shared worker at branch claude/sandbox-timing (1.16.8); `executionMs` for every plugin and its hooks at branch claude/limits-imported (1.16.9)
+Verified at: molfar.vertep 9b8c1fc (the `writeFileAtomic` lines, #440); the `host.peer` pieces at branch peer-read-chunks; the rest at: molfar.vertep 1593219; Timing and the Traps on a shared worker at branch claude/sandbox-timing (1.16.8); `executionMs` for every plugin and its hooks at branch claude/limits-imported (1.16.9)
 
 ## What it does
 An app plugin is `plugins/<id>/plugin.js` with a `manifest.json` beside it, inside an app folder. Each call evaluates the current source in a QuickJS runtime owned by a pooled worker thread. The plugin asks for models and the network through `host`, and the engine does that work between passes. A call that fails or overruns ends its worker. Manifest permissions gate each capability.
@@ -33,7 +33,7 @@ Every call gets `host` from `src/plugins/sandbox-worker.mjs`. Permission in brac
 - `host.net.request(key, {url, method, headers, body, form, json, binary, timeoutMs, maxBytes, followRedirects})`: fetch run by the engine with no credentials, 32 per pass, answer in `host.net.results[key]`. [network; host listed in `networkHosts`]
 - `host.script.request(key, {code, input, seed})`: small script on its own sandbox, 16 per pass. [script]
 - `host.fs`: `read`, `readBase64`, `write`, `list`, `stat`, `remove` inside the app's `data/` dir; escapes and dangling symlinks are refused. [fs; app-bundled plugins only]
-- `host.peer`: `apps`, `read`, `stat` on other apps' data the user allowed, limited to manifest-declared paths; read only. [peer]
+- `host.peer`: `apps`, `read`, `list`, `stat` on other apps' data the user allowed, limited to manifest-declared paths; read only. `read(app, path, { offset, maxBytes })` returns one piece `{ text, next, size, mtimeMs, done }` of a file too big to read whole. [peer]
 - `host.zip`: `build` needs no permission; `list` and `entries` read an uploaded zip. [zip, for those two]
 - `host.siblingTools`, `host.insertCeilings`: present only with `?siblingtools=1` or `?insertceilings=<chat>`.
 - Notify: no such call; an `onTick` return value becomes a `plugin_event`. [schedule]
@@ -66,7 +66,7 @@ Every call gets `host` from `src/plugins/sandbox-worker.mjs`. Permission in brac
 - Manifest `limits`: `PASSES_DEFAULT` 3, `PASSES_MAX` 12, `CONCURRENCY_MAX` 4; `DEFAULT_PACE` 250 ms gap, 3 retries. `src/plugins/llm-pace.ts`
 - `PLUGIN_IMAGE_MAX` = 4, `PLUGIN_IMAGE_CHARS` = 8 MB. `src/plugins/runtime.ts`
 - `SCRIPT_LIMITS`: 8000 code chars, 64 KB in, 32 KB out, 500 ms CPU, 2.5 s wall, 2 s per pass. `src/plugins/script-box.ts`
-- Store 1 MB, `fs.write` 4 MB, peer read `MAX_READ` 2 MB. `src/plugins/sandbox-worker.mjs`
+- Store 1 MB, `fs.write` 4 MB, peer read `MAX_READ` 2 MB per call (a bigger file is read in pieces). `src/plugins/sandbox-worker.mjs`
 - `UPGRADE_LIMITS`: 5 min, 512 MB; `SCHEDULE_SYNC_MS` = 10 s. `src/server/app.ts`
 
 ## Timing (#422)

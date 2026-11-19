@@ -476,7 +476,8 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
     })();
     // Read-only view of OTHER apps' files (src/apps/reads.ts): the host passes only the peers the user allowed, each with
     // the patterns its manifest declared. Same jail as fs, on the peer's data dir, plus: no symlink anywhere on the path
-    // (the real path must be the path asked for), the path must match a declared pattern, a size cap, no writes at all.
+    // (the real path must be the path asked for), the path must match a declared pattern, a size cap on each read (a
+    // bigger file is read in pieces), no writes at all.
     const peerSvc = (() => {
       const mounts = Array.isArray(peers) ? peers : [];
       const refuse = (why) => { throw new Error("peer read refused: " + why); };
@@ -513,16 +514,52 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
         return { m, r };
       };
       const MAX_READ = 2 * 1024 * 1024;
+      /** One piece of a file too big to read whole: at most MAX_READ bytes from `offset`, cut after the last line break
+       *  in the window (with none, before a character the window would split), so the pieces join back into the file.
+       *  `next` is where the following piece starts; `mtimeMs` shows the caller that the file changed between pieces. */
+      const readPiece = (real, st, opts) => {
+        const int = (v, dflt) => (v === undefined ? dflt : Number.isSafeInteger(v) && v >= 0 ? v : refuse("bad range"));
+        const offset = int(opts.offset, 0);
+        const max = Math.min(MAX_READ, Math.max(4, int(opts.maxBytes, MAX_READ)));
+        const size = st.size;
+        const piece = (text, next) => ({ text, next, size, mtimeMs: Math.floor(st.mtimeMs), done: next >= size });
+        if (offset >= size) return piece("", size);
+        const want = Math.min(max, size - offset);
+        const buf = Buffer.alloc(want);
+        const fd = fs.openSync(real, "r");
+        let got;
+        try { got = fs.readSync(fd, buf, 0, want, offset); } finally { fs.closeSync(fd); }
+        if (got === 0) refuse("the file changed while it was read");
+        let end = got;
+        if (offset + got < size) {
+          const nl = buf.lastIndexOf(10, got - 1);
+          if (nl >= 0) end = nl + 1;
+          else {
+            let p = got - 1;
+            while (p > 0 && (buf[p] & 0xc0) === 0x80) p--;
+            const lead = buf[p];
+            const len = lead >= 0xf0 ? 4 : lead >= 0xe0 ? 3 : lead >= 0xc0 ? 2 : 1;
+            if (p + len > got && p > 0) end = p;
+          }
+        }
+        return piece(buf.subarray(0, end).toString("utf8"), offset + end);
+      };
       return {
         apps: () => mounts.map((m) => ({ app: m.app, paths: m.allow.slice() })),
-        read: (app, rel) => {
+        /** The whole file as text (at most MAX_READ), or with `{offset, maxBytes}` one piece of it: { text, next, size,
+         *  mtimeMs, done }. */
+        read: (app, rel, opts) => {
           const { m, r } = pick(app, rel);
           if (r === "" || !matches(m, r)) refuse("path is not one the app declared");
           const real = resolve(m, r);
           if (!real) throw new Error("peer read: not found");
           const st = fs.statSync(real);
           if (!st.isFile()) refuse("not a file");
-          if (st.size > MAX_READ) refuse("file too large (2MB)");
+          if (opts !== undefined && opts !== null) {
+            if (typeof opts !== "object" || Array.isArray(opts)) refuse("bad range");
+            return readPiece(real, st, opts);
+          }
+          if (st.size > MAX_READ) refuse("file too large (2MB): read it in pieces with { offset }");
           return fs.readFileSync(real, "utf8");
         },
         list: (app, rel = "") => {

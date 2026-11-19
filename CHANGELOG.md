@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- **An app reads another app's file of any size, in pieces (#467).** `host.peer.read(app, path)` refuses a file over 2 MB, so an app with read access to Roleplay could not open a long chat (one 717-message chat is 3.8 MB). `host.peer.read(app, path, { offset, maxBytes })` now returns one piece of at most 2 MB, cut after its last line break (or before a character it would split), with `next` for the following piece and the file's `size` and `mtimeMs`, so the pieces join back into the file and a change between them shows. The same checks run as before (declared paths, the peer's folder, no links), each call still holds at most 2 MB, and a call without the third argument works as it did. Tests: `test/app-reads.test.ts`.
+
 ## 1.18.1 (2026-11-19)
 
 - **Settings > Memory: the embedding model is saved when you press Enter, leave the field or pick it from a list (#465).** It used to save only through the small Save button: a name typed on a phone and left with Enter or a tap elsewhere was lost, and a saved key, a provider change or a downloaded model refreshed the field and wiped an unsaved name. Now an unsaved name is kept and marked "Not saved yet". For OpenRouter (its public embedding catalog, with prices) and for your own API connections (their `/models` list) the field offers a list to search (`GET /v1/embeddings/models`, shell only). With Automatic, the "Default" line names both defaults (`defaults` in `GET /v1/embeddings/config`): API connections get `text-embedding-3-small`, OpenRouter `qwen/qwen3-embedding-4b`. Saving the choice leaves a line in the log.
