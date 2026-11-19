@@ -107,6 +107,8 @@ for (const dir of ["client/dist", "client-agent/dist"]) {
 }
 // the agent's built-in skills: read at runtime, updated with the engine
 fs.cpSync(path.join(repo, "builtin-skills"), path.join(resources, "builtin-skills"), { recursive: true });
+// the place icons of the Roleplay map
+fs.cpSync(path.join(repo, "builtin-assets"), path.join(resources, "builtin-assets"), { recursive: true });
 const builder = await buildBuilderForRelease();
 writePrebuilt(path.join(resources, "prebuilt", "builder"), builder);
 const sandbox = await buildSandboxForRelease();

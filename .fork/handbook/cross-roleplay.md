@@ -213,6 +213,35 @@ Traps:
 - No image model gives a 503 with a plain message (`generateImage`).
 
 
+## From `roleplay-places-map.md`
+
+Change X, touch Y:
+- The `placeMap` shape or limits: `cleanPlaceMap` and `cleanPlaceMapMeta` together, `docs/DATA-FORMATS.md`, `test/rp-place-map.test.ts`, the `rp-studio` meta case.
+- The sprite stage's phone limit (`useComposer`, `limitArea`, `stageArea` are exported for the map): `place-map.tsx` uses them.
+- The World record fields `size`, `inside`, `visits`, `background`: `layoutMap`, the node card.
+- A new kind in `PLACE_KINDS`: a picture set `<id>-1..4.webp` in the engine (`scripts/place-icons.json`, `scripts/place-icons.py`, `builtin-assets/place-icons/index.json`) and the kind list in the engine's `test/place-icons.test.ts`; without them the node keeps its emoji.
+- A new icon: the same four places above; the app needs no change, it reads the engine's list.
+
+Traps:
+- The board is its own component, not `canvas-kit`: its cards carry ports and are 200 x 74.
+- A swiped reply does not take back a road it walked; `at` is the last whole place seen.
+- Positions are saved from an effect that runs on each records or scene read; `layoutMap` returns `added` only for nodes without a position, or it would write forever.
+- The window's drag and resize use pointer capture and a `buttons === 0` guard: an app frame does not always hear a button released outside it.
+- A page reload takes about 8 s before the chip shows (the World state call comes after the app boots).
+- A road needs the scene's place to resolve to a World place record (`hereOf` in `plugins/world/plugin.js`: by registry id or by the words of the name). The Dashboard's place line is free text: when it names somewhere the book has no record of, `here` is null, `placeMap.at` is never set and no road is ever drawn (the owner's first real chat: 4 places, no `at`, no roads). The map says so in a line under the header (`place-map-scene`). The tracker only sees moves while the chat is open; it does not read the story's past.
+- A rename on the map is a label in `placeMap.labels`, by record id: the record's name is never changed there, because the book, the Dashboard, spots' `inside` and things' `place` go by that name and travel by a tap will go by the record. `MapNode.name` is the label or the record name, `bookName` the record's, `names` all of them (the icon's kind is read from them).
+- Travel does not move the Dashboard clock by code: the direction names the minutes, the reply narrates them and the sensor's reading of the reply moves the clock (as Skip time does), so a swipe takes it back. The first trip's street is invented by the reply and is not read back: the player types it into the road name if they want it kept.
+- The picked icon is a file name of the engine's set. An older engine that lacks it shows the name's icon, and a kind that is new in the set but not in `PLACE_KINDS` can only be picked by hand (matching by name needs its words added there).
+- The road's name read from the reply asks only after the stream has ended and only when the trip started with no name on the road; a swiped or regenerated reply is not asked again. The model may return junk: it is shown as an offer, never saved without Keep.
+- The direction rides on the player's message (`directions`), so it shows as a chip and is cut from the words; brackets are stripped from names and the move so nothing ends it early.
+- The default ready map is computed, never stored, so it changes when the places change enough to change the kind (a chat that grows from three streets to a modern-looking list may swap its plan). Choosing a map, uploading one or choosing the grid freezes it. `hasMap` hides a key the engine no longer has (an older engine: the grid).
+- A menu in the gear popover does not close after an action (it uses an uncontrolled `Popover`): its entries change in place (`No picture` becomes `Use the automatic map again`). A browser check that clicks the gear again toggles it shut.
+- The map pack is public art shipped with the engine; the maps are the owner's own generated pictures (permission given, issue #454). Social City does not use them.
+- Two floating things fight for a phone's room: while the map is open the sprite stage returns nothing (`usePlaceMapOpen`).
+- In the app frame an `<img src="/v1/...">` first fails (no session) and only then gets a blob URL from the bridge. An `onError` that acts on the first failure hides a healthy picture; the board acts only on an error whose `src` is a `blob:` URL.
+- A hook placed after the `if (!visible) return` in `PlaceMap` breaks the page ("Rendered more hooks"); the browser check caught it, no unit test can.
+
+
 ## From `roleplay-presets.md`
 
 Change X, touch Y:

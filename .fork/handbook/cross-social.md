@@ -33,7 +33,7 @@ Traps:
 - Shared flats: one side's mark is enough (a romantic tie is one way); a group is at most 6; the first holder by id keeps the flat when the mark goes.
 - Clearing all profiles leaves `city/` until a new profile appears (the tick does nothing on an empty list).
 - The place plate is cosmetic: tiles show everyone in a place anyway.
-- The drawing is set with `dangerouslySetInnerHTML`: `isoSvg` must stay numbers and theme tokens only, never a name (a test checks for text and hex colours). At most 25 places are drawn; the rest only in the list. A building's spot follows the tiles' order, so a removed place shifts the ones after it.
+- The drawing is set with `dangerouslySetInnerHTML`: `isoSvg` must stay numbers and theme tokens only, never a name (a test checks for text and hex colours). At most 25 places are drawn; the rest only in the list. A building's spot follows the tiles' order unless the user moved it: Rearrange (#458) saves `lots: { g, at: { <place id>: lot index } }` on the district (`POST /city/layout`, `layoutRoute`, `cleanLots` in `plugins/city/plugin.js`; `isoSlots` reads it), never on the place, because saving a place marks it `by: "you"`. A layout made for another grid size `g` is ignored, so a district that gains a place and grows a row is drawn in the tiles' order again; Homes cannot be rearranged. Without a layout a removed place shifts the ones after it.
 
 
 ## From `social-clubs-chatter-stories.md`

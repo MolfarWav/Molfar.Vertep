@@ -40,7 +40,7 @@ CONN=$(curl -sf -c "$WORK/jar" -b "$WORK/jar" -H 'content-type: application/json
 # from the environment), not the mock
 echo "{\"shown\":[\"$CONN/mock-model\"]}" > "$WORK/data/users/$USER_NAME/models-shown.json"
 
-cp "$SKILL/pw.mjs" "$SKILL/roleplay.mjs" "$WORK/"
+cp "$SKILL/pw.mjs" "$SKILL/roleplay.mjs" "$SKILL/placemap-check.mjs" "$WORK/"
 rm -rf "$WORK/forge" && cp -r "$SKILL/forge" "$WORK/forge"
 [ -d "$WORK/node_modules/playwright-core" ] || (cd "$WORK" && bun add playwright-core >/dev/null 2>&1)
 

@@ -20,7 +20,7 @@ export async function skipTours(page, app) {
       await page.waitForTimeout(400); continue
     }
     // an overlay with no Skip button (a last step): Escape closes it
-    if (app && (await app.locator("[data-guide-overlay]").count().catch(() => 0)) > 0) { await page.keyboard.press("Escape"); await page.waitForTimeout(400); continue }
+    if ((await (app ?? page).locator("[data-guide-overlay]").count().catch(() => 0)) > 0) { await page.keyboard.press("Escape"); await page.waitForTimeout(400); continue }
     break
   }
 }
@@ -36,7 +36,10 @@ export async function openRp(opts = {}) {
   for (let i = 0; i < 6 && !frame && (await page.getByText("Where to?").count()) === 0; i++) { await page.waitForTimeout(1000); frame = find() }
   if (!frame) {
     // a fresh shell: pick the app on the "Where to?" page and launch it
-    await page.getByText("Vertep", { exact: true }).first().click()
+    // a tour can open late and cover the row: close it and try again
+    for (let i = 0; i < 6; i++) {
+      try { await page.getByText("Vertep", { exact: true }).first().click({ timeout: 6000 }); break } catch (e) { if (i === 5) throw e; await skipTours(page); await page.keyboard.press("Escape") }
+    }
     await skipTours(page)
     // on a phone a tap on the row opens the app; there is no Launch button
     await page.getByRole("button", { name: /Launch/ }).click({ timeout: 4000 }).catch(() => {})

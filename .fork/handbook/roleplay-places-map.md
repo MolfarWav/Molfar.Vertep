@@ -1,0 +1,82 @@
+# Roleplay places map: the floating map of a chat's places
+Verified at: molfar.vertep-roleplay and molfar.vertep (engine part), both branch `claude/map-454`, not merged (the lock, the full name and rename, the scene line, the check script: 2026-11-19)
+
+## What it does
+- A round chip over the chat opens a floating window with a board of the chat's World place records: painted icons, names, dashed roads between places the story moved between, the place the story is in marked.
+- Layout is by code (no model): new places go next to the place the story came from, rooms (World "spots") around their place. The player drags places; positions are never moved by code afterwards. A map picture of the player's own can lie under the places.
+- It is steps M2, M1 and M3 of Molfar.Vertep#454: the window, the painted icons (four per kind, shipped by the engine) and travel by a tap (the player's move plus a hidden direction; the road keeps its minutes and name). Not built: a road event, reading the street the reply invented back into the road, travel from a model-estimated time. Social City still uses its own emoji.
+
+## Owners
+- `src/lib/place-map.ts` `cleanPlaceMap`: the kept shape and its limits (the plugin keeps its own copy, named cleanPlaceMapMeta).
+- `src/lib/place-map.ts` `layoutMap`: nodes from records, a position for each new one (`freeSpot`), `added` = positions to keep.
+- `src/lib/place-map.ts` `stepRoute`: adds a road when the scene's whole place changes; `at` follows the story. A hand-drawn road is an ordinary entry of `routes`, so the tracker never adds it twice.
+- `src/lib/place-map.ts` `moveNode`: a drag; a whole place takes its rooms along.
+- `src/lib/place-map.ts` `toggleRoute`, `roadsOf`: a road drawn by hand (adds the pair, or removes it when there is one); `PlaceMap`'s `connectFrom` mode (the card's road button, then a tap on another whole place) calls it; while it is on the card is hidden (it would cover nodes) and rooms are dimmed.
+- `src/lib/place-map.ts` `withPositions`: merges new positions, cap 200.
+- `src/lib/float-box.ts` `boxRect`: where the window or chip stands inside an area (desktop: the chat column; phone: from the top of the messages to the message box).
+- `src/lib/float-box.ts` `setFolded`, `dragTo`, `resizeTo`, `loadBox`, `saveBox`: fold, drag, resize and the browser-local copy (`rp.float.map.<chatId>`).
+- `src/lib/place-kinds.ts` `placeKind`: the kind a name says (English whole words, Ukrainian and Russian stems), its emoji (the fallback when there is no icon).
+- `src/lib/place-icons.ts` `placeIconPath`, `variantOf`, `usePlaceIconIndex`: the icon of a kind for a place (variant by a hash of the place id), the engine's list asked once per page load.
+- Engine `builtin-assets/place-icons/<kind>-<n>.webp` + `index.json` (256 px WebP with alpha, 3 to 8 per kind (mostly 4), 90 kinds: the fantasy town's 52 including the pin `place`, and the modern city's 38, listed in `scripts/place-icons.json`), made by `scripts/place-icons.py` from the owner's magenta-background pictures and `scripts/place-icons.json`; `src/place-icons.ts` reads them; `GET /v1/place-icons` (the list) and `GET /v1/place-icons/<kind>-<n>.webp` in `src/server/app.ts`; `scripts/dist.ts` copies the folder into a release.
+- `src/lib/place-map-lock.ts` `loadLock`, `saveLock`: the padlock (a drag from a place moves the map, a tap picks it), per chat in this browser (`rp.map.lock.<chatId>`); the board's `locked` prop turns a node press into a pan that remembers `tapId`.
+- `src/lib/place-travel.ts` `footMinutes`, `minutesFor`, `travelDirection`, `cleanMinutes`, `cleanVia`: the trip's minutes (10 board units a minute to 5 minutes; riding 0.4; skip 0) and the `[[Travel: ...]]` direction. `src/components/chat/place-travel-dialog.tsx` `PlaceTravelDialog`: the window (mode, minutes, road name, the move), saves `minutes`/`via` on the road (`setRouteInfo`) and calls `sendMessage(chatId, "<move> [[...]]")`.
+- The selected place's card (`PlaceMap`) keeps Go (travel) and Close in view and the rest in a three-dots menu (`place-map-more`: rename, change icon, draw a road); a card with five icon buttons left the name 40 px wide in a small window.
+- `src/components/chat/place-icon-dialog.tsx` `PlaceIconDialog`: pick a place's icon by hand (Automatic, a kind, one of its pictures) -> `setIcon` -> `placeMap.icons`; `pickedIconPath` in `place-icons.ts` ignores a key the engine has no file for.
+- `src/lib/place-travel.ts` `rollRoadEvent`, `ROAD_EVENTS`, `loadEventPref`/`saveEventPref`: the seeded road event die and its per-chat switch (`rp.map.roadEvent.<chatId>`); `PlaceMap` `journey`/`roadOffer`: after a trip the road's name is asked from the reply once streaming has ended.
+- `src/lib/map-packs.ts` `loadMapPacks`/`useMapPacks`, `mapPackUrl`, `hasMap`, `defaultMapKind`, `defaultMapKey`: the engine's map packs (`/v1/map-packs`), the key a chat keeps (`<pack>/<map id>`) and the default ready map picked by code from the place kinds (rooms: house plan; caves and cellars: underground; the sea: coast; many streets and shops: walled town; modern kinds: a modern plan by group: airport, industrial, waterfront, campus, metropolis, residential, downtown, small town; else region), the variant fixed by the chat's id. `src/components/chat/map-gallery-dialog.tsx` `MapGalleryDialog`: the gallery of ready maps by kind (thumbnails only).
+- Engine: `src/map-packs.ts`, `GET /v1/map-packs` and `/v1/map-packs/<pack>/<map id>[-thumb].webp`, `builtin-assets/map-packs/<pack>/` (packs `default` and `modern`, 4 maps per kind), made by `scripts/map-packs.py` from `scripts/place-icons.json` (`mapPacks`).
+- `src/lib/place-map-open.ts` `usePlaceMapOpen`: tells the sprite stage a phone's map is open.
+- `src/components/chat/place-map.tsx` `PlaceMap`: reads the records and the scene's place (`scenePlace`, the Dashboard's free text, kept as `sceneText`), keeps positions and roads, the window, chip, lock, gear menu, spoiler gate, picture upload, the card with the full name and the rename (`saveName`: a label in `placeMap.labels`, the World record is not touched).
+- `src/components/chat/place-map-board.tsx` `PlaceMapBoard`: pan, pinch, wheel, node drag, picture slot, routes.
+- `plugins/engine/plugin.js` `cleanPlaceMapMeta`: cleans `placeMap` on `PATCH /chats/<id>`.
+- `src/lib/engine.ts` `chatPatchOf`: sends `placeMap`; `src/lib/types.ts` `Chat.placeMap`.
+
+## Data
+- Chat meta `placeMap`: `{ v: 1, nodes: { <place record id>: { x, y } }, routes: [ { a, b, minutes?, via? } ], picture?: { id } | { builtin: "<pack>/<map id>" } | { none: true }, at?: <record id>, labels?: { <record id>: <name> }, icons?: { <record id>: <kind>-<n> } }`. Board units, 1600 x 1000, clamped 70 from the edge; 200 nodes; 400 routes (unordered, `a` sorts first). `picture.id` is an asset id in the engine's store (`/v1/assets/<id>`), not a Backgrounds item; `builtin` names a ready map of the engine's packs; `none` is the dotted grid; no picture = the default ready map by code. Format text: Roleplay `docs/DATA-FORMATS.md` ("placeMap").
+- Setting `showPlaceMap` (absent = on): hides the chip everywhere.
+- A road's `minutes` is the WALKING time; a ride is derived from it (0.4) and never stored; `via` is the road's name. Both are set only from the travel window.
+- Browser only: the window's place, size and fold, per chat.
+
+## When a model is called
+Only when the player asks, and only on the World DM's build model (`buildAsk` in `plugins/world/plugin.js`): "Ask the model" in the travel window (`POST /world/travel/time`: the two places' book text and the distance in, the walking minutes out) and, after a trip with an unnamed road, one call that reads the road's name from the journey's reply (`POST /world/travel/road`, offered with a Keep button). Both are off while the DM is off. A road event is not a model call: the DM's own waiting event (`eventWaiting`) or a seeded die in the page. Reads: `GET /world/state` (the count of places and the DM level), `GET /world/peek` (the records), `GET /world/here` (the scene's place record). Writes: `PATCH /chats/<id>`.
+
+## Flow
+1. The chat view mounts `PlaceMap`; it loads the World view; with at least one place the chip shows.
+2. Records are read again after each World run (`lastRunAt`); the scene's place is read again after each Dashboard reading and each message.
+3. Whenever records are read, `layoutMap` gives positions to nodes that have none, and `stepRoute` adds a road; both are written to the chat meta in one patch, even while the window is folded.
+4. A drag writes the new position (and its rooms') once, when the finger or button is lifted.
+5. A world built before the story asks the World section's spoiler question before the board shows names (`needsGate`, `isRevealed`).
+
+## If you change X, also touch Y
+- The `placeMap` shape or limits: `cleanPlaceMap` and `cleanPlaceMapMeta` together, `docs/DATA-FORMATS.md`, `test/rp-place-map.test.ts`, the `rp-studio` meta case.
+- The sprite stage's phone limit (`useComposer`, `limitArea`, `stageArea` are exported for the map): `place-map.tsx` uses them.
+- The World record fields `size`, `inside`, `visits`, `background`: `layoutMap`, the node card.
+- A new kind in `PLACE_KINDS`: a picture set `<id>-1..4.webp` in the engine (`scripts/place-icons.json`, `scripts/place-icons.py`, `builtin-assets/place-icons/index.json`) and the kind list in the engine's `test/place-icons.test.ts`; without them the node keeps its emoji.
+- A new icon: the same four places above; the app needs no change, it reads the engine's list.
+
+## Traps
+- The board is its own component, not `canvas-kit`: its cards carry ports and are 200 x 74.
+- A swiped reply does not take back a road it walked; `at` is the last whole place seen.
+- Positions are saved from an effect that runs on each records or scene read; `layoutMap` returns `added` only for nodes without a position, or it would write forever.
+- The window's drag and resize use pointer capture and a `buttons === 0` guard: an app frame does not always hear a button released outside it.
+- A page reload takes about 8 s before the chip shows (the World state call comes after the app boots).
+- A road needs the scene's place to resolve to a World place record (`hereOf` in `plugins/world/plugin.js`: by registry id or by the words of the name). The Dashboard's place line is free text: when it names somewhere the book has no record of, `here` is null, `placeMap.at` is never set and no road is ever drawn (the owner's first real chat: 4 places, no `at`, no roads). The map says so in a line under the header (`place-map-scene`). The tracker only sees moves while the chat is open; it does not read the story's past.
+- A rename on the map is a label in `placeMap.labels`, by record id: the record's name is never changed there, because the book, the Dashboard, spots' `inside` and things' `place` go by that name and travel by a tap will go by the record. `MapNode.name` is the label or the record name, `bookName` the record's, `names` all of them (the icon's kind is read from them).
+- Travel does not move the Dashboard clock by code: the direction names the minutes, the reply narrates them and the sensor's reading of the reply moves the clock (as Skip time does), so a swipe takes it back. The first trip's street is invented by the reply and is not read back: the player types it into the road name if they want it kept.
+- The picked icon is a file name of the engine's set. An older engine that lacks it shows the name's icon, and a kind that is new in the set but not in `PLACE_KINDS` can only be picked by hand (matching by name needs its words added there).
+- The road's name read from the reply asks only after the stream has ended and only when the trip started with no name on the road; a swiped or regenerated reply is not asked again. The model may return junk: it is shown as an offer, never saved without Keep.
+- The direction rides on the player's message (`directions`), so it shows as a chip and is cut from the words; brackets are stripped from names and the move so nothing ends it early.
+- The default ready map is computed, never stored, so it changes when the places change enough to change the kind (a chat that grows from three streets to a modern-looking list may swap its plan). Choosing a map, uploading one or choosing the grid freezes it. `hasMap` hides a key the engine no longer has (an older engine: the grid).
+- A menu in the gear popover does not close after an action (it uses an uncontrolled `Popover`): its entries change in place (`No picture` becomes `Use the automatic map again`). A browser check that clicks the gear again toggles it shut.
+- The map pack is public art shipped with the engine; the maps are the owner's own generated pictures (permission given, issue #454). Social City does not use them.
+- Two floating things fight for a phone's room: while the map is open the sprite stage returns nothing (`usePlaceMapOpen`).
+- In the app frame an `<img src="/v1/...">` first fails (no session) and only then gets a blob URL from the bridge. An `onError` that acts on the first failure hides a healthy picture; the board acts only on an error whose `src` is a `blob:` URL.
+- A hook placed after the `if (!visible) return` in `PlaceMap` breaks the page ("Rendered more hooks"); the browser check caught it, no unit test can.
+
+## Tests that guard it
+`test/rp-place-map.test.ts`, `test/rp-float-box.test.ts`, `test/rp-place-kinds.test.ts`, `test/rp-place-icons.test.ts`, `test/rp-place-map-lock.test.ts`, `test/rp-map-packs.test.ts`, `test/rp-place-travel.test.ts`, `test/rp-world-travel.test.ts`, `test/rp-studio.test.ts` (the `placeMap` meta case). End to end in a real browser (75 checks, exit code: ready maps, icons, drag, lock, names, picture, roads from the Dashboard, roads by hand, icon picker, travel with the model's help and road events, phone): `.claude/skills/browser-check/placemap-check.mjs` in the engine repo. Engine: `test/place-icons.test.ts` (the set, the routes, the bridge rule), `test/malicious-plugin.test.ts` (the host copy of the rule).
+
+## Not verified
+- The road tracker with a real Dashboard sensor and World DM: the browser check writes the Dashboard's snapshot by hand (a scene place), it does not run the sensor.
+- A real phone's keyboard and touch pinch (checked at 390 px with a mouse and touch-sized controls only).
+- Many places (more than about 40) in a real chat; the light theme was checked, a custom theme was not.

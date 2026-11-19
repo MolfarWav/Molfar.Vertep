@@ -1,0 +1,670 @@
+{
+ "note": "Which picture of the owner's folders is which place kind. Values are file names; the order is the order of the variants (kind-1, kind-2 ...). `kinds` are icons, `mapPacks` are the map packs (a pack = a folder of maps, each kind of map a list of files). Maps of a pack are shipped by scripts/map-packs.py.",
+ "kinds": {
+  "temple": [
+   "Ancient_stone_temple_icon_e15e0667.jpg",
+   "Ancient_stone_temple_with_doorway_78f0760d.jpg",
+   "Ancient_stone_temple_with_doorway_85704808.jpg",
+   "Ancient_stone_temple_with_doorway_ae4d70d1.jpg"
+  ],
+  "bridge": [
+   "Arched_stone_bridge_game_icon_915af73d.jpg",
+   "Arched_stone_bridge_game_icon_a4e85519.jpg",
+   "Arched_stone_bridge_game_icon_f0f02238.jpg",
+   "Arched_stone_bridge_game_icon_febffcfe.jpg"
+  ],
+  "bakery": [
+   "Bakery_shopfront_icon_with_awning_019116d8.jpg",
+   "Bakery_shopfront_icon_with_awning_410b1acd.jpg",
+   "Bakery_shopfront_icon_with_awning_e7efb7da.jpg",
+   "Bakery_shopfront_icon_with_awning_f11b5edb.jpg"
+  ],
+  "smithy": [
+   "Blacksmith_forge_game_icon_76644482.jpg",
+   "Blacksmith_forge_icon_with_anvil_948deb3d.jpg",
+   "Blacksmith_forge_icon_with_anvil_c542f6e3.jpg",
+   "Blacksmith_forge_with_anvil_832ea4d4.jpg"
+  ],
+  "lake": [
+   "Blue_lake_with_wooden_jetty_1aba52c9.jpg",
+   "Round_blue_lake_icon_615759ee.jpg",
+   "Round_blue_lake_with_reeds_047b6aff.jpg",
+   "Round_blue_lake_with_reeds_469d1257.jpg"
+  ],
+  "place": [
+   "Brass_map_pin_icon_b7b02822.jpg",
+   "Brass_map_pin_with_flag_2ce1e93b.jpg",
+   "Brass_map_pin_with_flag_e4a2bae2.jpg",
+   "Round_brass_map_pin_7e700a36.jpg"
+  ],
+  "ruins": [
+   "Broken_stone_ruins_arch_column_20f72b2f.jpg",
+   "Broken_stone_ruins_icon_aa883f1b.jpg",
+   "Broken_stone_ruins_overgrown_moss_de3374e1.jpg",
+   "Stone_ruins_overgrown_with_moss_0100ca61.jpg"
+  ],
+  "camp": [
+   "Camp_with_tent_and_campfire_ffcb018d.jpg",
+   "Small_camp_tent_and_campfire_55351428.jpg",
+   "Small_camp_with_tent_campfire_6d63827f.jpg",
+   "Small_camp_with_tent_campfire_fc496f17.jpg"
+  ],
+  "town": [
+   "Cluster_of_houses_and_tower_026f5cc7.jpg",
+   "Cluster_of_houses_and_tower_90b1f6c9.jpg",
+   "Cluster_of_houses_and_tower_f4115cde.jpg",
+   "Houses_around_tower_game-map_icon_e8cd456c.jpg"
+  ],
+  "street": [
+   "Cobbled_street_with_lamp_post_1bb827a0.jpg",
+   "Cobbled_street_with_lamp_post_3db6a410.jpg",
+   "Cobbled_street_with_lamp_post_b8c5049a.jpg",
+   "Cobbled_street_with_lamp_post_cd384b48.jpg"
+  ],
+  "room": [
+   "Cosy_room_interior_cut-away_illu…_01e355cc.jpg",
+   "Cosy_room_interior_cut-away_illu…_48726cbc.jpg",
+   "Cosy_room_interior_cut-away_illu…_fe6e4658.jpg",
+   "Cozy_room_interior_cut-away_illu…_754a0565.jpg"
+  ],
+  "tavern": [
+   "Cosy_timber_tavern_icon_a4abd26b.jpg",
+   "Cosy_timber_tavern_icon_illustra…_5a49f909.jpg",
+   "Timber_tavern_game-map_icon_cc57bea5.jpg",
+   "Timber_tavern_icon_illustration_187e5093.jpg"
+  ],
+  "cave": [
+   "Dark_cave_mouth_in_hill_33c8d2e7.jpg",
+   "Dark_cave_mouth_in_hill_8c73ef98.jpg",
+   "Dark_cave_mouth_in_hill_ae5548bf.jpg",
+   "Dark_cave_mouth_in_hill_ae82fe77.jpg"
+  ],
+  "sea": [
+   "Deep_blue_sea_with_waves_40bd8911.jpg",
+   "Deep_blue_sea_with_waves_81a58453.jpg",
+   "Deep_blue_sea_with_waves_f2d521b8.jpg",
+   "Patch_of_deep_blue_sea_bb6ce82b.jpg"
+  ],
+  "city": [
+   "Dense_city_skyline_behind_wall_13657245.jpg",
+   "Dense_city_skyline_behind_wall_7648b3c9.jpg",
+   "Dense_city_skyline_behind_wall_c88905d0.jpg",
+   "Dense_city_skyline_behind_wall_f2741b52.jpg"
+  ],
+  "farm": [
+   "Farmhouse_with_red_barn_0215d399.jpg",
+   "Farmhouse_with_red_barn_1029429a.jpg",
+   "Farmhouse_with_red_barn_3f33affb.jpg",
+   "Farmhouse_with_red_barn_9ce2ec85.jpg"
+  ],
+  "palace": [
+   "Grand_palace_with_golden_dome_0aa3b5e0.jpg",
+   "Grand_palace_with_golden_dome_48336a4b.jpg",
+   "Grand_palace_with_golden_dome_d126026b.jpg",
+   "Palace_with_golden_dome_01cf56ab.jpg"
+  ],
+  "hills": [
+   "Green_hills_with_stream_3b511aa0.jpg",
+   "Rolling_green_hills_game_icon_58648165.jpg",
+   "Rolling_green_hills_game_icon_6612412d.jpg",
+   "Rolling_green_hills_game_icon_72a0ef35.jpg"
+  ],
+  "meadow": [
+   "Green_meadow_patch_with_wildflowers_129d33fd.jpg",
+   "Green_meadow_patch_with_wildflowers_1b437cf7.jpg",
+   "Green_meadow_patch_with_wildflowers_c2c6faac.jpg",
+   "Meadow_patch_with_wildflowers_71c2ef74.jpg"
+  ],
+  "dungeon": [
+   "Iron_prison_cell_door_icon_0c6d0716.jpg",
+   "Iron_prison_cell_door_icon_0cca25f4.jpg",
+   "Iron_prison_cell_door_icon_188754af.jpg",
+   "Prison_cell_door_with_torch_5a6ae2cb.jpg"
+  ],
+  "lighthouse": [
+   "Lighthouse_on_rock_emitting_light_05d6d57c.jpg",
+   "Lighthouse_on_rock_emitting_light_1638c7f2.jpg",
+   "Lighthouse_on_rock_emitting_light_cb88aa91.jpg",
+   "Lighthouse_on_rock_with_light_13f4f94e.jpg"
+  ],
+  "shop": [
+   "Market_shop_front_icon_7ffbd7ab.jpg",
+   "Market_shop_front_icon_b3a6ac4a.jpg",
+   "Market_shop_front_icon_fa69e772.jpg",
+   "Market_shop_front_illustration_2c9b3c6b.jpg"
+  ],
+  "market": [
+   "Market_square_stall_icon_738e7ddc.jpg",
+   "Market_square_stall_illustration_19b6d82a.jpg",
+   "Market_square_stall_with_fruit_7ba5b9ce.jpg",
+   "Market_square_stall_with_fruit_a972252e.jpg"
+  ],
+  "swamp": [
+   "Murky_green_swamp_game_icon_0ece5b24.jpg",
+   "Swamp_map_icon_with_trees_b8688855.jpg",
+   "Swamp_with_dead_trees_2ba7ef1e.jpg",
+   "Swamp_with_dead_trees_3f2d56f9.jpg"
+  ],
+  "river": [
+   "River_stretch_with_stones_and_4930e999.jpg",
+   "River_stretch_with_stones_reeds_c91c3885.jpg",
+   "River_with_banks_and_stones_28f34fd6.jpg",
+   "River_with_stones_and_reeds_e5229fdc.jpg"
+  ],
+  "inn": [
+   "Roadside_inn_building_icon_aae4b625.jpg",
+   "Roadside_inn_with_signboard_d7ef9578.jpg",
+   "Two-storey_roadside_inn_illustra…_77ce4f53.jpg",
+   "Two-storey_roadside_inn_illustra…_f0b2c8f1.jpg"
+  ],
+  "desert": [
+   "Sand_dunes_with_a_cactus_31df0dfc.jpg",
+   "Sand_dunes_with_cactus_and_0f86428b.jpg",
+   "Sand_dunes_with_cactus_skull_271a1376.jpg",
+   "Sand_dunes_with_cactus_skull_a64d2d1d.jpg"
+  ],
+  "beach": [
+   "Sandy_beach_with_palm_tree_30855927.jpg",
+   "Sandy_beach_with_palm_tree_5a451a45.jpg",
+   "Sandy_beach_with_palm_tree_d1dd243d.jpg",
+   "Sandy_beach_with_palm_tree_fa8ceb14.jpg"
+  ],
+  "field": [
+   "Scarecrow_in_wheat_field_799e8ae2.jpg",
+   "Scarecrow_in_wheat_field_9a7d6aa7.jpg",
+   "Scarecrow_in_wheat_field_bc5ed13b.jpg",
+   "Scarecrow_in_wheat_field_c9746674.jpg"
+  ],
+  "school": [
+   "School_building_with_bell_tower_5347af11.jpg",
+   "School_building_with_bell_tower_68a88057.jpg",
+   "School_building_with_bell_tower_8d176c1d.jpg",
+   "School_building_with_bell_tower_a371189f.jpg"
+  ],
+  "graveyard": [
+   "Small_graveyard_with_gravestones_e0c89cf1.jpg",
+   "Small_graveyard_with_gravestones…_1449a8ec.jpg",
+   "Small_graveyard_with_gravestones…_31a37c54.jpg",
+   "Small_graveyard_with_gravestones…_40ad5079.jpg"
+  ],
+  "snow": [
+   "Snowy_field_with_fir_trees_26ee588c.jpg",
+   "Snowy_field_with_fir_trees_44e10b27.jpg",
+   "Snowy_field_with_fir_trees_5ceea83e.jpg",
+   "Snowy_field_with_fir_trees_6008173b.jpg"
+  ],
+  "portal": [
+   "Standing_stone_ring_with_gateway_5b50845b.jpg",
+   "Stone_ring_with_magical_gateway_7b580fd9.jpg",
+   "Stone_ring_with_magical_gateway_97468d9c.jpg",
+   "Stone_ring_with_magical_gateway_a4b2091b.jpg"
+  ],
+  "house": [
+   "Stone_and_timber_house_icon_114783f5.jpg",
+   "Stone_and_timber_house_icon_832d9c02.jpg",
+   "Stone_and_timber_house_icon_94ab1cff.jpg",
+   "Stone_and_timber_house_icon_ad0d9a74.jpg"
+  ],
+  "castle": [
+   "Stone_castle_with_two_towers_47fcd362.jpg",
+   "Stone_castle_with_two_towers_871a161e.jpg",
+   "Stone_castle_with_two_towers_b576a459.jpg",
+   "Stone_castle_with_two_towers_e48e1d3a.jpg"
+  ],
+  "cellar": [
+   "Stone_cellar_hatch_with_barrel_3490e087.jpg",
+   "Stone_cellar_hatch_with_barrel_39812c5f.jpg",
+   "Stone_cellar_hatch_with_barrel_a6cb3f9b.jpg",
+   "Stone_cellar_hatch_with_barrel_bf036a57.jpg"
+  ],
+  "gate": [
+   "Stone_city_gate_icon_52d1f3b5.jpg",
+   "Stone_city_gate_illustration_bb0e5bef.jpg",
+   "Stone_city_gate_illustration_d931f98c.jpg",
+   "Stone_city_gate_with_doors_81871fa1.jpg"
+  ],
+  "fortress": [
+   "Stone_fortress_game-map_icon_9a4b8fc0.jpg",
+   "Stone_fortress_game_icon_1e117eb3.jpg",
+   "Stone_fortress_game_icon_f2d3b50f.jpg",
+   "Stone_fortress_with_gatehouse_c683d954.jpg"
+  ],
+  "library": [
+   "Stone_library_building_icon_dd52e866.jpg",
+   "Stone_library_building_with_books_369a7b93.jpg",
+   "Stone_library_building_with_books_93fe4dc4.jpg",
+   "Stone_library_building_with_books_c1e57a7a.jpg"
+  ],
+  "tower": [
+   "Stone_tower_with_conical_roof_6597b348.jpg",
+   "Stone_tower_with_conical_roof_780c20d6.jpg",
+   "Stone_tower_with_conical_roof_920755de.jpg",
+   "Stone_tower_with_conical_roof_b77bad25.jpg"
+  ],
+  "mountain": [
+   "Tall_grey_mountain_icon_65cfb8b5.jpg",
+   "Tall_grey_mountain_with_snow_1b7eeb73.jpg",
+   "Tall_grey_mountain_with_snow_fe4e8856.jpg",
+   "Tall_mountain_with_snow_peak_5fcbed0e.jpg"
+  ],
+  "village": [
+   "Three_houses_and_well_icon_07621ed0.jpg",
+   "Three_houses_and_well_icon_da335ad1.jpg",
+   "Three_houses_with_a_well_7389a2e6.jpg",
+   "Three_small_houses_and_well_46c8eec9.jpg"
+  ],
+  "forest": [
+   "Three_trees_and_bushes_65275352.jpg",
+   "Three_trees_with_bushes_icon_8aa39037.jpg",
+   "Trees_and_bushes_icon_a1b4ac12.jpg",
+   "Trees_with_bushes_game_icon_d3d25535.jpg"
+  ],
+  "park": [
+   "Town_park_with_bench_08c3b817.jpg",
+   "Town_park_with_bench_8636a8fe.jpg",
+   "Town_park_with_bench_and_04358926.jpg",
+   "Town_park_with_park_bench_42091dc3.jpg"
+  ],
+  "church": [
+   "Small_village_church_with_steeple_3ce5b17c.jpg",
+   "Village_church_with_steeple_9db8ffc3.jpg",
+   "Village_church_with_steeple_c0f6568a.jpg",
+   "Village_church_with_steeple_e9dfdda3.jpg"
+  ],
+  "garden": [
+   "Walled_garden_game_icon_1cf2ba84.jpg",
+   "Walled_garden_icon_with_hedge_77ae486a.jpg",
+   "Walled_garden_with_trimmed_hedge_81738977.jpg",
+   "Walled_garden_with_trimmed_hedge_c3122c74.jpg"
+  ],
+  "road": [
+   "Winding_dirt_road_signpost_2215facb.jpg",
+   "Winding_dirt_road_signpost_787cc4ce.jpg",
+   "Winding_dirt_road_signpost_a9edb6e2.jpg",
+   "Winding_dirt_road_signpost_c4678e71.jpg"
+  ],
+  "cottage": [
+   "Tiny_wooden_cottage_icon_3c3a1190.jpg",
+   "Tiny_wooden_cottage_icon_da880105.jpg",
+   "Wooden_cottage_icon_1995607d.jpg",
+   "Wooden_cottage_icon_c0608cb2.jpg"
+  ],
+  "port": [
+   "Wooden_harbor_pier_with_boat_adb19e79.jpg",
+   "Wooden_harbour_pier_icon_df675c7c.jpg",
+   "Wooden_harbour_pier_with_boat_0188c16a.jpg",
+   "Wooden_harbour_pier_with_boat_16d75692.jpg"
+  ],
+  "mine": [
+   "Wooden_mine_entrance_with_cart_1a3f07ae.jpg",
+   "Wooden_mine_entrance_with_cart_c4ae616b.jpg",
+   "Wooden_mine_entrance_with_cart_cec65e74.jpg",
+   "Wooden_mine_entrance_with_cart_f2d5719b.jpg"
+  ],
+  "ship": [
+   "Wooden_sailing_ship_icon_16f03536.jpg",
+   "Wooden_sailing_ship_icon_1a5a3573.jpg",
+   "Wooden_sailing_ship_icon_52c75b0d.jpg",
+   "Wooden_sailing_ship_icon_66d2c9c1.jpg"
+  ],
+  "mill": [
+   "Wooden_windmill_on_a_hill_308c5370.jpg",
+   "Wooden_windmill_on_hill_feb4281e.jpg",
+   "Wooden_windmill_on_small_hill_255ff789.jpg",
+   "Wooden_windmill_on_small_hill_5ab57b8a.jpg"
+  ],
+  "airport": [
+   "Airport_terminal_game_icon_caba3a35.jpg",
+   "Airport_terminal_game_map_icon_8fc2271d.jpg",
+   "Airport_terminal_with_control_tower_43013200.jpg",
+   "Airport_terminal_with_control_tower_4f01d2d2.jpg"
+  ],
+  "apartment-block": [
+   "Apartment_block_game_icon_707220b4.jpg",
+   "Apartment_block_game_icon_b98c7bf8.jpg",
+   "Apartment_block_game_map_icon_1f7abec4.jpg",
+   "Six-storey_residential_apartment…_3245f771.jpg"
+  ],
+  "arcade": [
+   "Arcade_center_game-map_icon_6bb1902c.jpg",
+   "Arcade_center_game_icon_098bf985.jpg",
+   "Arcade_center_icon_design_0f1c8694.jpg"
+  ],
+  "bank": [
+   "Bank_building_map_icon_006e7261.jpg",
+   "Stone_bank_building_icon_design_4b45a9db.jpg",
+   "Stone_bank_building_icon_design_92e774eb.jpg",
+   "Stone_bank_game-map_icon_fd474323.jpg"
+  ],
+  "factory": [
+   "Brick_factory_game_map_icon_740ed1b2.jpg",
+   "Factory_building_icon_design_2324792a.jpg",
+   "Factory_building_on_map_icon_3b5f2916.jpg",
+   "Factory_game_map_icon_design_4e100fd8.jpg"
+  ],
+  "bus-stop": [
+   "Bus_stop_shelter_and_bus_666d1731.jpg",
+   "Bus_stop_shelter_and_bus_b86b7b77.jpg",
+   "Bus_stop_shelter_with_bus_ca3b1b1c.jpg",
+   "Bus_stop_shelter_with_bus_d8dcb316.jpg"
+  ],
+  "cafe": [
+   "Cafe_building_with_outdoor_tables_16c0b745.jpg",
+   "Corner_cafe_game_icon_e0a1c7fa.jpg",
+   "Corner_cafe_with_outdoor_seating_27d8c37c.jpg",
+   "Corner_cafe_with_outdoor_tables_13d2c7f5.jpg"
+  ],
+  "cinema": [
+   "Cinema_building_with_lit_marquee_2414d4cf.jpg",
+   "Cinema_building_with_lit_marquee_2dad4b6f.jpg",
+   "Cinema_with_lit_marquee_26fd95cf.jpg",
+   "Cinema_with_lit_marquee_dbce0d89.jpg"
+  ],
+  "crossroads": [
+   "City_crossroads_icon_design_9ddd50e4.jpg",
+   "City_crossroads_with_pedestrian_…_1957438d.jpg",
+   "City_crossroads_with_pedestrian_…_4aa164aa.jpg",
+   "City_crossroads_with_traffic_lights_e465b6e0.jpg"
+  ],
+  "construction-site": [
+   "Construction_site_game-map_icon_a694d5f3.jpg",
+   "Construction_site_game_icon_423c9820.jpg",
+   "Construction_site_icon_design_3973e521.jpg",
+   "Construction_site_map_icon_72e26b95.jpg"
+  ],
+  "courthouse": [
+   "Courthouse_game-map_icon_design_148b3318.jpg",
+   "Courthouse_game-map_icon_design_e99b7d55.jpg",
+   "Courthouse_game-map_icon_f943a52a.jpg",
+   "Courthouse_game_icon_design_47ce9d91.jpg"
+  ],
+  "fire-station": [
+   "Fire_station_with_engine_a1109070.jpg",
+   "Fire_station_with_engine_a39e4118.jpg",
+   "Fire_station_with_fire_engine_460ab9e0.jpg",
+   "Fire_station_with_fire_engine_6569567a.jpg"
+  ],
+  "stadium": [
+   "Football_stadium_game_icon_235c92c0.jpg",
+   "Football_stadium_game_icon_7c0ba01c.jpg",
+   "Football_stadium_game_icon_8af1d130.jpg",
+   "Football_stadium_game_icon_ab076eb4.jpg"
+  ],
+  "gym": [
+   "Gym_building_game_map_icon_14c172c7.jpg",
+   "Gym_building_map_icon_design_58626001.jpg",
+   "Gym_building_map_icon_design_a6a0432e.jpg",
+   "Gym_game-map_icon_design_f62feb7e.jpg"
+  ],
+  "hospital": [
+   "Hospital_building_icon_with_ambu…_6c6e756a.jpg",
+   "Hospital_building_icon_with_ambu…_81d8ebcf.jpg",
+   "Hospital_building_with_ambulance…_2176e132.jpg",
+   "Hospital_building_with_helipad_icon_c5bb4b9b.jpg"
+  ],
+  "hotel": [
+   "Hotel_building_icon_design_53fda22e.jpg",
+   "Hotel_icon_on_magenta_background_996b4163.jpg",
+   "Mid-size_hotel_building_icon_abd697be.jpg",
+   "Mid-size_hotel_with_lit_canopy_86b7f6d0.jpg"
+  ],
+  "subway": [
+   "Metro_station_entrance_game_icon_f301b3ed.jpg",
+   "Metro_station_entrance_icon_4da027e7.jpg",
+   "Metro_station_entrance_icon_90c04b6a.jpg",
+   "Metro_station_entrance_stairs_ca…_dcdd340b.jpg"
+  ],
+  "office": [
+   "Mid-rise_office_building_with_glass_6c5fe7aa.jpg",
+   "Office_building_game_map_icon_5b8b397c.jpg",
+   "Office_building_icon_design_09ae36e1.jpg",
+   "Office_building_with_glass_front_c570e93a.jpg"
+  ],
+  "karaoke": [
+   "Modern_city_karaoke_bar_121fd6a8.jpg",
+   "Modern_city_karaoke_bar_5b529058.jpg",
+   "Modern_city_karaoke_bar_icon_6e81d487.jpg",
+   "Modern_city_karaoke_bar_icon_ea511817.jpg"
+  ],
+  "post-office": [
+   "Modern_city_post_office_building_d370fd19.jpg",
+   "Modern_city_post_office_building_f0c74a9c.jpg",
+   "Modern_city_post_office_icon_737004e2.jpg",
+   "Modern_post_office_building_design_ede8fc61.jpg",
+   "Post_office_building_and_van_7dc6dfdb.jpg",
+   "Post_office_building_and_van_d5944e08.jpg",
+   "Post_office_building_and_van_f8f88d54.jpg",
+   "Post_office_building_with_van_1c8d46ca.jpg"
+  ],
+  "city-street": [
+   "Modern_city_street_game_icon_fc5b2d0a.jpg",
+   "Modern_city_street_map_icon_5d406ce0.jpg",
+   "Modern_city_street_map_icon_8dcd0f6c.jpg",
+   "Modern_city_street_map_icon_c0936d9f.jpg"
+  ],
+  "harbour-modern": [
+   "Modern_container_port_with_crane_85a532e7.jpg",
+   "Modern_container_port_with_crane_8b27d88b.jpg",
+   "Modern_container_port_with_crane_c663259a.jpg",
+   "Modern_container_port_with_crane…_1bbb20af.jpg"
+  ],
+  "pharmacy": [
+   "Modern_pharmacy_shopfront_icon_4f478df0.jpg",
+   "Modern_pharmacy_shopfront_icon_941e88ba.jpg",
+   "Modern_pharmacy_shopfront_icon_edb4c050.jpg",
+   "Pharmacy_shopfront_game_icon_4a075433.jpg"
+  ],
+  "train-station": [
+   "Modern_railway_station_game_icon_10635d55.jpg",
+   "Modern_railway_station_game_icon_1be401de.jpg",
+   "Modern_railway_station_map_icon_3b8920d0.jpg",
+   "Railway_station_map_icon_design_415f1b8c.jpg"
+  ],
+  "parking": [
+   "Multi-storey_car_park_game_icon_2bfec7cc.jpg",
+   "Multi-storey_car_park_game_icon_426e45c1.jpg",
+   "Multi-storey_car_park_game_icon_85b77fe0.jpg",
+   "Multi-storey_car_park_map_icon_f67258ca.jpg"
+  ],
+  "museum": [
+   "Museum_building_game_icon_08efc073.jpg",
+   "Museum_building_with_columns_17a118a6.jpg",
+   "Museum_building_with_columns_7db4e8f9.jpg",
+   "Museum_building_with_columns_c17c7984.jpg"
+  ],
+  "nightclub": [
+   "Nightclub_entrance_icon_design_949037a5.jpg",
+   "Nightclub_entrance_icon_design_dbe1c0c9.jpg",
+   "Nightclub_entrance_icon_design_f4627ad9.jpg",
+   "Nightclub_entrance_with_bouncer_…_b342d80a.jpg"
+  ],
+  "gas-station": [
+   "Petrol_station_game_icon_94c8c648.jpg",
+   "Petrol_station_game_map_icon_5985d348.jpg",
+   "Petrol_station_game_map_icon_5d4c01b4.jpg",
+   "Petrol_station_map_icon_design_7564f1ee.jpg"
+  ],
+  "police-station": [
+   "Police_station_building_with_car_b454379a.jpg",
+   "Police_station_game_icon_2d082b2c.jpg",
+   "Police_station_game_icon_7e327484.jpg",
+   "Police_station_game_map_icon_6b8c83b2.jpg",
+   "Police_station_with_patrol_car_d1e81b98.jpg",
+   "Police_station_with_patrol_car_fdb6b3c8.jpg"
+  ],
+  "power-plant": [
+   "Power_plant_game_icon_0bf18495.jpg",
+   "Power_plant_game_map_icon_17fb66e7.jpg",
+   "Power_plant_game_map_icon_758329a6.jpg",
+   "Power_plant_game_map_icon_a21aff77.jpg"
+  ],
+  "lab": [
+   "Research_laboratory_building_icon_24e2de63.jpg",
+   "Research_laboratory_building_icon_84187651.jpg",
+   "Research_laboratory_building_icon_a95084ee.jpg",
+   "Research_laboratory_game_icon_de…_8c453d3b.jpg"
+  ],
+  "restaurant": [
+   "Restaurant_front_with_lit_sign_0197938a.jpg",
+   "Restaurant_front_with_lit_sign_490f3cec.jpg",
+   "Restaurant_front_with_lit_sign_a7054d6a.jpg",
+   "Restaurant_front_with_lit_sign_a7f90dd7.jpg"
+  ],
+  "mall": [
+   "Shopping_mall_game-map_icon_8411e718.jpg",
+   "Shopping_mall_game-map_icon_8e1bbbf2.jpg",
+   "Shopping_mall_game_map_icon_61e32a1f.jpg",
+   "Shopping_mall_map_icon_design_898fdcb2.jpg"
+  ],
+  "skyscraper": [
+   "Skyscraper_with_antenna_crown_dbe2546b.jpg",
+   "Skyscraper_with_antennas_102e14e0.jpg",
+   "Skyscraper_with_antennas_and_win…_1a3c128a.jpg",
+   "Skyscraper_with_antennas_icon_224e489e.jpg"
+  ],
+  "suburban-house": [
+   "Suburban_house_game_map_icon_12241618.jpg",
+   "Suburban_house_game_map_icon_cb8b295b.jpg",
+   "Suburban_house_game_map_icon_d16f7a77.jpg",
+   "Suburban_house_map_icon_9381c52c.jpg"
+  ],
+  "supermarket": [
+   "Supermarket_building_icon_design_bc4bb96b.jpg",
+   "Supermarket_building_with_shoppi…_ae7770f7.jpg",
+   "Supermarket_building_with_shoppi…_b70d364a.jpg",
+   "Supermarket_building_with_shoppi…_dee51310.jpg"
+  ],
+  "university": [
+   "University_building_with_clock_t…_df41f296.jpg",
+   "University_campus_building_clock…_20057638.jpg",
+   "University_campus_building_clock…_e58768d0.jpg",
+   "University_campus_building_with_…_94ef18bb.jpg"
+  ],
+  "warehouse": [
+   "Warehouse_game-map_icon_design_9972e815.jpg",
+   "Warehouse_game_map_icon_321be27e.jpg",
+   "Warehouse_game_map_icon_61e3de64.jpg",
+   "Warehouse_game_map_icon_edcdd6e1.jpg"
+  ]
+ },
+ "mapPacks": {
+  "default": {
+   "name": "Molfar Vertep",
+   "maps": {
+    "map-coast": [
+     "Coast_and_islands_fantasy_map_5372c57a.jpg",
+     "Coast_and_islands_fantasy_map_6ea388fa.jpg",
+     "Fantasy_map_showing_coast_and_19623019.jpg",
+     "Painted_fantasy_map_of_coast_1e1035c7.jpg"
+    ],
+    "map-region": [
+     "Fantasy_map_background_of_region_8a34eff5.jpg",
+     "Hand-painted_fantasy_map_background_428caf95.jpg",
+     "Hand-painted_fantasy_map_background_62f5ff3f.jpg",
+     "Hand-painted_fantasy_map_background_d98220b7.jpg"
+    ],
+    "map-wilds": [
+     "Fantasy_map_of_wild_country_bb802461.jpg",
+     "Hand-painted_fantasy_map_background_84133451.jpg",
+     "Hand-painted_fantasy_map_background_b055d8ae.jpg",
+     "Hand-painted_fantasy_map_background_b42b8e16.jpg"
+    ],
+    "map-city": [
+     "Medieval_walled_town_map_plan_33af5ce3.jpg",
+     "Medieval_walled_town_map_plan_5984bcc5.jpg",
+     "Medieval_walled_town_map_plan_840ef09f.jpg",
+     "Medieval_walled_town_plan_8bb657dc.jpg"
+    ],
+    "map-village": [
+     "Village_fantasy_map_background_plan_d871f8e5.jpg",
+     "Village_map_plan_of_ground_0e10ca21.jpg",
+     "Village_plan_painted_fantasy_map_1039cd43.jpg",
+     "Village_plan_painted_map_background_c36d64f6.jpg"
+    ],
+    "map-port-town": [
+     "Harbour_town_fantasy_map_plan_12d1ba50.jpg",
+     "Harbour_town_fantasy_map_plan_70bbf46a.jpg",
+     "Harbour_town_fantasy_map_plan_abf02a81.jpg",
+     "Harbour_town_fantasy_map_plan_e2885020.jpg"
+    ],
+    "map-interior": [
+     "Floor_plan_of_large_house_d4e7c196.jpg",
+     "Floor_plan_of_large_house_e892caa1.jpg",
+     "House_floor_plan_top-down_e56efd60.jpg",
+     "House_floor_plan_top_down_09469d76.jpg"
+    ],
+    "map-underground": [
+     "Underground_cavern_system_from_a…_bf7ea803.jpg",
+     "Underground_cavern_system_from_a…_d463f83a.jpg",
+     "Underground_cavern_system_from_a…_ea5e2aa6.jpg",
+     "Underground_cavern_system_map_0b6fabe4.jpg"
+    ]
+   }
+  },
+  "modern": {
+   "name": "Modern city",
+   "maps": {
+    "map-modern-downtown": [
+     "City_map_grid_plan_background_112de62d.jpg",
+     "Painted_city_map_plan_39bcbf06.jpg",
+     "Painted_downtown_city_map_plan_679183c4.jpg",
+     "Painted_map_of_city_grid_3481be4e.jpg"
+    ],
+    "map-modern-residential": [
+     "Hand-painted_map_of_residential_…_62333a4e.jpg",
+     "Illustrated_map_of_residential_s…_e3143a09.jpg",
+     "Painted_map_of_residential_suburb_9279aaf6.jpg",
+     "Painted_map_of_residential_suburb_b603b60d.jpg"
+    ],
+    "map-modern-industrial": [
+     "Industrial_district_map_background_7db1b181.jpg",
+     "Industrial_district_painted_map_…_9a031bd2.jpg",
+     "Map_of_industrial_district_fe5c7dff.jpg",
+     "Painted_map_of_industrial_district_68d6beda.jpg"
+    ],
+    "map-modern-campus": [
+     "Hand-painted_university_campus_map_ede1e5ec.jpg",
+     "Painted_map_of_university_campus_b9a4c3d0.jpg",
+     "Painted_university_campus_map_ba…_18910741.jpg",
+     "Painted_university_campus_map_ba…_a0dcf220.jpg"
+    ],
+    "map-modern-waterfront": [
+     "Hand-painted_harbour_city_map_28150ad5.jpg",
+     "Hand-painted_map_of_harbour_wate…_c7be04b0.jpg",
+     "Hand-painted_modern_city_map_bac…_bb3e45a1.jpg",
+     "Painted_city_map_waterfront_layout_c6fa6833.jpg"
+    ],
+    "map-modern-old-town": [
+     "Hand-painted_map_of_town_74fe9a9f.jpg",
+     "Hand-painted_old_town_map_backgr…_33e6b2d9.jpg",
+     "Illustrated_map_of_European_town_dea4d672.jpg",
+     "Painted_map_of_European_town_f24a4646.jpg"
+    ],
+    "map-modern-airport": [
+     "Airport_map_seen_from_above_d856aa9d.jpg",
+     "Painted_map_of_airport_41ad8cc8.jpg",
+     "Painted_map_of_airport_98c2dd50.jpg",
+     "Painted_map_of_airport_bda245a8.jpg"
+    ],
+    "map-modern-metropolis": [
+     "Hand-painted_metropolis_map_back…_5a6045da.jpg",
+     "Hand-painted_metropolis_map_back…_872b4fc0.jpg",
+     "Hand-painted_metropolis_map_back…_e6c3e424.jpg",
+     "Painted_city_map_background_1aa36e1e.jpg"
+    ],
+    "map-modern-park": [
+     "Hand-painted_city_park_map_backg…_9da85356.jpg",
+     "Illustrated_map_of_city_park_28e6fd72.jpg",
+     "Painted_map_of_city_park_2f2a3373.jpg",
+     "Painted_map_of_city_park_95b607a4.jpg"
+    ],
+    "map-modern-small-town": [
+     "Illustrated_map_of_modern_town_b1c28be0.jpg",
+     "Painted_map_of_modern_town_88817048.jpg",
+     "Painted_map_of_modern_town_b1535c62.jpg",
+     "Painted_map_of_town_60c04202.jpg"
+    ]
+   }
+  }
+ }
+}

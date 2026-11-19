@@ -1,0 +1,198 @@
+{
+ "id": "default",
+ "name": "Molfar Vertep",
+ "maps": [
+  {
+   "id": "coast-1",
+   "kind": "coast",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "coast-2",
+   "kind": "coast",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "coast-3",
+   "kind": "coast",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "coast-4",
+   "kind": "coast",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "region-1",
+   "kind": "region",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "region-2",
+   "kind": "region",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "region-3",
+   "kind": "region",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "region-4",
+   "kind": "region",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "wilds-1",
+   "kind": "wilds",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "wilds-2",
+   "kind": "wilds",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "wilds-3",
+   "kind": "wilds",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "wilds-4",
+   "kind": "wilds",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "city-1",
+   "kind": "city",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "city-2",
+   "kind": "city",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "city-3",
+   "kind": "city",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "city-4",
+   "kind": "city",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "village-1",
+   "kind": "village",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "village-2",
+   "kind": "village",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "village-3",
+   "kind": "village",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "village-4",
+   "kind": "village",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "port-town-1",
+   "kind": "port-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "port-town-2",
+   "kind": "port-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "port-town-3",
+   "kind": "port-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "port-town-4",
+   "kind": "port-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "interior-1",
+   "kind": "interior",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "interior-2",
+   "kind": "interior",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "interior-3",
+   "kind": "interior",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "interior-4",
+   "kind": "interior",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "underground-1",
+   "kind": "underground",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "underground-2",
+   "kind": "underground",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "underground-3",
+   "kind": "underground",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "underground-4",
+   "kind": "underground",
+   "w": 1376,
+   "h": 768
+  }
+ ]
+}

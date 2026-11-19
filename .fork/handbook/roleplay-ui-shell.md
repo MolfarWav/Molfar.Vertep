@@ -1,5 +1,5 @@
 # Roleplay UI: shell, sections, navigation, themes, shared pieces, languages
-Verified at: molfar.vertep-roleplay 56bf594
+Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454)
 
 ## What it does
 - The shell (`src/components/shell/app-shell.tsx`) draws an icon rail (desktop) or tab bar (phone), one page (`view`), and an optional drawer (`drawer`).
