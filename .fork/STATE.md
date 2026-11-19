@@ -1,6 +1,6 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-11-18.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-11-19.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 Developer handbook, one page per system: `.fork/handbook/INDEX.md` (kept up to date by the rule in `CLAUDE.md`).
 
@@ -8,6 +8,12 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `.fork/state-archive/` (word for word, one file per period, `README.md` there). A note that says
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
+
+## 2026-11-19 (evening): #454 the places map, step M2 built (Roleplay branch `claude/map-454`, nothing merged or released)
+- **Owner's choice:** start with M2; he makes the icons himself in an image model (a plain JPEG on a flat magenta background, so a script keys it out): prompts and the 51 subjects are in `.fork/handoff/map-454/ICONS.md`. Plan and what changed against it: `.fork/handoff/map-454/PLAN.md`.
+- **Built (Roleplay, worktree `D:\Claude\rp-map-454`, 4 commits on top of `main` 7639f2e):** a floating map window with a round chip (`place-map.tsx`, `place-map-board.tsx`), own light board (pan, pinch, wheel, node drag, picture slot; not `canvas-kit`), layout by code (`place-map.ts`), window geometry (`float-box.ts`), emoji by place kind (`place-kinds.ts`), chat meta `placeMap` (positions, roads, picture id; `cleanPlaceMapMeta` in the engine plugin), setting "Places Map", 29 strings (en, uk), guide page `places-map`, `DATA-FORMATS.md`, COUPLINGS entry, CHANGELOG Unreleased. Roads are added when the scene moves between whole places; a picture of the player's own is uploaded under the places and removed again without moving them.
+- **Checked:** typecheck; new tests `rp-place-map`, `rp-float-box`, `rp-place-kinds` and the `placeMap` case in `rp-studio`; the full Roleplay suite (4637 pass, the same 3 known failures as on main). In a real browser on a throwaway engine: chip, open, fold, drag a node (saved in the chat meta), pan and wheel zoom, resize, move the window, upload and remove a picture (positions stay), reload (window and positions kept), roads drawn, dark, light and 390 px, the map steps aside while typing. Found and fixed on the way: a resize that stuck when the button was released outside the app frame (pointer capture and a `buttons === 0` guard), spots hiding their place's name.
+- **Not checked:** the road tracker in a real play (no Dashboard sensor or World DM ran: unit tests only), a real phone's touch and keyboard, more than about 40 places, a custom theme. The guide page is English only (translations at the Roleplay release). Not done on purpose: travel by a tap, the road's time and street (M3), the engine icon set (M1: waits for the pictures), a generate button for the map picture (M4).
 
 ## 2026-11-19 (later): owner's batch #467, #461, #458, #460, #463 (branches pushed, nothing merged or released)
 - **#467 / PR 468 (read another app's file in pieces, by LeviTheWeasel):** reviewed the diff (no new path or permission, each call holds at most 2 MB, bad ranges refused). It conflicted with main only in CHANGELOG (1.18.1 landed above it); resolved locally on `pr-468` (merge of main, `app-reads` 20 tests, typecheck and handbook check pass). **Not pushed to the contributor's branch and not merged: waiting for the owner's word** (`maintainerCanModify` is true).

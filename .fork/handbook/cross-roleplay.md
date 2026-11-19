@@ -213,6 +213,23 @@ Traps:
 - No image model gives a 503 with a plain message (`generateImage`).
 
 
+## From `roleplay-places-map.md`
+
+Change X, touch Y:
+- The `placeMap` shape or limits: `cleanPlaceMap` and `cleanPlaceMapMeta` together, `docs/DATA-FORMATS.md`, `test/rp-place-map.test.ts`, the `rp-studio` meta case.
+- The sprite stage's phone limit (`useComposer`, `limitArea`, `stageArea` are exported for the map): `place-map.tsx` uses them.
+- The World record fields `size`, `inside`, `visits`, `background`: `layoutMap`, the node card.
+- A new icon set from the engine: `placeKind` ids become the file names; the board draws `kind.emoji` today.
+
+Traps:
+- The board is its own component, not `canvas-kit`: its cards carry ports and are 200 x 74.
+- A swiped reply does not take back a road it walked; `at` is the last whole place seen.
+- Positions are saved from an effect that runs on each records or scene read; `layoutMap` returns `added` only for nodes without a position, or it would write forever.
+- The window's drag and resize use pointer capture and a `buttons === 0` guard: an app frame does not always hear a button released outside it.
+- A page reload takes about 8 s before the chip shows (the World state call comes after the app boots).
+- Two floating things fight for a phone's room: while the map is open the sprite stage returns nothing (`usePlaceMapOpen`).
+
+
 ## From `roleplay-presets.md`
 
 Change X, touch Y:

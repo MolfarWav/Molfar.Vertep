@@ -1,5 +1,5 @@
 # Pictures in Roleplay: portraits, sprites and outfits, backgrounds, scene pictures, voice
-Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite windows (#456) on branch claude/sprite-windows-456 (not merged yet)
+Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite windows (#456) on branch claude/sprite-windows-456 (not merged yet); the map's use of the stage helpers at molfar.vertep-roleplay c0e95cb (branch claude/map-454)
 
 ## What it does
 - A card has one portrait (its avatar) and an optional set of sprites: small pictures per emotion, sorted by outfit and, for a Narrator card, by voice.
@@ -57,7 +57,7 @@ Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite wind
 - `arrange` and `addWindow` place windows inside the chat column (`[data-chat-id]`), from an estimated sprite width of 0.6 of the height.
 - A transparent window is `pointer-events: none` except its buttons; it is moved by its grip.
 - `StageLayout.place`: `front` (windows over the chat text, as before), `behind` (each window is two boxes: the picture at `z-[5]`, under the chat log's `z-10`, and a copy at `z-30` whose picture is invisible and which carries the buttons; the grip moves it) or `reserve` (the chat log gets `margin-bottom: var(--stage-reserve)`, set by `ExpressionPanel` on `[data-chat-id]` to the tallest shown window plus 8 px, at most 60% of the chat; the windows are anchored to the strip's bottom, `anchorBottom`, and move sideways only). In `behind`, `ExpressionPanel` sets `data-stage-behind` and `--stage-scrim` (percent, `StageLayout.scrim`, default 55) on `[data-chat-id]`; `globals.css` gives `.look-stage .ls-col` a page-colour backing (`color-mix` with `--background`) of that strength, as wide as the text (`fit-content`). `StageLayout.visible` (35 to 100, default 100) is the share of each picture that shows from the top: the window is `overflow-hidden` and `h` is the visible height, the picture is drawn `h * 100 / visible` tall; `arrange` widens its width estimate by the same factor. A phone ignores `place` and `visible`. The row preset takes a smaller window height in a strip (`rowHeight` of `arrange`). `stageArea` lays windows out across the message column (`[data-chat-log]`), not the Dashboard strip beside it.
-- A phone shows window 1 and a strip of chips (`CastStrip`); a tap pins that character in the window until tapped again (not saved).
+- A phone shows window 1 and a strip of chips (`CastStrip`); a tap pins that character in the window until tapped again (not saved). While the places map is open on a phone (`usePlaceMapOpen`, `roleplay-places-map.md`) the stage returns nothing, as it does while a draft is typed; `stageArea`, `limitArea` and `useComposer` are exported for the map.
 - A group member's outfit choice is `spriteOutfits["@<card id>"]`; a solo card keeps `""`, a voice its name (`outfitsFor`, `memberSprite`).
 
 ## Backgrounds
