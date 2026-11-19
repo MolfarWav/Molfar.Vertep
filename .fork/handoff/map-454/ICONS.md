@@ -213,3 +213,33 @@ For the modern kinds add before "Subject": `A modern city, present day, believab
 More kinds later in the same way (a space, a post-apocalypse or a cyberpunk set, say): each set is a list like these, one prompt, four pictures
 each. When a set is large enough to be its own pack (the owner's plan: "our own sets of icons"), it gets its own folder and a name in the picker
 (#373 style packs); until then they all live in the one list.
+
+---
+
+# More map pictures: the modern city (the owner's request, 2026-11-19)
+
+Same use as the first map set: an opaque picture under the places (gear in the map header, "Upload a map picture"), landscape 16:9, calm and
+low-contrast, empty plots where the icons will stand. Attach one finished map of the first set (the walled town, say) as a style reference.
+
+## The prompt (replace SUBJECT)
+```
+A top-down hand-painted map background in the same illustrated style as the attached map: soft dark ink outlines, warm muted colours, visible painted texture, gentle light from the top left. Seen straight from above like a plan, a modern present-day city. It is only the ground: streets, pavements, water, greenery and open empty plots where buildings could stand later, because small icons will be placed on top of it. Calm, low-contrast, mid-tone colours, no strong dark or white areas. No buildings drawn in detail (at most flat empty lots), no cars, no people, no text, no letters, no street names, no labels, no compass, no scale bar, no border, no frame, no pins, no markers, no icons. Wide landscape 16:9.
+Subject: SUBJECT
+```
+
+## Ten subjects (file `map-modern-<name>.jpg`, four variants each as before)
+| file | subject |
+|---|---|
+| map-modern-downtown | a dense downtown plan: a regular grid of city blocks and avenues, one diagonal boulevard, a central plaza, a river along one edge with two bridges, empty paved lots in every block |
+| map-modern-residential | a residential suburb: curving streets and cul-de-sacs, a school ground with a sports field, a small park with a pond, rows of empty garden plots |
+| map-modern-industrial | an industrial district: a railway line with sidings, a canal, large empty fenced plots for warehouses and factories, access roads and a container yard outline |
+| map-modern-campus | a university campus: wide lawns, curving footpaths, a central quad, a running track and a stadium outline, car parks, empty plots for halls |
+| map-modern-waterfront | a harbour waterfront: a straight quay and piers into blue water, a promenade, a wide avenue behind it, a grid of empty blocks, a marina basin |
+| map-modern-old-town | a European old town: narrow winding streets, a central square, a river with a stone bridge, tight empty blocks, small courtyards, a ring road around it |
+| map-modern-airport | an airport seen from above: two runways, taxiways, a wide apron, an empty plot for the terminal, car parks and an access road with a junction |
+| map-modern-metropolis | a large metropolis: a ring road, highway interchanges, a wide river through the middle, districts of blocks, big parks, many empty plots |
+| map-modern-park | a large city park: a lake with an island, winding paths, lawns, tree groves, playground and pavilion outlines as empty plots, streets at the edges |
+| map-modern-small-town | a small modern town: one main street, a railway station area, a few blocks, a river and fields around, a bypass road |
+
+Avoid pink and magenta everywhere in these (nothing is cut out of a map, but it keeps the set clear of the icon backgrounds). Two or three runs of
+each is normal; pick the one with the most open ground. If the model draws buildings anyway, add: "leave all building plots empty, no roofs".
