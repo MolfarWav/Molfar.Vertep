@@ -79,6 +79,8 @@
       if (path === "/v1/assets" || path.indexOf("/v1/assets/") === 0) return true;
       // the shipped place icons of the Roleplay map: public art, read-only
       if (path === "/v1/place-icons" || path.indexOf("/v1/place-icons/") === 0) return true;
+      // the shipped map packs of the places map: public art, read-only
+      if (path === "/v1/map-packs" || path.indexOf("/v1/map-packs/") === 0) return true;
     }
     // generation the app makes on the user's behalf, and its own asset uploads
     // paid generation (images, speech) is open to every app by design: it

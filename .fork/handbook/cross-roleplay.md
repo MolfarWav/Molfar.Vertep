@@ -234,6 +234,9 @@ Traps:
 - The picked icon is a file name of the engine's set. An older engine that lacks it shows the name's icon, and a kind that is new in the set but not in `PLACE_KINDS` can only be picked by hand (matching by name needs its words added there).
 - The road's name read from the reply asks only after the stream has ended and only when the trip started with no name on the road; a swiped or regenerated reply is not asked again. The model may return junk: it is shown as an offer, never saved without Keep.
 - The direction rides on the player's message (`directions`), so it shows as a chip and is cut from the words; brackets are stripped from names and the move so nothing ends it early.
+- The default ready map is computed, never stored, so it changes when the places change enough to change the kind (a chat that grows from three streets to a modern-looking list may swap its plan). Choosing a map, uploading one or choosing the grid freezes it. `hasMap` hides a key the engine no longer has (an older engine: the grid).
+- A menu in the gear popover does not close after an action (it uses an uncontrolled `Popover`): its entries change in place (`No picture` becomes `Use the automatic map again`). A browser check that clicks the gear again toggles it shut.
+- The map pack is public art shipped with the engine; the maps are the owner's own generated pictures (permission given, issue #454). Social City does not use them.
 - Two floating things fight for a phone's room: while the map is open the sprite stage returns nothing (`usePlaceMapOpen`).
 - In the app frame an `<img src="/v1/...">` first fails (no session) and only then gets a blob URL from the bridge. An `onError` that acts on the first failure hides a healthy picture; the board acts only on an error whose `src` is a `blob:` URL.
 - A hook placed after the `if (!visible) return` in `PlaceMap` breaks the page ("Rendered more hooks"); the browser check caught it, no unit test can.

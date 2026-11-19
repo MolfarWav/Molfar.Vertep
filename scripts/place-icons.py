@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Turns the owner's place-icon pictures (an object on a flat magenta background) into transparent WebP icons.
 
-Usage: python scripts/place-icons.py <folder with the .jpg files> [--only kind] [--size 256]
-Needs Pillow and numpy (pip install pillow numpy). Reads scripts/place-icons.json (kind -> file names),
-writes builtin-assets/place-icons/<kind>-<n>.webp and builtin-assets/place-icons/index.json.
-The map pictures listed under "maps" in the json are not converted; they are only for the owner to upload.
+Usage: python scripts/place-icons.py <folder> [<folder> ...] [--only kind] [--missing] [--size 256]
+Needs Pillow and numpy (pip install pillow numpy). Reads scripts/place-icons.json (kind -> file names; a file is looked for in each folder
+given), writes builtin-assets/place-icons/<kind>-<n>.webp and builtin-assets/place-icons/index.json (kind -> how many variants).
+--missing makes only the kinds that have no <kind>-1.webp yet and keeps the rest of the index (for a new set of pictures).
+The maps of scripts/place-icons.json ("mapPacks") are not converted here: see scripts/map-packs.py.
 """
 import argparse, json, os, sys
 import numpy as np
@@ -56,26 +57,41 @@ def fit(im, size, margin=0.05):
     return sq.convert("RGBa").resize((size, size), Image.LANCZOS).convert("RGBA")
 
 
+def find(folders, name):
+    for f in folders:
+        p = os.path.join(f, name)
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError(name)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("src")
+    ap.add_argument("src", nargs="+")
     ap.add_argument("--only")
+    ap.add_argument("--missing", action="store_true")
     ap.add_argument("--size", type=int, default=256)
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "..", "builtin-assets", "place-icons"))
     a = ap.parse_args()
     cfg = json.load(open(os.path.join(os.path.dirname(__file__), "place-icons.json"), encoding="utf-8"))
     os.makedirs(a.out, exist_ok=True)
-    index = {}
+    index_path = os.path.join(a.out, "index.json")
+    index = json.load(open(index_path)) if (a.missing and os.path.exists(index_path)) else {}
+    done = 0
     for kind, files in cfg["kinds"].items():
         if a.only and kind != a.only:
             continue
+        if a.missing and os.path.exists(os.path.join(a.out, f"{kind}-1.webp")):
+            index.setdefault(kind, len(files))
+            continue
         for n, f in enumerate(files, 1):
-            icon = fit(key(Image.open(os.path.join(a.src, f))), a.size)
+            icon = fit(key(Image.open(find(a.src, f))), a.size)
             icon.save(os.path.join(a.out, f"{kind}-{n}.webp"), "WEBP", quality=84, method=6)
+            done += 1
         index[kind] = len(files)
     if not a.only:
-        json.dump(index, open(os.path.join(a.out, "index.json"), "w"), indent=1)
-    print("done", sum(index.values()), "icons")
+        json.dump({k: index[k] for k in cfg["kinds"] if k in index}, open(index_path, "w"), indent=1)
+    print("done", done, "icons")
 
 
 if __name__ == "__main__":

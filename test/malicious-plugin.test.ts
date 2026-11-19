@@ -244,6 +244,9 @@ describe("exfiltration ways out of an app page", () => {
     // the shipped place icons: readable by an app, never writable
     expect(host.allowedRequest("roleplay", "GET", "/v1/place-icons/inn-3.webp")).toBe(true);
     expect(host.allowedRequest("roleplay", "PUT", "/v1/place-icons/inn-3.webp")).toBe(false);
+    // the shipped map packs: readable by an app, never writable
+    expect(host.allowedRequest("roleplay", "GET", "/v1/map-packs/default/city-3-thumb.webp")).toBe(true);
+    expect(host.allowedRequest("roleplay", "PUT", "/v1/map-packs/default/city-3.webp")).toBe(false);
     // speech endpoint LISTING is fine; managing endpoints (a stored key could
     // be pointed at another host) is shell settings business
     expect(host.allowedRequest("roleplay", "GET", "/v1/audio/speech/endpoints")).toBe(true);

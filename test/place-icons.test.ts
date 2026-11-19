@@ -14,8 +14,13 @@ import { bootstrapUserDir } from "../src/paths.js";
 import { placeIconBytes, placeIconIndex } from "../src/place-icons.js";
 
 const SET = path.join(import.meta.dir, "..", "builtin-assets", "place-icons");
-/** The kinds the Roleplay map knows (its `PLACE_KINDS`, plus the pin that stands for any other place). */
-const KINDS = ["smithy", "bakery", "library", "school", "temple", "church", "graveyard", "tavern", "inn", "shop", "market", "mill", "farm", "lighthouse", "ship", "port", "bridge", "gate", "castle", "fortress", "tower", "palace", "dungeon", "cellar", "cave", "mine", "ruins", "camp", "portal", "street", "road", "forest", "meadow", "field", "mountain", "hills", "river", "lake", "sea", "beach", "swamp", "desert", "snow", "garden", "park", "cottage", "house", "village", "town", "city", "room", "place"];
+/** Every kind and how many pictures it has: scripts/place-icons.json is what made the files, so it is also what they are checked against. */
+const CFG = JSON.parse(fs.readFileSync(path.join(import.meta.dir, "..", "scripts", "place-icons.json"), "utf8")) as { kinds: Record<string, string[]> };
+const COUNTS: Record<string, number> = Object.fromEntries(Object.entries(CFG.kinds).map(([k, f]) => [k, f.length]));
+const KINDS = Object.keys(COUNTS);
+/** The kinds of the first set (the fantasy town and the pin) and of the modern city: Roleplay's `PLACE_KINDS` names every one of them. */
+const FIRST = ["smithy", "bakery", "library", "school", "temple", "church", "graveyard", "tavern", "inn", "shop", "market", "mill", "farm", "lighthouse", "ship", "port", "bridge", "gate", "castle", "fortress", "tower", "palace", "dungeon", "cellar", "cave", "mine", "ruins", "camp", "portal", "street", "road", "forest", "meadow", "field", "mountain", "hills", "river", "lake", "sea", "beach", "swamp", "desert", "snow", "garden", "park", "cottage", "house", "village", "town", "city", "room", "place"];
+const MODERN = ["apartment-block", "skyscraper", "office", "suburban-house", "cafe", "restaurant", "supermarket", "mall", "hospital", "pharmacy", "university", "police-station", "fire-station", "subway", "bus-stop", "train-station", "airport", "parking", "gas-station", "city-street", "crossroads", "gym", "cinema", "nightclub", "karaoke", "arcade", "hotel", "bank", "factory", "warehouse", "construction-site", "stadium", "museum", "post-office", "courthouse", "power-plant", "lab", "harbour-modern"];
 
 let dataDir: string;
 let token: string;
@@ -32,21 +37,23 @@ afterEach(() => fs.rmSync(dataDir, { recursive: true, force: true }));
 const get = (p: string, auth = true) => app.request(p, { headers: auth ? { authorization: `Bearer ${token}` } : {} });
 
 describe("the shipped place icons", () => {
-  it("has every kind the map knows, four variants each, and a file behind every number", () => {
+  it("has every kind the map knows, the pictures the config lists for each, and a file behind every number", () => {
+    expect([...KINDS].sort()).toEqual([...FIRST, ...MODERN, "arcade", "karaoke"].filter((k, i, a) => a.indexOf(k) === i).sort());
     const index = placeIconIndex();
     expect(Object.keys(index).sort()).toEqual([...KINDS].sort());
     for (const kind of KINDS) {
-      expect(index[kind], kind).toBe(4);
-      for (let n = 1; n <= 4; n++) expect(fs.existsSync(path.join(SET, `${kind}-${n}.webp`)), `${kind}-${n}`).toBe(true);
+      expect(COUNTS[kind], kind).toBeGreaterThanOrEqual(3);
+      expect(index[kind], kind).toBe(COUNTS[kind]);
+      for (let n = 1; n <= COUNTS[kind]!; n++) expect(fs.existsSync(path.join(SET, `${kind}-${n}.webp`)), `${kind}-${n}`).toBe(true);
     }
     // nothing in the folder that the index does not list
     const files = fs.readdirSync(SET).filter((f) => f.endsWith(".webp"));
-    expect(files.length).toBe(KINDS.length * 4);
+    expect(files.length).toBe(Object.values(COUNTS).reduce((a, b) => a + b, 0));
   });
 
   it("every icon is a real WebP with an alpha channel, square, small", () => {
     for (const kind of KINDS) {
-      for (let n = 1; n <= 4; n++) {
+      for (let n = 1; n <= COUNTS[kind]!; n++) {
         const b = placeIconBytes(`${kind}-${n}.webp`)!;
         expect(b, `${kind}-${n}`).not.toBeNull();
         expect(b.subarray(0, 4).toString("latin1"), `${kind}-${n} RIFF`).toBe("RIFF");
@@ -64,7 +71,8 @@ describe("the shipped place icons", () => {
 
   it("only serves names from the index, never a path", () => {
     expect(placeIconBytes("tavern-1.webp")).not.toBeNull();
-    for (const bad of ["tavern-5.webp", "tavern-0.webp", "tavern.webp", "nothing-1.webp", "../package.json", "..%2Fpackage.json", "tavern-1.webp/../x", "TAVERN-1.webp", "tavern-1.png", "index.json", ""]) {
+    expect(placeIconBytes("police-station-6.webp")).not.toBeNull();
+    for (const bad of ["tavern-5.webp", "police-station-7.webp", "tavern-0.webp", "tavern.webp", "nothing-1.webp", "../package.json", "..%2Fpackage.json", "tavern-1.webp/../x", "TAVERN-1.webp", "tavern-1.png", "index.json", ""]) {
       expect(placeIconBytes(bad), bad).toBeNull();
     }
   });

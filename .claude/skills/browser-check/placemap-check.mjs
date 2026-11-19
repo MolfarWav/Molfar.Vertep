@@ -36,8 +36,13 @@ for (const p of places) await api("PUT", "/v1/apps/roleplay/world/records", { ch
 
 const reload = async (wait = 7000) => { await page.reload(); await page.waitForTimeout(wait); await skipTours(page, fr()) }
 const openMap = async () => {
+  // after a reload the window (open as it was left) or the chip (folded) shows up when the app has loaded the World state: wait for either
   const f = fr()
-  if ((await f.locator('[data-testid="place-map"]').count()) === 0) await f.locator('[data-testid="place-map-chip"]').click({ timeout: 70000 })
+  for (let i = 0; i < 140; i++) {
+    if ((await f.locator('[data-testid="place-map"]').count()) > 0) break
+    if ((await f.locator('[data-testid="place-map-chip"]').count()) > 0) { await f.locator('[data-testid="place-map-chip"]').click({ timeout: 10000 }).catch(() => {}); break }
+    await page.waitForTimeout(500)
+  }
   await f.locator("[data-node]").first().waitFor({ timeout: 70000 })
 }
 const node = (name) => fr().locator(`[data-node][aria-label="${name}"]`)
@@ -64,7 +69,41 @@ let list = await imgs()
 for (let i = 0; i < 10 && list.some((x) => !x || x.w === 0); i++) { await page.waitForTimeout(1000); list = await imgs() }
 check("every place shows a painted icon (blob, 256 px)", list.every((x) => x && x.blob && x.w === 256), JSON.stringify(list))
 const iconUrls = await fr().evaluate(() => fetch("/v1/place-icons").then((r) => r.json()).then((j) => Object.keys(j.icons).length))
-check("the engine lists the icon set (52 kinds)", iconUrls === 52, String(iconUrls))
+check("the engine lists the icon set (90 kinds)", iconUrls === 90, String(iconUrls))
+
+// ---- ready maps: a default by what the places are, the gallery, no picture, automatic again
+const frameImg = () => fr().evaluate(() => { const i = document.querySelector('[data-testid="place-map-frame"] img'); return i ? { blob: i.src.startsWith("blob:"), w: i.naturalWidth } : null })
+const waitFrameImg = async (want) => { let r = null; for (let i = 0; i < 15; i++) { r = await frameImg(); if (want ? r?.w : !r) break; await page.waitForTimeout(1000) } return r }
+const gear = () => fr().locator('[data-testid="place-map-menu"]').click()
+const packCount = await fr().evaluate(() => fetch("/v1/map-packs").then((r) => r.json()).then((j) => j.packs.map((p) => p.maps.length).join("+")))
+check("the engine lists the map packs (32 + 40 maps)", packCount === "32+40", String(packCount))
+const dflt = await waitFrameImg(true)
+check("a new map shows a ready map by default, with no picture chosen", !!dflt?.w && !meta().placeMap?.picture, JSON.stringify(dflt))
+await gear()
+await fr().locator('[data-testid="place-map-gallery"]').click()
+const galDlg = fr().locator('[data-testid="place-map-gallery-dialog"]')
+await galDlg.waitFor({ timeout: 8000 })
+check("gallery: eighteen kinds of map (both packs), four maps in a kind", (await galDlg.locator("[data-map-kind]").count()) === 18 && (await galDlg.locator("[data-map]").count()) === 4)
+await galDlg.locator('[data-map-kind="coast"]').click()
+check("gallery: another kind shows its own four", (await galDlg.locator('[data-map^="default/coast-"]').count()) === 4)
+await galDlg.locator('[data-map-kind="modern-airport"]').click()
+check("gallery: the modern pack's kinds are there too", (await galDlg.locator('[data-map^="modern/modern-airport-"]').count()) === 4)
+await shot(page, "pm-gallery")
+await galDlg.locator('[data-map-kind="coast"]').click()
+await galDlg.locator('[data-map="default/coast-2"]').click()
+await page.waitForTimeout(1200)
+check("gallery: the pick is kept in the chat as a ready map", JSON.stringify(meta().placeMap?.picture) === '{"builtin":"default/coast-2"}', JSON.stringify(meta().placeMap?.picture))
+check("gallery: the picked map is shown", !!(await waitFrameImg(true))?.w)
+await gear()
+await fr().locator('[data-testid="place-map-no-picture"]').click()
+await page.waitForTimeout(900)
+check("no picture: the chat keeps `none` and the board is the dotted grid", JSON.stringify(meta().placeMap?.picture) === '{"none":true}' && !(await frameImg()))
+// the menu stays open after an action: its entry changes to "automatic again"
+check("no picture: the menu offers the automatic map again", (await fr().locator('[data-testid="place-map-auto-picture"]').count()) === 1)
+await fr().locator('[data-testid="place-map-auto-picture"]').click()
+await page.keyboard.press("Escape")
+await page.waitForTimeout(900)
+check("automatic again: the choice is gone and the default map is back", !meta().placeMap?.picture && !!(await waitFrameImg(true))?.w)
 
 // ---- drag moves a place, saved in the chat
 const before = JSON.stringify(meta().placeMap?.nodes ?? {})

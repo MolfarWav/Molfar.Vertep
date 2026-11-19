@@ -1,0 +1,246 @@
+{
+ "id": "modern",
+ "name": "Modern city",
+ "maps": [
+  {
+   "id": "modern-downtown-1",
+   "kind": "modern-downtown",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-downtown-2",
+   "kind": "modern-downtown",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-downtown-3",
+   "kind": "modern-downtown",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-downtown-4",
+   "kind": "modern-downtown",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-residential-1",
+   "kind": "modern-residential",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-residential-2",
+   "kind": "modern-residential",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-residential-3",
+   "kind": "modern-residential",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-residential-4",
+   "kind": "modern-residential",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-industrial-1",
+   "kind": "modern-industrial",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-industrial-2",
+   "kind": "modern-industrial",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-industrial-3",
+   "kind": "modern-industrial",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-industrial-4",
+   "kind": "modern-industrial",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-campus-1",
+   "kind": "modern-campus",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-campus-2",
+   "kind": "modern-campus",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-campus-3",
+   "kind": "modern-campus",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-campus-4",
+   "kind": "modern-campus",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-waterfront-1",
+   "kind": "modern-waterfront",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-waterfront-2",
+   "kind": "modern-waterfront",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-waterfront-3",
+   "kind": "modern-waterfront",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-waterfront-4",
+   "kind": "modern-waterfront",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-old-town-1",
+   "kind": "modern-old-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-old-town-2",
+   "kind": "modern-old-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-old-town-3",
+   "kind": "modern-old-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-old-town-4",
+   "kind": "modern-old-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-airport-1",
+   "kind": "modern-airport",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-airport-2",
+   "kind": "modern-airport",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-airport-3",
+   "kind": "modern-airport",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-airport-4",
+   "kind": "modern-airport",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-metropolis-1",
+   "kind": "modern-metropolis",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-metropolis-2",
+   "kind": "modern-metropolis",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-metropolis-3",
+   "kind": "modern-metropolis",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-metropolis-4",
+   "kind": "modern-metropolis",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-park-1",
+   "kind": "modern-park",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-park-2",
+   "kind": "modern-park",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-park-3",
+   "kind": "modern-park",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-park-4",
+   "kind": "modern-park",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-small-town-1",
+   "kind": "modern-small-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-small-town-2",
+   "kind": "modern-small-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-small-town-3",
+   "kind": "modern-small-town",
+   "w": 1376,
+   "h": 768
+  },
+  {
+   "id": "modern-small-town-4",
+   "kind": "modern-small-town",
+   "w": 1376,
+   "h": 768
+  }
+ ]
+}

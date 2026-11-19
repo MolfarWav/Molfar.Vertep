@@ -121,6 +121,8 @@ building plots empty, no houses, no roofs" and run again.
 
 # More sets (the owner's request, 2026-11-19: modern city, extra fantasy; more later, "our own sets")
 
+**Status 2026-11-20:** the modern-city icons (38 kinds, 157 pictures: the 36 listed plus an arcade and a karaoke bar) and the ten modern map plans (40) came back from the owner and are in the engine (`builtin-assets/place-icons`, pack `modern` in `builtin-assets/map-packs`). Not made yet: the "More fantasy" list below (battlefield, army camp, dragon lair...) and further map plans (dungeons, a continent for the global level).
+
 The first set (above) is done: 52 kinds, four pictures each. New kinds are new files `<id>-<n>.webp` in the same folder: the app's icon picker lists every
 kind the engine's `index.json` has, so a new kind shows up there at once. For a kind to also be picked **by name** (a place called "Police station"
 gets its icon by itself), `PLACE_KINDS` in Roleplay's `src/lib/place-kinds.ts` gets the kind with its words (English whole words, Ukrainian and
