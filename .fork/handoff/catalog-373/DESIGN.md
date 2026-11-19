@@ -1,6 +1,6 @@
 # #373: the shared catalog of standard things (names, places, organizations, items): design of intake and sources
 
-Status: a proposal for the owner's word (2026-11-19). No code. It answers the two questions the owner left open on 2026-11-11
+Status: the owner accepted every recommendation of section 6 on 2026-11-19 ("окей на все, починай з кроку 1"); step 1 is built (see "Step 1 as built" at the end). Steps 2 to 5 are not. It answers the two questions the owner left open on 2026-11-11
 (how entries get in, and where an app pulls from) and keeps his other decisions: a folder in the Store repo, short descriptions,
 variety as the second purpose, check before creating, identity by id, no binding to a named world.
 
@@ -88,7 +88,7 @@ checks it; the owner merges a clean diff in one click.
    written UI plan first.
 5. **Later:** the `cat:` pointer on registry items and the RPG kinds table (#123), Social City packs (C6), extra sources in Settings.
 
-## 6. Questions for the owner (answers change the work)
+## 6. Questions for the owner and his answers (2026-11-19: all recommendations accepted)
 1. **Seed content:** who writes the first packs and from what? Proposal: the owner with a strong model, CC0, checked by the robot for
    duplicates; no scraping of any site or book.
 2. **Adult content:** names, places and items rarely need it. Proposal: not accepted into the official packs (a flag exists for
@@ -99,3 +99,19 @@ checks it; the owner merges a clean diff in one click.
 5. **A user's own tags:** none in the official vocabulary; a donor asks for a new tag in the PR (the owner adds it to `tags.json`).
 6. **Start at step 1 or step 2?** Step 2 is useless without content; step 1 is useless without a reader, but the seed pack can be
    written and checked by hand while the reader is built.
+
+### The answers, as decided
+1. Seed content: the owner with a strong model, CC0, no names from published works, no scraping; names first.
+2. Adult content: not accepted into the official packs (a flag may exist for extra sources later).
+3. A donor needs no GitHub account: "Save the file" and send it is always there; the prefilled PR is a shortcut.
+4. Entries: English `name` and `desc`, other languages only as `aliases`; person names are the exception (native spelling, a culture tag).
+5. The tag vocabulary is fixed; a donor asks for a new tag in the PR.
+6. Start with step 1 (repo, schema, robot, seed), then step 2 (the engine reader), then the World DM.
+
+## Step 1 as built (Store repo `MolfarWav/Molfar.Vertep-Store`, branch `claude/catalog-373`)
+- `catalog/tags.json` (kinds, name parts, genders, 20 genres, 22 cultures), `catalog/packs/<author>/<pack>.json`, `catalog/index.json` (made by the script).
+- **Amended against section 1:** a name entry also has `part` (`given` or `family`) and, for a given name, `gender` (`f`, `m`, `n`); `culture` is required for a name. Without `part` a pool of given names could not be told from surnames. A place, an organization and an item need `desc` and at least one genre; a name needs neither. `format: 1` and `version` (raised when the pack changes) sit in the pack header.
+- **Rules in code** (`scripts/catalog-lib.ts`, 7 tests in `scripts/catalog.test.ts`): the path is the namespace; no unknown fields; limits (200 KB, 500 entries, 8 genres, name 60, desc 200); no markup, links or control characters; licence CC0-1.0 or CC-BY-4.0; duplicates across all packs by normalised name within the kind (aliases count for places, organizations and items; a name is a duplicate only within its part and culture; the same words in another kind are fine).
+- **Robot** (`.github/workflows/catalog.yml`): tests and `bun scripts/catalog.ts` on every pull request that touches `catalog/`; on `main` the index is rewritten and committed by a bot if it changed (it needs `contents: write`; if `main` is protected, the owner either allows the bot or runs `bun scripts/catalog.ts --write` by hand). A donor adds one pack file and nothing else.
+- **Seed packs** by `molfar`: eight name packs (ukrainian, slavic, english, norse, scottish-irish, japanese, spanish, invented) and three general packs (places, organizations, items), written by cheap models and checked by the script. Quality is only what the script and a skim can tell: the owner should read a sample before it goes to `main`.
+- **Not checked by any robot:** that a name is not from a published work, adult content, taste. The README says so; the owner's merge is the review.
