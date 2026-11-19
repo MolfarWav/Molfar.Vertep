@@ -116,3 +116,100 @@ building plots empty, no houses, no roofs" and run again.
   rim), crops to the content, pads to a square and writes WebP 128 and 256 px with alpha to `builtin-assets/place-icons/<id>.webp`.
 - The engine serves them (`GET /v1/place-icons/<id>.webp`, a list at `GET /v1/place-icons`), the map draws them instead of the emoji, and
   Social City reads the same files. This needs an engine release.
+
+---
+
+# More sets (the owner's request, 2026-11-19: modern city, extra fantasy; more later, "our own sets")
+
+The first set (above) is done: 52 kinds, four pictures each. New kinds are new files `<id>-<n>.webp` in the same folder: the app's icon picker lists every
+kind the engine's `index.json` has, so a new kind shows up there at once. For a kind to also be picked **by name** (a place called "Police station"
+gets its icon by itself), `PLACE_KINDS` in Roleplay's `src/lib/place-kinds.ts` gets the kind with its words (English whole words, Ukrainian and
+Russian stems); I add that when the pictures arrive. The ids below are the file names to use (`<id>_1.jpg`, `<id>_2.jpg`, ...: any suffix is fine,
+I map by looking as last time).
+
+## Prompt for the new sets
+Attach ONE finished icon of the first set (a tavern or a house) with the prompt, so the style matches. The first set came out isometric: the
+object stands on a small cut-out piece of ground, seen from a raised three-quarter angle. Keep exactly that:
+
+```
+Same painting style, line weight, colours and isometric three-quarter angle as the attached icon: a single game-map icon, hand-painted, soft dark ink outline, warm muted colours, gentle light from the top left, a simple readable silhouette that still reads clearly when it is only 64 pixels wide. The object stands on a small cut-out piece of ground and is centred, filling about 80% of the square. The whole background is one flat solid pure magenta (#FF00FF), nothing else in that colour anywhere in the object, no shadow or gradient on the background, no frame, no border, no text, no letters, no logos, no UI.
+Subject: SUBJECT
+```
+For the modern kinds add before "Subject": `A modern city, present day, believable real-world architecture, no fantasy elements.` Avoid pink in any subject (say "avoid pink").
+
+## Modern city (34 kinds)
+| id | subject |
+|---|---|
+| apartment-block | a six-storey residential apartment block with balconies, air-conditioner boxes and a small entrance canopy |
+| skyscraper | a tall glass and steel skyscraper with a crown of antennas, a few lit windows |
+| office | a mid-rise office building with a glass front and a revolving door |
+| suburban-house | a detached suburban house with a garage, a pitched roof and a small lawn |
+| cafe | a small corner cafe with an awning, outdoor tables and a menu board |
+| restaurant | a restaurant front with a lit sign, a glass door and a few outdoor tables |
+| supermarket | a supermarket: a wide low building with a big sign, a car park edge and a row of shopping trolleys |
+| mall | a shopping mall: a large glass-fronted block with an arched entrance and flags |
+| hospital | a hospital building with a blue cross sign, an ambulance bay and a helipad on the roof (avoid pink) |
+| pharmacy | a small pharmacy shopfront with a green cross sign |
+| university | a university campus building with a clock tower and wide steps |
+| police-station | a police station: a plain civic building with a blue lamp over the door and a patrol car |
+| fire-station | a fire station with two big garage doors open, a red fire engine and a hose tower |
+| subway | a metro station entrance: a stair going down under a canopy with a round sign |
+| bus-stop | a bus stop shelter with a bench, a sign pole and a city bus beside it |
+| train-station | a railway station: a long hall with a clock tower, platforms and a train at the side |
+| airport | an airport terminal with a control tower, a small passenger plane and a runway edge |
+| parking | a multi-storey car park: open concrete decks with a few cars and a ramp |
+| gas-station | a petrol station with a canopy, two pumps, a small shop and a price sign |
+| city-street | a modern city street seen at an angle: asphalt with lane markings, a pavement, a traffic light, a street lamp and the fronts of two buildings |
+| crossroads | a city crossroads seen at an angle: a pedestrian crossing, traffic lights and a corner kiosk |
+| gym | a gym: a low building with large windows showing equipment and a big sign |
+| cinema | a cinema with a lit marquee, poster boards and a ticket booth |
+| nightclub | a nightclub entrance: a dark front with a neon sign (blue and violet, not pink), a velvet rope and a bouncer silhouette |
+| hotel | a mid-size hotel with a lit canopy, a revolving door and a rooftop sign |
+| bank | a bank: a stone-fronted building with columns, a small flag and a cash machine |
+| factory | a factory: a long brick hall with a sawtooth roof, two tall chimneys and a loading dock |
+| warehouse | a warehouse: a plain wide shed with roller doors, pallets and a forklift |
+| construction-site | a construction site: a half-built frame, a yellow crane, a fence and stacked materials |
+| stadium | a football stadium seen at an angle: an oval bowl of stands, floodlight towers and a green pitch |
+| museum | a museum: a classical stone building with columns, wide steps and banners |
+| post-office | a post office: a small civic building with a mail box and a delivery van |
+| courthouse | a courthouse: a stone building with columns, a flag and a set of scales on the pediment |
+| power-plant | a power plant: cooling towers with steam, a turbine hall and pylons |
+| lab | a research laboratory: a modern low building with a glass atrium, a satellite dish and a small vent chimney |
+| harbour-modern | a modern container port: stacked colourful containers, a gantry crane and a ship at the quay |
+
+## More fantasy (28 kinds)
+| id | subject |
+|---|---|
+| battlefield | a battlefield: churned mud, broken spears and banners, a fallen shield, smoke, two small opposing flags |
+| army-camp | an army camp: rows of canvas tents, a large command tent with a banner, a palisade and campfires |
+| siege-camp | a siege camp: a trebuchet, a battering ram and a few tents before a short stretch of stone wall |
+| watchtower | a wooden watchtower on stilts with a ladder, a roofed platform and a lit brazier |
+| wizard-tower | a tall twisting wizard tower with a crooked roof, round windows lit violet and floating books (avoid pink) |
+| dragon-lair | a dragon lair: a cave mouth in a rocky mountain, a heap of gold at the entrance and scorched ground |
+| elven-grove | an elven grove: a slender white-barked tree with a carved platform and a small hanging lantern |
+| dwarven-hall | a dwarven hall: a carved stone gate in a mountainside with a great anvil sign and forge glow |
+| haunted-house | a haunted house: a crooked dark manor with broken shutters, a dead tree and a pale light in one window |
+| shipwreck | a shipwreck: a broken hull on a sandy shore with a snapped mast and torn sails |
+| crystal-cave | a crystal cave: a rocky arch glowing with blue and teal crystals |
+| volcano | a volcano with a glowing crater, smoke and slow lava streams |
+| floating-island | a small floating island with a waterfall off its edge, a few trees and a tiny tower |
+| tree-village | a village in giant trees: houses on platforms joined by rope bridges |
+| giant-tree | a single enormous ancient tree with a door in its trunk and roots like walls |
+| arena | an arena: a round sand-floored fighting pit with stone seating and banners |
+| bandit-camp | a bandit camp: ragged tents, a stolen cart, a fire and a skull-topped post |
+| hermit-hut | a hermit hut: a tiny stone and turf hut with a crooked chimney, a herb patch and a lantern |
+| witch-hut | a witch hut on chicken-like stilts in a swamp, with a cauldron and hanging herbs (avoid pink) |
+| crypt | a crypt: a stone mausoleum with a heavy door, steps and ivy |
+| oasis | a desert oasis: a small pool, a few palms and a striped tent |
+| ice-fortress | a fortress of ice and blue stone with sharp spires |
+| lava-fields | a field of black rock cracked with glowing orange lava, a few charred trees |
+| sunken-city | a sunken city: broken towers and an arch under clear shallow water, seen at an angle |
+| fairy-ring | a fairy ring: a circle of mushrooms and small stones with a soft teal glow (avoid pink) |
+| trade-caravan | a trade caravan: two covered wagons, a few mules and a lantern |
+| pirate-cove | a pirate cove: a hidden bay with a small ship, a wooden dock and a treasure chest on the sand |
+| mountain-pass | a mountain pass: a narrow rocky road between two steep walls with a small stone gatehouse |
+| waterfall | a waterfall: a cliff with a river falling into a pool, rocks and mist |
+
+More kinds later in the same way (a space, a post-apocalypse or a cyberpunk set, say): each set is a list like these, one prompt, four pictures
+each. When a set is large enough to be its own pack (the owner's plan: "our own sets of icons"), it gets its own folder and a name in the picker
+(#373 style packs); until then they all live in the one list.

@@ -53,7 +53,7 @@ Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec
 
 ## When a model is called, and when code decides
 - Play model, in `updateRoute`: the DM run returns records, front ops, a delivered flag and an event choice. A sweep is a records-only run of the same route.
-- Build model, through `buildAsk` in `startRoute`, `deckRoute` and the opening: Start steps and the deck.
+- Build model, through `buildAsk` in `startRoute`, `deckRoute` and the opening: Start steps and the deck. Also `travelRoute` (`POST /world/travel/time` and `/world/travel/road`): two small calls the places map starts (the walking time between two places; the road's name read from a journey's reply), see `roleplay-places-map.md`.
 - Code only: when a run is due, clock ticks in code mode, front and event rules, dice, the reply insert, and rollback.
 - No model call: `llmRequest` and `rollbackRoute`.
 
@@ -94,6 +94,7 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 ## Tests that guard it
 - `test/rp-world.test.ts`: tickClocks, clockStep, clockStage, rollFate, diceOutcome, llmRequest, applyLevel.
 - `test/rp-world-rollback.test.ts`: reconcile, firstGone, eventLost, the rollback route.
+- `test/rp-world-travel.test.ts`: the two travel routes (prompts, cleaning, no call without input).
 - `test/rp-world-start.test.ts`: Start steps, draft accept, applyLevel, applyReport.
 - `test/rp-world-stage3.test.ts`: deck cards.
 - `test/rp-world-ids.test.ts`, `test/rp-registry-bridges.test.ts`: applyReport and applyLevel with the registry.
