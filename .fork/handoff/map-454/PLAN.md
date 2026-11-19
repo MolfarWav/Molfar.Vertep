@@ -142,3 +142,21 @@ the set in its own release.
 - Whether the chip also shows in a chat with no World book but with places the Dashboard sensor named: M2 says no (the map reads the book).
 - Who travels in a group chat: M3.
 - A map picture per chat or per world: per chat in M2 (the owner's comment: "positions stay per chat").
+
+## M3: travel by a tap (owner's answers, 2026-11-19)
+Decided: (1) a tap is the player's own move plus a hidden direction (`[[...]]`, the same channel as Skip time); (2) the minutes come from the
+distance on the board by code, the player can edit them, and the edit is kept on the road; (3) the Dashboard clock is NOT moved by code: the
+direction names the minutes, the reply narrates them and the sensor's reading moves the clock, as Skip time does, so a swipe loses nothing;
+(4) when the story's place is unknown the trip has no road and no minutes: just the move and the arrival. Defaults not asked: the whole party
+goes (the direction says "the player's character and whoever is with them"); a road event is not built (World DM may add it later).
+
+**Where.** The selected place's card gets a "Go there" button (a place the story is not in). It opens a dialog like Skip time:
+From (the current place, or "somewhere the map does not know"), mode chips (On foot / Riding / Skip the road), Minutes (a number, default from
+the distance, editable; hidden for "Skip the road" and for an unknown start), Road name (optional; remembered on the road, and the next trip says
+"keep to it"), Your move (a text, default "I head to <place>.", editable), Go. On a phone the map folds after Go so the reply is seen.
+**States.** No current place: the dialog says so, no minutes, no road name. A room of the place the story is in: "move within" (no minutes).
+Phone: the dialog is the app's ordinary Dialog (full width). **Reused:** `Dialog`, `ToggleChip`, `Input` as in `time-skip-dialog.tsx`.
+**Data.** A road may carry `minutes` (1..99999, the foot time) and `via` (up to 120 characters): `routes: [{ a, b, minutes?, via? }]`.
+Cleaned by the page and the plugin, `docs/DATA-FORMATS.md` updated. **Model cost:** none beyond the reply itself.
+**Check:** unit tests (minutes, direction text, route info), the browser check (open the dialog, edit, Go: the message and its direction
+are in the chat, the road keeps minutes and name), UX walk-through on desktop and 390 px.
