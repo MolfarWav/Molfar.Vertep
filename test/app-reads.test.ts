@@ -239,6 +239,109 @@ describe("host.peer in the plugin sandbox", () => {
     expect(r.error).toMatch(/too large/);
   });
 
+  describe("in pieces, for a file over 2 MB", () => {
+    // A plugin that reads a whole file piece by piece, the way an app reads a long chat of another app.
+    const WALK = `export function uiPanel(ctx, host) {
+      const pieces = [];
+      let offset = 0;
+      for (let i = 0; i < 50; i++) {
+        const p = host.peer.read("roleplay", ctx.rel, { offset, maxBytes: ctx.maxBytes });
+        pieces.push({ next: p.next, size: p.size, mtimeMs: p.mtimeMs, done: p.done, endsAtLine: p.text.endsWith("\\n") });
+        offset = p.next;
+        if (p.done) break;
+      }
+      return { pieces };
+    }`;
+    // the same walk, returning the joined text
+    const JOIN = `export function uiPanel(ctx, host) {
+      let out = "";
+      let offset = 0;
+      for (let i = 0; i < 50; i++) {
+        const p = host.peer.read("roleplay", ctx.rel, { offset });
+        out += p.text;
+        offset = p.next;
+        if (p.done) return { out, pieces: i + 1 };
+      }
+      return { out, pieces: -1 };
+    }`;
+    const run = async (source: string, ctx: Record<string, unknown>) => {
+      const { sandbox } = await import("../src/plugins/sandbox.js");
+      const r = await sandbox.eval({ source, hook: "uiPanel", ctx, storeSnapshot: {}, peers: peers() as never });
+      expect(r.ok).toBe(true);
+      return r.out as Record<string, unknown>;
+    };
+    const bigChat = () => {
+      // lines of mixed width (Cyrillic is two bytes, the emoji four), past 2 MB, like a long chat's jsonl
+      const lines: string[] = [];
+      for (let i = 0, bytes = 0; bytes < 2.6 * 1024 * 1024; i++) {
+        const line = JSON.stringify({ id: `m${i}`, text: `Мавка каже ${i} 🌙 `.repeat(1 + (i % 40)) }) + "\n";
+        lines.push(line);
+        bytes += Buffer.byteLength(line);
+      }
+      const text = lines.join("");
+      fs.writeFileSync(path.join(peerData, "personas", "big.json"), text);
+      return text;
+    };
+
+    it("join back into the file, every piece but the last ending at a line break, none over 2 MB", async () => {
+      const text = bigChat();
+      const joined = await run(JOIN, { rel: "personas/big.json" });
+      expect(joined.pieces).toBe(2);
+      expect(joined.out).toBe(text);
+      const walk = await run(WALK, { rel: "personas/big.json", maxBytes: 512 * 1024 });
+      const pieces = walk.pieces as { next: number; size: number; done: boolean; endsAtLine: boolean; mtimeMs: number }[];
+      expect(pieces.length).toBeGreaterThan(5);
+      expect(pieces.at(-1)!.done).toBe(true);
+      expect(pieces.at(-1)!.next).toBe(Buffer.byteLength(text));
+      for (const p of pieces.slice(0, -1)) expect(p.endsAtLine).toBe(true);
+      let prev = 0;
+      for (const p of pieces) {
+        expect(p.next - prev).toBeLessThanOrEqual(512 * 1024);
+        expect(p.size).toBe(Buffer.byteLength(text));
+        expect(p.mtimeMs).toBe(pieces[0]!.mtimeMs);
+        prev = p.next;
+      }
+    });
+
+    it("without a line break in the window, stops before a character it would split", async () => {
+      fs.writeFileSync(path.join(peerData, "personas", "line.json"), "абвгд😀є");
+      const at = async (offset: number, maxBytes: number) => (await one("read", "roleplay", "personas/line.json", { offset, maxBytes })).value as { text: string; next: number; done: boolean };
+      expect(await at(0, 5)).toMatchObject({ text: "аб", next: 4, done: false }); // the window ends inside "в"
+      expect(await at(0, 4)).toMatchObject({ text: "аб", next: 4 });
+      expect(await at(10, 5)).toMatchObject({ text: "😀", next: 14 }); // ends inside "є"
+      expect(await at(8, 5)).toMatchObject({ text: "д", next: 10 }); // ends inside the four-byte character
+      expect(await at(14, 10)).toMatchObject({ text: "є", next: 16, done: true });
+      expect(await at(0, 1)).toMatchObject({ text: "аб", next: 4 }); // maxBytes below 4 is raised to 4: always progress
+    });
+
+    it("an offset at or past the end is an empty last piece; maxBytes above 2 MB is held to 2 MB", async () => {
+      const text = bigChat();
+      const size = Buffer.byteLength(text);
+      for (const offset of [size, size + 100]) expect((await one("read", "roleplay", "personas/big.json", { offset })).value).toMatchObject({ text: "", next: size, done: true });
+      const first = (await one("read", "roleplay", "personas/big.json", { offset: 0, maxBytes: 64 * 1024 * 1024 })).value as { next: number; done: boolean };
+      expect(first.done).toBe(false);
+      expect(first.next).toBeLessThanOrEqual(2 * 1024 * 1024);
+    });
+
+    it("refuses a bad range and keeps every other check; no options is the old whole read", async () => {
+      bigChat();
+      for (const opts of [{ offset: -1 }, { offset: 1.5 }, { offset: "0" }, { maxBytes: Number.NaN }, { offset: Number.MAX_SAFE_INTEGER + 2 }, "x", [0]]) {
+        const r = await one("read", "roleplay", "personas/big.json", opts);
+        expect(r.ok, JSON.stringify(opts)).toBe(false);
+        expect(r.error).toMatch(/bad range/);
+      }
+      for (const rel of ["settings.json", "chats/c1.json", "../secret/outside.json"]) {
+        const r = await one("read", "roleplay", rel, { offset: 0 });
+        expect(r.ok, rel).toBe(false);
+        expect(r.error).toMatch(/peer read refused/);
+      }
+      expect((await one("read", "roleplay", "personas/big.json", null)).error).toMatch(/too large.*pieces/);
+      expect(JSON.parse((await one("read", "roleplay", "characters/mavka/card.json", null)).value as string)).toEqual({ name: "Мавка" });
+      const cardBytes = fs.statSync(path.join(peerData, "characters", "mavka", "card.json")).size;
+      expect((await one("read", "roleplay", "characters/mavka/card.json", {})).value).toMatchObject({ text: '{"name":"Мавка"}', next: cardBytes, done: true, size: cardBytes });
+    });
+  });
+
   it("is empty and refuses everything when no peer is mounted (not allowed, not declared, or no permission)", async () => {
     for (const none of [[], null]) {
       const out = await probe([["read", "roleplay", "characters/mavka/card.json"], ["list", "roleplay", ""], ["apps"]], none);
