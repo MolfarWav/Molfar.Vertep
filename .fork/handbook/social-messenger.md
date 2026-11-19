@@ -1,5 +1,5 @@
 # Social: the Messenger plugin, its chats, memory note and recall
-Verified at: molfar.vertep-social 7587013; the #452 and #453 lines at f28fc28 (main, Social 0.18.0); the facts ledger (#446, M1) lines at e8893c8; the M2 lines (Remembered, pinned messages) at 874b6ea; the M3 line (public facts) on Social branch claude/memory-m3-446
+Verified at: molfar.vertep-social 7587013; the #452 and #453 lines at f28fc28 (main, Social 0.18.0); the facts ledger (#446, M1) lines at e8893c8; the M2 lines (Remembered, pinned messages) at 874b6ea; the M3 line (public facts) on Social branch claude/memory-m3-446; the M4 lines (learned facts, `elsewhereFor`, the forget op) on Social branch claude/social-memory-m4-catalog-373 (f597cc6)
 
 ## What it does
 - One chat per character and persona pair; a model writes each reply in the character's voice.
@@ -69,6 +69,7 @@ History is `historyFor` over the window: user messages as "user", the character'
 - `message.used` (#446, M2): `{f: fact ids (30), r: recalled message ids (3), p: pinned message ids (5), n: 1}` on a reply; `requestReply` puts it on `chat.pending.used` (`usedFor`), `fileReply` moves it to the message; `cleanUsed` cleans it on read. `message.pinned`: the time the user pinned it (`pinRoute`, `POST /messenger/pin {id, messageId, pinned}`, 20 at most). `pinnedFor`: pinned messages after the last divider and outside the window, the latest 5, oldest first, 900 characters, into `systemPromptFor` `opts.pinned` whatever the Recall and note switches say; `recallFor` skips pinned ones and returns ids.
 - Prompt (`factsFor`, `factsPick`, in `contextOf` as `facts`, `systemPromptFor` `opts.facts`): at most 1500 characters, pinned first, newest six, then by shared word stems with the last three messages, shown oldest first; nothing with `messengerSummary` off.
 - Routes: `GET`/`POST /messenger/facts` (`factsRoute`: add, update, delete, restore); `GET /messenger/chat` only carries `factCount` and `factPinned`. New conversation without the note keeps only the pinned facts; clear drops all.
+- Learned facts (#446 M4): the forum and the clubs file what the user said openly into `forum/facts/<profile>[.<persona>].json` and `clubs/facts/...` ({facts: [{id "l<n>", text, kind, at, from}], forgot, dropped}; 60 at most, public by construction, no `private`). The block `public-facts-shared` (identical in forum, clubs and messenger; `test/public-facts.test.ts`, `test/learned-facts.test.ts`) holds `readLearned`, `mergeLearned`, `writeLearned`, `parseLearned`, `learnedPath` and `publicFacts(fsx, profile, persona, skipChat)`. The messenger sends them as a second block (`elsewhereFor`, in `contextOf` as `elsewhere`, `systemPromptFor` `opts.elsewhere`), not as ledger facts, so a fold never merges them and `used` does not count them. `GET /messenger/facts` also answers `learned` (`learnedList`); `POST` op `forget {src, factId}` deletes one and adds its normalised words to `forgot`, so it is not learned again. Switch: `factsLearn` (Settings > Messenger, default on).
 - Failure: `foldFailAt` is set; the old note stays; the user sees nothing.
 - Edit: `summaryRoute` sets `edited: true`; the dialog limit is `NOTE_MAX`.
 - New conversation: `newRoute` folds the open messages first (key `newsum`, not waiting for the failure), then adds a divider. Without `keepNote` the note is cleared; a failed fold still makes the divider and answers `warn: "note"`.
@@ -94,7 +95,7 @@ History is `historyFor` over the window: user messages as "user", the character'
 - `src/screens/messenger/phone.tsx`, `PhoneList`, `PhoneChat`: phone layouts; the header opens the memory dialog.
 - `src/screens/messenger/memory.tsx`, `MemoryDialog`: the note (saved only when changed), new conversation (keep or drop the note), clear (asks first), and a "Facts…" step.
 - `src/screens/messenger/remembered.tsx`, `Remembered`: the line under a reply (facts are fetched by `loadFacts` when it opens); `parts.tsx` `ChatLog` draws it and the pin button (`ChatMemory` prop, built in `index.tsx` as `chatMemory`, also for the phone chat); `memory.tsx` lists the pinned messages with Unpin.
-- `src/screens/messenger/facts.tsx`, `FactsPage`, `facts-api.ts`: the facts list (add, edit, pin, private or public, delete after a question, Archive tab). Preview: `?screen=messenger&view=chat&dialog=facts` (a made-up ledger).
+- `src/screens/messenger/facts.tsx`, `FactsPage`, `facts-api.ts`: the facts list (add, edit, pin, private or public, delete after a question, Archive tab). Preview: `?screen=messenger&view=chat&dialog=facts` (a made-up ledger). The section "Noted in the forum and clubs" (M4) lists `ledger.learned` with Delete after a question (`forget`); the preview ledger has two.
 - `src/screens/messenger/community.tsx`, `community-api.ts`: story bar and "characters talk" dialog.
 - `src/screens/messenger/clubs.tsx`, `clubs-api.ts`, `clubs-model.ts`: clubs; not covered here.
 - `src/screens/messenger/strings.ts`, `messenger.css`: texts and styles.
@@ -114,7 +115,7 @@ History is `historyFor` over the window: user messages as "user", the character'
 - `writeChat` keeps the newest 500 messages; the note is stored apart.
 - A chat with a pending reply is never folded; a failed chat keeps `pending`, so its note waits for a retry or a new conversation.
 - A failed reply is not retried by the tick; a lost call is asked again after 5 minutes; a failed fold is silent.
-- The forum and clubs read only the public facts (`private === false`) through `publicFacts`, never the note (M3, #446); they do not write facts (M4 is not built). `factsShare` in Settings cuts the readers off.
+- The forum and clubs read only the public facts (`private === false`) through `publicFacts`, never the note (M3, #446); since M4 they also write them (see Learned facts). `factsShare` in Settings cuts the readers off.
 - Writing first has no `used`; the forum and clubs do not read pinned messages. Stem overlap in `factsFor` is a stand-in for "nearest in meaning" (the recall vectors are not used for facts).
 - Pictures are drawn by the open Social page only (`docs/DECISIONS.md`).
 - Recalled text is data: `recallText` turns angle brackets into spaces and double quotes into single quotes.

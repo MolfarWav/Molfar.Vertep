@@ -1,5 +1,5 @@
 # Social: the Forum plugin and its screens
-Verified at: molfar.vertep-social 748197a; the #452 and #453 lines at f28fc28 (main, Social 0.18.0); the public-facts lines (#446 M3) on Social branch claude/memory-m3-446
+Verified at: molfar.vertep-social 748197a; the #452 and #453 lines at f28fc28 (main, Social 0.18.0); the public-facts lines (#446 M3) on Social branch claude/memory-m3-446; the learner lines (#446 M4) on Social branch claude/social-memory-m4-catalog-373 (f597cc6)
 
 ## What it does
 - Boards, topics and posts written by the user and the characters. The Moderator (author id `_mod`) runs events, comments, closes and a daily chronicle.
@@ -52,6 +52,7 @@ Verified at: molfar.vertep-social 748197a; the #452 and #453 lines at f28fc28 (m
 5. The user: name and About (600 characters) from `userKnownTo`. `knowsOf` gives `knows`, `name` or `stranger`; `stranger` hides the name, and the prompt then says not to guess it.
 6. Met lines (`metLine`) and the `met` text from `requestPlan`: feeling toward the post's author, jealousy (`jealousLine`), and a rumour about the author (`aboutMeLine`).
 7. The public facts of the chat (`publicFacts`, #446 M3: only `private === false`, at most 12 and about 1000 characters, never the memory note). Only for a reply to the user, when the author is not a stranger, the messenger's memory switch and Settings "Public facts leave the chat" (`factsShare`) are on.
+   (M4: `publicFacts` now also joins what the forum and the clubs learned, `forum/facts/` and `clubs/facts/`; see "The forum learns" below.)
 8. Length, emoji level and formality. Never write (up to 12) and signature words (up to 8).
 9. Plain text only, and the language of the recent posts. Do not invent facts.
 10. Picture and sticker hints.
@@ -116,3 +117,7 @@ Verified at: molfar.vertep-social 748197a; the #452 and #453 lines at f28fc28 (m
 - Whether the engine serialises requests (the first trap depends on it); reputation as a screen or route; the Moderator's club.
 - Real-model behaviour and play balance (DECISIONS: not checked).
 
+
+## The forum learns what the user says (#446 M4)
+- `learnTick` (called from `onTick` after `modTick`, every fifth minute, one call at a time): a topic the user wrote in and nobody has posted in for `LEARN_QUIET_MS` (6 hours) is read once by `learnRequest` (key `lf:<topic>:<upto>`, the forum's model, temperature 0.2, 500 tokens, JSON `{facts: [{text, kind}]}`). `fileLearn` files the answer with `mergeLearned` into the file of each character who posted (the four latest, not strangers) for the persona of the user's latest post. State in `forum/learn.json` ({day, calls, failAt, pending, topics: {id: {upto, fails}}}): at most `LEARN_DAY_MAX` (6) calls a day, a failure waits 30 minutes and is given up after three, text under 30 characters or nobody to tell is marked read with no call. Off with `factsLearn`, `factsShare` or `messengerSummary` false (`learnOn`).
+- Where to look: `learnPlan`, `pickLearn`, `learnRequest`, `learnTick`, `fileLearn`, `readLearnState`. Tests: `test/learned-facts.test.ts`. Decision record: Social `docs/DECISIONS.md`, "The forum and the clubs write facts, M4".

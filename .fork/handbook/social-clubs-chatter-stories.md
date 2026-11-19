@@ -1,5 +1,5 @@
 # Social: clubs, chatter and stories (what characters do without the user)
-Verified at: molfar.vertep-social 748197a; the #452 and #453 lines at f28fc28 (main, Social 0.18.0)
+Verified at: molfar.vertep-social 748197a; the #452 and #453 lines at f28fc28 (main, Social 0.18.0); the clubs learner (#446 M4) on Social branch claude/social-memory-m4-catalog-373 (f597cc6)
 
 ## What it does
 Chatter has two characters write to each other in a private chat. Clubs has three or four characters talk in a group chat around an interest, and the user may join. Stories posts a line that vanishes after 24 hours, taken from a character's diary of the day.
@@ -13,6 +13,7 @@ They read profiles and the Life lists, and keep files under `chatter/`, `clubs/`
 - `plugins/chatter/plugin.js`, `onTick`: files pending replies, else starts one request.
 - `plugins/clubs/plugin.js`, `pickTurn`: owed answers first, then idle talk.
 - `plugins/clubs/plugin.js`, `buildRequest`: the prompt; drops the user's lines when answers run out. While the user is in the talk it adds `publicFacts` of the persona who wrote (#446 M3; `clubSystem` `userFacts`); the block is a copy of the forum's.
+- `plugins/clubs/plugin.js`, the learner (#446 M4): `learnTick` (from `onTick` after the clubs switch, every fifth minute) reads a club 30 minutes after its last message when the user wrote in it (key `cf:<club>:<upto>`, the messenger model), `fileLearn` files public facts about the user into `clubs/facts/<member>[.<persona>].json`; state in `clubs/learn/state.json`; at most 6 calls a day; same rules and switch (`factsLearn`) as the forum's, see social-forum.md.
 - `plugins/clubs/plugin.js`, `modClub`: the Moderator's club, by rules only.
 - `plugins/clubs/plugin.js`, `sendRoute`: stores the user's message and makes the first reply.
 - `plugins/clubs/plugin.js`, `fileClubResult`: files a reply and counts it.

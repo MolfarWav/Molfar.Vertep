@@ -1,5 +1,5 @@
 # Social: profiles, the import from Roleplay, the user's own page, the picture worker, stickers
-Verified at: molfar.vertep-social 748197a; the picture worker line at 6dc9606; the #452 and #453 lines at f28fc28 (main, Social 0.18.0)
+Verified at: molfar.vertep-social 748197a; the picture worker line at 6dc9606; the #452 and #453 lines at f28fc28 (main, Social 0.18.0); the `factsLearn` setting and `removeLearned` (#446 M4) on Social branch claude/social-memory-m4-catalog-373 (f597cc6)
 
 ## What it does
 Each character is one file, `profiles/<id>.json`. A profile is made by hand, from an idea, or by a one-time digest of a Roleplay card. The user's personas live in `you.json`. Plugins file pictures as pending and the open Social page draws them. Sticker packs name engine assets; the free catalog comes from GitHub.
@@ -119,3 +119,6 @@ The model never sees a picture; prompts carry `[a picture: ...]` text (DECISIONS
 - The full review rules of "Update from Roleplay" (`makeDiff`, `update-all.tsx`), the Start over dialog, and whether a catalog pack can be refreshed.
 - Whether deleting a profile removes its drawn pictures from the asset store.
 - I did not run the tests.
+
+## Learned facts and the settings (#446 M4)
+- `factsLearn` (default true) is one more messenger switch in the settings route (`plugins/profiles/plugin.js`, merged like `factsShare`). `removeChats` calls `removeLearned`, which deletes `forum/facts/<profile>[.<persona>].json` and `clubs/facts/...` with the same filter as the chats; `RESET_PARTS.chats` lists `forum/facts` and `RESET_PARTS.forum` lists `forum/learn.json` (`clubs` goes whole with the chats).

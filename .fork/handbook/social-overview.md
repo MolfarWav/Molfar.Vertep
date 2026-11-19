@@ -50,7 +50,7 @@ Paths are in the app's data folder; the writer is in brackets.
 - Messenger note: `chat.summary`, up to 1500 characters, written by `fileFold` when messages leave the 24-message window. The user edits it with `POST /messenger/summary`.
 - `knowsOf` sets what a character knows of the user: "knows" (the active persona's name and About, About cut to 600 in `systemPromptFor`), "name", or "stranger".
 - `metLine` gives one line about the person being answered, from `life/people`. `scanPeople` counts meetings every five minutes. A hand-written note survives until three new meetings (`NOTE_AFTER`). `knownBy` lists the characters who hold a given one (the "who remembers her" view).
-- The forum reads the public facts of a chat only for a reply to the user (`publicFacts`, #446 M3), and the clubs for the persona who wrote while the user is in the talk; never the memory note. Strangers get none; Settings "Public facts leave the chat" cuts both off.
+- The forum reads the public facts of a chat only for a reply to the user (`publicFacts`, #446 M3), and the clubs for the persona who wrote while the user is in the talk; never the memory note. Strangers get none; Settings "Public facts leave the chat" cuts both off. Since M4 the forum and the clubs also write public facts about the user (`forum/facts/`, `clubs/facts/`; Settings `factsLearn`), which the same reader joins in.
 - Recall (off by default) adds up to three older messages, 900 characters, via `recallTake`.
 - Limits: the messenger tells characters only the active persona, a chat cannot move between personas, and recall is messenger-only.
 
@@ -92,7 +92,7 @@ Paths are in the app's data folder; the writer is in brackets.
 - `reads` in `manifest.json`: also `RP_APP` in `plugins/profiles/plugin.js` and `test/profiles-import.test.ts`. Users are asked again on Home.
 - `buildMaterial`: every profile counts as changed once (`hashText`).
 - `networkHosts` in `manifest.json` and `SOURCES` in `plugins/life/plugin.js`: `test/life-plugin.test.ts` pins them.
-- `chatPath`: also `adoptLegacy` and `publicFacts`, plus `removeChats` and `RESET_PARTS`.
+- `chatPath`: also `adoptLegacy` and `publicFacts`, plus `removeChats` and `RESET_PARTS`., `removeLearned` (the learned files go with a character or a persona) and `RESET_PARTS` (`chats` includes `forum/facts`, `forum` includes `forum/learn.json`)
 - A screen string: `src/screens/<screen>/strings.ts` in `en` and `uk` (`test/skeleton.test.ts`).
 - `engine` in `manifest.json`: raise it only with the engine contract.
 - A catalog pack: `catalog/index.json`, its folder, LICENSE, per `catalog/README.md`; `test/stickers-catalog.test.ts`.
