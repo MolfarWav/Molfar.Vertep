@@ -241,6 +241,9 @@ describe("exfiltration ways out of an app page", () => {
     expect(host.allowedRequest("roleplay", "GET", "/v1/audio/voices")).toBe(true);
     expect(host.allowedRequest("roleplay", "GET", "/v1/embeddings/config")).toBe(true);
     expect(host.allowedRequest("roleplay", "GET", "/v1/assets/abc")).toBe(true);
+    // the shipped place icons: readable by an app, never writable
+    expect(host.allowedRequest("roleplay", "GET", "/v1/place-icons/inn-3.webp")).toBe(true);
+    expect(host.allowedRequest("roleplay", "PUT", "/v1/place-icons/inn-3.webp")).toBe(false);
     // speech endpoint LISTING is fine; managing endpoints (a stored key could
     // be pointed at another host) is shell settings business
     expect(host.allowedRequest("roleplay", "GET", "/v1/audio/speech/endpoints")).toBe(true);

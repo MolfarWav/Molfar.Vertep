@@ -219,7 +219,8 @@ Change X, touch Y:
 - The `placeMap` shape or limits: `cleanPlaceMap` and `cleanPlaceMapMeta` together, `docs/DATA-FORMATS.md`, `test/rp-place-map.test.ts`, the `rp-studio` meta case.
 - The sprite stage's phone limit (`useComposer`, `limitArea`, `stageArea` are exported for the map): `place-map.tsx` uses them.
 - The World record fields `size`, `inside`, `visits`, `background`: `layoutMap`, the node card.
-- A new icon set from the engine: `placeKind` ids become the file names; the board draws `kind.emoji` today.
+- A new kind in `PLACE_KINDS`: a picture set `<id>-1..4.webp` in the engine (`scripts/place-icons.json`, `scripts/place-icons.py`, `builtin-assets/place-icons/index.json`) and the kind list in the engine's `test/place-icons.test.ts`; without them the node keeps its emoji.
+- A new icon: the same four places above; the app needs no change, it reads the engine's list.
 
 Traps:
 - The board is its own component, not `canvas-kit`: its cards carry ports and are 200 x 74.
@@ -228,6 +229,8 @@ Traps:
 - The window's drag and resize use pointer capture and a `buttons === 0` guard: an app frame does not always hear a button released outside it.
 - A page reload takes about 8 s before the chip shows (the World state call comes after the app boots).
 - Two floating things fight for a phone's room: while the map is open the sprite stage returns nothing (`usePlaceMapOpen`).
+- In the app frame an `<img src="/v1/...">` first fails (no session) and only then gets a blob URL from the bridge. An `onError` that acts on the first failure hides a healthy picture; the board acts only on an error whose `src` is a `blob:` URL.
+- A hook placed after the `if (!visible) return` in `PlaceMap` breaks the page ("Rendered more hooks"); the browser check caught it, no unit test can.
 
 
 ## From `roleplay-presets.md`

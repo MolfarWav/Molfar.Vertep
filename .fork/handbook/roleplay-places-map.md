@@ -1,10 +1,10 @@
 # Roleplay places map: the floating map of a chat's places
-Verified at: molfar.vertep-roleplay c0e95cb (branch `claude/map-454`, not merged)
+Verified at: molfar.vertep-roleplay ec373ce and molfar.vertep (engine part), both branch `claude/map-454`, not merged
 
 ## What it does
-- A round chip over the chat opens a floating window with a board of the chat's World place records: icons, names, dashed roads between places the story moved between, the place the story is in marked.
+- A round chip over the chat opens a floating window with a board of the chat's World place records: painted icons, names, dashed roads between places the story moved between, the place the story is in marked.
 - Layout is by code (no model): new places go next to the place the story came from, rooms (World "spots") around their place. The player drags places; positions are never moved by code afterwards. A map picture of the player's own can lie under the places.
-- It is step M2 of Molfar.Vertep#454. Travel by a tap, a road's time and street, and the engine's shared icon set (M1) are not built.
+- It is steps M2 and M1 of Molfar.Vertep#454: the window, and the painted icons (four per kind, shipped by the engine). Travel by a tap, a road's time and street are not built. Social City still uses its own emoji.
 
 ## Owners
 - `src/lib/place-map.ts` `cleanPlaceMap`: the kept shape and its limits (the plugin keeps its own copy, named cleanPlaceMapMeta).
@@ -14,7 +14,9 @@ Verified at: molfar.vertep-roleplay c0e95cb (branch `claude/map-454`, not merged
 - `src/lib/place-map.ts` `withPositions`: merges new positions, cap 200.
 - `src/lib/float-box.ts` `boxRect`: where the window or chip stands inside an area (desktop: the chat column; phone: from the top of the messages to the message box).
 - `src/lib/float-box.ts` `setFolded`, `dragTo`, `resizeTo`, `loadBox`, `saveBox`: fold, drag, resize and the browser-local copy (`rp.float.map.<chatId>`).
-- `src/lib/place-kinds.ts` `placeKind`: the kind a name says (English whole words, Ukrainian and Russian stems), its emoji; the seed of the shared icon set.
+- `src/lib/place-kinds.ts` `placeKind`: the kind a name says (English whole words, Ukrainian and Russian stems), its emoji (the fallback when there is no icon).
+- `src/lib/place-icons.ts` `placeIconPath`, `variantOf`, `usePlaceIconIndex`: the icon of a kind for a place (variant by a hash of the place id), the engine's list asked once per page load.
+- Engine `builtin-assets/place-icons/<kind>-<n>.webp` + `index.json` (256 px WebP with alpha, 4 per kind, 52 kinds including the pin `place`), made by `scripts/place-icons.py` from the owner's magenta-background pictures and `scripts/place-icons.json`; `src/place-icons.ts` reads them; `GET /v1/place-icons` (the list) and `GET /v1/place-icons/<kind>-<n>.webp` in `src/server/app.ts`; `scripts/dist.ts` copies the folder into a release.
 - `src/lib/place-map-open.ts` `usePlaceMapOpen`: tells the sprite stage a phone's map is open.
 - `src/components/chat/place-map.tsx` `PlaceMap`: reads the records and the scene's place, keeps positions and roads, the window, chip, gear menu, spoiler gate, picture upload.
 - `src/components/chat/place-map-board.tsx` `PlaceMapBoard`: pan, pinch, wheel, node drag, picture slot, routes.
@@ -40,7 +42,8 @@ Never. Reads: `GET /world/state` (the count of places and the DM level), `GET /w
 - The `placeMap` shape or limits: `cleanPlaceMap` and `cleanPlaceMapMeta` together, `docs/DATA-FORMATS.md`, `test/rp-place-map.test.ts`, the `rp-studio` meta case.
 - The sprite stage's phone limit (`useComposer`, `limitArea`, `stageArea` are exported for the map): `place-map.tsx` uses them.
 - The World record fields `size`, `inside`, `visits`, `background`: `layoutMap`, the node card.
-- A new icon set from the engine: `placeKind` ids become the file names; the board draws `kind.emoji` today.
+- A new kind in `PLACE_KINDS`: a picture set `<id>-1..4.webp` in the engine (`scripts/place-icons.json`, `scripts/place-icons.py`, `builtin-assets/place-icons/index.json`) and the kind list in the engine's `test/place-icons.test.ts`; without them the node keeps its emoji.
+- A new icon: the same four places above; the app needs no change, it reads the engine's list.
 
 ## Traps
 - The board is its own component, not `canvas-kit`: its cards carry ports and are 200 x 74.
@@ -49,9 +52,11 @@ Never. Reads: `GET /world/state` (the count of places and the DM level), `GET /w
 - The window's drag and resize use pointer capture and a `buttons === 0` guard: an app frame does not always hear a button released outside it.
 - A page reload takes about 8 s before the chip shows (the World state call comes after the app boots).
 - Two floating things fight for a phone's room: while the map is open the sprite stage returns nothing (`usePlaceMapOpen`).
+- In the app frame an `<img src="/v1/...">` first fails (no session) and only then gets a blob URL from the bridge. An `onError` that acts on the first failure hides a healthy picture; the board acts only on an error whose `src` is a `blob:` URL.
+- A hook placed after the `if (!visible) return` in `PlaceMap` breaks the page ("Rendered more hooks"); the browser check caught it, no unit test can.
 
 ## Tests that guard it
-`test/rp-place-map.test.ts`, `test/rp-float-box.test.ts`, `test/rp-place-kinds.test.ts`, `test/rp-studio.test.ts` (the `placeMap` meta case).
+`test/rp-place-map.test.ts`, `test/rp-float-box.test.ts`, `test/rp-place-kinds.test.ts`, `test/rp-place-icons.test.ts`, `test/rp-studio.test.ts` (the `placeMap` meta case). Engine: `test/place-icons.test.ts` (the set, the routes, the bridge rule), `test/malicious-plugin.test.ts` (the host copy of the rule).
 
 ## Not verified
 - The road tracker in a real play: the scene's place came from unit tests only (no Dashboard sensor or World DM ran in the browser check).

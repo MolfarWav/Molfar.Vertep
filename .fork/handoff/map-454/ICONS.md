@@ -111,7 +111,7 @@ Subject: SUBJECT
 Two or three runs of each is normal: pick the one with the most open ground. If the model draws houses anyway, add: "leave all
 building plots empty, no houses, no roofs" and run again.
 
-## After the pictures exist (my side)
+## After the pictures exist (my side): done 2026-11-19, see `.fork/STATE.md`
 - `scripts/place-icons.ts`: keys out the magenta (distance from the corner colour with a soft edge, then removes the magenta tint from the
   rim), crops to the content, pads to a square and writes WebP 128 and 256 px with alpha to `builtin-assets/place-icons/<id>.webp`.
 - The engine serves them (`GET /v1/place-icons/<id>.webp`, a list at `GET /v1/place-icons`), the map draws them instead of the emoji, and

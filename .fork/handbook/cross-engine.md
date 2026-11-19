@@ -28,7 +28,7 @@ Traps:
 ## From `engine-apps-bridge.md`
 
 Change X, touch Y:
-- `appBridgeAllows` in `src/server/app.ts`: also `allowedRequest` in `client/public/app-bridge-host.js`, and the cases in `test/security.test.ts` and `test/malicious-plugin.test.ts`.
+- `appBridgeAllows` in `src/server/app.ts` (it lets an app frame read `/v1/assets/*` and `/v1/place-icons*`, GET only): also `allowedRequest` in `client/public/app-bridge-host.js`, and the cases in `test/security.test.ts` and `test/malicious-plugin.test.ts`.
 - `APP_MANAGEMENT_HEADS` in `src/server/app.ts`: also `MANAGEMENT_HEADS` in `client/public/app-bridge-host.js`.
 - A new shell op: `molfarShell` in `client/public/app-bridge.js`, `shellRequest` in `client/public/app-bridge-host.js`, a branch in `onShellRequest` in `client/src/App.tsx`, and the op list in `test/security.test.ts`.
 - The notify limits in `shellRequest`: also the notify cases in `test/security.test.ts` and `client/src/notice-rules.ts`.

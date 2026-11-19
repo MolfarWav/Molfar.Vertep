@@ -65,6 +65,7 @@ import {
 import { ImageError, adaptComfyWorkflow, parseImageAspect, imageErrorBody, comfyWorkflowProblem, createImageEndpoint, deleteImageEndpoint, listImageEndpoints, updateImageEndpoint, validateImageEndpointInput, validateImageFavorites, writeImageFavorites } from "../images.js";
 import type { EdgeFormat } from "../speech.js";
 import * as assets from "../assets/store.js";
+import { placeIconBytes, placeIconIndex } from "../place-icons.js";
 import * as assetCleanup from "../assets/cleanup.js";
 import { createSandbox, type SandboxRunner } from "../sandbox/index.js";
 import { sandboxConfigOf } from "../config.js";
@@ -260,6 +261,8 @@ export function appBridgeAllows(appId: string, method: string, path: string, tru
     if (path === "/v1/models" || path.startsWith("/v1/models/")) return true;
     if (["/v1/images/models", "/v1/embeddings/config", "/v1/audio/voices", "/v1/audio/speech/endpoints", "/v1/settings/connections", "/v1/settings/providers", "/v1/plugins"].includes(path)) return true;
     if (path === "/v1/assets" || path.startsWith("/v1/assets/")) return true;
+    // the shipped place icons of the Roleplay map: public art, read-only
+    if (path === "/v1/place-icons" || path.startsWith("/v1/place-icons/")) return true;
   }
   // Paid generation (images, speech) is open to every app and deliberately
   // unmetered per app: the user installed the app and the call rides their
@@ -6276,6 +6279,19 @@ html,body{margin:0;height:100%;overflow:hidden;background:#111217}iframe{border:
     } catch (e) {
       return c.json({ error: (e as Error).message }, 413);
     }
+  });
+  // the place icons shipped with the engine (builtin-assets/place-icons): the list of kinds with their
+  // variant counts, and one icon by file name (<kind>-<n>.webp). Read-only; apps reach them through the bridge.
+  app.get("/v1/place-icons", (c) => c.json({ icons: placeIconIndex() }));
+  app.get("/v1/place-icons/:file", (c) => {
+    const bytes = placeIconBytes(c.req.param("file"));
+    if (!bytes) return c.json({ error: "not found" }, 404);
+    return c.body(new Uint8Array(bytes), 200, {
+      "content-type": "image/webp",
+      "x-content-type-options": "nosniff",
+      "content-security-policy": "sandbox; default-src 'none'",
+      "cache-control": "public, max-age=86400",
+    });
   });
   app.get("/v1/assets/:id", (c) => {
     const got = assets.getAsset(c.get("paths"), c.req.param("id"));
