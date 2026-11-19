@@ -1,0 +1,367 @@
+{
+ "note": "Which picture of the owner's folder is which place kind. Values are file names; the order is the order of the variants (kind-1, kind-2 ...). Maps are not shipped.",
+ "kinds": {
+  "temple": [
+   "Ancient_stone_temple_icon_e15e0667.jpg",
+   "Ancient_stone_temple_with_doorway_78f0760d.jpg",
+   "Ancient_stone_temple_with_doorway_85704808.jpg",
+   "Ancient_stone_temple_with_doorway_ae4d70d1.jpg"
+  ],
+  "bridge": [
+   "Arched_stone_bridge_game_icon_915af73d.jpg",
+   "Arched_stone_bridge_game_icon_a4e85519.jpg",
+   "Arched_stone_bridge_game_icon_f0f02238.jpg",
+   "Arched_stone_bridge_game_icon_febffcfe.jpg"
+  ],
+  "bakery": [
+   "Bakery_shopfront_icon_with_awning_019116d8.jpg",
+   "Bakery_shopfront_icon_with_awning_410b1acd.jpg",
+   "Bakery_shopfront_icon_with_awning_e7efb7da.jpg",
+   "Bakery_shopfront_icon_with_awning_f11b5edb.jpg"
+  ],
+  "smithy": [
+   "Blacksmith_forge_game_icon_76644482.jpg",
+   "Blacksmith_forge_icon_with_anvil_948deb3d.jpg",
+   "Blacksmith_forge_icon_with_anvil_c542f6e3.jpg",
+   "Blacksmith_forge_with_anvil_832ea4d4.jpg"
+  ],
+  "lake": [
+   "Blue_lake_with_wooden_jetty_1aba52c9.jpg",
+   "Round_blue_lake_icon_615759ee.jpg",
+   "Round_blue_lake_with_reeds_047b6aff.jpg",
+   "Round_blue_lake_with_reeds_469d1257.jpg"
+  ],
+  "place": [
+   "Brass_map_pin_icon_b7b02822.jpg",
+   "Brass_map_pin_with_flag_2ce1e93b.jpg",
+   "Brass_map_pin_with_flag_e4a2bae2.jpg",
+   "Round_brass_map_pin_7e700a36.jpg"
+  ],
+  "ruins": [
+   "Broken_stone_ruins_arch_column_20f72b2f.jpg",
+   "Broken_stone_ruins_icon_aa883f1b.jpg",
+   "Broken_stone_ruins_overgrown_moss_de3374e1.jpg",
+   "Stone_ruins_overgrown_with_moss_0100ca61.jpg"
+  ],
+  "camp": [
+   "Camp_with_tent_and_campfire_ffcb018d.jpg",
+   "Small_camp_tent_and_campfire_55351428.jpg",
+   "Small_camp_with_tent_campfire_6d63827f.jpg",
+   "Small_camp_with_tent_campfire_fc496f17.jpg"
+  ],
+  "town": [
+   "Cluster_of_houses_and_tower_026f5cc7.jpg",
+   "Cluster_of_houses_and_tower_90b1f6c9.jpg",
+   "Cluster_of_houses_and_tower_f4115cde.jpg",
+   "Houses_around_tower_game-map_icon_e8cd456c.jpg"
+  ],
+  "street": [
+   "Cobbled_street_with_lamp_post_1bb827a0.jpg",
+   "Cobbled_street_with_lamp_post_3db6a410.jpg",
+   "Cobbled_street_with_lamp_post_b8c5049a.jpg",
+   "Cobbled_street_with_lamp_post_cd384b48.jpg"
+  ],
+  "room": [
+   "Cosy_room_interior_cut-away_illu…_01e355cc.jpg",
+   "Cosy_room_interior_cut-away_illu…_48726cbc.jpg",
+   "Cosy_room_interior_cut-away_illu…_fe6e4658.jpg",
+   "Cozy_room_interior_cut-away_illu…_754a0565.jpg"
+  ],
+  "tavern": [
+   "Cosy_timber_tavern_icon_a4abd26b.jpg",
+   "Cosy_timber_tavern_icon_illustra…_5a49f909.jpg",
+   "Timber_tavern_game-map_icon_cc57bea5.jpg",
+   "Timber_tavern_icon_illustration_187e5093.jpg"
+  ],
+  "cave": [
+   "Dark_cave_mouth_in_hill_33c8d2e7.jpg",
+   "Dark_cave_mouth_in_hill_8c73ef98.jpg",
+   "Dark_cave_mouth_in_hill_ae5548bf.jpg",
+   "Dark_cave_mouth_in_hill_ae82fe77.jpg"
+  ],
+  "sea": [
+   "Deep_blue_sea_with_waves_40bd8911.jpg",
+   "Deep_blue_sea_with_waves_81a58453.jpg",
+   "Deep_blue_sea_with_waves_f2d521b8.jpg",
+   "Patch_of_deep_blue_sea_bb6ce82b.jpg"
+  ],
+  "city": [
+   "Dense_city_skyline_behind_wall_13657245.jpg",
+   "Dense_city_skyline_behind_wall_7648b3c9.jpg",
+   "Dense_city_skyline_behind_wall_c88905d0.jpg",
+   "Dense_city_skyline_behind_wall_f2741b52.jpg"
+  ],
+  "farm": [
+   "Farmhouse_with_red_barn_0215d399.jpg",
+   "Farmhouse_with_red_barn_1029429a.jpg",
+   "Farmhouse_with_red_barn_3f33affb.jpg",
+   "Farmhouse_with_red_barn_9ce2ec85.jpg"
+  ],
+  "palace": [
+   "Grand_palace_with_golden_dome_0aa3b5e0.jpg",
+   "Grand_palace_with_golden_dome_48336a4b.jpg",
+   "Grand_palace_with_golden_dome_d126026b.jpg",
+   "Palace_with_golden_dome_01cf56ab.jpg"
+  ],
+  "hills": [
+   "Green_hills_with_stream_3b511aa0.jpg",
+   "Rolling_green_hills_game_icon_58648165.jpg",
+   "Rolling_green_hills_game_icon_6612412d.jpg",
+   "Rolling_green_hills_game_icon_72a0ef35.jpg"
+  ],
+  "meadow": [
+   "Green_meadow_patch_with_wildflowers_129d33fd.jpg",
+   "Green_meadow_patch_with_wildflowers_1b437cf7.jpg",
+   "Green_meadow_patch_with_wildflowers_c2c6faac.jpg",
+   "Meadow_patch_with_wildflowers_71c2ef74.jpg"
+  ],
+  "dungeon": [
+   "Iron_prison_cell_door_icon_0c6d0716.jpg",
+   "Iron_prison_cell_door_icon_0cca25f4.jpg",
+   "Iron_prison_cell_door_icon_188754af.jpg",
+   "Prison_cell_door_with_torch_5a6ae2cb.jpg"
+  ],
+  "lighthouse": [
+   "Lighthouse_on_rock_emitting_light_05d6d57c.jpg",
+   "Lighthouse_on_rock_emitting_light_1638c7f2.jpg",
+   "Lighthouse_on_rock_emitting_light_cb88aa91.jpg",
+   "Lighthouse_on_rock_with_light_13f4f94e.jpg"
+  ],
+  "shop": [
+   "Market_shop_front_icon_7ffbd7ab.jpg",
+   "Market_shop_front_icon_b3a6ac4a.jpg",
+   "Market_shop_front_icon_fa69e772.jpg",
+   "Market_shop_front_illustration_2c9b3c6b.jpg"
+  ],
+  "market": [
+   "Market_square_stall_icon_738e7ddc.jpg",
+   "Market_square_stall_illustration_19b6d82a.jpg",
+   "Market_square_stall_with_fruit_7ba5b9ce.jpg",
+   "Market_square_stall_with_fruit_a972252e.jpg"
+  ],
+  "swamp": [
+   "Murky_green_swamp_game_icon_0ece5b24.jpg",
+   "Swamp_map_icon_with_trees_b8688855.jpg",
+   "Swamp_with_dead_trees_2ba7ef1e.jpg",
+   "Swamp_with_dead_trees_3f2d56f9.jpg"
+  ],
+  "river": [
+   "River_stretch_with_stones_and_4930e999.jpg",
+   "River_stretch_with_stones_reeds_c91c3885.jpg",
+   "River_with_banks_and_stones_28f34fd6.jpg",
+   "River_with_stones_and_reeds_e5229fdc.jpg"
+  ],
+  "inn": [
+   "Roadside_inn_building_icon_aae4b625.jpg",
+   "Roadside_inn_with_signboard_d7ef9578.jpg",
+   "Two-storey_roadside_inn_illustra…_77ce4f53.jpg",
+   "Two-storey_roadside_inn_illustra…_f0b2c8f1.jpg"
+  ],
+  "desert": [
+   "Sand_dunes_with_a_cactus_31df0dfc.jpg",
+   "Sand_dunes_with_cactus_and_0f86428b.jpg",
+   "Sand_dunes_with_cactus_skull_271a1376.jpg",
+   "Sand_dunes_with_cactus_skull_a64d2d1d.jpg"
+  ],
+  "beach": [
+   "Sandy_beach_with_palm_tree_30855927.jpg",
+   "Sandy_beach_with_palm_tree_5a451a45.jpg",
+   "Sandy_beach_with_palm_tree_d1dd243d.jpg",
+   "Sandy_beach_with_palm_tree_fa8ceb14.jpg"
+  ],
+  "field": [
+   "Scarecrow_in_wheat_field_799e8ae2.jpg",
+   "Scarecrow_in_wheat_field_9a7d6aa7.jpg",
+   "Scarecrow_in_wheat_field_bc5ed13b.jpg",
+   "Scarecrow_in_wheat_field_c9746674.jpg"
+  ],
+  "school": [
+   "School_building_with_bell_tower_5347af11.jpg",
+   "School_building_with_bell_tower_68a88057.jpg",
+   "School_building_with_bell_tower_8d176c1d.jpg",
+   "School_building_with_bell_tower_a371189f.jpg"
+  ],
+  "graveyard": [
+   "Small_graveyard_with_gravestones_e0c89cf1.jpg",
+   "Small_graveyard_with_gravestones…_1449a8ec.jpg",
+   "Small_graveyard_with_gravestones…_31a37c54.jpg",
+   "Small_graveyard_with_gravestones…_40ad5079.jpg"
+  ],
+  "snow": [
+   "Snowy_field_with_fir_trees_26ee588c.jpg",
+   "Snowy_field_with_fir_trees_44e10b27.jpg",
+   "Snowy_field_with_fir_trees_5ceea83e.jpg",
+   "Snowy_field_with_fir_trees_6008173b.jpg"
+  ],
+  "portal": [
+   "Standing_stone_ring_with_gateway_5b50845b.jpg",
+   "Stone_ring_with_magical_gateway_7b580fd9.jpg",
+   "Stone_ring_with_magical_gateway_97468d9c.jpg",
+   "Stone_ring_with_magical_gateway_a4b2091b.jpg"
+  ],
+  "house": [
+   "Stone_and_timber_house_icon_114783f5.jpg",
+   "Stone_and_timber_house_icon_832d9c02.jpg",
+   "Stone_and_timber_house_icon_94ab1cff.jpg",
+   "Stone_and_timber_house_icon_ad0d9a74.jpg"
+  ],
+  "castle": [
+   "Stone_castle_with_two_towers_47fcd362.jpg",
+   "Stone_castle_with_two_towers_871a161e.jpg",
+   "Stone_castle_with_two_towers_b576a459.jpg",
+   "Stone_castle_with_two_towers_e48e1d3a.jpg"
+  ],
+  "cellar": [
+   "Stone_cellar_hatch_with_barrel_3490e087.jpg",
+   "Stone_cellar_hatch_with_barrel_39812c5f.jpg",
+   "Stone_cellar_hatch_with_barrel_a6cb3f9b.jpg",
+   "Stone_cellar_hatch_with_barrel_bf036a57.jpg"
+  ],
+  "gate": [
+   "Stone_city_gate_icon_52d1f3b5.jpg",
+   "Stone_city_gate_illustration_bb0e5bef.jpg",
+   "Stone_city_gate_illustration_d931f98c.jpg",
+   "Stone_city_gate_with_doors_81871fa1.jpg"
+  ],
+  "fortress": [
+   "Stone_fortress_game-map_icon_9a4b8fc0.jpg",
+   "Stone_fortress_game_icon_1e117eb3.jpg",
+   "Stone_fortress_game_icon_f2d3b50f.jpg",
+   "Stone_fortress_with_gatehouse_c683d954.jpg"
+  ],
+  "library": [
+   "Stone_library_building_icon_dd52e866.jpg",
+   "Stone_library_building_with_books_369a7b93.jpg",
+   "Stone_library_building_with_books_93fe4dc4.jpg",
+   "Stone_library_building_with_books_c1e57a7a.jpg"
+  ],
+  "tower": [
+   "Stone_tower_with_conical_roof_6597b348.jpg",
+   "Stone_tower_with_conical_roof_780c20d6.jpg",
+   "Stone_tower_with_conical_roof_920755de.jpg",
+   "Stone_tower_with_conical_roof_b77bad25.jpg"
+  ],
+  "mountain": [
+   "Tall_grey_mountain_icon_65cfb8b5.jpg",
+   "Tall_grey_mountain_with_snow_1b7eeb73.jpg",
+   "Tall_grey_mountain_with_snow_fe4e8856.jpg",
+   "Tall_mountain_with_snow_peak_5fcbed0e.jpg"
+  ],
+  "village": [
+   "Three_houses_and_well_icon_07621ed0.jpg",
+   "Three_houses_and_well_icon_da335ad1.jpg",
+   "Three_houses_with_a_well_7389a2e6.jpg",
+   "Three_small_houses_and_well_46c8eec9.jpg"
+  ],
+  "forest": [
+   "Three_trees_and_bushes_65275352.jpg",
+   "Three_trees_with_bushes_icon_8aa39037.jpg",
+   "Trees_and_bushes_icon_a1b4ac12.jpg",
+   "Trees_with_bushes_game_icon_d3d25535.jpg"
+  ],
+  "park": [
+   "Town_park_with_bench_08c3b817.jpg",
+   "Town_park_with_bench_8636a8fe.jpg",
+   "Town_park_with_bench_and_04358926.jpg",
+   "Town_park_with_park_bench_42091dc3.jpg"
+  ],
+  "church": [
+   "Small_village_church_with_steeple_3ce5b17c.jpg",
+   "Village_church_with_steeple_9db8ffc3.jpg",
+   "Village_church_with_steeple_c0f6568a.jpg",
+   "Village_church_with_steeple_e9dfdda3.jpg"
+  ],
+  "garden": [
+   "Walled_garden_game_icon_1cf2ba84.jpg",
+   "Walled_garden_icon_with_hedge_77ae486a.jpg",
+   "Walled_garden_with_trimmed_hedge_81738977.jpg",
+   "Walled_garden_with_trimmed_hedge_c3122c74.jpg"
+  ],
+  "road": [
+   "Winding_dirt_road_signpost_2215facb.jpg",
+   "Winding_dirt_road_signpost_787cc4ce.jpg",
+   "Winding_dirt_road_signpost_a9edb6e2.jpg",
+   "Winding_dirt_road_signpost_c4678e71.jpg"
+  ],
+  "cottage": [
+   "Tiny_wooden_cottage_icon_3c3a1190.jpg",
+   "Tiny_wooden_cottage_icon_da880105.jpg",
+   "Wooden_cottage_icon_1995607d.jpg",
+   "Wooden_cottage_icon_c0608cb2.jpg"
+  ],
+  "port": [
+   "Wooden_harbor_pier_with_boat_adb19e79.jpg",
+   "Wooden_harbour_pier_icon_df675c7c.jpg",
+   "Wooden_harbour_pier_with_boat_0188c16a.jpg",
+   "Wooden_harbour_pier_with_boat_16d75692.jpg"
+  ],
+  "mine": [
+   "Wooden_mine_entrance_with_cart_1a3f07ae.jpg",
+   "Wooden_mine_entrance_with_cart_c4ae616b.jpg",
+   "Wooden_mine_entrance_with_cart_cec65e74.jpg",
+   "Wooden_mine_entrance_with_cart_f2d5719b.jpg"
+  ],
+  "ship": [
+   "Wooden_sailing_ship_icon_16f03536.jpg",
+   "Wooden_sailing_ship_icon_1a5a3573.jpg",
+   "Wooden_sailing_ship_icon_52c75b0d.jpg",
+   "Wooden_sailing_ship_icon_66d2c9c1.jpg"
+  ],
+  "mill": [
+   "Wooden_windmill_on_a_hill_308c5370.jpg",
+   "Wooden_windmill_on_hill_feb4281e.jpg",
+   "Wooden_windmill_on_small_hill_255ff789.jpg",
+   "Wooden_windmill_on_small_hill_5ab57b8a.jpg"
+  ]
+ },
+ "maps": {
+  "map-coast": [
+   "Coast_and_islands_fantasy_map_5372c57a.jpg",
+   "Coast_and_islands_fantasy_map_6ea388fa.jpg",
+   "Fantasy_map_showing_coast_and_19623019.jpg",
+   "Painted_fantasy_map_of_coast_1e1035c7.jpg"
+  ],
+  "map-region": [
+   "Fantasy_map_background_of_region_8a34eff5.jpg",
+   "Hand-painted_fantasy_map_background_428caf95.jpg",
+   "Hand-painted_fantasy_map_background_62f5ff3f.jpg",
+   "Hand-painted_fantasy_map_background_d98220b7.jpg"
+  ],
+  "map-wilds": [
+   "Fantasy_map_of_wild_country_bb802461.jpg",
+   "Hand-painted_fantasy_map_background_84133451.jpg",
+   "Hand-painted_fantasy_map_background_b055d8ae.jpg",
+   "Hand-painted_fantasy_map_background_b42b8e16.jpg"
+  ],
+  "map-city": [
+   "Medieval_walled_town_map_plan_33af5ce3.jpg",
+   "Medieval_walled_town_map_plan_5984bcc5.jpg",
+   "Medieval_walled_town_map_plan_840ef09f.jpg",
+   "Medieval_walled_town_plan_8bb657dc.jpg"
+  ],
+  "map-village": [
+   "Village_fantasy_map_background_plan_d871f8e5.jpg",
+   "Village_map_plan_of_ground_0e10ca21.jpg",
+   "Village_plan_painted_fantasy_map_1039cd43.jpg",
+   "Village_plan_painted_map_background_c36d64f6.jpg"
+  ],
+  "map-port-town": [
+   "Harbour_town_fantasy_map_plan_12d1ba50.jpg",
+   "Harbour_town_fantasy_map_plan_70bbf46a.jpg",
+   "Harbour_town_fantasy_map_plan_abf02a81.jpg",
+   "Harbour_town_fantasy_map_plan_e2885020.jpg"
+  ],
+  "map-interior": [
+   "Floor_plan_of_large_house_d4e7c196.jpg",
+   "Floor_plan_of_large_house_e892caa1.jpg",
+   "House_floor_plan_top-down_e56efd60.jpg",
+   "House_floor_plan_top_down_09469d76.jpg"
+  ],
+  "map-underground": [
+   "Underground_cavern_system_from_a…_bf7ea803.jpg",
+   "Underground_cavern_system_from_a…_d463f83a.jpg",
+   "Underground_cavern_system_from_a…_ea5e2aa6.jpg",
+   "Underground_cavern_system_map_0b6fabe4.jpg"
+  ]
+ }
+}
