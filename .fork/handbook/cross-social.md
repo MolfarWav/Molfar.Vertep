@@ -33,7 +33,7 @@ Traps:
 - Shared flats: one side's mark is enough (a romantic tie is one way); a group is at most 6; the first holder by id keeps the flat when the mark goes.
 - Clearing all profiles leaves `city/` until a new profile appears (the tick does nothing on an empty list).
 - The place plate is cosmetic: tiles show everyone in a place anyway.
-- The drawing is set with `dangerouslySetInnerHTML`: `isoSvg` must stay numbers and theme tokens only, never a name (a test checks for text and hex colours). At most 25 places are drawn; the rest only in the list. A building's spot follows the tiles' order, so a removed place shifts the ones after it.
+- The drawing is set with `dangerouslySetInnerHTML`: `isoSvg` must stay numbers and theme tokens only, never a name (a test checks for text and hex colours). At most 25 places are drawn; the rest only in the list. A building's spot follows the tiles' order unless the user moved it: Rearrange (#458) saves `lots: { g, at: { <place id>: lot index } }` on the district (`POST /city/layout`, `layoutRoute`, `cleanLots` in `plugins/city/plugin.js`; `isoSlots` reads it), never on the place, because saving a place marks it `by: "you"`. A layout made for another grid size `g` is ignored, so a district that gains a place and grows a row is drawn in the tiles' order again; Homes cannot be rearranged. Without a layout a removed place shifts the ones after it.
 
 
 ## From `social-clubs-chatter-stories.md`
@@ -125,7 +125,7 @@ Traps:
 - `writeChat` keeps the newest 500 messages; the note is stored apart.
 - A chat with a pending reply is never folded; a failed chat keeps `pending`, so its note waits for a retry or a new conversation.
 - A failed reply is not retried by the tick; a lost call is asked again after 5 minutes; a failed fold is silent.
-- The forum and clubs read only the public facts (`private === false`) through `publicFacts`, never the note (M3, #446); they do not write facts (M4 is not built). `factsShare` in Settings cuts the readers off.
+- The forum and clubs read only the public facts (`private === false`) through `publicFacts`, never the note (M3, #446); since M4 they also write them (see Learned facts). `factsShare` in Settings cuts the readers off.
 - Writing first has no `used`; the forum and clubs do not read pinned messages. Stem overlap in `factsFor` is a stand-in for "nearest in meaning" (the recall vectors are not used for facts).
 - Pictures are drawn by the open Social page only (`docs/DECISIONS.md`).
 - Recalled text is data: `recallText` turns angle brackets into spaces and double quotes into single quotes.
@@ -139,7 +139,7 @@ Change X, touch Y:
 - `reads` in `manifest.json`: also `RP_APP` in `plugins/profiles/plugin.js` and `test/profiles-import.test.ts`. Users are asked again on Home.
 - `buildMaterial`: every profile counts as changed once (`hashText`).
 - `networkHosts` in `manifest.json` and `SOURCES` in `plugins/life/plugin.js`: `test/life-plugin.test.ts` pins them.
-- `chatPath`: also `adoptLegacy` and `publicFacts`, plus `removeChats` and `RESET_PARTS`.
+- `chatPath`: also `adoptLegacy` and `publicFacts`, plus `removeChats` and `RESET_PARTS`., `removeLearned` (the learned files go with a character or a persona) and `RESET_PARTS` (`chats` includes `forum/facts`, `forum` includes `forum/learn.json`)
 - A screen string: `src/screens/<screen>/strings.ts` in `en` and `uk` (`test/skeleton.test.ts`).
 - `engine` in `manifest.json`: raise it only with the engine contract.
 - A catalog pack: `catalog/index.json`, its folder, LICENSE, per `catalog/README.md`; `test/stickers-catalog.test.ts`.

@@ -11,6 +11,7 @@ by the owner. In force since 2026-11-14: `CLAUDE.md` (rule and "Done means") and
 | You are touching | Read |
 | --- | --- |
 | How an app calls the shell, opens another app, reads another app's files, notifies | `engine-apps-bridge.md` |
+| The shared catalog of names, places, organizations and items: the reader, its cache and routes | `engine-catalog.md` |
 | Names, ids, aliases of persons, things, places in a chat | `roleplay-entity-registry.md` |
 | World records, fronts, clocks, the events deck, World's own dice | `roleplay-world-dm.md` |
 | Scenes, facts, who knows what, beliefs, What fired, word-for-word recall | `roleplay-litopys.md` |

@@ -77,6 +77,8 @@
       // read-only catalogs the app renders (no keys, no control)
       if (path === "/v1/settings/connections" || path === "/v1/settings/providers" || path === "/v1/plugins") return true;
       if (path === "/v1/assets" || path.indexOf("/v1/assets/") === 0) return true;
+      // the shared catalog (#373): read-only look-ups
+      if (path === "/v1/catalog" || path.indexOf("/v1/catalog/") === 0) return true;
     }
     // generation the app makes on the user's behalf, and its own asset uploads
     // paid generation (images, speech) is open to every app by design: it

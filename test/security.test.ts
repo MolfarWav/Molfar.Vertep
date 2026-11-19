@@ -955,6 +955,10 @@ describe("A2 the bridge's second lock (server side)", () => {
     }
     expect((await relay("GET", "/v1/apps/evil/anything")).status).toBe(200);
     expect((await relay("GET", "/v1/models")).status).not.toBe(403);
+    // the shared catalog is read-only for apps (#373)
+    expect((await relay("GET", "/v1/catalog/search?kind=name")).status).not.toBe(403);
+    expect((await relay("POST", "/v1/catalog/search")).status).toBe(403);
+    expect((await relay("PUT", "/v1/catalog")).status).toBe(403);
     // the header on an unknown app is refused outright
     expect((await relay("GET", "/v1/models", "nope")).status).toBe(403);
   }, 30_000);
@@ -979,7 +983,8 @@ describe("A2 the bridge's second lock (server side)", () => {
       "/v1/projects/project:x/export", "/v1/projects/app:x/files", "/v1/projects/app:x/files/a.png",
       "/v1/storage/assets", "/v1/storage/assets/job", "/v1/storage/assets/plan", "/v1/storage/assets/clean", "/v1/storage/assets/trash", "/v1/storage/assets/trash/abc/file", "/v1/storage/assets/trash/restore", "/v1/storage/assets/trash/empty",
       "/v1/profile/export", "/v1/profile/import", "/v1/profile/import/t/confirm",
-      "/v1/sync", "/v1/sync/settings", "/v1/sync/drive/start", "/v1/sync/drive/code", "/v1/sync/folder", "/v1/sync/target", "/v1/sync/job", "/v1/sync/check", "/v1/sync/push", "/v1/sync/pull"];
+      "/v1/sync", "/v1/sync/settings", "/v1/sync/drive/start", "/v1/sync/drive/code", "/v1/sync/folder", "/v1/sync/target", "/v1/sync/job", "/v1/sync/check", "/v1/sync/push", "/v1/sync/pull",
+      "/v1/catalog", "/v1/catalog/search", "/v1/catalog/lookup", "/v1/catalog/entry", "/v1/catalog/refresh"];
     for (const trusted of [false, true]) {
       for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
         for (const p of paths) {

@@ -47,8 +47,23 @@ Traps:
 - A decision covers only the patterns it was made for. A manifest that asks for a new pattern makes the user answer again.
 - The worker's matcher is a separate copy and must stay in step with `patternMatches`.
 - The frame's `fetch` is the bridge: a request body over 32 MB (`TOO_BIG` in `client/public/app-bridge.js`) is refused inside the frame, before any network, and the app's own error wrapper shows it as a lost connection. An app that has more to send sends it in parts (Roleplay's backup import does, `splitLibrary`).
+- A frame cannot load an engine picture by itself: a plain subresource request carries no session. The frame's rewriter (`rewriteElement`, `scanTree` and the MutationObserver in `client/public/app-bridge.js`) fetches each `/v1/` address over the bridge and swaps in a `blob:` URL, in `src`, `poster`, `srcset`, `style` and `<style>`, and in `href` / `xlink:href` of an SVG `<image>` or `<feImage>` (#460). A `/v1/` address in any other attribute stays broken: add it to the rewriter and to the observer's `attributeFilter`.
 - No server code handles app notices. The `notify` op stops in the browser. The `bus.emit` call in `src/server/app.ts` is the agent's event bus, not an app notice.
 - The browser copy decodes the path with `decodeURIComponent` and refuses a path that does not decode. The server relies on the router's decoded path.
+
+
+## From `engine-catalog.md`
+
+Change X, touch Y:
+- The pack format in the Store repo (`scripts/catalog-lib.ts`): `parsePack` here and the test fixtures in `test/catalog.test.ts`.
+- A new `/v1/catalog` route that apps may call: both allowlists and the path list in `test/security.test.ts` ("the engine and bridge copies of the allowlist agree").
+- A new source (an extra repository): `catalogOf` builds one reader per base URL; extra sources must stay unofficial and read only `catalog/`.
+
+Traps:
+- Entry text is untrusted: `plain` strips control characters and angle brackets and caps the length, but an app that renders it as HTML must still escape it.
+- The reader fetches the whole catalog (every pack) on the first call; the seed is about 400 KB. A much larger catalog needs lazy pack loading.
+- The cache is keyed by pack hash, not by a clock: a pack changed without an index rewrite is never refetched. The Store's workflow rewrites the index on every push to `main`.
+- `catalogBase` needs an `https://` Store URL ending in `/apps.json`; a custom feed with another file name has no catalog.
 
 
 ## From `engine-models-embeddings.md`

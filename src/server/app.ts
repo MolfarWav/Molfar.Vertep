@@ -13,6 +13,7 @@ import { McpRegistry, WEB_SEARCH_PRESET, readStdioApprovals, stdioFingerprint, w
 import { forgetGrants, forgetPeer, moveGrants, peerMounts, readGrants, readState, setGrant, type PeerMount } from "../apps/reads.js";
 import { listApps, readApp, createAppSkeleton, renameAppDir, appTree, validateAppManifest, hashAppTree, type AppInfo } from "../apps/manager.js";
 import { UPDATE_STRATEGIES, applyWrites, discardDir, discardStaleStaging, mergeBrief, restoreWrites, forgetInstall, mergeTrees, moveInstall, readBaseline, readCodeTree, readInstallSource, readPendingUpgrade, recoverBaseline, replaceTree, satisfiesRange, seedDataTemplates, writeBaseline, writeInstallSource, writePendingUpgrade, type InstallSource } from "../apps/update.js";
+import { catalogBase, createCatalogReader, lookupEntries, searchEntries } from "../catalog.js";
 import { OFFICIAL_SOURCES, createCatalog, forkOf, isOfficialSource, normalizeGitUrl } from "../apps/store.js";
 import { gitClone, gitRemoteHead, isValidGitRef, isValidGitUrl, remoteManifest, stripVcs } from "../apps/git.js";
 import { BACKUP_MAX_BYTES, BACKUP_META_DIR, BackupError, buildBackup, extractBackup, locateBackup, type BackupMeta } from "../apps/backup.js";
@@ -260,6 +261,8 @@ export function appBridgeAllows(appId: string, method: string, path: string, tru
     if (path === "/v1/models" || path.startsWith("/v1/models/")) return true;
     if (["/v1/images/models", "/v1/embeddings/config", "/v1/audio/voices", "/v1/audio/speech/endpoints", "/v1/settings/connections", "/v1/settings/providers", "/v1/plugins"].includes(path)) return true;
     if (path === "/v1/assets" || path.startsWith("/v1/assets/")) return true;
+    // the shared catalog (#373): read-only look-ups, no keys, no control
+    if (path === "/v1/catalog" || path.startsWith("/v1/catalog/")) return true;
   }
   // Paid generation (images, speech) is open to every app and deliberately
   // unmetered per app: the user installed the app and the call rides their
@@ -2069,6 +2072,64 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       .map((e) => ({ ...e, official: isOfficialSource(e.repository, officialSources), installed: installed.get(normalizeGitUrl(e.repository)) ?? null }))
       .sort((a, b) => Number(b.official) - Number(a.official) || b.added.localeCompare(a.added) || a.name.localeCompare(b.name));
     return c.json({ enabled: true, apps, fetchedAt: result.fetchedAt, ...(result.error ? { error: result.error } : {}) });
+  });
+
+  // ---------- shared catalog (#373) ----------
+  // Names, places, organizations and items with tags, read once by the engine from the Store repository's catalog/ so an app needs no
+  // network permission of its own. Read-only, for the shell and for apps (the bridge allowlist lists these paths).
+  let catalogReader: { base: string; reader: ReturnType<typeof createCatalogReader> } | null = null;
+  const catalogOf = () => {
+    const base = catalogBase(config.apps.store);
+    if (!base) return null;
+    if (catalogReader?.base !== base) catalogReader = { base, reader: createCatalogReader({ base, cacheDir: path.join(dataDir, "catalog"), fetcher: deps.storeFetch, userAgent: `MolfarVertep/${ENGINE_VERSION}` }) };
+    return catalogReader.reader;
+  };
+  const publicEntry = (e: { ref: string; pack: string; kind: string; name: string; desc: string; aliases: Record<string, string[]>; tags: string[]; culture?: string; part?: string; gender?: string }, state: { packs: { id: string; author: string; license: string }[] }) => {
+    const pack = state.packs.find((p) => p.id === e.pack);
+    return { ...e, author: pack?.author ?? "", license: pack?.license ?? "" };
+  };
+  app.get("/v1/catalog", async (c) => {
+    const reader = catalogOf();
+    if (!reader) return c.json({ enabled: false, packs: [], tags: null, fetchedAt: null });
+    const s = await reader.get({ fresh: c.req.query("fresh") === "1" });
+    return c.json({ enabled: true, packs: s.packs, tags: s.tags, fetchedAt: s.fetchedAt, ...(s.error ? { error: s.error } : {}) });
+  });
+  app.get("/v1/catalog/search", async (c) => {
+    const reader = catalogOf();
+    if (!reader) return c.json({ enabled: false, items: [], total: 0 });
+    const s = await reader.get();
+    const q = c.req.query();
+    const num = (v: string | undefined) => (v !== undefined && /^\d{1,6}$/.test(v) ? Number(v) : undefined);
+    const found = searchEntries(s.entries, {
+      kind: q.kind,
+      tags: q.tags ? q.tags.split(",").map((x) => x.trim()).filter(Boolean).slice(0, 8) : undefined,
+      culture: q.culture,
+      part: q.part,
+      gender: q.gender,
+      pack: q.pack,
+      q: q.q?.slice(0, 200),
+      random: q.random === "1",
+      limit: num(q.limit),
+      offset: num(q.offset),
+    });
+    return c.json({ enabled: true, total: found.total, items: found.items.map((e) => publicEntry(e, s)), ...(s.error ? { error: s.error } : {}) });
+  });
+  app.get("/v1/catalog/lookup", async (c) => {
+    const reader = catalogOf();
+    const name = (c.req.query("name") ?? "").slice(0, 200);
+    if (!name.trim()) return c.json({ error: "name is required" }, 400);
+    if (!reader) return c.json({ enabled: false, matches: [] });
+    const s = await reader.get();
+    return c.json({ enabled: true, matches: lookupEntries(s.entries, name, c.req.query("kind")).map((m) => ({ match: m.match, entry: publicEntry(m.entry, s) })), ...(s.error ? { error: s.error } : {}) });
+  });
+  app.get("/v1/catalog/entry", async (c) => {
+    const reader = catalogOf();
+    const ref = c.req.query("ref") ?? "";
+    if (!/^[a-z0-9-]{1,32}\/[a-z0-9-]{1,40}:[a-z0-9-]{1,40}$/.test(ref)) return c.json({ error: "ref must look like author/pack:id" }, 400);
+    if (!reader) return c.json({ enabled: false }, 404);
+    const s = await reader.get();
+    const e = s.entries.find((x) => x.ref === ref);
+    return e ? c.json({ enabled: true, entry: publicEntry(e, s) }) : c.json({ error: "no such entry" }, 404);
   });
 
   app.get("/v1/settings", (c) => {

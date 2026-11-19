@@ -8,7 +8,7 @@ An app runs in a sandboxed frame and calls the shell through `window.molfarShell
 - `client/public/app-bridge.js` `molfarShell`: frame-side API (`openApp`, `apps`, `openHome`, `openSettings`, `locale`, `notify`, `askMolfar`).
 - `client/public/app-bridge-host.js` `shellRequest`: validates shell ops; returns null for every op unless the frame is trusted.
 - `client/public/app-bridge-host.js` `handleShell`: forwards a valid op to `CH.onShellRequest` and replies.
-- `client/public/app-bridge-host.js` `allowedRequest`: browser copy of the engine-request allowlist.
+- `client/public/app-bridge-host.js` `allowedRequest`: browser copy of the engine-request allowlist (it also lists the read-only `/v1/catalog` routes, #373, see `engine-catalog.md`).
 - `client/public/app-bridge-host.js` `MANAGEMENT_HEADS`: management routes no frame may call (browser copy).
 - `client/src/App.tsx` `onShellRequest`: the handler set inside the `App` component; only `notify` and `locale` skip the on-screen check.
 - `client/src/app-notices.tsx` `useAppNotices`: per-app counts and toasts; decides what a notify shows.
