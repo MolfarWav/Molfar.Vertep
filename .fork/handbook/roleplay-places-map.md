@@ -1,5 +1,5 @@
 # Roleplay places map: the floating map of a chat's places
-Verified at: molfar.vertep-roleplay ec373ce and molfar.vertep (engine part), both branch `claude/map-454`, not merged
+Verified at: molfar.vertep-roleplay and molfar.vertep (engine part), both branch `claude/map-454`, not merged (the lock, the full name and rename, the scene line, the check script: 2026-11-19)
 
 ## What it does
 - A round chip over the chat opens a floating window with a board of the chat's World place records: painted icons, names, dashed roads between places the story moved between, the place the story is in marked.
@@ -17,14 +17,15 @@ Verified at: molfar.vertep-roleplay ec373ce and molfar.vertep (engine part), bot
 - `src/lib/place-kinds.ts` `placeKind`: the kind a name says (English whole words, Ukrainian and Russian stems), its emoji (the fallback when there is no icon).
 - `src/lib/place-icons.ts` `placeIconPath`, `variantOf`, `usePlaceIconIndex`: the icon of a kind for a place (variant by a hash of the place id), the engine's list asked once per page load.
 - Engine `builtin-assets/place-icons/<kind>-<n>.webp` + `index.json` (256 px WebP with alpha, 4 per kind, 52 kinds including the pin `place`), made by `scripts/place-icons.py` from the owner's magenta-background pictures and `scripts/place-icons.json`; `src/place-icons.ts` reads them; `GET /v1/place-icons` (the list) and `GET /v1/place-icons/<kind>-<n>.webp` in `src/server/app.ts`; `scripts/dist.ts` copies the folder into a release.
+- `src/lib/place-map-lock.ts` `loadLock`, `saveLock`: the padlock (a drag from a place moves the map, a tap picks it), per chat in this browser (`rp.map.lock.<chatId>`); the board's `locked` prop turns a node press into a pan that remembers `tapId`.
 - `src/lib/place-map-open.ts` `usePlaceMapOpen`: tells the sprite stage a phone's map is open.
-- `src/components/chat/place-map.tsx` `PlaceMap`: reads the records and the scene's place, keeps positions and roads, the window, chip, gear menu, spoiler gate, picture upload.
+- `src/components/chat/place-map.tsx` `PlaceMap`: reads the records and the scene's place (`scenePlace`, the Dashboard's free text, kept as `sceneText`), keeps positions and roads, the window, chip, lock, gear menu, spoiler gate, picture upload, the card with the full name and the rename (`saveName`: a label in `placeMap.labels`, the World record is not touched).
 - `src/components/chat/place-map-board.tsx` `PlaceMapBoard`: pan, pinch, wheel, node drag, picture slot, routes.
 - `plugins/engine/plugin.js` `cleanPlaceMapMeta`: cleans `placeMap` on `PATCH /chats/<id>`.
 - `src/lib/engine.ts` `chatPatchOf`: sends `placeMap`; `src/lib/types.ts` `Chat.placeMap`.
 
 ## Data
-- Chat meta `placeMap`: `{ v: 1, nodes: { <place record id>: { x, y } }, routes: [ { a, b } ], picture?: { id }, at?: <record id> }`. Board units, 1600 x 1000, clamped 70 from the edge; 200 nodes; 400 routes (unordered, `a` sorts first). `picture.id` is an asset id in the engine's store (`/v1/assets/<id>`), not a Backgrounds item. Format text: Roleplay `docs/DATA-FORMATS.md` ("placeMap").
+- Chat meta `placeMap`: `{ v: 1, nodes: { <place record id>: { x, y } }, routes: [ { a, b } ], picture?: { id }, at?: <record id>, labels?: { <record id>: <name> } }`. Board units, 1600 x 1000, clamped 70 from the edge; 200 nodes; 400 routes (unordered, `a` sorts first). `picture.id` is an asset id in the engine's store (`/v1/assets/<id>`), not a Backgrounds item. Format text: Roleplay `docs/DATA-FORMATS.md` ("placeMap").
 - Setting `showPlaceMap` (absent = on): hides the chip everywhere.
 - Browser only: the window's place, size and fold, per chat.
 
@@ -51,14 +52,16 @@ Never. Reads: `GET /world/state` (the count of places and the DM level), `GET /w
 - Positions are saved from an effect that runs on each records or scene read; `layoutMap` returns `added` only for nodes without a position, or it would write forever.
 - The window's drag and resize use pointer capture and a `buttons === 0` guard: an app frame does not always hear a button released outside it.
 - A page reload takes about 8 s before the chip shows (the World state call comes after the app boots).
+- A road needs the scene's place to resolve to a World place record (`hereOf` in `plugins/world/plugin.js`: by registry id or by the words of the name). The Dashboard's place line is free text: when it names somewhere the book has no record of, `here` is null, `placeMap.at` is never set and no road is ever drawn (the owner's first real chat: 4 places, no `at`, no roads). The map says so in a line under the header (`place-map-scene`). The tracker only sees moves while the chat is open; it does not read the story's past.
+- A rename on the map is a label in `placeMap.labels`, by record id: the record's name is never changed there, because the book, the Dashboard, spots' `inside` and things' `place` go by that name and travel by a tap will go by the record. `MapNode.name` is the label or the record name, `bookName` the record's, `names` all of them (the icon's kind is read from them).
 - Two floating things fight for a phone's room: while the map is open the sprite stage returns nothing (`usePlaceMapOpen`).
 - In the app frame an `<img src="/v1/...">` first fails (no session) and only then gets a blob URL from the bridge. An `onError` that acts on the first failure hides a healthy picture; the board acts only on an error whose `src` is a `blob:` URL.
 - A hook placed after the `if (!visible) return` in `PlaceMap` breaks the page ("Rendered more hooks"); the browser check caught it, no unit test can.
 
 ## Tests that guard it
-`test/rp-place-map.test.ts`, `test/rp-float-box.test.ts`, `test/rp-place-kinds.test.ts`, `test/rp-place-icons.test.ts`, `test/rp-studio.test.ts` (the `placeMap` meta case). Engine: `test/place-icons.test.ts` (the set, the routes, the bridge rule), `test/malicious-plugin.test.ts` (the host copy of the rule).
+`test/rp-place-map.test.ts`, `test/rp-float-box.test.ts`, `test/rp-place-kinds.test.ts`, `test/rp-place-icons.test.ts`, `test/rp-place-map-lock.test.ts`, `test/rp-studio.test.ts` (the `placeMap` meta case). End to end in a real browser (27 checks, exit code): `.claude/skills/browser-check/placemap-check.mjs` in the engine repo. Engine: `test/place-icons.test.ts` (the set, the routes, the bridge rule), `test/malicious-plugin.test.ts` (the host copy of the rule).
 
 ## Not verified
-- The road tracker in a real play: the scene's place came from unit tests only (no Dashboard sensor or World DM ran in the browser check).
+- The road tracker with a real Dashboard sensor and World DM: the browser check writes the Dashboard's snapshot by hand (a scene place), it does not run the sensor.
 - A real phone's keyboard and touch pinch (checked at 390 px with a mouse and touch-sized controls only).
 - Many places (more than about 40) in a real chat; the light theme was checked, a custom theme was not.

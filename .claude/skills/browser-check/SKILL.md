@@ -73,3 +73,12 @@ cd $W && bun forge/forge-check.mjs            # 10 checks, exit code 1 on a fail
 - The browser: the cloud image's /opt/pw-browsers, else an installed Chrome or Edge (Windows, macOS, Linux); `CHROME_PATH` overrides.
 - Screens prove layout. A behavior claim needs the file on disk (`$DATA/...`) or an API read too.
 - A subagent building UI gets this file's path and runs the same steps; ask it for screenshot paths and look at them yourself.
+
+## The places map of Roleplay (issue #454)
+A scripted end-to-end check with assertions and an exit code (about 30 checks): icons, drag, lock, full name and rename, picture and
+reload, roads from the Dashboard's scene place, phone. Same setup as above, then:
+```bash
+cd $W && bun placemap-check.mjs            # optional: MAP_PICTURE=<a real map image> for the picture step
+```
+It seeds six places itself and runs in one session (a second `openRp` wipes the app's data). Screenshots `pm-*.png` land in `$W`.
+

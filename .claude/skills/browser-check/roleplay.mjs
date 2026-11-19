@@ -20,7 +20,7 @@ export async function skipTours(page, app) {
       await page.waitForTimeout(400); continue
     }
     // an overlay with no Skip button (a last step): Escape closes it
-    if (app && (await app.locator("[data-guide-overlay]").count().catch(() => 0)) > 0) { await page.keyboard.press("Escape"); await page.waitForTimeout(400); continue }
+    if ((await (app ?? page).locator("[data-guide-overlay]").count().catch(() => 0)) > 0) { await page.keyboard.press("Escape"); await page.waitForTimeout(400); continue }
     break
   }
 }
