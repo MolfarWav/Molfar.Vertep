@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- **An engine picture in an SVG `<image>` loads inside an app (#460).** The app frame swaps a `/v1/` address for a `blob:` URL (a plain load in the frame carries no session) but only did it for `src`, `poster`, `srcset` and `style`, so an SVG `<image href="/v1/assets/...">` showed the broken-image icon. It now also rewrites `href` and `xlink:href` of `<image>` and `<feImage>`, including ones an app adds or changes later. Social's relationship map had worked around it. Tests: `test/app-bridge-assets.test.ts`.
+
 ## 1.18.1 (2026-11-19)
 
 - **Settings > Memory: the embedding model is saved when you press Enter, leave the field or pick it from a list (#465).** It used to save only through the small Save button: a name typed on a phone and left with Enter or a tap elsewhere was lost, and a saved key, a provider change or a downloaded model refreshed the field and wiped an unsaved name. Now an unsaved name is kept and marked "Not saved yet". For OpenRouter (its public embedding catalog, with prices) and for your own API connections (their `/models` list) the field offers a list to search (`GET /v1/embeddings/models`, shell only). With Automatic, the "Default" line names both defaults (`defaults` in `GET /v1/embeddings/config`): API connections get `text-embedding-3-small`, OpenRouter `qwen/qwen3-embedding-4b`. Saving the choice leaves a line in the log.
