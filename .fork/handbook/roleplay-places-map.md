@@ -9,8 +9,9 @@ Verified at: molfar.vertep-roleplay and molfar.vertep (engine part), both branch
 ## Owners
 - `src/lib/place-map.ts` `cleanPlaceMap`: the kept shape and its limits (the plugin keeps its own copy, named cleanPlaceMapMeta).
 - `src/lib/place-map.ts` `layoutMap`: nodes from records, a position for each new one (`freeSpot`), `added` = positions to keep.
-- `src/lib/place-map.ts` `stepRoute`: adds a road when the scene's whole place changes; `at` follows the story.
+- `src/lib/place-map.ts` `stepRoute`: adds a road when the scene's whole place changes; `at` follows the story. A hand-drawn road is an ordinary entry of `routes`, so the tracker never adds it twice.
 - `src/lib/place-map.ts` `moveNode`: a drag; a whole place takes its rooms along.
+- `src/lib/place-map.ts` `toggleRoute`, `roadsOf`: a road drawn by hand (adds the pair, or removes it when there is one); `PlaceMap`'s `connectFrom` mode (the card's road button, then a tap on another whole place) calls it; while it is on the card is hidden (it would cover nodes) and rooms are dimmed.
 - `src/lib/place-map.ts` `withPositions`: merges new positions, cap 200.
 - `src/lib/float-box.ts` `boxRect`: where the window or chip stands inside an area (desktop: the chat column; phone: from the top of the messages to the message box).
 - `src/lib/float-box.ts` `setFolded`, `dragTo`, `resizeTo`, `loadBox`, `saveBox`: fold, drag, resize and the browser-local copy (`rp.float.map.<chatId>`).
