@@ -1,6 +1,6 @@
 # Molfar Vertep: project state
 
-Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-11-19.
+Fork of Chrysalis Engine; repo MolfarWav/Molfar.Vertep. Current as of 2026-11-21.
 Standing rules: `CLAUDE.md`. The queue of work and how to start a session: `.fork/handoff/START.md`.
 Developer handbook, one page per system: `.fork/handbook/INDEX.md` (kept up to date by the rule in `CLAUDE.md`).
 
@@ -8,6 +8,14 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `.fork/state-archive/` (word for word, one file per period, `README.md` there). A note that says
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
+
+## 2026-11-21: Roleplay #448 steps T3 to T5 built (Roleplay PR 180 open, not merged, not released; no engine change)
+- **Owner:** "continue 448", picks: the Backstage button sits before the "More" menu, all the rows, no hotkey; then "finish T4 and T5", then handbook, translations, comment, PR.
+- **Built (Roleplay branch `claude/stage-backstage-t3-448`, PR 180):** T3 a Backstage button in the chat header and a block in the phone menu (`backstage-menu.tsx`, rows from the pure `backstageTargets`); T4 a "Dashboard settings" row that opens the settings view directly (store counter `dashSettingsOpen`; the readable Dashboard and its gear stay); T5 `BACKSTAGE_SURFACE` tone (popover with 5% primary, tokens only) and a `BackstageChip` on drawers of `backstage` sections and on the Dashboard settings sheet. Design and what is left: `docs/STAGE-BACKSTAGE.md` in the Roleplay repo. CHANGELOG has an "Unreleased" section; no version bump.
+- **Checked:** typecheck, new tests, full Roleplay suite (3 failures, the same three as main), a browser run in a throwaway engine (desktop dark and Daylight, phone). **Not checked:** the Dashboard settings of an already built dashboard (wide sheet), `uk` in a browser, the look after the tone went from 7% to 5%.
+- **Guide:** `index` and `dashboard` pages changed, 13 translations refreshed by a cheap model and stamped (not read by native speakers).
+- **Handbook:** `roleplay-ui-shell.md` updated in this repo (branch `claude/handbook-stage-backstage-448`), `cross-roleplay.md` rebuilt. The page was already over its 11 KB limit before this change.
+- **Left (issue 448 stays open):** Library and World still mix a reader's view and settings; Characters, Groups and Personas drawers keep the Stage tone; variants B and C of the curtain are not built; an icon-only button below 1300 px is a mask that may be unclear.
 
 ## 2026-11-20 (night): #475 part 5 small things, the guide translations; part 3 moved to #479 — RELEASED as Roleplay 4.142.0 (PR 177 merged by the owner, cf9d164; #473 closed, #475 stays open for its part 4)
 - **Owner's word:** "finish these: spread the places over the picture, 'you are here' by hand, the DM's own road event; refresh the guide translations; take part 3 out into its own issue, it is another kind of generation". Part 3 (fantasy extras, dungeon and continent plans, item icons) is now #479 (#475's body points to it).
