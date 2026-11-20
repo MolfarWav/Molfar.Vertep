@@ -239,6 +239,9 @@ Traps:
 - The map pack is public art shipped with the engine; the maps are the owner's own generated pictures (permission given, issue #454). Social City does not use them.
 - Two floating things fight for a phone's room: while the map is open the sprite stage returns nothing (`usePlaceMapOpen`).
 - In the app frame an `<img src="/v1/...">` first fails (no session) and only then gets a blob URL from the bridge. An `onError` that acts on the first failure hides a healthy picture; the board acts only on an error whose `src` is a `blob:` URL.
+- A hand mark is against the Dashboard's place line: once the sensor writes another line (or names a place of the book) it lapses by itself, which is meant; with no Dashboard at all (an empty line) it holds until one appears. Two saves in one tick (a trip keeps the road, then moves the mark) must build on each other: `PlaceMap.save` keeps `pendingFull`, cleared when the page has the new data; a handler that built from the render's `data` would overwrite the first save.
+- Spreading changes positions the player may have placed: it is a button, not automatic, and the toast's Undo restores the `nodes` it replaced (rooms included).
+- Levels: a place that has no position on any map is "new" and goes to the map the story is on, so removing a place from every map puts it back there; there is no "hide from all maps". A plan level's `plan` place is not removed from the level above when the level is deleted. The `here` mark on a map that does not hold the story's place goes up through the levels' `plan` links (six hops at most). A scale change keeps the roads' `minutes`, which are the walking times at the old scale: the player resets them in the travel window. The generate window keeps its own state per open (a new key per open), and the drawn file is converted to WebP on "Use this map" (a PNG is several MB), the raw asset if that fails.
 - A hook placed after the `if (!visible) return` in `PlaceMap` breaks the page ("Rendered more hooks"); the browser check caught it, no unit test can.
 
 
@@ -290,6 +293,7 @@ Change X, touch Y:
 - Add a section: `SECTIONS` in `sections.ts`, `ViewKey` in `store.ts`, `renderView`, `RAIL_HUES`, `DRAWER_VIEWS` if a drawer, and both languages.
 - Add a settings tab: `SECTIONS` or `navItems` in `settings-view.tsx`.
 - Change a palette token: `globals.css` `:root` and `.dark`, and `ThemeApplier`'s key list.
+- Add or move a section between tiers: `tier` in `sections.ts` (the drawer tone and chip follow it); add a row to the Backstage menu in `backstage-targets.ts` and `useBackstageRows`.
 - Change Dashboard tabs: `DashTabId`, `TONE_TAB` (`dash-common.tsx`).
 - Change Canvas boards: `CanvasBoardKey` (`src/lib/canvas-board.ts`) and the Agents item.
 
