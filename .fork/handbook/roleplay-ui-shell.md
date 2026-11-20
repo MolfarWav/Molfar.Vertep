@@ -1,9 +1,9 @@
 # Roleplay UI: shell, sections, navigation, themes, shared pieces, languages
-Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454)
+Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5
 
 ## What it does
 - The shell (`src/components/shell/app-shell.tsx`) draws an icon rail (desktop) or tab bar (phone), one page (`view`), and an optional drawer (`drawer`).
-- Section ids: `src/components/shell/sections.ts`; `renderView` maps each to a view.
+- Section ids: `src/components/shell/sections.ts`; `renderView` maps each to a view. Each section has a `tier` (`playbill` or `backstage`, #448); the Stage is the chat itself, so no section has it. The design is `docs/STAGE-BACKSTAGE.md` in the Roleplay repo.
 - Navigation state is a Zustand store in `src/lib/store.ts`; no `useNav` or `use-nav` hook exists.
 
 ## Owners
@@ -59,6 +59,7 @@ All in src/components/chat/; `chat-view.tsx` mounts the screen.
 - `archived-banner.tsx`: archived-chat band.
 - `attachment-gallery.tsx`: attachment thumbnails.
 - `avatar-menu.tsx`: portrait menu.
+- `backstage-menu.tsx`: the Backstage button in the chat header and the phone menu block (`BackstageButton`, `BackstagePhoneBlock`, `useBackstageRows`); each row opens a section drawer on this chat's object.
 - `carries-panel.tsx`: stories not reaching this chat.
 - `carries-stories.tsx`: story switches.
 - `changes-note.tsx`: "what changed" line.
@@ -110,7 +111,9 @@ All in src/components/chat/; `chat-view.tsx` mounts the screen.
 - `window-unknown-note.tsx`: unknown window note.
 - `world-sheet.tsx`: World DM sheet.
 
-Dashboard: `src/components/dashboard/dash-mount.tsx` (`DashStripMount`, `DashPhoneMount`).
+Dashboard: `src/components/dashboard/dash-mount.tsx` (`DashStripMount`, `DashPhoneMount`). Both also answer the store counter `dashSettingsOpen` (`openDashSettings`, the Backstage menu's row) by opening the settings view directly.
+
+Backstage (#448): `src/lib/backstage-targets.ts` (`backstageTargets`, pure, which rows a chat gets), `src/lib/backstage-tone.ts` (`BACKSTAGE_SURFACE`, a fill mixed from `--popover` and `--primary`, so themes follow), `src/components/shell/backstage-chip.tsx` (`BackstageChip`). `SectionDrawer` gives a drawer of a `backstage` section the surface and the chip; the Dashboard settings sheet does the same. Characters, Groups and Personas are `playbill`, so their drawers keep the Stage tone even when the curtain opens a card.
 
 ## Settings tabs and Library tabs
 - Roleplay settings, `src/components/views/settings-view.tsx` (`SECTIONS`, `navItems`): appearance, chat, streaming, themes, prose, custom-css, card-tasks, studio-import, data, guide.
@@ -194,6 +197,7 @@ docs/UI-CATALOG.md (lines 1 to 80 read): status "not built", building waits. Sta
 - Add a section: `SECTIONS` in `sections.ts`, `ViewKey` in `store.ts`, `renderView`, `RAIL_HUES`, `DRAWER_VIEWS` if a drawer, and both languages.
 - Add a settings tab: `SECTIONS` or `navItems` in `settings-view.tsx`.
 - Change a palette token: `globals.css` `:root` and `.dark`, and `ThemeApplier`'s key list.
+- Add or move a section between tiers: `tier` in `sections.ts` (the drawer tone and chip follow it); add a row to the Backstage menu in `backstage-targets.ts` and `useBackstageRows`.
 - Change Dashboard tabs: `DashTabId`, `TONE_TAB` (`dash-common.tsx`).
 - Change Canvas boards: `CanvasBoardKey` (`src/lib/canvas-board.ts`) and the Agents item.
 
