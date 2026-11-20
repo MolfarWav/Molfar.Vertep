@@ -82,3 +82,5 @@ cd $W && bun placemap-check.mjs            # optional: MAP_PICTURE=<a real map i
 ```
 It seeds six places itself and runs in one session (a second `openRp` wipes the app's data). Screenshots `pm-*.png` land in `$W`.
 
+Map levels and "Draw a map" (#473, #475) have their own script, `placemap-levels-check.mjs` (about 45 checks, on a FRESH engine): maps, scale, places on a map, a map of a place, travel by scale, the draw window with `POST /v1/images` faked in the page (a picture stored in the engine), the light theme and a 390 px phone; screenshots `pml-*.png`.
+
