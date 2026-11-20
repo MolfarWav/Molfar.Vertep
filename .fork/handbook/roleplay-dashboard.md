@@ -39,7 +39,7 @@ Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at b
 - `plugins/relations/plugin.js` `llmRequest`: adds the parts to the reply request and labels them.
 - `plugins/relations/plugin.js` `voicesRoute`: voice colours per chat (UI only).
 - `src/components/dashboard/use-dashboard.ts` `useDashboard`: the UI's calls, among them `/dashboard/update` with `op: send`.
-- `src/components/dashboard/dash-journal.tsx` `JournalBox`: the journal panel of one character.
+- `src/components/dashboard/dash-journal.tsx` `JournalBox`: the journal panel of one character (wide Dashboard only). Besides the thought, the people lines and the Litopys recollections it has an "Off screen (Meanwhile)" section (#449, M2b): `awayLine`, and `awayEvents` / `meanwhileEnabled` from `src/lib/meanwhile.ts`; read-only from the Meanwhile plugin's state under its spoiler setting, nothing written into the Dashboard's state, nothing asked while Meanwhile is off.
 - `src/lib/chat-voices.ts` `useLoadChatVoices`: loads a chat's voice colours.
 
 ## Data

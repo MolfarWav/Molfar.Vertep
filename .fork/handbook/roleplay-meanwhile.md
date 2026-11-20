@@ -29,6 +29,9 @@ One call per due pass under the key `meanwhile` (`meanwhile_retry` for the one r
 - Who gets one is the ordinary rule of `buildInsert`: a reply by a person who knows, or a reply that voices several when someone who knows is in the scene (Dashboard `present`). A swipe marks the event undone in the Meanwhile state and the next read drops it, so the fact leaves with it.
 - Not read by the Dashboard's leak check, not listed in the Library's Facts tab or the "Who knows" map.
 
+## The character's journal (M2b)
+A stored journal line was NOT built (it would spoil secrets in a panel the player reads, needs a second writer of `dashboard/state`, and repeats the Litopys fact). Instead the wide Dashboard's `JournalBox` reads `/meanwhile/state` and lists the events whose `who` names the focused character (`awayEvents`: equal names or equal first word), as the spoiler setting allows (Nothing: no section). The phone Dashboard has no Journal box.
+
 ## Flow
 1. After a reply `triggerMeanwhile` asks (only with the switch on, one pass at a time per chat); `dueReason` decides from the Dashboard's snapshots. A failed pass waits ten minutes (`lastFailAt`), "Run a pass now" (`force`) skips the wait.
 2. `gatherInput` -> `buildPrompt` -> model -> `parseEvents` -> `buildEvents` -> `recordPass` and a log line. Facts will go to Litopys through a route inside Litopys (M2a), never by writing `litopys/chats/<id>.json` from here.
