@@ -807,6 +807,7 @@ const dict = {
   "Sync devices": "同步设备",
   "Changed on both devices: {n}. Pull to choose which version to keep.": "两台设备上均有更改：{n}。拉取以选择要保留的版本。",
   "A ComfyUI on this computer or your network. Its checkpoints show up as models.": "此电脑或你的网络上的 ComfyUI。其检查点会显示为模型。",
+  "Or a RunPod Serverless endpoint: the address is https://api.runpod.ai/v2/<endpoint id>, the key is your RunPod API key, and the models are the checkpoint file names on your worker.": "或者 RunPod Serverless 端点：地址为 https://api.runpod.ai/v2/<端点 ID>，密钥是你的 RunPod API 密钥，模型是你的 worker 上检查点的文件名。",
   "AUTOMATIC1111 or Forge started with --api. Its checkpoints show up as models.": "以 --api 启动的 AUTOMATIC1111 或 Forge。其检查点会显示为模型。",
   "Any service with /images/generations: OpenAI, Together, xAI, a local server.": "任何支持 /images/generations 的服务：OpenAI、Together、xAI、本地服务器。",
   "Images": "图像",

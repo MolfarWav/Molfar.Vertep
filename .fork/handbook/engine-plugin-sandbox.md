@@ -1,5 +1,5 @@
 # App plugins: the sandbox, the host API, hooks and limits
-Verified at: molfar.vertep 9b8c1fc (the `writeFileAtomic` lines, #440); the `host.peer` pieces at branch peer-read-chunks; the rest at: molfar.vertep 1593219; Timing and the Traps on a shared worker at branch claude/sandbox-timing (1.16.8); `executionMs` for every plugin and its hooks at branch claude/limits-imported (1.16.9)
+Verified at: molfar.vertep 9b8c1fc (the `writeFileAtomic` lines, #440); the `host.peer` pieces at branch peer-read-chunks; the rest at: molfar.vertep 1593219; Timing and the Traps on a shared worker at branch claude/sandbox-timing (1.16.8); `executionMs` for every plugin and its hooks at branch claude/limits-imported (1.16.9); the SCRIPT_LIMITS line at branch claude/batch-471 (#471)
 
 ## What it does
 An app plugin is `plugins/<id>/plugin.js` with a `manifest.json` beside it, inside an app folder. Each call evaluates the current source in a QuickJS runtime owned by a pooled worker thread. The plugin asks for models and the network through `host`, and the engine does that work between passes. A call that fails or overruns ends its worker. Manifest permissions gate each capability.

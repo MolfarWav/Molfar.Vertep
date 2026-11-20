@@ -5,7 +5,9 @@
  *  · NanoGPT — the user's NanoGPT connection key, endpoint fixed in code.
  *  · Gemini — the user's Google (AI Studio) key, endpoint fixed in code.
  *  · Image endpoints — user-configured servers: a local ComfyUI, a local
- *    AUTOMATIC1111 / Forge, or any OpenAI-compatible /images/generations.
+ *    AUTOMATIC1111 / Forge, or any OpenAI-compatible /images/generations. A
+ *    ComfyUI address of the form https://api.runpod.ai/v2/<id> is a RunPod
+ *    Serverless worker: the same workflow, sent as a job (see runpodGenerate).
  *    Definitions live in images.json beside the credentials (outside the
  *    workspace, written only by Settings); keys go to auth.json under
  *    "images/<id>", bound to the base URL they were saved for.
@@ -138,7 +140,7 @@ export function imageErrorBody(e: unknown): { error: string; code?: ImageErrorCo
 export type ImageErrorCode = "key" | "credit" | "rate" | "unknown_model" | "refused" | "failed" | "timeout" | "unreachable" | "not_found" | "redirect" | "no_picture";
 
 /** Fixed hosts. Tests point these at a mock server. */
-export const imageHosts = { nanogpt: "https://nano-gpt.com", gemini: "https://generativelanguage.googleapis.com" };
+export const imageHosts = { nanogpt: "https://nano-gpt.com", gemini: "https://generativelanguage.googleapis.com", runpod: "https://api.runpod.ai" };
 
 const MAX_IMAGE_BYTES = 30 * 1024 * 1024;
 const MAX_JSON_BYTES = 8 * 1024 * 1024;
@@ -1002,6 +1004,14 @@ export async function listEndpointModels(def: ImageEndpointDef, key?: string): P
   }
   // comfyui
   if (def.workflow && !def.workflow.includes("%model%")) return [{ id: WORKFLOW_MODEL, label: `${def.name} workflow` }];
+  if (runpodEndpointId(def)) {
+    // a RunPod worker cannot be asked for its checkpoints: the user types the file names. Asking its health tells
+    // a wrong endpoint id or a wrong key now, not at the first picture.
+    const health = await call(`${base}/health`, { timeout: LIST_TIMEOUT, ...(auth ? { headers: auth } : {}) }, who);
+    await failUnlessOk(health, who);
+    await health.body?.cancel();
+    return (def.models ?? []).map((id) => ({ id, label: id }));
+  }
   const res = await call(`${base}/object_info/CheckpointLoaderSimple`, { timeout: LIST_TIMEOUT, ...(auth ? { headers: auth } : {}) }, who);
   await failUnlessOk(res, who);
   const info = (await readJson(res, who)) as { CheckpointLoaderSimple?: { input?: { required?: { ckpt_name?: unknown[] } } } };
@@ -1020,7 +1030,8 @@ const names = (v: unknown): string[] => (Array.isArray(v) ? v.filter((n): n is s
 /** The samplers, schedulers and LoRA files a local server offers, for the
  *  settings form. Empty lists for an OpenAI-compatible server. */
 export async function listEndpointOptions(def: ImageEndpointDef, key?: string): Promise<EndpointOptions> {
-  if (def.kind === "openai") return { samplers: [], schedulers: [], loras: [] };
+  // a RunPod worker has no lists to ask for: the form takes typed names
+  if (def.kind === "openai" || runpodEndpointId(def)) return { samplers: [], schedulers: [], loras: [] };
   const who = def.name;
   const base = normalizeUrl(def.baseUrl);
   await assertEndpointHost(base);
@@ -1129,6 +1140,7 @@ export async function endpointGenerate(def: ImageEndpointDef, key: string | unde
   const started = Date.now();
   const graph = def.workflow ? (JSON.parse(def.workflow) as unknown) : defaultWorkflow(def);
   const filled = fillPlaceholders(graph, comfyVars(def, { positive: pos, negative: neg, model, width, height, seed, steps, cfg }));
+  if (runpodEndpointId(def)) return runpodGenerate(base, key, filled, who);
   const queued = await call(
     `${base}/prompt`,
     { method: "POST", headers: { "content-type": "application/json", ...auth }, body: JSON.stringify({ prompt: filled, client_id: "molfar-vertep" }), timeout: 30_000 },
@@ -1188,6 +1200,107 @@ interface ComfyHistory {
 export let comfyPollMs = 1000;
 export function setComfyPollMs(ms: number): void {
   comfyPollMs = ms;
+}
+
+// ---------- RunPod Serverless, under the ComfyUI kind (#471) ----------
+
+/** The endpoint id when a ComfyUI address is a RunPod Serverless one (`https://api.runpod.ai/v2/<id>`), else null.
+ *  Nothing to switch on: the address says it. */
+export function runpodEndpointId(def: Pick<ImageEndpointDef, "kind" | "baseUrl">): string | null {
+  if (def.kind !== "comfyui") return null;
+  let u: URL;
+  try {
+    u = new URL(def.baseUrl);
+  } catch {
+    return null;
+  }
+  if (u.origin !== new URL(imageHosts.runpod).origin) return null;
+  return /^\/v2\/([A-Za-z0-9_-]{3,64})\/?$/.exec(u.pathname)?.[1] ?? null;
+}
+
+/** How often a RunPod job's status is asked; tests shorten it. A cold worker takes up to half a minute to start. */
+export let runpodPollMs = 2000;
+export function setRunpodPollMs(ms: number): void {
+  runpodPollMs = ms;
+}
+
+interface RunpodJob {
+  status?: unknown;
+  output?: unknown;
+  error?: unknown;
+}
+
+/** A job's own words for what went wrong: `error` on the job, or in its output (the worker puts `error` there). */
+function runpodFailure(job: RunpodJob): string {
+  const out = job.output as { error?: unknown; errors?: unknown } | null | undefined;
+  const say = (v: unknown): string => (typeof v === "string" ? v : Array.isArray(v) ? v.filter((x) => typeof x === "string").join("; ") : "");
+  return errorDetail(say(job.error) || say(out?.error) || say(out?.errors));
+}
+
+/** The picture in a finished job. The official worker answers `output.images[]`, each `{ filename, type, data }` with
+ *  `type` "base64" or "s3_url"; its releases before 5.0.0 answered `output.message` with the same two kinds of value. */
+async function runpodPicture(job: RunpodJob, who: string): Promise<{ data: Buffer; mimeType: string }> {
+  const out = job.output as { images?: unknown; message?: unknown } | null | undefined;
+  const of = async (v: unknown): Promise<{ data: Buffer; mimeType: string } | null> => {
+    if (typeof v !== "string" || !v.trim()) return null;
+    const s = v.trim();
+    return /^https?:\/\//i.test(s) ? downloadResult(s, who, null) : fromBase64(s, who);
+  };
+  for (const item of Array.isArray(out?.images) ? out.images : []) {
+    const data = typeof item === "string" ? item : (item as { data?: unknown } | null)?.data;
+    const picture = await of(data);
+    if (picture) return picture;
+  }
+  const legacy = await of(out?.message);
+  if (legacy) return legacy;
+  throw new ImageError(`${who} finished the job without a picture: the workflow needs a SaveImage node`, 502, "no_picture", { who });
+}
+
+/** Run a filled ComfyUI workflow on a RunPod Serverless worker: queue the job, ask its status until it ends, read the
+ *  picture. `/run` plus polling, not `/runsync`: a cold worker plus a long render outlasts one wait, and a `/runsync`
+ *  result is kept for a minute only. A job still running at the deadline is cancelled so the worker stops billing. */
+async function runpodGenerate(base: string, key: string | undefined, workflow: unknown, who: string): Promise<{ data: Buffer; mimeType: string }> {
+  if (!key) throw new ImageError(`${who} needs your RunPod API key: add it in Settings`, 401, "key", { who });
+  const auth = { authorization: `Bearer ${key}` };
+  const started = Date.now();
+  const queued = await call(
+    `${base}/run`,
+    // `ttl` covers queue and run: a job nobody waits for any longer is dropped by RunPod too
+    { method: "POST", headers: { "content-type": "application/json", ...auth }, body: JSON.stringify({ input: { workflow }, policy: { ttl: GENERATE_TIMEOUT } }), timeout: 60_000 },
+    who,
+  );
+  await failUnlessOk(queued, who);
+  const jobId = ((await readJson(queued, who)) as { id?: unknown }).id;
+  if (typeof jobId !== "string" || !jobId) throw new ImageError(`${who} did not queue the job`, 502);
+  for (;;) {
+    if (Date.now() - started > GENERATE_TIMEOUT) {
+      await fetch(`${base}/cancel/${encodeURIComponent(jobId)}`, { method: "POST", headers: auth, redirect: "manual", signal: AbortSignal.timeout(5_000) }).catch(() => undefined);
+      throw new ImageError(`${who} did not finish within ${GENERATE_TIMEOUT / 60_000} minutes (the worker may still be starting, or busy)`, 504);
+    }
+    await new Promise((r) => setTimeout(r, runpodPollMs));
+    const res = await call(`${base}/status/${encodeURIComponent(jobId)}`, { timeout: 30_000, headers: auth }, who);
+    // a refusal will not change by asking again (404: RunPod dropped the job); a hiccup might
+    if (res.status === 401 || res.status === 403 || res.status === 404) await failUnlessOk(res, who);
+    if (!res.ok) {
+      await res.body?.cancel();
+      continue;
+    }
+    const job = (await readJson(res, who, MAX_IMAGE_JSON_BYTES)) as RunpodJob;
+    switch (job.status) {
+      case "COMPLETED":
+        return runpodPicture(job, who);
+      case "FAILED": {
+        const said = runpodFailure(job);
+        throw new ImageError(`${who} failed while drawing${said ? `: ${said}` : ""}`, 502);
+      }
+      case "CANCELLED":
+        throw new ImageError(`${who}: the job was cancelled on RunPod`, 502);
+      case "TIMED_OUT":
+        throw new ImageError(`${who}: the job ran out of time on RunPod`, 504);
+      default:
+        break; // IN_QUEUE, IN_PROGRESS: keep asking
+    }
+  }
 }
 
 /** Errors from the pi-ai images path read "401: {json}": the same plain words. */

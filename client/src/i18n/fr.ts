@@ -807,6 +807,7 @@ const dict = {
   "Sync devices": "Synchroniser les appareils",
   "Changed on both devices: {n}. Pull to choose which version to keep.": "Modifié sur les deux appareils : {n}. Récupérez pour choisir la version à garder.",
   "A ComfyUI on this computer or your network. Its checkpoints show up as models.": "Un ComfyUI sur cet ordinateur ou votre réseau. Ses checkpoints apparaissent comme des modèles.",
+  "Or a RunPod Serverless endpoint: the address is https://api.runpod.ai/v2/<endpoint id>, the key is your RunPod API key, and the models are the checkpoint file names on your worker.": "Ou un endpoint RunPod Serverless : l'adresse est https://api.runpod.ai/v2/<id de l'endpoint>, la clé est votre clé d'API RunPod et les modèles sont les noms de fichier des checkpoints sur votre worker.",
   "AUTOMATIC1111 or Forge started with --api. Its checkpoints show up as models.": "AUTOMATIC1111 ou Forge lancé avec --api. Ses checkpoints apparaissent comme des modèles.",
   "Any service with /images/generations: OpenAI, Together, xAI, a local server.": "Tout service avec /images/generations : OpenAI, Together, xAI, un serveur local.",
   "Images": "Images",

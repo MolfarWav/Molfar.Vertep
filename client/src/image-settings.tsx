@@ -92,8 +92,12 @@ const KINDS: Array<{ value: Kind; label: string; name: string; url: string }> = 
   { value: "a1111", label: "A1111 / Forge", name: "Forge", url: "http://127.0.0.1:7860" },
   { value: "openai", label: "OpenAI-compatible", name: "", url: "" },
 ]
+/** A ComfyUI address that is a RunPod Serverless endpoint (src/images.ts runpodEndpointId): its worker cannot list
+ *  checkpoints, so the form takes them typed, and the key is required. */
+const RUNPOD_ADDRESS = /^https:\/\/api\.runpod\.ai\/v2\/[\w-]{3,64}\/?$/i
+const isRunpod = (kind: Kind, baseUrl: string): boolean => kind === "comfyui" && RUNPOD_ADDRESS.test(baseUrl.trim())
 const kindHint = (k: Kind): string =>
-  k === "comfyui" ? tr("A ComfyUI on this computer or your network. Its checkpoints show up as models.")
+  k === "comfyui" ? `${tr("A ComfyUI on this computer or your network. Its checkpoints show up as models.")} ${tr("Or a RunPod Serverless endpoint: the address is https://api.runpod.ai/v2/<endpoint id>, the key is your RunPod API key, and the models are the checkpoint file names on your worker.")}`
   : k === "a1111" ? tr("AUTOMATIC1111 or Forge started with --api. Its checkpoints show up as models.")
   : tr("Any service with /images/generations: OpenAI, Together, xAI, a local server.")
 const kindLabel = (k: Kind) => KINDS.find((x) => x.value === k)?.label ?? k
@@ -411,7 +415,7 @@ const bodyFrom = (f: FormState): Record<string, unknown> => {
     width: num(f.width), height: num(f.height),
     style: f.style, instructions: f.instructions.trim(),
   }
-  if (f.kind === "openai") b.models = f.modelList
+  if (f.kind === "openai" || isRunpod(f.kind, f.baseUrl)) b.models = f.modelList
   if (local) {
     Object.assign(b, {
       steps: num(f.steps), cfg: num(f.cfg), seed: num(f.seed), clipSkip: num(f.clipSkip),
@@ -448,7 +452,8 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
   const [opts, setOpts] = useState<{ loading: boolean; data?: ServerOptions; error?: string }>({ loading: !!ep && ep.kind !== "openai" })
   const kind = f.kind
   const local = kind !== "openai"
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setF((x) => ({ ...x, [k]: v }))
+  const runpod = isRunpod(kind, f.baseUrl)
+  const set =<K extends keyof FormState>(k: K, v: FormState[K]) => setF((x) => ({ ...x, [k]: v }))
   const [taken, setTaken] = useState("")
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -576,11 +581,11 @@ function ImageEndpointForm(props: { ep?: ImageEndpoint; onCancel: () => void; on
       <p className="text-12 text-ink-muted">{kindHint(kind)}</p>
       {field(tr("Name"), text("name", tr("e.g. My ComfyUI")))}
       {field(tr("Address"), text("baseUrl", kind === "openai" ? "e.g. https://api.openai.com/v1" : "e.g. http://127.0.0.1:8188"))}
-      {kind === "openai" ? field(tr("Models"), <input className={inputClass} placeholder="e.g. gpt-image-1, dall-e-3" value={f.modelList} onChange={(e) => set("modelList", e.currentTarget.value)} />, tr("Image model ids, separated by commas.")) : null}
+      {kind === "openai" || runpod ? field(tr("Models"), <input className={inputClass} placeholder={runpod ? "e.g. illustrious.safetensors" : "e.g. gpt-image-1, dall-e-3"} value={f.modelList} onChange={(e) => set("modelList", e.currentTarget.value)} />, tr("Image model ids, separated by commas.")) : null}
       {field(
-        local ? tr("API key (optional)") : tr("API key"),
+        local && !runpod ? tr("API key (optional)") : tr("API key"),
         <input className={inputClass} type="password" autoComplete="off" placeholder={ep?.hasKey ? tr("Saved — leave empty to keep") : tr("Stored on this machine only")} value={key} onChange={(e) => { setKey(e.currentTarget.value); if (e.currentTarget.value) setClearKey(false) }} />,
-        local ? tr("Only if your server sits behind a proxy that asks for one.") : undefined,
+        local && !runpod ? tr("Only if your server sits behind a proxy that asks for one.") : undefined,
       )}
       {ep?.hasKey && !key ? (
         <label className="flex items-center gap-2 text-12 text-ink-muted max-sm:min-h-9">
