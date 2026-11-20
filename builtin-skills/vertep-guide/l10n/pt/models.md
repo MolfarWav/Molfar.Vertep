@@ -1,4 +1,4 @@
-<!-- source: 5ebdb1f697e0 -->
+<!-- source: cb493ace9db7 -->
 # Modelos e conexões
 
 O Molfar e seus apps precisam de um modelo de IA para responder. Esta página explica como conectar um, escolher quais modelos aparecem e configurar imagens e voz. Tudo fica em Configurações.
@@ -32,7 +32,7 @@ Os apps enviam imagens para este modelo, por exemplo para descrever um personage
 
 ## Imagens
 
-"Imagens" em Configurações configura a geração de imagens para todos os apps. Você pode adicionar modelos de imagem das suas conexões ou servidores de imagem: um ComfyUI, um servidor AUTOMATIC1111 ou Forge iniciado com a API ligada, ou qualquer serviço com endpoint de imagens. Os modelos de imagem com estrela viram favoritos. O Molfar escolhe entre eles conforme a finalidade de cada um, e o Roleplay os lista primeiro no seletor dele.
+"Imagens" em Configurações configura a geração de imagens para todos os apps. Você pode adicionar modelos de imagem das suas conexões ou servidores de imagem: um ComfyUI, um servidor AUTOMATIC1111 ou Forge iniciado com a API ligada, ou qualquer serviço com endpoint de imagens. Um ComfyUI também pode ser um no RunPod Serverless: escolha ComfyUI, informe como endereço `https://api.runpod.ai/v2/` seguido do id do seu endpoint, como chave a sua chave de API do RunPod, e em "Modelos" os nomes dos arquivos de checkpoint no seu worker (o RunPod não consegue listá-los); "Verificar" informa se o id do endpoint e a chave estão corretos. A primeira imagem pode levar até meio minuto enquanto o worker inicia. Os modelos de imagem com estrela viram favoritos. O Molfar escolhe entre eles conforme a finalidade de cada um, e o Roleplay os lista primeiro no seletor dele.
 
 ## Voz
 
