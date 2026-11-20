@@ -11,7 +11,7 @@ import os from "node:os";
 import path from "node:path";
 import {
   ImageError, clearNanoGptCache, nearestListedSize, parseImageAspect, shapeSize, comfyVars, createImageEndpoint, endpointGenerate, endpointPromptStyle, listEndpointOptions, imageEndpoint, imageHosts, listEndpointModels, listImageEndpoints,
-  geminiGenerate, geminiImageModels, nanoGptGenerate, nanoGptImageModels, providerError, imageErrorBody, setComfyPollMs, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
+  geminiGenerate, geminiImageModels, nanoGptGenerate, nanoGptImageModels, providerError, imageErrorBody, setComfyPollMs, setRunpodPollMs, runpodEndpointId, splitAvoid, updateImageEndpoint, validateImageEndpointInput,
   type ImageEndpointDef,
 } from "../src/images.js";
 import { UserModelService, defaultImageModel, type ImageModelInfo } from "../src/models.js";
@@ -36,6 +36,7 @@ let dataDir: string;
 
 beforeAll(() => {
   setComfyPollMs(5);
+  setRunpodPollMs(5);
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), "images-test-"));
   server = Bun.serve({
     port: 0,
@@ -52,6 +53,7 @@ beforeAll(() => {
   });
   base = `http://127.0.0.1:${server.port}`;
   imageHosts.nanogpt = base;
+  imageHosts.runpod = base;
 });
 afterAll(() => {
   server.stop(true);
@@ -192,6 +194,98 @@ describe("ComfyUI", () => {
       "GET /view": () => new Response("<svg onload=alert(1)>", { headers: { "content-type": "image/png" } }),
     });
     expect((await rejects(endpointGenerate({ ...def, baseUrl: base }, undefined, "m", "x"))).message).toBe("Comfy sent something that is not a picture");
+  });
+});
+
+describe("ComfyUI on RunPod Serverless (#471)", () => {
+  const rp = (): ImageEndpointDef => ({ name: "Pod", kind: "comfyui", baseUrl: `${base}/v2/ep123`, models: ["illustrious.safetensors"], width: 832, height: 1216 });
+  const done = (output: unknown) => json({ id: "j1", status: "COMPLETED", output });
+
+  it("the address says it is RunPod: only ComfyUI, only the RunPod host, only /v2/<id>", () => {
+    expect(runpodEndpointId(rp())).toBe("ep123");
+    expect(runpodEndpointId({ kind: "comfyui", baseUrl: `${base}/v2/ep123/` })).toBe("ep123");
+    expect(runpodEndpointId({ kind: "a1111", baseUrl: `${base}/v2/ep123` })).toBeNull();
+    expect(runpodEndpointId({ kind: "comfyui", baseUrl: base })).toBeNull();
+    expect(runpodEndpointId({ kind: "comfyui", baseUrl: `${base}/v2/ep123/extra` })).toBeNull();
+    expect(runpodEndpointId({ kind: "comfyui", baseUrl: "http://127.0.0.1:8188" })).toBeNull();
+    expect(runpodEndpointId({ kind: "comfyui", baseUrl: "https://api.runpod.ai.example.com/v2/ep123" })).toBeNull();
+  });
+
+  it("queues the workflow, asks the status until it ends and reads a base64 picture", async () => {
+    let polls = 0;
+    reset({
+      "POST /v2/ep123/run": () => json({ id: "j1", status: "IN_QUEUE" }),
+      "GET /v2/ep123/status/j1": () => (++polls < 3 ? json({ id: "j1", status: polls === 1 ? "IN_QUEUE" : "IN_PROGRESS" }) : done({ images: [{ filename: "a.png", type: "base64", data: PNG.toString("base64") }] })),
+    });
+    const out = await endpointGenerate(rp(), "rpa_key", "illustrious.safetensors", 'a "quoted" fox\n(Avoid: blur)');
+    expect(out.mimeType).toBe("image/png");
+    expect(out.data.equals(PNG)).toBe(true);
+    expect(polls).toBe(3);
+    const run = seen.find((s) => s.path === "/v2/ep123/run")!;
+    expect(run.auth).toBe("Bearer rpa_key");
+    const body = run.body as { input: { workflow: Record<string, { inputs: Record<string, unknown> }> }; policy: { ttl: number } };
+    expect(body.policy.ttl).toBeGreaterThan(0);
+    expect(body.input.workflow["4"]!.inputs.ckpt_name).toBe("illustrious.safetensors");
+    expect(body.input.workflow["6"]!.inputs.text).toBe('a "quoted" fox');
+    expect(body.input.workflow["5"]!.inputs).toMatchObject({ width: 832, height: 1216 });
+    expect(seen.every((s) => s.auth === "Bearer rpa_key")).toBe(true);
+    expect(seen.some((s) => s.path.startsWith("/prompt") || s.path.startsWith("/history"))).toBe(false);
+  });
+
+  it("reads the picture of a worker older than 5.0.0 (output.message) and a data URI", async () => {
+    reset({
+      "POST /v2/ep123/run": () => json({ id: "j1" }),
+      "GET /v2/ep123/status/j1": () => done({ message: `data:image/png;base64,${PNG.toString("base64")}`, status: "success" }),
+    });
+    expect((await endpointGenerate(rp(), "k", "m", "x")).data.equals(PNG)).toBe(true);
+  });
+
+  it("a picture link is fetched from the public internet only, never from the machine itself", async () => {
+    reset({
+      "POST /v2/ep123/run": () => json({ id: "j1" }),
+      "GET /v2/ep123/status/j1": () => done({ images: [{ filename: "a.png", type: "s3_url", data: `${base}/bucket/a.png` }] }),
+      "GET /bucket/a.png": () => new Response(PNG, { headers: { "content-type": "image/png" } }),
+    });
+    await rejects(endpointGenerate(rp(), "k", "m", "x"));
+    expect(seen.some((s) => s.path === "/bucket/a.png")).toBe(false);
+  });
+
+  it("failures come back in plain words", async () => {
+    reset({ "POST /v2/ep123/run": () => json({ id: "j1" }), "GET /v2/ep123/status/j1": () => json({ id: "j1", status: "FAILED", error: JSON.stringify({ error_message: "CUDA out of memory." }) }) });
+    const failed = await rejects(endpointGenerate(rp(), "k", "m", "x"));
+    expect(failed.status).toBe(502);
+    expect(failed.message).toContain("Pod failed while drawing");
+    reset({ "POST /v2/ep123/run": () => json({ id: "j1" }), "GET /v2/ep123/status/j1": () => json({ id: "j1", status: "FAILED", output: { error: "Value not in list: ckpt_name" } }) });
+    expect((await rejects(endpointGenerate(rp(), "k", "m", "x"))).message).toContain("Value not in list: ckpt_name");
+    reset({ "POST /v2/ep123/run": () => json({ id: "j1" }), "GET /v2/ep123/status/j1": () => json({ id: "j1", status: "CANCELLED" }) });
+    expect((await rejects(endpointGenerate(rp(), "k", "m", "x"))).message).toContain("cancelled");
+    reset({ "POST /v2/ep123/run": () => json({ id: "j1" }), "GET /v2/ep123/status/j1": () => done({ images: [] }) });
+    expect(await rejects(endpointGenerate(rp(), "k", "m", "x"))).toMatchObject({ status: 502, code: "no_picture" });
+  });
+
+  it("a missing or refused key says so, and a hiccup while asking is asked again", async () => {
+    reset({});
+    expect(await rejects(endpointGenerate(rp(), undefined, "m", "x"))).toMatchObject({ status: 401, code: "key" });
+    expect(seen).toHaveLength(0);
+    reset({ "POST /v2/ep123/run": () => new Response("denied", { status: 401 }) });
+    expect(await rejects(endpointGenerate(rp(), "bad", "m", "x"))).toMatchObject({ status: 401, code: "key" });
+    let polls = 0;
+    reset({
+      "POST /v2/ep123/run": () => json({ id: "j1" }),
+      "GET /v2/ep123/status/j1": () => (++polls === 1 ? new Response("busy", { status: 503 }) : done({ images: [{ type: "base64", data: PNG.toString("base64") }] })),
+    });
+    expect((await endpointGenerate(rp(), "k", "m", "x")).data.equals(PNG)).toBe(true);
+  });
+
+  it("lists the typed models after the endpoint answers its health, and offers no sampler lists", async () => {
+    reset({ "GET /v2/ep123/health": () => json({ workers: { idle: 0, ready: 0 } }) });
+    expect(await listEndpointModels(rp(), "k")).toEqual([{ id: "illustrious.safetensors", label: "illustrious.safetensors" }]);
+    expect(seen[0]).toMatchObject({ path: "/v2/ep123/health", auth: "Bearer k" });
+    reset({ "GET /v2/ep123/health": () => new Response("no", { status: 401 }) });
+    expect(await rejects(listEndpointModels(rp(), "bad"))).toMatchObject({ status: 401, code: "key" });
+    reset({});
+    expect(await listEndpointOptions(rp(), "k")).toEqual({ samplers: [], schedulers: [], loras: [] });
+    expect(seen).toHaveLength(0);
   });
 });
 

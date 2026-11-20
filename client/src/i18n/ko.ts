@@ -807,6 +807,7 @@ const dict = {
   "Sync devices": "기기 동기화",
   "Changed on both devices: {n}. Pull to choose which version to keep.": "양쪽 기기에서 변경됨: {n}. 유지할 버전을 선택하려면 Pull하세요.",
   "A ComfyUI on this computer or your network. Its checkpoints show up as models.": "이 컴퓨터나 네트워크에 있는 ComfyUI. 체크포인트가 모델로 표시됩니다.",
+  "Or a RunPod Serverless endpoint: the address is https://api.runpod.ai/v2/<endpoint id>, the key is your RunPod API key, and the models are the checkpoint file names on your worker.": "또는 RunPod Serverless 엔드포인트: 주소는 https://api.runpod.ai/v2/<엔드포인트 ID>, 키는 RunPod API 키, 모델은 워커에 있는 체크포인트 파일 이름입니다.",
   "AUTOMATIC1111 or Forge started with --api. Its checkpoints show up as models.": "--api로 시작한 AUTOMATIC1111 또는 Forge. 체크포인트가 모델로 표시됩니다.",
   "Any service with /images/generations: OpenAI, Together, xAI, a local server.": "/images/generations를 지원하는 모든 서비스: OpenAI, Together, xAI, 로컬 서버.",
   "Images": "이미지",

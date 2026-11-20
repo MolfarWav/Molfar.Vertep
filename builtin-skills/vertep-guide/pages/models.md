@@ -31,7 +31,7 @@ Apps send pictures to this model, for example to describe a character from a por
 
 ## Images
 
-"Images" in Settings sets up picture generation for every app. You can add image models from your connections, or image servers: a ComfyUI, an AUTOMATIC1111 or Forge server started with its API on, or any service with an images endpoint. Starred image models become favorites. Molfar picks among them by what each is for, and Roleplay lists them first in its picker.
+"Images" in Settings sets up picture generation for every app. You can add image models from your connections, or image servers: a ComfyUI, an AUTOMATIC1111 or Forge server started with its API on, or any service with an images endpoint. A ComfyUI can also be one on RunPod Serverless: choose ComfyUI, enter `https://api.runpod.ai/v2/` followed by your endpoint id as the address, your RunPod API key as the key, and under "Models" the checkpoint file names on your worker (RunPod cannot list them); "Check" tells you if the endpoint id and key are right. The first picture can take up to half a minute while the worker starts. Starred image models become favorites. Molfar picks among them by what each is for, and Roleplay lists them first in its picker.
 
 ## Speech
 

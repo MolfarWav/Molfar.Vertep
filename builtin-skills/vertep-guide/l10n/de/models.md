@@ -1,4 +1,4 @@
-<!-- source: 5ebdb1f697e0 -->
+<!-- source: cb493ace9db7 -->
 # Modelle und Verbindungen
 
 Molfar und deine Apps brauchen ein KI-Modell, um zu antworten. Diese Seite erklärt, wie du eines verbindest, auswählst, welche Modelle angezeigt werden, und Bilder und Sprache einrichtest. Das alles liegt in den Einstellungen.
@@ -32,7 +32,7 @@ Apps senden diesem Modell Bilder, zum Beispiel um einen Charakter anhand eines P
 
 ## Bilder
 
-„Bilder“ in den Einstellungen richtet die Bilderzeugung für jede App ein. Du kannst Bildmodelle aus deinen Verbindungen hinzufügen oder Bildserver: einen ComfyUI, einen AUTOMATIC1111- oder Forge-Server, der mit eingeschalteter API gestartet wurde, oder jeden Dienst mit einem Bilder-Endpunkt. Mit Stern markierte Bildmodelle werden Favoriten. Molfar wählt danach, wofür jedes gedacht ist, und Roleplay listet sie in seiner Auswahl zuerst auf.
+„Bilder“ in den Einstellungen richtet die Bilderzeugung für jede App ein. Du kannst Bildmodelle aus deinen Verbindungen hinzufügen oder Bildserver: einen ComfyUI, einen AUTOMATIC1111- oder Forge-Server, der mit eingeschalteter API gestartet wurde, oder jeden Dienst mit einem Bilder-Endpunkt. Ein ComfyUI kann auch einer auf RunPod Serverless sein: ComfyUI wählen, als Adresse `https://api.runpod.ai/v2/` gefolgt von deiner Endpoint-ID eingeben, als Schlüssel deinen RunPod-API-Schlüssel, und unter „Modelle“ die Checkpoint-Dateinamen auf deinem Worker (RunPod kann sie nicht auflisten); „Prüfen“ sagt dir, ob Endpoint-ID und Schlüssel stimmen. Das erste Bild kann bis zu einer halben Minute dauern, während der Worker startet. Mit Stern markierte Bildmodelle werden Favoriten. Molfar wählt danach, wofür jedes gedacht ist, und Roleplay listet sie in seiner Auswahl zuerst auf.
 
 ## Sprache
 

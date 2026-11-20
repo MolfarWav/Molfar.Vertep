@@ -807,6 +807,7 @@ const dict = {
   "Sync devices": "デバイスを同期",
   "Changed on both devices: {n}. Pull to choose which version to keep.": "両方のデバイスで変更されています: {n}。保持するバージョンを選ぶにはPullしてください。",
   "A ComfyUI on this computer or your network. Its checkpoints show up as models.": "このコンピューターまたはネットワーク上の ComfyUI。チェックポイントがモデルとして表示されます。",
+  "Or a RunPod Serverless endpoint: the address is https://api.runpod.ai/v2/<endpoint id>, the key is your RunPod API key, and the models are the checkpoint file names on your worker.": "または RunPod Serverless のエンドポイント：アドレスは https://api.runpod.ai/v2/<エンドポイントID>、キーは RunPod の API キー、モデルはワーカー上のチェックポイントのファイル名です。",
   "AUTOMATIC1111 or Forge started with --api. Its checkpoints show up as models.": "--api で起動した AUTOMATIC1111 または Forge。チェックポイントがモデルとして表示されます。",
   "Any service with /images/generations: OpenAI, Together, xAI, a local server.": "/images/generations に対応する任意のサービス：OpenAI、Together、xAI、ローカルサーバー。",
   "Images": "画像",

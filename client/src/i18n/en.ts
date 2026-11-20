@@ -817,6 +817,7 @@ const en = {
   "Sync devices": "",
   "Changed on both devices: {n}. Pull to choose which version to keep.": "",
   "A ComfyUI on this computer or your network. Its checkpoints show up as models.": "",
+  "Or a RunPod Serverless endpoint: the address is https://api.runpod.ai/v2/<endpoint id>, the key is your RunPod API key, and the models are the checkpoint file names on your worker.": "",
   "AUTOMATIC1111 or Forge started with --api. Its checkpoints show up as models.": "",
   "Any service with /images/generations: OpenAI, Together, xAI, a local server.": "",
   "Images": "",

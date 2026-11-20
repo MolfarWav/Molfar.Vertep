@@ -1,4 +1,4 @@
-<!-- source: 5ebdb1f697e0 -->
+<!-- source: cb493ace9db7 -->
 # Modeller ve bağlantılar
 
 Molfar ve uygulamaların yanıt vermek için bir yapay zekâ modeline ihtiyaç duyar. Bu sayfa, nasıl bağlanacağını, hangi modellerin görüneceğini seçmeyi ve görseller ile konuşmayı ayarlamayı açıklar. Hepsi Ayarlar'da bulunur.
@@ -32,7 +32,7 @@ Uygulamalar, örneğin bir portreden bir karakteri tarif etmek için bu modele r
 
 ## Görseller
 
-Ayarlar'daki "Görseller", her uygulama için görsel üretimini ayarlar. Bağlantılarından görsel modelleri veya görsel sunucuları ekleyebilirsin: API'si açık başlatılmış bir ComfyUI, AUTOMATIC1111 veya Forge sunucusu ya da görsel uç noktası olan herhangi bir hizmet. Yıldızlanan görsel modelleri sık kullanılanlar olur. Molfar, her birinin amacına göre bunlar arasından seçer ve Roleplay bunları kendi seçicisinde ilk sırada listeler.
+Ayarlar'daki "Görseller", her uygulama için görsel üretimini ayarlar. Bağlantılarından görsel modelleri veya görsel sunucuları ekleyebilirsin: API'si açık başlatılmış bir ComfyUI, AUTOMATIC1111 veya Forge sunucusu ya da görsel uç noktası olan herhangi bir hizmet. ComfyUI, RunPod Serverless üzerinde de olabilir: ComfyUI'yi seçin, adres olarak `https://api.runpod.ai/v2/` ve ardından uç nokta kimliğinizi, anahtar olarak RunPod API anahtarınızı girin ve "Modeller" altına worker'ınızdaki checkpoint dosya adlarını yazın (RunPod bunları listeleyemez); "Kontrol et" uç nokta kimliğinin ve anahtarın doğru olup olmadığını söyler. Worker başlarken ilk görsel yarım dakikaya kadar sürebilir. Yıldızlanan görsel modelleri sık kullanılanlar olur. Molfar, her birinin amacına göre bunlar arasından seçer ve Roleplay bunları kendi seçicisinde ilk sırada listeler.
 
 ## Konuşma
 

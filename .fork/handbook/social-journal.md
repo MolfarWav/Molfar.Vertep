@@ -1,5 +1,5 @@
 # Social: the journal (posts, and stories that ran out)
-Verified at: molfar.vertep-social f28fc28 (main, Social 0.18.0)
+Verified at: molfar.vertep-social f28fc28 (main, Social 0.18.0); the More tile at branch claude/batch-471 (#471)
 
 ## What it does
 Every profile and the user keep a journal of dated posts. A post comes from the user's own hand, from a story that ran out after 24 hours (J1, no model call), or from a character writing from its own diary of the day (J2, one model call a post, off by default). J3 adds comments (the user's, and characters' by a model, off by default) and the user's follows. J4 adds friends-only posts (issue 444). #453 adds: a character's friends-only posts and pictures, hiding a character's post, a place on the user's post, the count of new comments, and the author's view worded once.
@@ -17,7 +17,7 @@ Every profile and the user keep a journal of dated posts. A post comes from the 
 - `plugins/journal/plugin.js`, `pickView`, `viewSystem`, `viewUser`, `fileViewResult`, `readViews`: (#453) the author's view of a commenter Life holds no note on; key `jv:<owner>:<commenter>`.
 - `plugins/profiles/plugin.js`, `RESET_PARTS.journal`: Start over's "Journals" part; `community.storiesToJournal` is merged in the settings there.
 - `src/screens/journal/`: the screen (`index.tsx`), calls (`api.ts`). `src/pictures/worker.ts`: draws pending pictures through `/journal/images`.
-- `src/shell/app-shell.tsx`, `src/shell/nav.tsx`: the "journal" tab on desktop; on a phone `src/screens/settings/phone.tsx` has the row that opens it (More stays lit).
+- `src/shell/app-shell.tsx`, `src/shell/nav.tsx`: the "journal" tab on desktop; on a phone the Journal tile of the "more" tab (`src/screens/more/index.tsx`, #471) opens it (More stays lit and carries its badge).
 
 ## Data
 - `journal/<profileId|you>.json` {posts: [{id, at, title, text, image?, mood?, place?, tags, visible, from}]}. `from` is "you" or "story:<id>"; `visible` is stored for J4 and unused in J1; `place` is reserved for the City.

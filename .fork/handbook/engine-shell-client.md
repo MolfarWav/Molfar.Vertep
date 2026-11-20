@@ -1,5 +1,5 @@
 # Engine shell client: screens, settings, languages, themes, app framing
-Verified at: molfar.vertep 32fc4f6 (the cache lifetime lines on the cache branch; the updates-panel and BuildErrors lines read at 2c6d4d0)
+Verified at: molfar.vertep 32fc4f6 (the cache lifetime lines on the cache branch; the updates-panel and BuildErrors lines read at 2c6d4d0); the Images line (RunPod) at branch claude/batch-471 (#471)
 
 ## What it does
 The shell is the signed-in browser page in `client/src`. It shows a tab strip (the Molfar agent page, app tabs, new-tab launch screens) and hosts each app in a sandboxed iframe. `Shell` mounts the Settings dialog, the update dialogs, the bug report and the install dialog; the launch screen mounts the Store. UI preferences (theme, language, tab strip, split size) live in the browser's localStorage through `prefs`, not on the server. The agent page is a separate app in `client-agent/` with no i18n folder.
@@ -36,7 +36,7 @@ The shell is the signed-in browser page in `client/src`. It shows a tab strip (t
 ## Screens and settings panels
 - Settings tabs, in order: General, Backup, Storage, Sync, Connections and models, Speech, Images, Molfar, Memory, MCP servers, Developer; Server and Users only for admins (`SettingsBody`).
 - Connections and models (`ApiTab`, `ConnectionModels`): `ModelPanel` opens for a chosen model.
-- Images (`ImagesTab`, `client/src/image-settings.tsx`): image endpoints and favourites.
+- Images (`ImagesTab`, `client/src/image-settings.tsx`): image endpoints and favourites. A ComfyUI address of the form `https://api.runpod.ai/v2/<id>` (`RUNPOD_ADDRESS`, `isRunpod`; the engine side is `runpodEndpointId` in `src/images.ts`, #471) shows the Models field (typed checkpoint names), makes the key required and leaves the sampler and LoRA lists as plain fields; "Check" asks the worker's `/health`.
 - Memory (`MemoryTab`; `MemoryMeaningSection` in `settings.tsx` mounts `LocalEmbeddings`).
 - Storage (`StorageTab`, `client/src/storage-settings.tsx`): cleanup plan and skipped files.
 - Sync (`SyncTab`, `client/src/sync-settings.tsx`): sync settings, with `ConflictPanel` for conflicts.

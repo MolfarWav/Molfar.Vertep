@@ -1,4 +1,4 @@
-<!-- source: 5ebdb1f697e0 -->
+<!-- source: cb493ace9db7 -->
 # Modellen en verbindingen
 
 Molfar en je apps hebben een AI-model nodig om te antwoorden. Deze pagina legt uit hoe je er een verbindt, kiest welke modellen verschijnen en afbeeldingen en spraak instelt. Het staat allemaal in Instellingen.
@@ -32,7 +32,7 @@ Apps sturen afbeeldingen naar dit model, bijvoorbeeld om een personage te beschr
 
 ## Afbeeldingen
 
-"Afbeeldingen" in Instellingen stelt beeldgeneratie in voor elke app. Je kunt beeldmodellen uit je verbindingen toevoegen, of beeldservers: een ComfyUI-, AUTOMATIC1111- of Forge-server gestart met de API aan, of elke dienst met een afbeeldingen-endpoint. Beeldmodellen met een ster worden favorieten. Molfar kiest eruit op basis van waar elk voor dient en Roleplay toont ze bovenaan in zijn eigen keuzelijst.
+"Afbeeldingen" in Instellingen stelt beeldgeneratie in voor elke app. Je kunt beeldmodellen uit je verbindingen toevoegen, of beeldservers: een ComfyUI-, AUTOMATIC1111- of Forge-server gestart met de API aan, of elke dienst met een afbeeldingen-endpoint. Een ComfyUI kan ook er een zijn op RunPod Serverless: kies ComfyUI, vul als adres `https://api.runpod.ai/v2/` in gevolgd door je endpoint-id, als sleutel je RunPod-API-sleutel, en onder "Modellen" de bestandsnamen van de checkpoints op je worker (RunPod kan die niet opvragen); "Controleren" laat zien of het endpoint-id en de sleutel kloppen. De eerste afbeelding kan tot een halve minuut duren terwijl de worker opstart. Beeldmodellen met een ster worden favorieten. Molfar kiest eruit op basis van waar elk voor dient en Roleplay toont ze bovenaan in zijn eigen keuzelijst.
 
 ## Spraak
 
