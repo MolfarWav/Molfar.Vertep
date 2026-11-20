@@ -46,6 +46,7 @@ Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec
 
 - `plugins/world/plugin.js`, `cleanPool`, `poolWithout`, `poolNote`: the names pool a run or a Start may carry (#373): cleaned, minus the names in use, as one prompt block.
 - `src/lib/names-pool.ts`, `fetchNamePool`, `loadCatalogInfo`, `poolFor`: the app reads the engine's catalog routes and builds the pool; every failure gives no pool.
+- `src/components/world/world-meanwhile.tsx`, `MeanwhileCard`: the Meanwhile card (#449), mounted last in `world-controls.tsx`; its plugin and trigger are on the page `roleplay-meanwhile.md`. It does not depend on the DM being on.
 - `src/components/world/world-names.tsx`, `NamesCard`: the sheet's card (switch, style and culture chips, the unavailable state).
 
 ## Data

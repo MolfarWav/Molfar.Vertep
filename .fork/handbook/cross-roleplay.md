@@ -155,7 +155,9 @@ Change X, touch Y:
 - Who may take part: the checks in `peopleList` and the "player never knows" line in `factDraft`; `test/rp-meanwhile.test.ts` guards both.
 
 Traps:
-- A person in the scene is found by name or alias in plain lower case; a transliterated spelling is missed. M1b should use the registry's `resolveName`.
+- A person in the scene is found through the Dashboard's `personIds` (name to registry id) first, then by name or alias in plain lower case; a name the Dashboard never resolved and the registry spells otherwise is missed.
+- The per-card switch is `offCards` (card ids) in `meanwhile/config.json`, global to all chats; no card field was added. A card character's `goal` is empty (the Dashboard journal is not read yet), so the model sees only name and place.
+- `inCombat` is never passed: a fight does not stop a pass yet.
 - An event's `where` may be free words; only an `l#` id is checked against the registry.
 - `reconcile` marks events `undone` and keeps them: the caller must retire their facts, then call `dropUndone`, or the facts outlive the swipe.
 - A reasoning model can answer with nothing (it spent the whole budget thinking): M1b retries once with more room, as World does.

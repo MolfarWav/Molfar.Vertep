@@ -41,7 +41,7 @@ off-screen too with a per-card switch (2026-11-11); spoilers default to hints (2
     character growth (#450) -> S2 suspicion and S3 rumours -> M3 letters -> M4 Social feed.
 
 ## M1 split into reviewable pieces
-- **M1a DONE 2026-11-20** (Roleplay `5c5f1ec`). **M1a** (pure, no UI): `plugins/meanwhile/plugin.js` with `cleanEvent`, `checkEvent`, `dueReason`, `reconcile`, the prompt
+- **M1a and M1b DONE 2026-11-20** (Roleplay `5c5f1ec`, `ffa04bf`, `6e2bae7`). **M1a** (pure, no UI): `plugins/meanwhile/plugin.js` with `cleanEvent`, `checkEvent`, `dueReason`, `reconcile`, the prompt
   builder and the parser; `test/rp-meanwhile.test.ts`. Registry and the Dashboard's `present` are read from files.
 - **M1b** the route, the model call under key `meanwhile`, storage, the visible switch and a log of who, why and dice (owner's
   rule for mechanisms under test: a visible switch and a log).
