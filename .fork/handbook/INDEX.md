@@ -21,6 +21,7 @@ by the owner. In force since 2026-11-14: `CLAUDE.md` (rule and "Done means") and
 | The chain of chats, the archive, backstory, the Data Bank, snapshot books, vectors | `roleplay-memory-chain.md` |
 | A plugin's host API, hooks, permissions, time limits, the sandbox worker | `engine-plugin-sandbox.md` |
 | Engine self-update, app install and update, the launcher, CI, the release procedure | `engine-update-release.md` |
+| Life off screen: events of people outside the scene, when a pass is due, rollback, what the panel may show | `roleplay-meanwhile.md` |
 | Letters from characters, Roleplay's inbox, the engine mailbox (two different things) | `roleplay-letters-mailbox.md` |
 | Forge agents: cards, triggers, dry run, the generated block | `roleplay-forge-agents.md` |
 | The built-in agent: a turn, tools, memory, context folding, small windows | `engine-agent.md` |

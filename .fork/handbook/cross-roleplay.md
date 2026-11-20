@@ -148,6 +148,19 @@ Traps:
 - Keys read the saved text, so a save-stage script changes what the scan sees. A display-only script does not.
 
 
+## From `roleplay-meanwhile.md`
+
+Change X, touch Y:
+- Event fields or effect types: `cleanEvent`, `cleanEffect`, the prompt's rules in `SYSTEM`, `spoilerView`, `factDraft`, Roleplay `docs/DATA-FORMATS.md`.
+- Who may take part: the checks in `peopleList` and the "player never knows" line in `factDraft`; `test/rp-meanwhile.test.ts` guards both.
+
+Traps:
+- A person in the scene is found by name or alias in plain lower case; a transliterated spelling is missed. M1b should use the registry's `resolveName`.
+- An event's `where` may be free words; only an `l#` id is checked against the registry.
+- `reconcile` marks events `undone` and keeps them: the caller must retire their facts, then call `dropUndone`, or the facts outlive the swipe.
+- A pass needs Dashboard snapshots; a chat with the Dashboard off is never due (`no-dashboard`).
+
+
 ## From `roleplay-memory-chain.md`
 
 Change X, touch Y:
