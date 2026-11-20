@@ -22,7 +22,7 @@ Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite wind
 - `src/lib/sprite-batch.ts` `planBatch`: what a batch of dropped files adds or replaces.
 - `src/components/character/sprites-panel.tsx` `SpritesPanel`: the Sprites tab of the card editor.
 - `src/components/character/sprite-batch-dialog.tsx` `SpriteBatchDialog`: the dialog for many files at once.
-- `src/lib/image-gen.ts` `generateImage`: sends the prompt to the engine's image route.
+- `src/lib/image-gen.ts` `generateImage`: sends the prompt to the engine's image route (an optional `aspect`: `square`, `wide`, `tall`; the places map's "Draw a map" asks `wide`, see [[roleplay-places-map]]).
 - `src/lib/image-gen.ts` `postPicture`: posts a finished picture into the chat.
 - `src/lib/world-backgrounds.ts` `applySceneBackground`: switches a chat's background by scene.
 - `src/lib/tts.ts` `speakText`: reads a reply aloud.
