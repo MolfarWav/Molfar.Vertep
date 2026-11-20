@@ -22,6 +22,7 @@ Verified at: molfar.vertep-roleplay efead2b (sections: Owners, Data, Who knows w
 - `plugins/litopys/plugin.js` `witnessed`, `castKnowledgeFor`, `soleVoice`: who knows what.
 - `plugins/litopys/plugin.js` `liveLies`, `moveLies`, `endBeliefs`: lies and the belief facts they become.
 - `plugins/litopys/plugin.js` `suspectsOf`, `KNOWING_RULE`, op `knows` in `applyWorkerResult`: suspects and secrets on facts (#416).
+- `src/lib/knowledge-map.ts` `knowledgeMap`, `stateOf`; `src/components/library/ledger-knowledge.tsx` `KnowledgeTab`: the "Who knows" map (#449, S1). Client only, reads `chat.facts`; no route, no model call.
 - `plugins/litopys/plugin.js` `remoteNotesFor`, `farOfSnap`, `remoteNoteText`: a line after each player message of a remote scene (#415).
 - `plugins/litopys/plugin.js` `markUsed`, `causeRecord`, `pushTraceRing`: insert file use record and trace ring.
 - `plugins/litopys/plugin.js` `recordLitFired`: writes the What fired counter.
@@ -71,6 +72,11 @@ Per chat unless noted.
 - Embedding model: `vectorOf`, `vectorGaps`, `currentEmbedModel`, `noteScanModel`. Vectors of another model are not used. This device's model is read only from `.cache/litopys/embed-status.json`, never from the synced `litopys/insert/` trace (it carries the model of whichever device replied last; #419).
 - Lies and beliefs: `liveLies`, `endBeliefs`, `moveLies`, and the believers copy in the Dashboard plugin.
 
+## The knowledge map (#449, S1)
+- A row is an active fact with `secret: true`, or an array `knownBy` that names fewer columns than the cast; `knownBy: "all"` and an unmarked `belief` are left out and counted as open. The cast is every name in `knownBy`, `suspectedBy` and the chapters' `views[].who`. A group token is its own column. A person who knows or suspects no shown secret has no column.
+- Order: marked first, fewest knowers, newest. Columns: most involved first, groups last, eight before "Show all".
+- A fact with an empty `knownBy` array is shown as "no one is named" (the engine reads it as known to whoever was in the scene).
+
 ## Traps
 - `witnessed` returns true for a chapter with no `cast`; an old chapter without one is visible to every character.
 - A fact with no `knownBy` is known to whoever is in the scene, not to everyone.
@@ -85,6 +91,7 @@ Per chat unless noted.
 Names confirmed in `test/`. Coverage claims come from `docs/COUPLINGS.md`; test bodies were not read.
 - `test/rp-litopys-far-turns.test.ts`, `test/rp-chat-links.test.ts`, `test/rp-litopys-causes.test.ts`, `test/rp-litopys-recency.test.ts`, `test/rp-litopys-budget.test.ts`
 - `test/rp-memory-trace.test.ts`, `test/rp-fired-lit.test.ts`, `test/rp-fired-log.test.ts`, `test/rp-verbatim.test.ts`, `test/rp-fired-verbatim.test.tsx`
+- `test/rp-knowledge-map.test.ts` (the map: what is a secret, order, groups, both languages)
 - `test/rp-knowledge-invariants.test.ts` (remote notes, suspects, the worker's `knows` op, invariants)
 - `test/rp-litopys-beliefs.test.ts`, `test/rp-litopys-risky.test.ts`, `test/rp-trace-belief.test.tsx`, `test/rp-presence-cut.test.ts`, `test/rp-studio.test.ts`
 

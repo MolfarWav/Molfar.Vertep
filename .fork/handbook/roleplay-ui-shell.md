@@ -1,5 +1,5 @@
 # Roleplay UI: shell, sections, navigation, themes, shared pieces, languages
-Verified at: molfar.vertep-roleplay 56bf594
+Verified at: molfar.vertep-roleplay e90a439 (sections: Owners, Sections, Library tabs); the rest at 56bf594
 
 ## What it does
 - The shell (`src/components/shell/app-shell.tsx`) draws an icon rail (desktop) or tab bar (phone), one page (`view`), and an optional drawer (`drawer`).
@@ -13,6 +13,7 @@ Verified at: molfar.vertep-roleplay 56bf594
 - `src/components/shell/app-shell.tsx` `IconRail`: rail items.
 - `src/components/shell/sections.ts` `SECTIONS`: sections, label keys, groups, hues.
 - `src/components/shell/sections.ts` `PHONE_TABS`: the three phone tabs.
+- `src/components/shell/sections.ts` `SectionItem.tier`: `playbill` or `backstage` (#448, T2); the Stage is the chat, no section has it. The rail groups follow the tiers; `test/rp-sections-tier.test.ts` guards it. The inventory and the plan for the curtain: Roleplay `docs/STAGE-BACKSTAGE.md`.
 - `src/components/shell/section-page.tsx` `SectionPage`: page title row.
 - `src/components/shell/master-detail.tsx` `MasterDetail`: two panes.
 - `src/components/shell/mobile-tab-bar.tsx` `MobileTabBar`: phone tabs, More sheet.
@@ -115,7 +116,7 @@ Dashboard: `src/components/dashboard/dash-mount.tsx` (`DashStripMount`, `DashPho
 ## Settings tabs and Library tabs
 - Roleplay settings, `src/components/views/settings-view.tsx` (`SECTIONS`, `navItems`): appearance, chat, streaming, themes, prose, custom-css, card-tasks, studio-import, data, guide.
 - Library, `src/components/library/litopys-view.tsx` (`ModeSwitch`): overview, ledger.
-- Library Ledger, `src/components/library/ledger.tsx` (`TAB_IDS`): chapters, facts, turns, proposals, habits, activity, settings.
+- Library Ledger, `src/components/library/ledger.tsx` (`TAB_IDS`): chapters, facts, knows ("Who knows", `ledger-knowledge.tsx`, #449 S1), turns, proposals, habits, activity, settings.
 - Dashboard, `src/components/dashboard/dash-tabs.tsx` (`DashTabId`): person, here, quests, notes, history.
 
 ## Play-like vs settings-like
