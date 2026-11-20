@@ -65,7 +65,7 @@ Every call gets `host` from `src/plugins/sandbox-worker.mjs`. Permission in brac
 - `MIN_INTERVAL_MS` = 5 s for timers; `MAX_TOOL_PASSES` = 3. `src/plugins/runtime.ts`
 - Manifest `limits`: `PASSES_DEFAULT` 3, `PASSES_MAX` 12, `CONCURRENCY_MAX` 4; `DEFAULT_PACE` 250 ms gap, 3 retries. `src/plugins/llm-pace.ts`
 - `PLUGIN_IMAGE_MAX` = 4, `PLUGIN_IMAGE_CHARS` = 8 MB. `src/plugins/runtime.ts`
-- `SCRIPT_LIMITS`: 8000 code chars, 64 KB in, 32 KB out, 500 ms CPU, 2.5 s wall, 2 s per pass. `src/plugins/script-box.ts`
+- `SCRIPT_LIMITS`: 8000 code chars, 64 KB in, 32 KB out, 1.5 s on the clock for one script (an interrupt, so time the device gave no CPU counts), 3.5 s wall before the worker is ended, 4 s per pass (#471: they were 0.5, 2.5 and 2 s; the stock Repetition guard needs 0.2 to 0.5 s alone). `src/plugins/script-box.ts`
 - Store 1 MB, `fs.write` 4 MB, peer read `MAX_READ` 2 MB per call (a bigger file is read in pieces). `src/plugins/sandbox-worker.mjs`
 - `UPGRADE_LIMITS`: 5 min, 512 MB; `SCHEDULE_SYNC_MS` = 10 s. `src/server/app.ts`
 

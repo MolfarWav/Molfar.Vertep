@@ -20,14 +20,16 @@ export const SCRIPT_LIMITS = {
   inputBytes: 64 * 1024,
   /** Bytes of output JSON handed back. */
   outputBytes: 32 * 1024,
-  /** QuickJS interrupt: CPU time of one call. */
-  cpuMs: 500,
+  /** QuickJS interrupt: the time one call may run. It is read off the clock, so it also counts the moments the device
+   *  gave the engine no CPU (a busy computer, a phone). The stock Repetition guard needs 0.2 to 0.5 s alone on a
+   *  laptop, which 500 ms left no room for once other agents ran beside it (#471). */
+  cpuMs: 1500,
   /** Memory of one call. */
   memoryBytes: 16 * 1024 * 1024,
   /** Wall clock of one call before the worker is terminated (a memory bomb ignores cpuMs). */
-  hardMs: 2500,
+  hardMs: 3500,
   /** Time all the scripts of one pass may use together; later ones answer that the budget is used up. */
-  passMs: 2000,
+  passMs: 4000,
   /** Scripts one pass may ask for. */
   perPass: 16,
 } as const;
