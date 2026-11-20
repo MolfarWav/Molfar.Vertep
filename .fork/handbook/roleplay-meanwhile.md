@@ -34,12 +34,14 @@ Never yet. M1b: one call per due pass under its own key, with its own model pick
 - A person in the scene is found by name or alias in plain lower case; a transliterated spelling is missed. M1b should use the registry's `resolveName`.
 - An event's `where` may be free words; only an `l#` id is checked against the registry.
 - `reconcile` marks events `undone` and keeps them: the caller must retire their facts, then call `dropUndone`, or the facts outlive the swipe.
+- A reasoning model can answer with nothing (it spent the whole budget thinking): M1b retries once with more room, as World does.
+- Item and NPC-move effects pass the checks but can be silly (a stolen ledger moved by an unrelated event); M1b applies only `front_clock` and `relation` by itself.
 - A pass needs Dashboard snapshots; a chat with the Dashboard off is never due (`no-dashboard`).
 
 ## Tests that guard it
 `test/rp-meanwhile.test.ts` (24 tests: the checks, `dueReason`, rollback, state and config, the prompt and the reader, the fact and the spoiler view).
 
 ## Not verified
-- Anything with a real model: whether small free models keep to the schema; K = 1 is the planned fallback.
-- The prompt's size (an estimate of about 4 characters a token, 300 to 900 tokens on the test input), not measured with the inspector.
+- Small-window and weak models, and the owner's own chats. A bench with five models on an invented world (22 calls, English and Ukrainian) is in the engine repo `.fork/handoff/meanwhile-449/bench/`: every answer parsed, 53 of 53 events passed the rules, no one in the scene or the player in `who`; one empty answer from a reasoning model.
+- The prompt's size: an estimate of about 4 characters a token, 544 to 558 tokens on the test input, not measured with the inspector.
 - How Litopys will take the fact (M2a is not built).

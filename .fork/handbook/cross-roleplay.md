@@ -158,6 +158,8 @@ Traps:
 - A person in the scene is found by name or alias in plain lower case; a transliterated spelling is missed. M1b should use the registry's `resolveName`.
 - An event's `where` may be free words; only an `l#` id is checked against the registry.
 - `reconcile` marks events `undone` and keeps them: the caller must retire their facts, then call `dropUndone`, or the facts outlive the swipe.
+- A reasoning model can answer with nothing (it spent the whole budget thinking): M1b retries once with more room, as World does.
+- Item and NPC-move effects pass the checks but can be silly (a stolen ledger moved by an unrelated event); M1b applies only `front_clock` and `relation` by itself.
 - A pass needs Dashboard snapshots; a chat with the Dashboard off is never due (`no-dashboard`).
 
 
