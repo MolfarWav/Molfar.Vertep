@@ -1,5 +1,5 @@
 # Social: the city (places, homes, who is where)
-Verified at: molfar.vertep-social 8d6971c (main, Social 0.18.1); the rearranging lines at branch claude/social-458-remains (bb0dcd3)
+Verified at: molfar.vertep-social 8d6971c (main, Social 0.18.1); the rearranging lines at branch claude/social-458-remains (bb0dcd3); the More tiles at branch claude/batch-471 (#471)
 
 ## What it does
 A town the characters live in. By rules, with no model call, it gives every profile a flat and works out, once per 3-hour band, where each character is. The user can look, listen, walk in and make places and districts of their own (issue 445, C1 to C3), and other plugins read where a character is (C4). #452 adds a wide picture to places and districts; #453 adds workplaces, shared flats, rooms that share the day's caps and stock names in the page's language. C5 draws each district as an isometric plate above the tiles. Packs (C6) are a later phase.
@@ -27,7 +27,7 @@ A town the characters live in. By rules, with no model call, it gives every prof
 - `src/screens/messenger/clubs.tsx`: the "Room" tag and "Leave the room" (`ClubHead`); `src/shell/nav.tsx` `openClub` carries the City to the Messenger.
 - `plugins/city/plugin.js`, `onTick`: writes the stock town once, the flats, and the band's places once per band.
 - `src/screens/city/index.tsx`, `strings.ts`: the screen; stock names and lines are translated by id there.
-- `src/shell/app-shell.tsx`, `src/shell/nav.tsx`: the desktop tab; `src/screens/settings/phone.tsx` has the More row.
+- `src/shell/app-shell.tsx`, `src/shell/nav.tsx`: the desktop tab; on a phone the tab "more" (`src/screens/more/index.tsx`, a grid of icon tiles, #471) opens it, and its back arrow returns to More.
 
 ## Data
 - `city/places.json` {districts, places}; a place and a district may have `background` (#452, an asset url); a place may still have the small `picture` of C3. `city/homes.json` {buildings, flats: {profileId: {b, n}}}, two or more profiles on one flat when they live together; `city/now.json` {id: "day#band", at, where: {profileId: placeId | "home"}}.
