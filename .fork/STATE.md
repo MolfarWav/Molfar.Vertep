@@ -9,6 +9,11 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
+## 2026-11-20 (night): RELEASED Roleplay 4.143.0 (owner: "translations, then the release"; PR 178 merge `512139b`, PR 179 merge `ebca7b4`; the owner presses Update; no engine release)
+- PR 178 (the features: Who knows, tiers, Meanwhile M1a to M2b) was merged on GitHub before my release commits were pushed (it said "already merged"), so the version bump and the translations went in a second PR 179. Main has 4.143.0 and the translations.
+- **Guide translations** of `litopys`, `dashboard`, `world-dm`, `index` and the new `meanwhile` page, 13 locales, by a cheap model through `ask-model` (alias fast), a script checked headings and links (two needed a hand: a duplicated link in fr/dashboard, and a false "too short" on zh/world-dm), then `guide-l10n.ts --stamp`; `--stale` lists nothing. Not read by a native speaker; UI labels stay English. The driver is not in the repo (scratch).
+- Full Roleplay suite: 4853 pass, 3 fail (the same three as main). Issues 448 and 449 stay open (T3 to T5; growth and S2/S3).
+
 ## 2026-11-20 (evening): #448 T1+T2 and #449 S1 built (Roleplay branch `claude/stage-backstage-448-449`, worktree `D:Claudep-448-449`, pushed, no PR; nothing merged or released)
 - **Owner:** "take 448 and 449, decisions are yours, the recommended ones fit". I took the first safe slice of each; the rest needs the owner's look or its own session.
 - **#449 S1, the knowledge map:** a Library Details tab "Who knows" (`src/lib/knowledge-map.ts`, `ledger-knowledge.tsx`): secrets as rows (an active fact marked `secret` or known by fewer people than the cast; "all" and unmarked beliefs are left out), people as columns (a group is its own column, 8 before "Show all"), check / question mark / dash; on a phone one card per secret. No model call, nothing written. Also in the chat's Story record panel. 9 + 4 tests, typecheck clean. Guide page `litopys` and two help articles updated (uk translations of the guide page are stale).
