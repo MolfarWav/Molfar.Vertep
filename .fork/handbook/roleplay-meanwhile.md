@@ -1,8 +1,8 @@
-# Meanwhile: life off screen (the rules, the routes, one model call per pass; nothing reaches Litopys yet)
+# Meanwhile: life off screen (the rules, the routes, one model call per pass; Litopys reads the events as facts)
 Verified at: molfar.vertep-roleplay branch claude/stage-backstage-448-449 (M1a)
 
 ## What it does
-- People who are not in the scene act while time passes, and what they did becomes knowledge (#449). M1a is the rules as pure exported functions; M1b adds the routes (`handleRoute`), one model call per due pass, a log, and the World sheet's card with the switch. M2a (the Litopys wiring, so the events reach replies) is NOT built; until then nothing the plugin writes is read by the prompt.
+- People who are not in the scene act while time passes, and what they did becomes knowledge (#449). M1a is the rules as pure exported functions; M1b adds the routes (`handleRoute`), one model call per due pass, a log, and the World sheet's card with the switch. M2a: Litopys reads the kept events as facts for each reply (below). The journal line (M2b), letters and Social are not built.
 - Design and decisions: engine repo `.fork/handoff/meanwhile-449/DESIGN.md`.
 
 ## Owners
@@ -22,6 +22,12 @@ Verified at: molfar.vertep-roleplay branch claude/stage-backstage-448-449 (M1a)
 
 ## When a model is called
 One call per due pass under the key `meanwhile` (`meanwhile_retry` for the one retry), model from `modelFor`: its own, the World's, the sensor's, Litopys', the chat's, the app's. `max_tokens` 1500, 6000 on the retry; no reasoning field.
+
+## How the events reach a reply (M2a)
+- A plugin cannot call another, and a second writer of `litopys/chats/<id>.json` would skip `saveChatFile`, so the events are never stored there. `plugins/litopys/plugin.js` `meanwhileFacts` reads `meanwhile/state/<chatId>.json` (only while `meanwhile/config.json` has `enabled: true`; active events, the newest 30) and builds facts with id `mw:<event id>`, `knownBy` = canonical names of who and witnesses (never the player's), `secret` for a secret event; `withMeanwhile` lays them over the record in memory.
+- Call sites in Litopys: `llmRequest` (the reply; a chat with no record yet gets a blank one), `firedRoute`, `traceRoute`, `carriesRoute`. `castKnowledgeFor` skips an event nobody in the scene knows, so a narrator is not told it.
+- Who gets one is the ordinary rule of `buildInsert`: a reply by a person who knows, or a reply that voices several when someone who knows is in the scene (Dashboard `present`). A swipe marks the event undone in the Meanwhile state and the next read drops it, so the fact leaves with it.
+- Not read by the Dashboard's leak check, not listed in the Library's Facts tab or the "Who knows" map.
 
 ## Flow
 1. After a reply `triggerMeanwhile` asks (only with the switch on, one pass at a time per chat); `dueReason` decides from the Dashboard's snapshots. A failed pass waits ten minutes (`lastFailAt`), "Run a pass now" (`force`) skips the wait.

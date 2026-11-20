@@ -118,6 +118,7 @@ Change X, touch Y:
 - Lies and beliefs: `liveLies`, `endBeliefs`, `moveLies`, and the believers copy in the Dashboard plugin.
 
 Traps:
+- A Meanwhile event is a fact with id `mw:<id>` that exists only in memory: it is not in `litopys/chats/<id>.json`, the Facts tab or the "Who knows" map, and the Dashboard's leak check does not see it. See `roleplay-meanwhile.md`.
 - `witnessed` returns true for a chapter with no `cast`; an old chapter without one is visible to every character.
 - A fact with no `knownBy` is known to whoever is in the scene, not to everyone.
 - `saveChatFile` is the only place that removes the far digest. A new writer of the chat file that skips it leaves a stale far part.

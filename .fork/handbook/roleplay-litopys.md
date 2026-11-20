@@ -22,6 +22,7 @@ Verified at: molfar.vertep-roleplay efead2b (sections: Owners, Data, Who knows w
 - `plugins/litopys/plugin.js` `witnessed`, `castKnowledgeFor`, `soleVoice`: who knows what.
 - `plugins/litopys/plugin.js` `liveLies`, `moveLies`, `endBeliefs`: lies and the belief facts they become.
 - `plugins/litopys/plugin.js` `suspectsOf`, `KNOWING_RULE`, op `knows` in `applyWorkerResult`: suspects and secrets on facts (#416).
+- `plugins/litopys/plugin.js` `meanwhileFacts`, `withMeanwhile`: the Meanwhile events as facts, built in memory for a reply, the trace, What fired and the carries preview (#449, M2a); never stored in the chat's record.
 - `src/lib/knowledge-map.ts` `knowledgeMap`, `stateOf`; `src/components/library/ledger-knowledge.tsx` `KnowledgeTab`: the "Who knows" map (#449, S1). Client only, reads `chat.facts`; no route, no model call.
 - `plugins/litopys/plugin.js` `remoteNotesFor`, `farOfSnap`, `remoteNoteText`: a line after each player message of a remote scene (#415).
 - `plugins/litopys/plugin.js` `markUsed`, `causeRecord`, `pushTraceRing`: insert file use record and trace ring.
@@ -78,6 +79,7 @@ Per chat unless noted.
 - A fact with an empty `knownBy` array is shown as "no one is named" (the engine reads it as known to whoever was in the scene).
 
 ## Traps
+- A Meanwhile event is a fact with id `mw:<id>` that exists only in memory: it is not in `litopys/chats/<id>.json`, the Facts tab or the "Who knows" map, and the Dashboard's leak check does not see it. See `roleplay-meanwhile.md`.
 - `witnessed` returns true for a chapter with no `cast`; an old chapter without one is visible to every character.
 - A fact with no `knownBy` is known to whoever is in the scene, not to everyone.
 - `saveChatFile` is the only place that removes the far digest. A new writer of the chat file that skips it leaves a stale far part.
@@ -91,6 +93,7 @@ Per chat unless noted.
 Names confirmed in `test/`. Coverage claims come from `docs/COUPLINGS.md`; test bodies were not read.
 - `test/rp-litopys-far-turns.test.ts`, `test/rp-chat-links.test.ts`, `test/rp-litopys-causes.test.ts`, `test/rp-litopys-recency.test.ts`, `test/rp-litopys-budget.test.ts`
 - `test/rp-memory-trace.test.ts`, `test/rp-fired-lit.test.ts`, `test/rp-fired-log.test.ts`, `test/rp-verbatim.test.ts`, `test/rp-fired-verbatim.test.tsx`
+- `test/rp-meanwhile-memory.test.ts` (the Meanwhile events as facts)
 - `test/rp-knowledge-map.test.ts` (the map: what is a secret, order, groups, both languages)
 - `test/rp-knowledge-invariants.test.ts` (remote notes, suspects, the worker's `knows` op, invariants)
 - `test/rp-litopys-beliefs.test.ts`, `test/rp-litopys-risky.test.ts`, `test/rp-trace-belief.test.tsx`, `test/rp-presence-cut.test.ts`, `test/rp-studio.test.ts`
