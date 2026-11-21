@@ -1,5 +1,5 @@
 # Roleplay UI: shell, sections, navigation, themes, shared pieces, languages
-Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5
+Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5; the DM link lines (#183: Owners, Sections, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/dm-rail-link-183 (on 1375e09)
 
 ## What it does
 - The shell (`src/components/shell/app-shell.tsx`) draws an icon rail (desktop) or tab bar (phone), one page (`view`), and an optional drawer (`drawer`).
@@ -13,6 +13,8 @@ Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` 
 - `src/components/shell/app-shell.tsx` `IconRail`: rail items.
 - `src/components/shell/sections.ts` `SECTIONS`: sections, label keys, groups, hues.
 - `src/components/shell/sections.ts` `PHONE_TABS`: the three phone tabs.
+- `src/components/shell/sections.ts` `itemActive`, `prepareItem`: which rail or sheet item is current, and the board or tab a link item (Agents, DM) opens; the rail and the phone sheet both use them.
+- `src/lib/world-nav.ts` `useWorldTop`, `writeWorldTop`: the World section's Chats | Worlds | DM switch, shared with the rail (session storage).
 - `src/components/shell/section-page.tsx` `SectionPage`: page title row.
 - `src/components/shell/master-detail.tsx` `MasterDetail`: two panes.
 - `src/components/shell/mobile-tab-bar.tsx` `MobileTabBar`: phone tabs, More sheet.
@@ -39,6 +41,7 @@ Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` 
 | canvas | nav.canvas | 2 | `CanvasView`, in `canvas/` |
 | canvas, id `agents` | nav.agents | 2 | `CanvasView`, board `agents` (a link) |
 | world | nav.world | 2 | `WorldView`, in `world/` |
+| world, id `dm` | nav.dm | 2 | `WorldView`, tab `dm` (a link, #183); its count is the DM Memory proposals waiting (`useMemoryOverview`) |
 | presets | nav.presets | 3 | `PresetsView` |
 | quickreplies (Shortcuts) | nav.quickreplies | 4 | `QuickRepliesView` |
 | extensions (Tools) | nav.extensions | 4 | `ExtensionsView` |
@@ -200,18 +203,20 @@ docs/UI-CATALOG.md (lines 1 to 80 read): status "not built", building waits. Sta
 - Add or move a section between tiers: `tier` in `sections.ts` (the drawer tone and chip follow it); add a row to the Backstage menu in `backstage-targets.ts` and `useBackstageRows`.
 - Change Dashboard tabs: `DashTabId`, `TONE_TAB` (`dash-common.tsx`).
 - Change Canvas boards: `CanvasBoardKey` (`src/lib/canvas-board.ts`) and the Agents item.
+- Add a link item to a section's view (like Agents or DM): `board` or `worldTop` on the item, `itemActive` and `prepareItem` in `sections.ts`, `isLinkItem` (keeps it out of `sectionsFor`).
 
 ## Traps
 - `settings` has group `'none'` (off the rail); Home's Settings button opens it.
 - Two arrays are named `SECTIONS`: `sections.ts` and `settings-view.tsx`.
 - Agents and Canvas share the key `canvas`, so `SectionDrawer` titles an open Agents drawer "Canvas".
+- DM and World share the key `world`; the drawer and page keep the title "World" on the DM tab (`sectionItemOf` has no tab argument). A rail click on World or DM switches the tab without the World view's unsaved-profile guard.
 - `ViewKey` also holds `connections` (shows Home) and `chat`; neither is in `SECTIONS`.
 - On desktop a persisted section view becomes a drawer over Home; `drawer` is not persisted.
 - Settings nav mixes hard-coded English labels with translated ones.
 - `ThemeApplier`'s doc comment sits above `PROSE_FONTS`, not the component.
 
 ## Tests that guard it
-`test/rp-i18n.test.ts`, `test/rp-shell-view.test.ts`, `test/ui-mobile-tab-bar.test.tsx`, `test/rp-themes.test.ts`, `test/rp-legible-fill.test.ts`, `test/rp-chat-header-tint.test.ts`, `test/ui-sheet-width.test.ts`, `test/ui-fold.test.tsx`, `test/ui-section.test.tsx`, `test/ui-setting-row.test.tsx`, `test/type-scale.test.ts`. No test imports `app-shell`, `use-back-close` or `inbox`.
+`test/rp-i18n.test.ts`, `test/rp-dm-rail-link.test.ts`, `test/rp-shell-view.test.ts`, `test/ui-mobile-tab-bar.test.tsx`, `test/rp-themes.test.ts`, `test/rp-legible-fill.test.ts`, `test/rp-chat-header-tint.test.ts`, `test/ui-sheet-width.test.ts`, `test/ui-fold.test.tsx`, `test/ui-section.test.tsx`, `test/ui-setting-row.test.tsx`, `test/type-scale.test.ts`. No test imports `app-shell`, `use-back-close` or `inbox`.
 
 ## Not verified
 - How the outer shell's theme reaches the app (`shell-bridge.ts` has no theme call).
