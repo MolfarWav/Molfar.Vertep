@@ -9,7 +9,11 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-21 (end): #488 Consolidate fixes in Roleplay PR 182 (open, nothing released); #183 closed after PR 181 merged
+## 2026-11-21 (release): RELEASED Roleplay 4.145.0 (owner: "Мердж і реліз"; PR 182 merge ea229b8, release PR 183 merge b429128; no engine release; the owner presses Update)
+- Carries the DM rail item (PR 181, #183 closed) and the Consolidate fixes (PR 182, part 1 of #488). Release commit: manifest and `APP_VERSION` 4.145.0, CHANGELOG heading, What's new tip `new.dm-rail` (target `nav.dm`). Guide pages `index`, `world-dm`, `litopys`: only the changed paragraphs re-translated into 13 locales by a cheap model (zh/litopys by hand-picked paragraph: its paragraph count differs from English), stamped; `--stale` lists nothing; not read by a native speaker. Full suite: the 3 known Windows failures only.
+- #488 stays open: the fold op, and facts stored cut off before this release (three in one chat).
+
+## 2026-11-21 (end): #488 Consolidate fixes in Roleplay PR 182 (merged in 4.145.0); #183 closed after PR 181 merged
 - **Roleplay PR 182** (branch `claude/consolidate-488`, 181937a): the automatic Consolidate starts after 15 facts written since its last run (`consolidateNewCount`, `CONSOLIDATE_AUTO_NEW`, merges do not count); the prompt names stale plans and deadlines and "history is not a contradiction" and the one-thing/shorter rule; a text over 300 characters is dropped, not cut; a merge not shorter than its parts is skipped. Hint (en, uk), guide `litopys`, DATA-FORMATS, CHANGELOG; handbook `roleplay-litopys.md` (5bee161). **Checked:** new tests, full suite (3 known Windows failures), a replay of the real request on three chats: the stale deadline is retired by both build-model variants; the plain model 18 merges to 6. **Not done:** repairing facts already stored cut off (three in one chat), the "fold" op, a guide translation refresh.
 - **#183 closed** (owner: close after the PR) with "How it was solved": the DM rail item (PR 181, merge bac304d, unreleased), stance and Court dropped by the diagnostic and the bench.
 - **In the app Consolidate answered 13 of 14 runs** (one "empty or invalid reply" on 11-14), although a direct call to the same thinking model needed 30k+ tokens; how the engine gets answers at `max_tokens: 1500` was not looked into.
