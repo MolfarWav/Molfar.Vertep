@@ -7,6 +7,7 @@ had reached 488 KB). One file per period, newest first inside each. Nothing here
 
 | File | Covers |
 | --- | --- |
+| `2026-11-15-to-11-18.md` | 2026-11-15 to 2026-11-18: Roleplay 4.128 to 4.139 (who perceives and who knows, phone typing lag and the grey frame, sprite windows), Social 0.18 to 0.21 (Journal, City, memory ledger M1 to M3), engine 1.17 to 1.18.0 |
 | `2026-11-13-to-11-15.md` | 2026-11-13 to 2026-11-15: Roleplay 4.119 to 4.123 (agent forge, group dynamics, dashboard clock and clothes, Kingmaker concept), cache keep-alive, Updates dialog wording, big library zip import |
 | `2026-11-11-to-11-12.md` | 2026-11-11 to 2026-11-12: Roleplay 4.114 to 4.118, engine 1.16.2 to 1.16.4 (prepared or released), turn director design |
 | `2026-11-08-to-11-11.md` | 2026-11-08 to 2026-11-11: Roleplay 4.103 to 4.113, engine 1.12.2 to 1.16.1 (prepared or released) |
