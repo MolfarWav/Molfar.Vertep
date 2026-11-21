@@ -1,6 +1,6 @@
 # The built-in agent: the loop, tools, memory, context folding, small windows
 
-Verified at: molfar.vertep 5b6f37a
+Verified at: molfar.vertep 6c3f4e0
 
 ## What it does
 - A run sends the user's message to a model, which calls tools on the user's workspace until it stops.
@@ -54,7 +54,8 @@ Verified at: molfar.vertep 5b6f37a
 
 ## Memory
 - Files: `memory/MEMORY.md` plus topic files; `apps/<id>/.memory/` and `projects/<name>/.memory/`; skills in `skills/` and the matching `.skills/` folders; the mailbox in `memory/mailbox/`.
-- Writers: `memory_propose` goes through `proposeEntry`, which shows Save, Later or Skip. With no card, the entry is queued. The post-run pass only queues entries.
+- `grep` (`tools.ts`): `grepRegex` turns a leading `(?i)` into flags and tries the `u` flag for `p{..}`; a path that is one file searches that file (credentials and protected files refused as in `read_file`); a missing path is an error; an empty result says how many files were searched (#482).
+- Writers: `memory_propose` goes through `proposeEntry`, which shows Save, Later or Skip. With `replaces`, the card also shows the whole old entry, which is removed in full; `normalizeEntry` drops a date the entry brings, because the store adds its own (#484). With no card, the entry is queued. The post-run pass only queues entries.
 - Prompt: `memoryPromptSection` clips core memory to 6000 characters (2000 in small mode). `projectPromptSection` clips project memory to 4000.
 - Limits: `ENTRY_MAX` 500 characters per entry, `CORE_MEMORY_CAP` 4000 for the core (then a topic is required), `MAILBOX_MAX` 50, `DECLINED_KEEP` 300.
 - A skipped entry is recorded in `declined.json` and cannot be proposed again.
@@ -63,7 +64,7 @@ Verified at: molfar.vertep 5b6f37a
 - Token estimate (`context-budget.ts`): 3.5 characters per token for ASCII, 2 for alphabetic text, 1 otherwise. An image costs `IMAGE_TOKENS` (1600).
 - Input budget (`inputBudget`): the window, minus the output reserve, minus a safety margin of at least 4096 or 3 percent of the window.
 - `fitContext` runs only when over budget, or after a forced overflow. It trims to `TRIM_TARGET` (0.6 of the budget), or `FORCED_TRIM_TARGET` (0.5). Pass 1 cuts old results and arguments to 1200 characters. Pass 2 cuts them to 200. Pass 3 drops the oldest history up to an assistant message. Pass 4 shares the rest among tool results. The last `PROTECTED_TAIL` (6) messages are not cut.
-- `foldToolResults` (`context-fold.ts`), on a copy: results of earlier runs are cut to `PAST_RESULT_CHARS` (300). Steps older than the last `KEEP_STEPS` (6) keep an 800-character head of results over 2000 characters. Arguments over 1500 characters are cut to 400. An older full read of a file is stubbed once it has been read again or written later.
+- `foldToolResults` (`context-fold.ts`), on a copy: results of earlier runs are cut to `PAST_RESULT_CHARS` (300). Steps older than the last `KEEP_STEPS` (6) keep an 800-character head of results over 2000 characters. Arguments over 1500 characters are cut to 400. An older full read of a file is stubbed once it has been read again or written later. A cut result carries a marker that names the call (`describeCall`: a batched read lists its files) and says the result was not empty and did not fail, so a cut is not taken for a broken tool (#483, #484). The system prompt (rule 7) and the small-window rules say the same and forbid quoting or editing file content from memory.
 - `nudgeBatching`: after two single-call lookup steps in a row, and then every third (literals). The reminder rides a copy only.
 - Small window (`small-window.ts`): `SMALL_WINDOW_MAX` is 32000. In `auto` mode, small mode is on at or below that, or when the window is unknown. Only `CORE_TOOLS` are sent until a group unlocks. Tools in no group are always sent.
 - Compaction (`summarizeSession`): each chunk gets 60 percent of the input budget (literal), at least 2000 tokens, at most `MAX_CHUNKS` (6) newest chunks, and a reply of `SUMMARY_MAX_TOKENS` (4096). The compact record restarts the model's context from the summary. The file keeps everything.

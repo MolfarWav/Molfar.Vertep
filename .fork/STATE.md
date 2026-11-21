@@ -9,6 +9,14 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
+## 2026-11-21: batch #481 to #484 built (engine branch `claude/agent-batch-482-484`, Social branch `claude/social-stories-close-481`; no PR, nothing merged or released)
+- **#482 grep:** a path that is one file searches it (credentials and protected files refused as in read_file), a missing path is an error, a leading `(?i)` and `p{L}` work (`grepRegex`), an empty answer says how many files were searched. `test/grep-tool.test.ts`.
+- **#483 and #484:** `foldToolResults` was not changed (cost, #101); its markers now name the call (`describeCall`), say the result was not empty and the call did not fail, and say to read again before quoting. System prompt rule 7 and the small-window rules say the same and forbid writing from memory. Small-window prompt cap 4050 to 4100. `memory_propose` with `replaces` shows the whole old entry in the card; `normalizeEntry` drops a date the entry brings. **Not built:** a tool that fetches an earlier cut result.
+- **#481 Social:** × in the stories viewer's title bar (44 px on a phone), en/uk strings, guide and CHANGELOG. Checked in the design preview (390 px dark, light + Ukrainian): closes, stories stay. Not checked in the real app with real stories.
+- **Tests:** full engine run 1326 pass, 36 fail; clean HEAD gives the same 36 (Windows: symlinks, builder, git clone), so none are from this batch. Social 694 pass.
+- **Idea filed:** #490, edit the Dashboard clock by hand (time, part of the day, day); waits for the owner's answers on what the sensor does after an edit.
+- **Left:** releases (engine and Social), closing 481 to 484 with "How it was solved", guide page for the memory card line not needed (no guide mention).
+
 ## 2026-11-20 (night): RELEASED Roleplay 4.143.0 (owner: "translations, then the release"; PR 178 merge `512139b`, PR 179 merge `ebca7b4`; the owner presses Update; no engine release)
 - PR 178 (the features: Who knows, tiers, Meanwhile M1a to M2b) was merged on GitHub before my release commits were pushed (it said "already merged"), so the version bump and the translations went in a second PR 179. Main has 4.143.0 and the translations.
 - **Guide translations** of `litopys`, `dashboard`, `world-dm`, `index` and the new `meanwhile` page, 13 locales, by a cheap model through `ask-model` (alias fast), a script checked headings and links (two needed a hand: a duplicated link in fr/dashboard, and a false "too short" on zh/world-dm), then `guide-l10n.ts --stamp`; `--stale` lists nothing. Not read by a native speaker; UI labels stay English. The driver is not in the repo (scratch).
