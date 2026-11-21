@@ -349,7 +349,7 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
     const fsSvc = (() => {
       if (!fsAllowed || !fsRoot) {
         const denied = () => { throw new Error("plugin manifest.json is missing the \"fs\" permission (add it to permissions array) or the grant was not approved for imported plugins"); };
-        return { read: denied, write: denied, list: denied, stat: denied, remove: denied, root: null };
+        return { read: denied, readMany: denied, write: denied, list: denied, stat: denied, remove: denied, root: null };
       }
       // Lexical containment PLUS a realpath pass: a symlink planted inside
       // data/ (e.g. by a workspace shell) would otherwise let read/write/
@@ -410,8 +410,52 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
         const msg = String(e?.message ?? e).split(fsRoot).join("[app-data]");
         throw new Error(`${msg} (${rel})`);
       };
+      // A path below the root with no link anywhere along it cannot leave the root, so the folders on the way are checked
+      // once each (lstat) instead of resolving every path. Used by a list of paths (stat, readMany).
+      const plainDirChecker = () => {
+        const plainDirs = new Set([fsRoot]);
+        const plainDir = (dir) => {
+          if (plainDirs.has(dir)) return true;
+          if (dir === path.dirname(dir) || !dir.startsWith(fsRoot + path.sep)) return false;
+          if (!plainDir(path.dirname(dir))) return false;
+          let st;
+          try { st = fs.lstatSync(dir); } catch { return false; }
+          if (st.isSymbolicLink() || !st.isDirectory()) return false;
+          plainDirs.add(dir);
+          return true;
+        };
+        return plainDir;
+      };
       return {
         read: (rel) => { try { return fs.readFileSync(within(rel), "utf8"); } catch (e) { scrub(e, rel); } },
+        // Several files in one call (#432): the text of each, null for a path that is missing or is a folder. The same jail as
+        // read; per path the call into the sandbox and the realpath walk cost ~3 ms, so 161 regex scripts spent 0.5 s on them.
+        // At most 5,000 paths and 32 MB of text in one call.
+        readMany: (rels) => {
+          if (!Array.isArray(rels)) throw new Error("fs.readMany(paths): a list of paths");
+          if (rels.length > 5000) throw new Error("fs.readMany: at most 5000 paths at once");
+          const plainDir = plainDirChecker();
+          let bytes = 0;
+          return rels.map((r) => {
+            const full = path.resolve(fsRoot, String(r));
+            let at = full;
+            // a plain path (no link on it) is read as it is; anything else takes the single-path check
+            if (full === fsRoot || !full.startsWith(fsRoot + path.sep) || !plainDir(path.dirname(full))) at = within(r);
+            else {
+              let st = null;
+              try { st = fs.lstatSync(full); } catch (e) { if (e && e.code === "ENOENT") return null; }
+              if (!st || st.isSymbolicLink()) at = within(r);
+            }
+            let text;
+            try { text = fs.readFileSync(at, "utf8"); } catch (e) {
+              if (e && (e.code === "ENOENT" || e.code === "EISDIR")) return null;
+              scrub(e, r);
+            }
+            bytes += Buffer.byteLength(text);
+            if (bytes > 32 * 1024 * 1024) throw new Error("fs.readMany: at most 32 MB of text at once");
+            return text;
+          });
+        },
         readBase64: (rel) => { try { return fs.readFileSync(within(rel)).toString("base64"); } catch (e) { scrub(e, rel); } },
         write: (rel, content) => {
           if (typeof content !== "string") throw new Error("fs.write(rel, string)");
@@ -440,20 +484,8 @@ try { Object.defineProperty(globalThis, 'fetch', { value: undefined, writable: f
           };
           if (!Array.isArray(rel)) return one(rel);
           if (rel.length > 100000) throw new Error("fs.stat: at most 100000 paths at once");
-          // A path below the root with no link anywhere along it cannot leave the root, so the
-          // folders on the way are checked once each (lstat) instead of resolving every path.
           // Anything with a link on it, or that looks odd, takes the single-path check above.
-          const plainDirs = new Set([fsRoot]);
-          const plainDir = (dir) => {
-            if (plainDirs.has(dir)) return true;
-            if (dir === path.dirname(dir) || !dir.startsWith(fsRoot + path.sep)) return false;
-            if (!plainDir(path.dirname(dir))) return false;
-            let st;
-            try { st = fs.lstatSync(dir); } catch { return false; }
-            if (st.isSymbolicLink() || !st.isDirectory()) return false;
-            plainDirs.add(dir);
-            return true;
-          };
+          const plainDir = plainDirChecker();
           return rel.map((r) => {
             const full = path.resolve(fsRoot, String(r));
             if (full === fsRoot || !full.startsWith(fsRoot + path.sep) || !plainDir(path.dirname(full))) return one(r);

@@ -7,6 +7,8 @@ Versions here count from 0.1.0 and are independent of upstream's.
 
 ## Unreleased
 
+- **A plugin can read many files in one call: `host.fs.readMany(paths)` (#432).** Roleplay read each of its regex scripts (161 on a big workspace) as its own host call, which cost about half a second on every pass that builds a prompt. `readMany` takes a list of paths and answers a list of texts (null for a path that is missing or a folder), under the same jail as `read`: a path out of the data folder, or one that goes through a link, is refused. At most 5,000 paths and 32 MB of text a call. Measured in the real sandbox with 161 files: 440 to 530 ms one call each, 35 ms with `readMany` (`.fork/bench/fs-readmany.ts`). A plugin has to check that it exists (an older engine has no `readMany`). Tests: `test/plugin-fs-readmany.test.ts`.
+
 ## 1.20.0 (2026-11-20)
 
 - **A Script card may run three times longer (#471).** The Script card's time limit was 0.5 s, read off the clock, so a busy computer or several agents at once pushed the stock Repetition guard (0.2 to 0.5 s alone on a laptop, measured) over it and it failed on every run with "the script ran longer than 500 ms". A script now has 1.5 s, the worker is ended after 3.5 s of wall time, and the scripts of one run may use 4 s together (they were 0.5, 2.5 and 2 s). Hostile scripts stay bounded by the same three limits and the memory cap. Files: `src/plugins/script-box.ts`; the Roleplay side is a cheaper stock Repetition guard (same output, about half the time).
