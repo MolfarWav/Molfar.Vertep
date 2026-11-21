@@ -76,7 +76,7 @@ Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at b
 - Sensor output shape: the default sensor prompt parts, `applySensor` and the apply functions that read each field, `docs/DATA-FORMATS.md` "Dashboard state", `test/rp-dash-journal.test.ts`.
 - Journal fields or caps: `keepJournalLines`, `journalPreviousLines`, `journalBlock`, prompt board key `plugin:journal` in `llmRequest`, the journal row in `docs/COUPLINGS.md`.
 - A new insert part or budget: `insertCeiling` must match `buildInsert`, and the engine's fallback table must change with it (`docs/COUPLINGS.md`).
-- The clock: `advanceClock`, `clockLine`, `NEW_DAY_BACK`, `test/rp-dash-clock.test.ts`.
+- The clock: `advanceClock`, `clockLine`, `NEW_DAY_BACK`, `test/rp-dash-clock.test.ts`. A hand edit (#490): `clockRoute` (`POST /dashboard/clock`) sets `time` and `day` on the newest snapshot's clock and marks it `hand`; `advanceClock` ignores a sensor time while `hand` is set unless the player's lines state one; the UI is the date pencil's popover (`DateEdit`, `useDashboard.setClock`); `test/rp-dash-clock-edit.test.ts`.
 - Lie beliefs: `believersOf` has a copy in the Litopys plugin (`docs/COUPLINGS.md`, beliefs).
 - Name helpers: `askSensor` depends on `expandNamesFor`, which has copies in other plugins (`docs/COUPLINGS.md`, helper names).
 

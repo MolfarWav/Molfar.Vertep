@@ -89,6 +89,17 @@ describe("memory storage", () => {
     expect(() => appendEntry(p.root, scope, "x", "no such phrase")).toThrow("no entry");
   });
 
+  it("does not stack a second date on an entry that brings its own (issue #484)", () => {
+    const scope = resolveScope(p.root, "global");
+    appendEntry(p.root, scope, "2026-11-20: Uses phosphor icons");
+    appendEntry(p.root, scope, "- 2026-11-19 — Writes in Ukrainian");
+    const body = read(GLOBAL_MEMORY);
+    const date = String.raw`\d{4}-\d\d-\d\d`;
+    expect(body).toMatch(new RegExp(`- ${date}: Uses phosphor icons`));
+    expect(body).toMatch(new RegExp(`- ${date}: Writes in Ukrainian`));
+    expect(body).not.toMatch(new RegExp(`${date}: ${date}`));
+  });
+
   it("clips old entries first", () => {
     const lines = Array.from({ length: 400 }, (_, i) => `- entry ${i}`).join("\n");
     const clipped = clipMemory(lines, 500);

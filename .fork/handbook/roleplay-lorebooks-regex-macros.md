@@ -1,5 +1,5 @@
 # Lorebooks, regex scripts and macros
-Verified at: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
+Verified at: molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
 
 ## What it does
 Lorebook entries enter the prompt by keys, by constant status, or by a vector match over a threshold. One server function runs the scan, budget and placement. Regex scripts rewrite text on save, on edit, in the prompt, or only for display. Macros are expanded on the server. The browser shows why each entry fired and runs a keyword test through the same scanner.
@@ -58,7 +58,7 @@ Fields the scan reads (book shape in `docs/DATA-FORMATS.md`, "Lorebooks"):
 Secret entries: each item gets `secretV` once per scan (known: content; cover; marked: content plus a "[Secret: only A knows...]" line for several voices). `contentOf` feeds the prompt, the budget and recursion. Knowers come from the chat each scan: `knownBy`, a `reveal` word in a message (taught to its author and the Dashboard's `present`), `lore-known/<chat>.json` by hand.
 
 ## Regex scripts
-- Storage: one file per script at `regex/<id>.json`, read by `loadRegexScripts`. Scope: `global`, `preset`, `chat` or `character`. Placements: `user_input`, `ai_output`, `slash`, `wi`, `reasoning`.
+- Storage: one file per script at `regex/<id>.json`, read by `loadRegexScripts` (engine, Litopys and the Dashboard sensor each in one `host.fs.readMany` call when the engine has it, one `fs.read` per file on an older engine; #432). Scope: `global`, `preset`, `chat` or `character`. Placements: `user_input`, `ai_output`, `slash`, `wi`, `reasoning`.
 - When each kind runs (`regexAxes`, `runRegexScripts`):
   - Save: scripts with neither flag rewrite the saved text (`regexOnSave`).
   - Edit: scripts with `runOnEdit` run when a saved message is edited (the caller is line 7114 of `plugins/engine/plugin.js`).
