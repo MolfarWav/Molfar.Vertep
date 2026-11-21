@@ -9,6 +9,11 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
+## 2026-11-21 (after the release): #488 the rest in Roleplay PR 184 (open, nothing merged or released)
+- **Branch `claude/fold-488`:** switch "Fold small facts" (`foldFacts`, off; Library > Litopys settings > Changes to facts); `CONSOLIDATE_FOLD`, `smallFact`, `foldable`, fold = merge with `fold: true`; cut-off facts (`looksCut`) sent with their parts; retire narrowed (stale plans rewritten in the past tense; retire only pure duplicates or facts proven false; history stays); merges keep every concrete detail.
+- **Why the retire change:** a replay showed the 4.145.0 wording made the plain build model propose wrong retirements (18 of 27). After: 4 wrong in two runs; rewrites 17 of 18 lossless; folds 23 of 25 lossless; the stale bill rewritten as paid; cut facts repaired 1 of 3 (plain) or 2 of 3 (thinking) per pass. Retirements always wait for the user, so 4.145.0 lost no data, it only proposed noise.
+- **Checked:** tests, typecheck, full suite (3 known Windows failures), a real browser through a subagent (1280 dark/light, 390, Ukrainian, saved and kept after reload). The engine request never sets a reasoning field: that is why a thinking build model answers at `max_tokens: 1500` (the open question of the earlier entry). **Not done:** guide translations for the release.
+
 ## 2026-11-21 (release): RELEASED Roleplay 4.145.0 (owner: "Мердж і реліз"; PR 182 merge ea229b8, release PR 183 merge b429128; no engine release; the owner presses Update)
 - Carries the DM rail item (PR 181, #183 closed) and the Consolidate fixes (PR 182, part 1 of #488). Release commit: manifest and `APP_VERSION` 4.145.0, CHANGELOG heading, What's new tip `new.dm-rail` (target `nav.dm`). Guide pages `index`, `world-dm`, `litopys`: only the changed paragraphs re-translated into 13 locales by a cheap model (zh/litopys by hand-picked paragraph: its paragraph count differs from English), stamped; `--stale` lists nothing; not read by a native speaker. Full suite: the 3 known Windows failures only.
 - #488 stays open: the fold op, and facts stored cut off before this release (three in one chat).

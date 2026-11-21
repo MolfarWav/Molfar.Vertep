@@ -1,5 +1,5 @@
 # Litopys: story memory, who knows what, and the What fired record
-Verified at: molfar.vertep-roleplay efead2b (sections: Owners, Data, Who knows what, Tests); Owners also 4e0989b; the rest at 91eec33; the Consolidate lines (#488: When a model is called, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/consolidate-488 (on bac304d)
+Verified at: molfar.vertep-roleplay efead2b (sections: Owners, Data, Who knows what, Tests); Owners also 4e0989b; the rest at 91eec33; the Consolidate lines (#488: When a model is called, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/fold-488 (on b429128)
 
 ## What it does
 - Litopys keeps one record per chat: chapters (one per closed scene), arcs (older chapters merged), and facts, each with the people who know it. A background worker writes it; the reply hook only reads it.
@@ -43,7 +43,7 @@ Per chat unless noted.
 ## When a model is called, and when code decides
 - Model calls go through `host.llm`: the chapter worker from `onTick`, plus arc, consolidate, summary and scene-suggest requests. Embeddings go out as `host.llm.embed` under `lit_emb_<chat>` from `kickEmbedWant`.
 - `llmRequest` makes no model call. It reads stored records and vectors.
-- Consolidate facts (#51): one call per batch of 60 active facts (`consolidateBatches`, one subject's facts together) with `CONSOLIDATE_PROMPT`; `parseConsolidateReply` reads merge, rewrite and retire, `addConsolidateProposals` queues them. It starts by itself (`autoConsolidateDue`) when 15 facts were written since the last run began (`consolidateNewCount`, `CONSOLIDATE_AUTO_NEW`; facts with `origin: "merge"` do not count) and 20 are active (#488).
+- Consolidate facts (#51): one call per batch of 60 active facts (`consolidateBatches`, one subject's facts together) with `CONSOLIDATE_PROMPT`; `parseConsolidateReply` reads merge, rewrite and retire, `addConsolidateProposals` queues them. It starts by itself (`autoConsolidateDue`) when 15 facts were written since the last run began (`consolidateNewCount`, `CONSOLIDATE_AUTO_NEW`; facts with `origin: "merge"` do not count) and 20 are active (#488). With config `foldFacts` on, the request adds `CONSOLIDATE_FOLD` and marks small facts (`smallFact`); a fold comes back as a merge with `fold: true`, and `addConsolidateProposals` keeps it only if `foldable` (two or more small facts, one subject, the same knowers). A merged fact stored cut off (`looksCut`) is sent with its parts' texts (`partsOf` in `consolidateStep`). The request never sets a reasoning field, which is why a thinking build model answers at `max_tokens: 1500`.
 - Code decides: scene bounds, the next scene, prompt part order and budget, ranking, passage matches (two or more shared stems and a chance under `RECALL_CHANCE`), turning-point dedupe (`DICE_LIMIT`), belief endings, the trace.
 
 ## Flow
@@ -71,7 +71,7 @@ Per chat unless noted.
 - Passage index format: `recallSave`, `recallBuild`, `recallCandidates`, `verbatimFor`; bump `RECALL_V`.
 - Embedding model: `vectorOf`, `vectorGaps`, `currentEmbedModel`, `noteScanModel`. Vectors of another model are not used. This device's model is read only from `.cache/litopys/embed-status.json`, never from the synced `litopys/insert/` trace (it carries the model of whichever device replied last; #419).
 - Lies and beliefs: `liveLies`, `endBeliefs`, `moveLies`, and the believers copy in the Dashboard plugin.
-- Consolidate's rules: `CONSOLIDATE_PROMPT` and the two code guards must agree (a merged or rewritten text over `CONSOLIDATE_TEXT_MAX` is dropped in `parseConsolidateReply`; a merge not shorter than its parts is skipped in `addConsolidateProposals`); the hint `lit.set.autoConsolidateHint` and the guide page `litopys` name the trigger.
+- Consolidate's rules: `CONSOLIDATE_PROMPT`, `CONSOLIDATE_FOLD`, `foldable` and the two code guards must agree (a merged or rewritten text over `CONSOLIDATE_TEXT_MAX` is dropped in `parseConsolidateReply`; a merge not shorter than its parts is skipped in `addConsolidateProposals`); the hint `lit.set.autoConsolidateHint` and the guide page `litopys` name the trigger.
 
 ## Traps
 - `witnessed` returns true for a chapter with no `cast`; an old chapter without one is visible to every character.
@@ -83,7 +83,8 @@ Per chat unless noted.
 - `verbatimFor` needs three or more word stems in the scan window; a chat with no link gets no passages.
 - The passage index refreshes on the tick only when `cfg.verbatim === true`.
 - `factRecency` (#50) ranks a fact up for having been sent in earlier prompts (`markUsed`). It does nothing while the whole record fits the budget; under a tight budget it keeps the facts that were repeated most (#488).
-- Before #488 a merged sentence over 300 characters was cut and stored mid-word; such facts may still be in older chats.
+- Before #488 a merged sentence over 300 characters was cut and stored mid-word; `looksCut` finds them and a pass can rewrite them (not every pass does).
+- Retirement wording is fragile with a small build model: the 4.145.0 rule (retire a plan a later fact shows done) made it retire things people did or said; the prompt now asks for a rewrite in the past tense and keeps retire for pure duplicates and facts proven false (replay numbers in the Roleplay CHANGELOG).
 
 ## Tests that guard it
 Names confirmed in `test/`. Coverage claims come from `docs/COUPLINGS.md`; test bodies were not read.
