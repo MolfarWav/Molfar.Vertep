@@ -4,7 +4,7 @@ Verified at: molfar.vertep-roleplay 586f601 plus the zip-sprites change
 ## What it does
 - A character card (PNG, charx or JSON) is read in the browser and posted in batches of 25 to the studio-import plugin, which writes `characters/<id>/card.json` with any embedded lorebook, regex scripts and pictures.
 - A whole library, a zip of another app's data folder or of a backup, goes to `/import/zip`. It writes characters, lorebooks, presets, regex, personas, groups, chats and databank files in a fixed order, then returns a summary.
-- Chats can be imported into a card's memory through the Litopys plugin. Nothing new is created as a chat.
+- Chats can still be imported into a card's memory through the Litopys routes, but since #492 nothing sends or shows a card's stories (no UI, no prompt part). Nothing new is created as a chat.
 - Each import is a job on a progress card with counts, Cancel between units, and failed files with reasons.
 - Imports never overwrite. A new item that clashes gets a numeric suffix.
 

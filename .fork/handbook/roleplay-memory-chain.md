@@ -16,7 +16,7 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 - **Data Bank.** `databank/<id>.json`, searched by words. Plugin: engine. Setting: feature `databank`.
 - **Snapshot books.** Data Bank files with `kind: "snapshot"`, written by litopys. No setting; the user saves one.
 - **Data Bank vectors.** `.cache/databank-vectors/<fileId>.json`. Setting: `autoEmbed` (on), or a click.
-- **Character memory from imports.** `characters/<id>/memory.json`. Plugin: litopys, not profile. Board key `plugin:cardmemory`; inject `maxTokens` (400).
+- **Character memory from imports: gone since #492.** `characters/<id>/memory.json` now holds only the card's kept habits; the `sources` (stories) already in a file are ignored (no prompt part, no reserve, no board row, no UI for a card). A persona's and a world's stories (`ownerMemoryFor`) stay.
 
 ## Owners
 
@@ -36,7 +36,7 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 - `plugins/litopys/plugin.js` `bookChunks`: turns a chat's record into snapshot chunks, with who knew each fact.
 - `plugins/litopys/plugin.js` `bookSave`: writes a snapshot book; an update disables the older version.
 - `plugins/litopys/plugin.js` `importChat`: writes an imported chat's snapshot into a card's memory.
-- `plugins/litopys/plugin.js` `cardMemoryFor`: builds the character-memory part of a reply.
+- `plugins/litopys/plugin.js` `ownerMemoryFor`: builds a persona's or a world's memory part (the card's own part, `cardMemoryFor`, was removed in #492).
 - `plugins/engine/plugin.js` `searchDatabank`: finds passages by words, then reorders them by meaning.
 - `plugins/engine/plugin.js` `chunkVisibleTo`: hides a snapshot passage from a speaker who did not witness it.
 - `plugins/engine/plugin.js` `shelfVectorsFor`: reads a Data Bank file's vectors for one model.
@@ -55,7 +55,7 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 - `databank/<id>.json`: `chunks[]` with `i` and `text`. A snapshot adds `kind`, `scope: "chat"`, `scopeChatIds` (at most 24), `source`, and chunks of kind chapter, arc or fact with `cast` or `knownBy` (DATA-FORMATS, "Snapshot books").
 - `.cache/litopys/vectors/<chatId>.json`: `{ id: { hash, vector, m? } }`, split into `.pN.json` past about 2 MB.
 - `.cache/databank-vectors/<fileId>.json`: `{ v: 1, m, dim, chunks: { "<i>": [numbers] } }`, one model per file.
-- `characters/<id>/memory.json`: sources that are snapshots taken at import; the chat is never read again (DATA-FORMATS, "The card's long memory").
+- `characters/<id>/memory.json`: kept habits; old `sources` (snapshots taken at import) are ignored since #492 (DATA-FORMATS, "The card's long memory").
 
 ## When a model or an embeddings call happens
 
