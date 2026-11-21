@@ -1,5 +1,5 @@
 # Social: the Forum plugin and its screens
-Verified at: molfar.vertep-social 748197a; the #452 and #453 lines at f28fc28 (main, Social 0.18.0); the public-facts lines (#446 M3) on Social branch claude/memory-m3-446
+Verified at: molfar.vertep-social 748197a; steps 8 and 9 of the tick (#493) at claude/forum-new-topics-493 7fdf4f5; the #452 and #453 lines at f28fc28 (main, Social 0.18.0); the public-facts lines (#446 M3) on Social branch claude/memory-m3-446
 
 ## What it does
 - Boards, topics and posts written by the user and the characters. The Moderator (author id `_mod`) runs events, comments, closes and a daily chronicle.
@@ -35,8 +35,8 @@ Verified at: molfar.vertep-social 748197a; the #452 and #453 lines at f28fc28 (m
 5. Eligible: status `online` or `away` (`statusAt`, three-hour bands from Monday), and fewer than `postsPerAuthor` posts today (default 6).
 6. Weight: `5 + forum.frequency` (1 when `writers` is `equal`), times 0.4 when away, times 0.3 for the last author.
 7. A mention of the author is dropped with `AVOID_CHANCE` 0.6 when the feeling is at or below `AVOID_AT` (-7), unless the user wrote it or the author is jealous.
-8. Order in `planAction`: addressed to the author (`addressed`); a user post still owed a reply (`owe`); an event invitation (`EVENT_LIVE_MS`, 2 days); a mention in the last six posts (`LIVE_MS`, 7 days); then a new topic or a live one.
-9. New topic: forced when no live topic exists, else chance `newTopicShare` (default 20%).
+8. Order in `planAction` (#493): addressed to the author (`addressed`); a user post still owed a reply (`owe`); then the new-topic roll; then an event invitation (`EVENT_LIVE_MS`, 2 days); a mention in the last six posts (`LIVE_MS`, 7 days); then a live topic. A mention counts only when the name starts a word (`mentions`).
+9. New topic: forced when nothing can be answered (no live topic, invitation or mention), else chance `newTopicShare` (default 20%). The board is weighted `1 + 3 / (1 + topics in it)`, among the author's favourites when there are any.
 10. Live lean: feeling divided by 12, clamped 0.15 to 2; jealousy at least 1.5; a grudge times 0.6; a rumour about the author times 2 (max 3); a followed author times `FOLLOW_LEAN` (1.6).
 11. Next slot (`nextGapMs`): `avgGapMs` (awake minutes over `postsPerDay`, times `ACTIVITY_SCALE`) times a random 0.5 to 1.5, never under `MIN_GAP_MS`. The slot moves only when a post files.
 12. Subject (`pickSubject`): a rumour with chance `GOSSIP_SHARE` (0.25) while today's count is under `gossipPerDay` (default 2); else a Life subject; else one interest.
