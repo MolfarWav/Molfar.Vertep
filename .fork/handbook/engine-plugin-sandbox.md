@@ -1,5 +1,5 @@
 # App plugins: the sandbox, the host API, hooks and limits
-Verified at: molfar.vertep 9b8c1fc (the `writeFileAtomic` lines, #440); the `host.peer` pieces at branch peer-read-chunks; the rest at: molfar.vertep 1593219; Timing and the Traps on a shared worker at branch claude/sandbox-timing (1.16.8); `executionMs` for every plugin and its hooks at branch claude/limits-imported (1.16.9); the SCRIPT_LIMITS line at branch claude/batch-471 (#471)
+Verified at: molfar.vertep 9b8c1fc (the `writeFileAtomic` lines, #440); the `host.peer` pieces at branch peer-read-chunks; the rest at: molfar.vertep 1593219; Timing and the Traps on a shared worker at branch claude/sandbox-timing (1.16.8); `executionMs` for every plugin and its hooks at branch claude/limits-imported (1.16.9); the SCRIPT_LIMITS line at branch claude/batch-471 (#471); `host.fs.readMany` at branch claude/fs-readmany-432 (#432)
 
 ## What it does
 An app plugin is `plugins/<id>/plugin.js` with a `manifest.json` beside it, inside an app folder. Each call evaluates the current source in a QuickJS runtime owned by a pooled worker thread. The plugin asks for models and the network through `host`, and the engine does that work between passes. A call that fails or overruns ends its worker. Manifest permissions gate each capability.
@@ -32,7 +32,7 @@ Every call gets `host` from `src/plugins/sandbox-worker.mjs`. Permission in brac
 - `host.llm.embed(key, {texts, model?, kinds?})`: embeddings, 8 per pass; vectors in `host.llm.embedResults[key]`, the model in `host.llm.embedInfo[key]`. [llm]
 - `host.net.request(key, {url, method, headers, body, form, json, binary, timeoutMs, maxBytes, followRedirects})`: fetch run by the engine with no credentials, 32 per pass, answer in `host.net.results[key]`. [network; host listed in `networkHosts`]
 - `host.script.request(key, {code, input, seed})`: small script on its own sandbox, 16 per pass. [script]
-- `host.fs`: `read`, `readBase64`, `write`, `list`, `stat`, `remove` inside the app's `data/` dir; escapes and dangling symlinks are refused. [fs; app-bundled plugins only]
+- `host.fs`: `read`, `readMany` (a list of paths in, a list of texts out in one call; null for a missing path or a folder; at most 5000 paths and 32 MB, #432), `readBase64`, `write`, `list`, `stat`, `remove` inside the app's `data/` dir; escapes and dangling symlinks are refused. [fs; app-bundled plugins only]
 - `host.peer`: `apps`, `read`, `list`, `stat` on other apps' data the user allowed, limited to manifest-declared paths; read only. `read(app, path, { offset, maxBytes })` returns one piece `{ text, next, size, mtimeMs, done }` of a file too big to read whole. [peer]
 - `host.zip`: `build` needs no permission; `list` and `entries` read an uploaded zip. [zip, for those two]
 - `host.siblingTools`, `host.insertCeilings`: present only with `?siblingtools=1` or `?insertceilings=<chat>`.
