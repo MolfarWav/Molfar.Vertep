@@ -25,7 +25,27 @@ import { splitContracts } from "./app-contract.js";
 /** Same length as the summaries a reloaded chat carries. */
 export const PAST_RESULT_CHARS = 300;
 
-const PAST_NOTE = "[result from an earlier task, cut to save tokens. Read a file again if you need it; do not repeat actions that change things]";
+/**
+ * What the marker of a cut result says. It names the call, so the cut cannot be taken for an
+ * empty or failed result (issue #483: agents read the same files again in a loop), and it says
+ * what is gone, so nothing is quoted or edited from memory (issue #484).
+ */
+function pastNote(label: string): string {
+  return `[${label}: result from an earlier task, cut to save tokens (the rest is NOT in your context; it was not empty and the call did not fail). Read it again before you quote or edit from it; do not repeat actions that change things]`;
+}
+
+/** A call in a few words for a marker: its name and what it was about. */
+export function describeCall(c: { name: string; args: Record<string, unknown> } | undefined): string {
+  if (!c) return "tool result";
+  const clip = (v: string, n = 80) => (v.length > n ? `${v.slice(0, n)}…` : v);
+  const a = c.args;
+  const paths = Array.isArray(a.paths) ? (a.paths as unknown[]).filter((x): x is string => typeof x === "string") : [];
+  if (typeof a.path === "string" && a.path.trim()) paths.unshift(a.path.trim());
+  if (c.name === "read_file" && paths.length > 1) return `read_file of ${paths.length} files (${clip(paths.join(", "), 140)})`;
+  if (c.name === "grep" && typeof a.pattern === "string") return `grep ${JSON.stringify(clip(a.pattern, 50))}${paths[0] ? ` in ${paths[0]}` : ""}`;
+  if (c.name === "bash" && typeof a.command === "string") return `bash ${JSON.stringify(clip(a.command, 60))}`;
+  return paths[0] ? `${c.name} ${clip(paths[0], 100)}` : c.name;
+}
 
 /** Steps of this run (model replies with tool calls) that stay whole. */
 export const KEEP_STEPS = 6;
@@ -135,13 +155,14 @@ export function foldToolResults(msgs: AgentMessage[], runStart: number): FoldRes
     const split = splitContracts(textOf(r));
     const text = split.body;
     const gone = split.ids.map((id) => `\n[the contract of apps/${id} was delivered here; it comes again with the first touch of the app in each new task]`).join("");
-    if (text.length <= PAST_RESULT_CHARS + PAST_NOTE.length + 2) {
+    const note = pastNote(describeCall(r.toolCallId ? calls.get(r.toolCallId) : undefined));
+    if (text.length <= PAST_RESULT_CHARS + note.length + 2) {
       if (!split.ids.length) return;
       out[i] = withText(m, `${text}${gone}`);
       folded++;
       return;
     }
-    out[i] = withText(m, `${text.slice(0, PAST_RESULT_CHARS)}\n${PAST_NOTE}${gone}`);
+    out[i] = withText(m, `${text.slice(0, PAST_RESULT_CHARS)}\n${note}${gone}`);
     folded++;
   });
 
@@ -164,7 +185,7 @@ export function foldToolResults(msgs: AgentMessage[], runStart: number): FoldRes
     if (r.toolCallId && oldCalls.has(r.toolCallId) && text.length > OLD_RESULT_CHARS) {
       out[i] = withText(
         out[i]!,
-        `${text.slice(0, OLD_RESULT_HEAD)}\n[${text.length - OLD_RESULT_HEAD} more characters of this older result left out to save tokens; run the tool again (read_file with offset/limit) if you need them]${blocks}`,
+        `${text.slice(0, OLD_RESULT_HEAD)}\n[${describeCall(call)}: ${text.length - OLD_RESULT_HEAD} more characters of this older result left out to save tokens (NOT in your context; the call did not fail). Run it again (read_file with offset/limit) before you quote or edit from it]${blocks}`,
       );
       folded++;
     }

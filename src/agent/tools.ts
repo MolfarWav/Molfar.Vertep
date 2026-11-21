@@ -243,6 +243,33 @@ export function normalizeAsk(params: unknown): AskRequest | null {
   };
 }
 
+/**
+ * The grep tool's regex. Models write Python/PCRE habits: a leading inline flag group
+ * ("(?i)", "(?is)") becomes the matching JavaScript flags, and Unicode escapes such as
+ * \p{L} need the u flag (without it they match the literal text). A pattern that is
+ * not valid in Unicode mode (a needless escape like "\-") is retried without it.
+ */
+export function grepRegex(pattern: string, ignoreCase?: boolean): RegExp {
+  let flags = ignoreCase ? "gi" : "g";
+  let body = pattern;
+  const inline = /^\(\?([imsu]+)\)/.exec(body);
+  if (inline) {
+    body = body.slice(inline[0].length);
+    for (const f of inline[1] ?? "") if (!flags.includes(f)) flags += f;
+  }
+  const wantsUnicode = /\\[pP]\{/.test(body);
+  const tries = wantsUnicode ? [`${flags}u`, flags] : [flags, `${flags}u`];
+  let firstError: Error | undefined;
+  for (const f of tries) {
+    try {
+      return new RegExp(body, f);
+    } catch (e) {
+      firstError ??= e as Error;
+    }
+  }
+  throw new Error(`Invalid regex: ${firstError?.message ?? pattern}`);
+}
+
 export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOptions = { dataDir: "." }): AgentTool[] {
   const guard = makePathGuard(p.root);
   // area -> the last protected-path question of that area in THIS agent's chat (see askToChange);
@@ -508,28 +535,43 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
     name: "grep",
     label: "Grep workspace",
     description:
-      "Search the workspace's text files with a regex. Returns file:line matches. Optional start path under the user dir.",
+      "Search the workspace's text files with a regex (a leading (?i) works). Returns file:line matches. Optional path: a folder or one file under the user dir; a missing path is an error.",
     parameters: Type.Object({
       pattern: Type.String(),
       path: Type.Optional(Type.String({ description: "Relative dir/file to start from (default: workspace root)" })),
       ignoreCase: Type.Optional(Type.Boolean()),
     }),
     async execute(_id, params) {
-      const { pattern, ignoreCase } = params as { pattern: string; ignoreCase?: boolean };
+      const { pattern: rawPattern, ignoreCase } = params as { pattern: string; ignoreCase?: boolean };
       const rel = (params as { path?: string }).path ?? ".";
       const start = safeResolve(p.root, rel);
-      let re: RegExp;
-      try {
-        re = new RegExp(pattern, ignoreCase ? "gi" : "g");
-      } catch (e) {
-        throw new Error(`Invalid regex: ${(e as Error).message}`);
-      }
+      if (!fs.existsSync(start)) throw new Error(`Path not found: ${rel}. Nothing was searched.`);
+      const re = grepRegex(rawPattern, ignoreCase);
       // SKIP dirs: git internals, runtime state, the agent's own transcripts
       // (noise). auth.json files are skipped wherever they appear — grep
       // results must never surface credentials.
       const SKIP = new Set([".git", "assets-store", "store", "node_modules", "agent", ".staging"]);
       const BIN_EXT = /\.(png|jpe?g|gif|webp|zip|gz|wav|mp3|ogg|woff2?|ttf)$/i;
       const results: string[] = [];
+      let searched = 0;
+      const searchFile = (full: string): void => {
+        let content: string;
+        try {
+          const stat = fs.statSync(full);
+          if (stat.size > 1024 * 1024) return;
+          content = fs.readFileSync(full, "utf8");
+          if (content.includes("\u0000")) return; // binary
+        } catch {
+          return;
+        }
+        searched++;
+        const relPath = path.relative(p.root, full).replace(/\\/g, "/");
+        const lines = content.split("\n");
+        for (let i = 0; i < lines.length && results.length < 100; i++) {
+          re.lastIndex = 0;
+          if (re.test(lines[i]!)) results.push(`${relPath}:${i + 1}: ${lines[i]!.trim().slice(0, 160)}`);
+        }
+      };
       const walk = (dir: string, depth: number): void => {
         if (depth > 8 || results.length >= 100) return;
         let entries: fs.Dirent[];
@@ -545,26 +587,21 @@ export function buildUserTools(username: string, p: UserPaths, opts: AgentToolOp
           if (e.isDirectory()) {
             walk(full, depth + 1);
           } else if (e.isFile() && !BIN_EXT.test(e.name)) {
-            let content: string;
-            try {
-              const stat = fs.statSync(full);
-              if (stat.size > 1024 * 1024) continue;
-              content = fs.readFileSync(full, "utf8");
-              if (content.includes("\u0000")) continue; // binary
-            } catch {
-              continue;
-            }
-            const relPath = path.relative(p.root, full).replace(/\\/g, "/");
-            const lines = content.split("\n");
-            for (let i = 0; i < lines.length && results.length < 100; i++) {
-              re.lastIndex = 0;
-              if (re.test(lines[i]!)) results.push(`${relPath}:${i + 1}: ${lines[i]!.trim().slice(0, 160)}`);
-            }
+            searchFile(full);
           }
         }
       };
-      walk(start, 0);
-      return textResult(results.length ? results.join("\n") : "(no matches)");
+      if (fs.statSync(start).isFile()) {
+        // one named file: the same refusals as read_file (credentials, protected settings), then search it
+        readablePath(rel);
+        if (BIN_EXT.test(start)) throw new Error(`${rel} is a binary file; nothing was searched.`);
+        searchFile(start);
+        if (!searched) throw new Error(`${rel} was not searched (over 1 MB or binary). Read it with read_file and offset/limit.`);
+      } else {
+        walk(start, 0);
+      }
+      if (!results.length) return textResult(`(no matches in ${searched} file${searched === 1 ? "" : "s"} searched)`);
+      return textResult(results.length >= 100 ? `${results.join("\n")}\n[stopped at 100 matches: narrow the pattern or the path]` : results.join("\n"));
     },
   };
 

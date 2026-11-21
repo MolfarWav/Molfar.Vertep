@@ -278,6 +278,7 @@ ${o.apps ? `Installed apps:\n${o.apps}` : ""}
 - Never delete the user's content (chats, characters, notes, uploads) unless asked for exactly that.
 - JSON files (cards, lorebooks): json_get for the shape or a field, json_set to change fields, several in one call. Never load a big JSON whole.
 - Few steps: each one resends the whole chat. Put independent tool calls in ONE reply (read_file paths for several files).
+- A result marked "cut to save tokens" is not empty or failed. Never quote or edit file text from memory: read it again first.
 - Before building something big, ask first: one ask_user with 2-6 questions.
 - Check your work (app_check after src/ or package.json edits). Finish with what changed, what you checked and what you could not check.
 ${o.groups.length ? `- Some tools are hidden to save room: ${o.groups.join(", ")}. tools_enable shows a group. Touching an app shows the app tools by itself.\n` : ""}${o.shell ? "- bash runs in a WebAssembly sandbox in the user's browser (bash utilities and python3, no node or npm); the workspace is mounted at /workspace.\n" : ""}${o.admin ? "- You may manage accounts and server settings (admin group); every change asks the user first.\n" : ""}`;

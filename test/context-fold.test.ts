@@ -28,7 +28,7 @@ describe("folding tool results", () => {
     const { messages, folded } = foldToolResults(msgs, RUN);
     expect(folded).toBe(1);
     expect(text(messages[2])).toStartWith("a".repeat(PAST_RESULT_CHARS));
-    expect(text(messages[2]).length).toBeLessThan(PAST_RESULT_CHARS + 200);
+    expect(text(messages[2]).length).toBeLessThan(PAST_RESULT_CHARS + 320);
     expect(text(messages[2])).toContain("earlier task");
     expect(text(messages[5])).toBe(big);
     expect(text(msgs[2])).toBe(big);
@@ -69,7 +69,7 @@ describe("folding tool results", () => {
     const results = messages.filter((m) => (m as { role: string }).role === "toolResult").map(text);
     const args = messages.filter((m) => (m as { role: string }).role === "assistant").map((m) => (m as unknown as { content: { arguments: { command: string } }[] }).content[0]!.arguments.command);
     for (const k of [0, 1]) {
-      expect(results[k]!.length).toBeLessThan(1000);
+      expect(results[k]!.length).toBeLessThan(1150);
       expect(results[k]).toContain("left out to save tokens");
       expect(args[k]!.length).toBeLessThan(600);
       expect(args[k]).toContain("this call already ran");
@@ -174,5 +174,33 @@ describe("read_file", () => {
 
   it("an app named in paths counts as touched", () => {
     expect(appTouched("read_file", { paths: ["notes/a.md", "apps/rp/src/main.tsx"] })).toBe("rp");
+  });
+});
+
+describe("markers of cut results (issues #483, #484)", () => {
+  const big = "a".repeat(20_000);
+
+  it("names the call and says the result was neither empty nor failed", () => {
+    const msgs = [user("old", 1), call("c1", "read_file", { path: "apps/x/app.tsx" }, 2), result("c1", big, 3), user("new", RUN)];
+    const t = text(foldToolResults(msgs, RUN).messages[2]);
+    expect(t).toContain("read_file apps/x/app.tsx");
+    expect(t).toContain("NOT in your context");
+    expect(t).toContain("did not fail");
+  });
+
+  it("lists the files of a batched read", () => {
+    const msgs = [user("old", 1), call("c1", "read_file", { paths: ["a.md", "b.md", "c.md"] }, 2), result("c1", big, 3), user("new", RUN)];
+    const t = text(foldToolResults(msgs, RUN).messages[2]);
+    expect(t).toContain("read_file of 3 files (a.md, b.md, c.md)");
+  });
+
+  it("names the call in an old step of this run too", () => {
+    const msgs: AgentMessage[] = [user("t", RUN)];
+    for (let i = 0; i < KEEP_STEPS + 2; i++) {
+      msgs.push(call(`c${i}`, "grep", { pattern: `p${i}` }, RUN + i * 2 + 1), result(`c${i}`, "b".repeat(3000), RUN + i * 2 + 2));
+    }
+    const t = text(foldToolResults(msgs, RUN).messages[2]);
+    expect(t).toContain('grep "p0"');
+    expect(t).toContain("did not fail");
   });
 });

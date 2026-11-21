@@ -107,7 +107,10 @@ const today = (): string => new Date().toISOString().slice(0, 10);
 
 /** One memory entry as it is stored: a single dated line. */
 export function normalizeEntry(text: string): string {
-  return text.replace(/\s+/g, " ").trim().slice(0, ENTRY_MAX);
+  // the store adds the date: an entry that brings its own ("2026-11-20: ...", "- 2026-11-20 — ...")
+  // would be stored with two (issue #484)
+  const bare = text.replace(/\s+/g, " ").trim().replace(/^(?:[-*]\s+)?\d{4}-\d{2}-\d{2}\s*[:—–-]?\s+(?=\S)/, "");
+  return bare.slice(0, ENTRY_MAX);
 }
 
 // ---------- topics ----------
@@ -574,7 +577,7 @@ ${skills.length ? skills.map(indexSkillLine).join("\n") : "(none yet)"}${scopedP
 - A project's memory (${appMemoryPath("<id>")}) and its skills in full are shown to you automatically the first time you touch that app in a session; until then you see only the skills' names. A chat opened inside a project has that project's section below instead.
 - To remember something durable — a user preference, a decision, where a project stands, a gotcha that cost real time — call memory_propose with scope "global", "app:<id>" or "project:<name>". Never say something is saved until the tool says so. Do not propose trivia, one-off details, or secrets (keys, passwords, tokens).
 - Core memory (MEMORY.md, capped) holds what matters in every chat. Everything else goes to a topic file (memory_propose topic). memory_search finds entries in all memory files by words; search before saying you do not remember.
-- After substantial work, at a natural stopping point, propose what is worth keeping — once, not after every message. When an entry is outdated, pass replaces with a phrase from the old entry.
+- After substantial work, at a natural stopping point, propose what is worth keeping — once, not after every message. When an entry is outdated, pass replaces with a phrase from the old entry; the whole entry goes, so the new one repeats whatever of it should stay (read it first with memory_search).
 - Before a task a skill covers, call skill_load and follow it.
 - Skills are how this workspace gets better at its work. Propose one (skill_propose) when a task took several attempts and you now know the path, when the user corrected you the same way twice, or when they ask. When a skill you followed was wrong or missed a step, fix it with skill_edit right after the task. Load skill-authoring first. Propose once, at a natural stopping point, with one line on what it improves; the user saves or skips it.
 - A [built-in] skill ships with Molfar Vertep. Changing one saves a workspace copy that replaces it; the user can reset it to the built-in version.
@@ -707,7 +710,7 @@ export async function proposeEntry(
     await ask({
       question: `${p.origin ? `${p.origin} ` : ""}Save to ${scope.label}${topic ? `, topic "${topic}"` : ""}?${replaces ? ` It replaces the entry containing "${replaces.trim()}".` : ""} Type a corrected version to save that instead. "Later" leaves it in your mailbox.`,
       options: ["Save", "Later", "Skip"],
-      detail: proposed,
+      detail: replacedNote(root, scope, replaces, proposed),
     })
   ).trim();
   if (answer === "Later" || NO_ANSWER.test(answer)) return leaveInMailbox(root, { ...draft, from: answer === "Later" ? "later" : "unanswered" });
@@ -716,6 +719,16 @@ export async function proposeEntry(
     return { text: "Not saved: the user skipped this entry. Do not propose it again.", saved: false };
   }
   return saveEntry(root, username, { scope, entry: answer === "Save" ? proposed : answer, topic, replaces, proposed });
+}
+
+/**
+ * The card's detail. A replace removes the WHOLE entry that holds the phrase, even when the phrase is
+ * one sentence of a longer entry (issue #484): the card shows that entry, so the user sees what goes.
+ */
+function replacedNote(root: string, scope: MemoryScope, replaces: string | undefined, proposed: string): string {
+  if (!replaces?.trim()) return proposed;
+  const old = findEntry(root, scope, replaces);
+  return old ? `${proposed}\n\nThis replaces the whole entry:\n${old.line}` : proposed;
 }
 
 /** The mailbox shape of an entry proposal. */
@@ -893,7 +906,7 @@ export function buildMemoryTools(username: string, p: UserPaths, opts: Pick<Agen
     name: "memory_propose",
     label: "Propose a memory entry",
     description:
-      'Propose one entry for long-term memory. The user sees it and confirms, edits or skips it; it is saved only if they agree. scope: "global" (about the user and everything), "app:<app-id>" (one app project) or "project:<name>" (one free project). One self-contained sentence, specific (names, paths, dates). topic: a lowercase-dashes topic file; omit only for core facts that matter in every chat. replaces: a phrase from an existing entry this one supersedes (with topic, this moves it).',
+      'Propose one entry for long-term memory. The user sees it and confirms, edits or skips it; it is saved only if they agree. scope: "global" (about the user and everything), "app:<app-id>" (one app project) or "project:<name>" (one free project). One self-contained sentence, specific (names, paths, dates). topic: a lowercase-dashes topic file; omit only for core facts that matter in every chat. replaces: a phrase from an existing entry this one supersedes; the WHOLE entry holding the phrase is removed, so yours must carry everything of the old one that should stay (read it with memory_search first; with topic, this moves it).',
     parameters: Type.Object({
       scope: Type.String(),
       entry: Type.String(),
