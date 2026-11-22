@@ -9,8 +9,8 @@ For the next session. Read `.fork/STATE.md` first, then this file, then `DESIGN.
 - **Phase 1, released in Roleplay 4.149.0** (PR 191, merge `2f8c992c`): plan `PHASE1.md`, approved mock
   `mock-group-create.html`, handbook `../../handbook/roleplay-direction.md`. #294 closed. The owner presses Update.
 
-## Phase 2 BUILT, not released (2026-11-22)
-Roleplay branch `claude/direction-phase2` (not merged, no version bump: the owner decides "Мердж і реліз"). Plan and what is built:
+## Phase 2 RELEASED in 4.150.0 (2026-11-22)
+Roleplay 4.150.0 (PR 192, merged and released 2026-11-22). Plan and what is built:
 `PHASE2.md`. Before a release: refresh the `direction` guide translations (`bun scripts/guide-l10n.ts --stale`, then a cheap model,
 check `uk` by eye, `--stamp`); bump `manifest.json` and `APP_VERSION`; CHANGELOG "Unreleased" renamed. Phase 2 left on purpose:
 place, time and warmth conditions, actions leave/spotlight/event, a firing limit, own rules, other sets; `RULE_DEFAULTS` and
