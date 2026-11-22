@@ -203,6 +203,17 @@
             gap: 12px;
         }
 
+        .tile-open { all: unset; display:block; cursor:pointer; border-radius:8px; margin-bottom:8px; }
+        .tile-open h3 { color: var(--cta); display:inline-flex; align-items:center; gap:6px; }
+        .tile-open h3::after { content: '›'; font-size: 20px; line-height: 1; }
+        .tile-open:hover h3 { text-decoration: underline; }
+        .group-tile { cursor: pointer; }
+        .group-tile:hover { border-color: var(--cta); }
+        .chat-title-btn { all: unset; cursor: pointer; font-family: Georgia, serif; font-size: 16px; font-weight: 700; display:flex; flex-direction:column; align-items:center; padding: 4px 12px; border-radius: 8px; }
+        .chat-title-btn:hover { background: var(--accent); }
+        .chat-title-btn:focus-visible { outline: 2px solid var(--ring); }
+        .chat-title-btn small { font-family: system-ui, sans-serif; font-size: 12px; font-weight: 400; color: var(--muted-foreground); }
+        .tile-open:focus-visible { outline: 2px solid var(--ring); outline-offset: 4px; }
         .group-tile h3 {
             font-family: var(--heading-font);
             font-size: var(--heading);
@@ -565,13 +576,19 @@
                 </div>
                 <div class="groups-grid">
                     <div class="group-tile">
-                        <h3>After Class</h3>
-                        <div class="meta">5 members · 3 chats</div>
+                        <button class="tile-open" data-open-group="After Class" aria-label="Open After Class: settings and cast">
+                            <h3>After Class</h3>
+                            <div class="meta">5 members · 3 chats</div>
+                            <div class="meta" style="margin-top:4px;">Settings and cast ›</div>
+                        </button>
                         <button class="btn btn-outline btn-sm" data-open-new-chat>New chat</button>
                     </div>
                     <div class="group-tile">
-                        <h3>Fantasy Tavern</h3>
-                        <div class="meta">4 members · 0 chats</div>
+                        <button class="tile-open" data-open-group="Fantasy Tavern" aria-label="Open Fantasy Tavern: settings and cast">
+                            <h3>Fantasy Tavern</h3>
+                            <div class="meta">4 members · 0 chats</div>
+                            <div class="meta" style="margin-top:4px;">Settings and cast ›</div>
+                        </button>
                         <button class="btn btn-outline btn-sm" data-open-new-chat>New chat</button>
                     </div>
                 </div>
@@ -590,7 +607,7 @@
                     </div>
                     <button class="btn btn-primary" style="margin-left:auto;" id="startChatBtn">Start chat</button>
                 </div>
-                <div class="banner">
+                <div class="banner" id="newGroupBanner">
                     <span>ℹ️</span>
                     <span style="flex:1;">New group created. Check how it plays, then start the first chat.</span>
                     <button class="btn btn-ghost btn-sm">Dismiss</button>
@@ -614,7 +631,7 @@
             <div class="desktop-layout">
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0;">
                     <button class="btn btn-ghost" id="backToEditorFromChat">←</button>
-                    <h3>After Class</h3>
+                    <button class="chat-title-btn" id="chatTitleBtn" aria-label="After Class: group settings and cast">After Class<small>5 members · settings and cast ›</small></button>
                     <span></span>
                 </div>
                 <div class="empty-state" style="margin-top:40px;">Chat started</div>
@@ -889,10 +906,25 @@
 
             // Editor
             function openGroupEditor() {
-                showScreen('screen2');
+                showScreen('screen2'); { const b=document.getElementById('newGroupBanner'); if (b) b.style.display=''; }
                 currentTab = 'turns';
                 renderEditorTab();
             }
+            // the chat's title opens the group's editor (settings and cast)
+            document.getElementById('chatTitleBtn').addEventListener('click', () => {
+                showScreen('screen2');
+                const banner = document.getElementById('newGroupBanner'); if (banner) banner.style.display = 'none'; renderEditorTab();
+            });
+            // a click anywhere on a group tile (but its New chat button) opens the editor
+            document.querySelectorAll('.group-tile').forEach(t => t.addEventListener('click', (e) => {
+                if (e.target.closest('[data-open-new-chat]') || e.target.closest('[data-open-group]')) return;
+                t.querySelector('[data-open-group]')?.click();
+            }));
+            // an existing group: its tile opens the same editor, without the "new group" banner
+            document.querySelectorAll('[data-open-group]').forEach(b => b.addEventListener('click', () => {
+                showScreen('screen2');
+                const banner = document.getElementById('newGroupBanner'); if (banner) banner.style.display = 'none'; renderEditorTab();
+            }));
             document.getElementById('backToGroups').addEventListener('click', ()=>showScreen('screen0'));
             document.getElementById('startChatBtn').addEventListener('click', ()=>showScreen('screen3a'));
             document.getElementById('backToEditorFromChat').addEventListener('click', ()=>showScreen('screen2'));

@@ -57,6 +57,23 @@ outside the three, rubric came / mentioned / ignored and leaks; a sample read by
 
 The one miss: Rin came, spoke and left within the same reply (judged "mentioned" at the end).
 
+## 0b: the lock and return notes through the app's real prompt (2026-11-22)
+
+`scripts/direction-bench.ts deliver-real`: the engine plugin assembles the reply prompt with the stock preset Vertep Medium,
+the members' cards, the history up to the turn and the group scene text (absent members as one line); the Direction plugin's
+own `llmRequest` appends the note; the reply model answers; the same judge. Prompts were 21k to 37k characters. 12 points:
+6 locks (only one or two members held, the story around them full of others) and 6 returns.
+
+| reply model | lock held | return: all came | words | s |
+|---|---|---|---|---|
+| DeepSeek V4 Flash | 6/6 | 6/6 | 223 | 9.7 |
+| GLM 5.2 | 6/6 | 6/6 | 621 | 27.3 |
+| MiMo 2.6 Flash | 6/6 | 5/6 | 431 | 27.4 |
+
+The miss: Aoi knocks and calls through the locked door but does not come in (judged "mentioned"). The notes hold in a real
+prompt as well as in the short one; the phase 1 notes need no change. Not tested: a preset that already has its own long
+"director" instructions, and Russian or Ukrainian chats.
+
 ## Limits
 
 - Synthetic chat written by one strong model from an outline; real play is messier (Russian, swipes, long replies).

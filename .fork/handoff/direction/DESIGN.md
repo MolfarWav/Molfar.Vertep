@@ -142,7 +142,7 @@ for long, someone always walks in. Today a group chat cannot be steered that way
 0. **Bench.** Replay real group chats (start from `scripts/sensor-replay.ts` of #236 and #401). Answer key labelled by a
    strong model, spot-checked by the owner. Compare A, B and C on scene tag and on which rule should fire: accuracy,
    tokens, time, on free models; groups of 3-5 present.
-   Done 2026-11-22 (`RESULTS.md`). Still open: **0b**, the same 12 notes through the app's real prompt assembly
+   Done 2026-11-22 (`RESULTS.md`), 0b too (the lock and return notes through the real prompt: 35 of 36). Was open: **0b**, the same 12 notes through the app's real prompt assembly
    (preset, Dashboard insert, World), before phase 2 relies on delivery.
 1. **Scene cast + group creation + the director call and its bar.** 3.1, 3.6, 3.7; scene cast reads `present` from
    the director when it runs, from the Dashboard otherwise.

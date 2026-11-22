@@ -101,7 +101,13 @@ words hide, the chips stay.
   check the settings" and a primary "Start chat"; a new "Direction" tab holds the group default (on or off).
 - New chat of an existing group: a short dialog (who answers, Direction on or off, World Start or not), "Start", and a
   link to all group settings.
-- A clickable HTML mock of the picker and the banner before code.
+- Unchanged and kept (owner asked, 2026-11-22): a group tile on the Groups page opens that group's editor (settings and
+  cast, no banner); its menu keeps New chat (now the short dialog), Favourite and Delete
+  (`src/components/views/characters-view.tsx`, `GroupTiles`). In a chat, the member bar's Turns popover still links to
+  the group's editor.
+- A clickable HTML mock of the picker and the banner before code: `mock-group-create.html`, **approved by the owner
+  2026-11-22** after two changes he asked for: a whole group tile opens its editor (the name reads as a link with a
+  chevron), and in a group chat the chat's title opens the group's editor (settings and cast).
 
 ## Tests (1a)
 - Plugin: the pure functions (precedence, name matching with aliases, reconcile on a swipe, no-model and off answers).

@@ -10,7 +10,7 @@ Change X, touch Y:
 - Sensor output shape: the default sensor prompt parts, `applySensor` and the apply functions that read each field, `docs/DATA-FORMATS.md` "Dashboard state", `test/rp-dash-journal.test.ts`.
 - Journal fields or caps: `keepJournalLines`, `journalPreviousLines`, `journalBlock`, prompt board key `plugin:journal` in `llmRequest`, the journal row in `docs/COUPLINGS.md`.
 - A new insert part or budget: `insertCeiling` must match `buildInsert`, and the engine's fallback table must change with it (`docs/COUPLINGS.md`).
-- The clock: `advanceClock`, `clockLine`, `NEW_DAY_BACK`, `test/rp-dash-clock.test.ts`.
+- The clock: `advanceClock`, `clockLine`, `NEW_DAY_BACK`, `test/rp-dash-clock.test.ts`. A hand edit (#490): `clockRoute` (`POST /dashboard/clock`) sets `time` and `day` on the newest snapshot's clock and marks it `hand`; `advanceClock` ignores a sensor time while `hand` is set unless the player's lines state one; the UI is the date pencil's popover (`DateEdit`, `useDashboard.setClock`); `test/rp-dash-clock-edit.test.ts`.
 - Lie beliefs: `believersOf` has a copy in the Litopys plugin (`docs/COUPLINGS.md`, beliefs).
 - Name helpers: `askSensor` depends on `expandNamesFor`, which has copies in other plugins (`docs/COUPLINGS.md`, helper names).
 
@@ -25,6 +25,21 @@ Traps:
 - A clock time the report does not state is marked approximate. The day count only moves forward.
 - A new insert part without a row in `insertCeiling` overflows the window silently.
 - A user journal line always wins over a sensor line. No route writes user lines yet.
+
+
+## From `roleplay-direction.md`
+
+Change X, touch Y:
+- The file shape: `cleanState` in the plugin and `directionScene` in the engine (two readers).
+- The scene's priority (lock, director, Dashboard): `sceneNow` and `directionScene` together.
+- A group's Dashboard focus: `GROUP_FOCUS` in relations and `DASHBOARD_FOCUS` in the engine's `hookInsertTable`.
+- The note texts: `sceneLines`, and the reserve row "direction scene".
+
+Traps:
+- With no lock and `on` not true, the engine behaves exactly as before: no presence limit, every card whole.
+- An empty present list (the player alone) still counts as a known scene: every card is one line, but the turn pool falls back to everyone.
+- The Dashboard fallback matches names by full name or first word only; the director's own matching also uses registry aliases.
+- A report is tied to the reply's swipe: a swipe makes the director read the new text again.
 
 
 ## From `roleplay-entity-registry.md`
@@ -56,6 +71,7 @@ Change X, touch Y:
 - An error code: `docs/DATA-FORMATS.md` and the `ag.issue.<CODE>` keys read by `src/lib/agent-issues.ts`.
 - A recipe: its file in `.skills/agent-craft/references/`, then the recipe sync script.
 - `expandNames`: five plugins carry a copy (see `docs/COUPLINGS.md`).
+- Where a growth block acts: `growthReach` in the plugin and its mirror `growthReach` in `src/components/character/memory-api.ts` (the dialog and the Carries row read it); the Memory tab (`memory-growth.tsx`, `memory-growth-where.tsx`), the chat's `carries-growth.tsx`, and the guide page `memory`.
 
 Traps:
 - A hand edit between the markers is overwritten by the next sync, and the generated-block test fails.
@@ -63,6 +79,7 @@ Traps:
 - `docs/DATA-FORMATS.md` says the `before` and `parallel` triggers are not yet run. The code runs them (`pickAgents`, `runBefore`), so that note looks stale.
 - A regenerated reply restores state from before, so a rerun does not count twice.
 - `.skills/agent-craft/SKILL.md` names paths under `apps/roleplay/`, which do not match this repo.
+- A story is the chat and the chats that continue it (`litopys/links.json`), not the earlier ones. A story proposal never revises a block with another scope. A missing helper inside `llmRequest` is swallowed by its `catch`: the portrait just vanishes from the prompt.
 
 
 ## From `roleplay-import.md`
@@ -116,6 +133,7 @@ Change X, touch Y:
 - Passage index format: `recallSave`, `recallBuild`, `recallCandidates`, `verbatimFor`; bump `RECALL_V`.
 - Embedding model: `vectorOf`, `vectorGaps`, `currentEmbedModel`, `noteScanModel`. Vectors of another model are not used. This device's model is read only from `.cache/litopys/embed-status.json`, never from the synced `litopys/insert/` trace (it carries the model of whichever device replied last; #419).
 - Lies and beliefs: `liveLies`, `endBeliefs`, `moveLies`, and the believers copy in the Dashboard plugin.
+- Consolidate's rules: `CONSOLIDATE_PROMPT`, `CONSOLIDATE_FOLD`, `foldable` and the two code guards must agree (a merged or rewritten text over `CONSOLIDATE_TEXT_MAX` is dropped in `parseConsolidateReply`; a merge not shorter than its parts is skipped in `addConsolidateProposals`); the hint `lit.set.autoConsolidateHint` and the guide page `litopys` name the trigger.
 
 Traps:
 - `witnessed` returns true for a chapter with no `cast`; an old chapter without one is visible to every character.
@@ -126,6 +144,9 @@ Traps:
 - `recordLitFired` does nothing unless the reply had a trace, a far part or passages.
 - `verbatimFor` needs three or more word stems in the scan window; a chat with no link gets no passages.
 - The passage index refreshes on the tick only when `cfg.verbatim === true`.
+- `factRecency` (#50) ranks a fact up for having been sent in earlier prompts (`markUsed`). It does nothing while the whole record fits the budget; under a tight budget it keeps the facts that were repeated most (#488).
+- Before #488 a merged sentence over 300 characters was cut and stored mid-word; `looksCut` finds them and a pass can rewrite them (not every pass does).
+- Retirement wording is fragile with a small build model: the 4.145.0 rule (retire a plan a later fact shows done) made it retire things people did or said; the prompt now asks for a rewrite in the past tense and keeps retire for pure duplicates and facts proven false (replay numbers in the Roleplay CHANGELOG).
 
 
 ## From `roleplay-lorebooks-regex-macros.md`
@@ -296,11 +317,13 @@ Change X, touch Y:
 - Add or move a section between tiers: `tier` in `sections.ts` (the drawer tone and chip follow it); add a row to the Backstage menu in `backstage-targets.ts` and `useBackstageRows`.
 - Change Dashboard tabs: `DashTabId`, `TONE_TAB` (`dash-common.tsx`).
 - Change Canvas boards: `CanvasBoardKey` (`src/lib/canvas-board.ts`) and the Agents item.
+- Add a link item to a section's view (like Agents or DM): `board` or `worldTop` on the item, `itemActive` and `prepareItem` in `sections.ts`, `isLinkItem` (keeps it out of `sectionsFor`).
 
 Traps:
 - `settings` has group `'none'` (off the rail); Home's Settings button opens it.
 - Two arrays are named `SECTIONS`: `sections.ts` and `settings-view.tsx`.
 - Agents and Canvas share the key `canvas`, so `SectionDrawer` titles an open Agents drawer "Canvas".
+- DM and World share the key `world`; the drawer and page keep the title "World" on the DM tab (`sectionItemOf` has no tab argument). A rail click on World or DM switches the tab without the World view's unsaved-profile guard.
 - `ViewKey` also holds `connections` (shows Home) and `chat`; neither is in `SECTIONS`.
 - On desktop a persisted section view becomes a drawer over Home; `drawer` is not persisted.
 - Settings nav mixes hard-coded English labels with translated ones.
