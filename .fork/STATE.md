@@ -10,6 +10,7 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
 ## 2026-11-22 (last): Direction for group chats (#496): designed, benched, phase 1 RELEASED in Roleplay 4.149.0
+- Next session: `.fork/handoff/direction/NEXT.md` (where it stands, what is not checked, phase 2).
 - Owner asked how to make a group chat change who is in the scene (down to one character, then the others back) and for "direction" of a group: genre rules (rom-com: never alone for long), planned beats, scene cast; plus a better group creation. Design note `.fork/handoff/direction/DESIGN.md`, issue #496; #294 (phase 1, scene cast) and #430 point 2 (phase 3, scene boundary) are taken into it (comments on both).
 - Decided: code decides firing, a model only writes the note (switch); scene-type reading tried as code and as a director model on a bench first (phase 0); v1 has scene cast, genre rules with a payoff, beat plan, genre sets; members and World NPCs can be moved; a "Direction" button in the member bar; group creation = full-size picker, then the new group's editor with "Start chat" (clickable mock before code).
 - Read from the laptop's Roleplay copy, not checked against the latest main: `groupTurnPlan` ignores `present`, Spotlight counts every unmuted member, the create-group dialog has hardcoded English strings.
