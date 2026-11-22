@@ -1,5 +1,5 @@
 # Roleplay UI: shell, sections, navigation, themes, shared pieces, languages
-Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5; the DM link lines (#183: Owners, Sections, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/dm-rail-link-183 (on 1375e09)
+Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5; the DM link lines (#183: Owners, Sections, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/dm-rail-link-183 (on 1375e09); the carries lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1)
 
 ## What it does
 - The shell (`src/components/shell/app-shell.tsx`) draws an icon rail (desktop) or tab bar (phone), one page (`view`), and an optional drawer (`drawer`).
@@ -63,8 +63,8 @@ All in src/components/chat/; `chat-view.tsx` mounts the screen.
 - `attachment-gallery.tsx`: attachment thumbnails.
 - `avatar-menu.tsx`: portrait menu.
 - `backstage-menu.tsx`: the Backstage button in the chat header and the phone menu block (`BackstageButton`, `BackstagePhoneBlock`, `useBackstageRows`); each row opens a section drawer on this chat's object.
-- `carries-panel.tsx`: stories not reaching this chat.
-- `carries-stories.tsx`: story switches.
+- `carries-panel.tsx`: What this chat carries: one row and switch per part (habits, portrait, persona and world memory, recollections, backstory, Litopys, Dashboard, Said, World DM, note).
+- `carries-growth.tsx`: the Growth blocks in this chat rows.
 - `changes-note.tsx`: "what changed" line.
 - `chat-css-sheet.tsx`: per-chat CSS examples.
 - `chat-details.tsx`: context ring, details button.

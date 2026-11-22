@@ -1,10 +1,10 @@
 # Import: character cards, chats, lorebooks, and a whole library from another app
-Verified at: molfar.vertep-roleplay 586f601 plus the zip-sprites change
+Verified at: molfar.vertep-roleplay 586f601 plus the zip-sprites change; the memory import lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1)
 
 ## What it does
 - A character card (PNG, charx or JSON) is read in the browser and posted in batches of 25 to the studio-import plugin, which writes `characters/<id>/card.json` with any embedded lorebook, regex scripts and pictures.
 - A whole library, a zip of another app's data folder or of a backup, goes to `/import/zip`. It writes characters, lorebooks, presets, regex, personas, groups, chats and databank files in a fixed order, then returns a summary.
-- Chats can still be imported into a card's memory through the Litopys routes, but since #492 nothing sends or shows a card's stories (no UI, no prompt part). Nothing new is created as a chat.
+- Chats can be imported into a persona's or a saved world's memory through the Litopys routes. A card keeps no stories since #492: no import route, no UI, no prompt part. Nothing new is created as a chat.
 - Each import is a job on a progress card with counts, Cancel between units, and failed files with reasons.
 - Imports never overwrite. A new item that clashes gets a numeric suffix.
 
@@ -18,7 +18,7 @@ Verified at: molfar.vertep-roleplay 586f601 plus the zip-sprites change
 - `plugins/studio-import/plugin.js` `writeCardWithBook`: writes the card, its lorebook, regex scripts and pictures.
 - `plugins/studio-import/plugin.js` `handleRoute`: all import routes, the zip phase order and the summary.
 - `plugins/studio-import/plugin.js` `writeChat`: writes a chat transcript and its meta.
-- `plugins/litopys/plugin.js` `previewImport` and `importChat`: a chat's candidates for card memory, and the write.
+- `plugins/litopys/plugin.js` `previewImport` and `importChat`: a chat's candidates for a persona's or a world's memory, and the write (a card gives 404).
 - `src/lib/backup-assets.ts` `importBackupFile`: the browser side of Backup zip: puts the zip's pictures back, takes the sprite folders out, cuts the zip into parts and posts them one by one.
 - `src/lib/backup-assets.ts` `splitLibrary`: drops media the plugin does not read, orders cards, then the rest, then chats (with sidecars), and packs parts of `PART_BUDGET` (18 MB).
 - `src/lib/backup-assets.ts` `extractSprites`: `characters/<Name>/<emotion>.<img>` into the asset store; the plugin gets `body.sprites`.
@@ -69,22 +69,13 @@ Skipped silently:
 - Chat lines that are not JSON.
 - A character PNG too large to read from the zip. It is reported as an error.
 
-## Chats into a card's memory
-- POST `/litopys/card-memory/preview`, then POST `/litopys/card-memory/import`, both routed by `cardMemoryPostRoute`.
-- `previewImport` offers the chat's arc (cut to 1200 characters), up to 30 facts and 30 notes held by the card, and said lines. A candidate another source already holds is marked `dup`, not pre-ticked. `IMPORT_TOP` sets the pre-ticked counts.
-- `importChat` keeps only the selected ids. The arc is cut to 1500 characters. Habits become accepted story habits.
-- One source entry per chat goes into `characters/<id>/memory.json`. Importing the same chat again replaces that entry.
-- Nothing selected gives 400. A habits-only import writes no source.
+## Chats into a persona's or a world's memory
+- POST `/litopys/memory/preview`, then POST `/litopys/memory/import`, with `{ kind: "persona"|"world", id, chatId }`, both routed by `cardMemoryPostRoute`. `kind: "card"` gives 400, and the old `/litopys/card-memory/preview` and `/import` no longer exist (#495).
+- `previewImport` offers the chat's arc (cut to 1200 characters) and up to 30 active facts everybody knows that are about the owner (a persona: its subject or name; a world: subject or type `world`). A candidate another source already holds is marked `dup`, not pre-ticked. `IMPORT_TOP.facts` sets the pre-ticked count.
+- `importChat` keeps only the selected fact ids. The arc is cut to 1500 characters, or is the `arcText` the dialog settled on.
+- One source entry per chat goes into `memory/personas/<id>.json` or `memory/worlds/<id>.json`. Importing the same chat again replaces that entry.
+- Nothing selected gives 400.
 
-## Limits, duplicates, re-import
-- Browser: 25 cards per request. Each file and each batch counts as one unit.
-- Plugin: avatar data URL under 900 KB. Each expression data URL under 700 KB, 3 MB in total, at most 300 keys.
-- Emotion pictures sit in the asset store as `/v1/assets/<64 hex>` URLs. Avatars and fallback pictures are data URLs inside card.json.
-- Duplicates: `uid` appends -2, -3 while the target exists. It covers characters, lorebooks, presets, personas, regex, chats, groups, databank and themes. A re-imported card is a second card, and the first is untouched.
-- Lorebooks and personas link to cards by name, so links follow names, not old ids.
-
-## If you change X, also touch Y
-- Card fields (`normalizeCard`): also `writeCardWithBook`, the export side `buildCardPng` in `src/lib/png-card.ts`, and the "Card and lorebook formats" entry in `docs/COUPLINGS.md`.
 - PNG reading: two copies, `extractCharaFromPng` and `cardFromPngBase64`. They differ on iTXt.
 - Picture caps: `EMOTION_BUDGET` in `src/lib/card-import.ts` and `EXPRESSIONS_BUDGET`, `MAX_EMOTION`, `MAX_AVATAR` in the plugin.
 - Asset URL shape: `ASSET_URL` in the plugin must match `storeImageAsset` in `src/lib/engine.ts`.
@@ -105,7 +96,7 @@ Skipped silently:
 ## Tests that guard it
 - `test/rp-card-png.test.ts`: non-ASCII text, v3 over v2, null for no card or truncated stream.
 - `test/rp-card-sources.test.ts`: link routing, V3 ccv3 first, plain image or web page or non-card JSON, zip behind a JPEG cover.
-- `test/rp-card-memory.test.ts`: chat preview, second import refreshes, duplicate marking.
+- `test/rp-shared-memory.test.ts`: persona and world preview, write, duplicate marking, refused owners; `test/rp-card-memory.test.ts`: a card has no import and keeps its old story untouched.
 - `test/rp-import-progress.test.ts`: progress fraction, units, cancel between units, failed files.
 - `test/rp-preset-import-regex.test.ts`: imported preset regex, and the (2), (3) names.
 - `test/rp-backup-assets.test.ts`: pictures in a backup.
