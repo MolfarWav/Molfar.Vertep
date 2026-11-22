@@ -9,6 +9,12 @@ For the next session. Read `.fork/STATE.md` first, then this file, then `DESIGN.
 - **Phase 1, released in Roleplay 4.149.0** (PR 191, merge `2f8c992c`): plan `PHASE1.md`, approved mock
   `mock-group-create.html`, handbook `../../handbook/roleplay-direction.md`. #294 closed. The owner presses Update.
 
+## Phase 4 BUILT, not released (2026-11-22)
+Nine genre sets, beat templates, "Draft from the cards", Roleplay branch `claude/direction-phase4` (pushed, no PR). What is built and the UI
+plan: `PHASE4.md`. Next: the owner plays it (or "Мердж і реліз": 4.153.0, tip, CHANGELOG, `direction` translations, full suite, PR, merge).
+Left for later: rules written by the player or a model (an editor), conditions by place, time and warmth, the `leave`, `spotlight` and
+`event` actions, sharing sets, the Scene tab, editing a drafted beat before adding it.
+
 ## Phase 3b RELEASED in 4.152.0 (2026-11-22)
 World people in beats and rules, Roleplay 4.152.0 (PR 194, merge `2880a815`). What is built and the UI plan: `PHASE3B.md`. The owner
 presses Update and plays it. Next: phase 4 (other genre sets, a draft from the cards) or the Scene tab; tune numbers from his play.
