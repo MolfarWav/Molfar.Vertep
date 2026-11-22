@@ -9,7 +9,9 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-22 (newest): Direction phase 3b (World people in beats and rules) BUILT, not released (Roleplay branch `claude/direction-phase3b`, commit `37b8eff7`, pushed, no PR)
+## 2026-11-22 (newest): Direction phase 3b (World people in beats and rules) RELEASED in Roleplay 4.152.0 (owner: "Мердж і реліз"; PR 194, merge `2880a815`; no engine release; the owner presses Update)
+- Release added: version 4.152.0, CHANGELOG, tip `new.direction-world-people`, the guide page `direction` re-translated whole in 13 locales (three cheap-model agents; `uk` and `ru` checked for stray letters). Full Roleplay suite 5104 pass, 3 known failures. Comment "How it was solved" on #496 (stays open for phase 4 and the Scene tab). Not checked after release: the Updates dialog, a real model.
+- (Below: the build notes of the same phase.)
 - Owner's answers at the start: people only from the World bench (not the cast deck); beats and rules both (a rule's "Who comes": members / World people / either, default members); the director is asked about them only for the one reply that carries the note.
 - Built (plan and details: `.fork/handoff/direction/PHASE3B.md`): `worldPeople` reads World's person records (read only), `npc` on beats / fires / next, `from` on a rule, `pickWho`, notes that say who the person is (`aboutNpc`), the director prompt gets an "others" line and answer field for that one reply, `judgeNext` came / mentioned / sent. UI by a subagent: a second chip group in the beat editor, the "Who comes" row on a rule card, names in the callout, chip, log and mark.
 - Checked: rp-direction-world 12, rp-direction-world-ui 28, 215 pass in the direction, boundary and i18n files, tsc clean; browser check on a mock model (desktop and 390 px, dark and light, 39 to 45 checks each, 0 console errors), screenshots looked at by me. NOT run: the full Roleplay suite; a real model; the Ukrainian layout.
