@@ -9,13 +9,22 @@ For the next session. Read `.fork/STATE.md` first, then this file, then `DESIGN.
 - **Phase 1, released in Roleplay 4.149.0** (PR 191, merge `2f8c992c`): plan `PHASE1.md`, approved mock
   `mock-group-create.html`, handbook `../../handbook/roleplay-direction.md`. #294 closed. The owner presses Update.
 
+## Phase 2 BUILT, not released (2026-11-22)
+Roleplay branch `claude/direction-phase2` (not merged, no version bump: the owner decides "Мердж і реліз"). Plan and what is built:
+`PHASE2.md`. Before a release: refresh the `direction` guide translations (`bun scripts/guide-l10n.ts --stale`, then a cheap model,
+check `uk` by eye, `--stamp`); bump `manifest.json` and `APP_VERSION`; CHANGELOG "Unreleased" renamed. Phase 2 left on purpose:
+place, time and warmth conditions, actions leave/spotlight/event, a firing limit, own rules, other sets; `RULE_DEFAULTS` and
+`DIRECTION_SETS` repeat the plugin's set on the client (better: a `default` per rule and a sets route in the plugin).
+The log's rule names and "why" text come from the plugin in English (not translated).
+
 ## Not checked yet (ask the owner after he plays)
+- Phase 2 with a real model: do the rom-com rules fire at sensible moments, is `came` common, are need, cooldown, K and M right.
 - A real model in the app: does the director's report match the scene; which model he picked.
 - A Russian or Ukrainian group chat (names in Cyrillic go through the registry's aliases).
 - A long real group chat; the phone with three bars above the chat (Dashboard, members, Direction).
 - The lock and return on a free model in the owner's own preset.
 
-## Next: phase 2 (genre rules), design section 3.2 and 3.5
+## (Phase 2 as it was planned; now built, see above and PHASE2.md. Next is phase 3: beat plan, scene boundary, World's NPCs.)
 - Rules `when -> do` with a closed list of conditions over the director's reports (scene tag, who and how many present,
   "alone with X for N replies", place, time, warmth, after an event) and actions (bring in a member or NPC, interrupt,
   take out, event, Spotlight); chance by 2d6 (`rollFate` in World), cooldown, limit; build-up and payoff (K, M).
