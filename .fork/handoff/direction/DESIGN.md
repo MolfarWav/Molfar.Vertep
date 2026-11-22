@@ -32,6 +32,19 @@ for long, someone always walks in. Today a group chat cannot be steered that way
 - **Group creation:** a full-size picker, then the new group's editor (not the chat); a short "New chat" dialog for
   later chats of an existing group.
 
+## 1a. Decided after the bench (owner, 2026-11-22; numbers in `RESULTS.md`)
+
+- **The duo, confirmed:** the model reports the state (who is present, the base scene tag, a new scene), code applies
+  the `alone_moment` precedence, counts turns and absences and decides firing. The model never counts.
+- **The director is its own small call** (about 1.1k tokens in, 50-250 out), not a part of the Dashboard sensor. The
+  sensor keeps its own job (moods, things, knowledge). In a group chat the director gets **its own bar** with a model
+  choice.
+- **No default model:** the user picks the director's model. The picker is the palette of the chat's top bar
+  (`src/components/chat/chat-quick-bar.tsx`: favourites, search, every model by connection), moved into a shared
+  component and reused, not a new picker. Until a model is picked, the director does not run and its bar says so.
+- **No model-written note:** template notes delivered as well as model-written ones (71 of 72 together), so variant C
+  and the "note writer" switch are dropped from the plan.
+
 ## 2. What exists and is reused
 
 - Dashboard sensor (`plugins/relations/plugin.js`): `present`, `struck`, `direction` (domestic, social, intrigue,
@@ -74,8 +87,7 @@ for long, someone always walks in. Today a group chat cannot be steered that way
 - **Build-up and payoff:** each time a rule fires it adds 1 to its tension counter; at K the rule yields a window of
   M replies where it does not fire ("finally alone"), optionally a planned beat. Without the payoff the trope wears out
   by the third time.
-- Note text: a template with names filled in; with the model switch on, one cheap call writes 1-2 sentences for this
-  scene (variant C).
+- Note text: a template with names filled in (variant C, a model-written note, was dropped after the bench).
 
 ### 3.3 Beat plan + scene boundary (#430 p2)
 - Ordered beats: `{ text, who[], when: after N replies | at a place | scene tag | time | after beat X | manual "now",
@@ -111,7 +123,9 @@ for long, someone always walks in. Today a group chat cannot be steered that way
 - No separate wizard: it would duplicate the editor's settings.
 
 ### 3.7 UI plan (text, ux-review before building and before done)
-- Member bar: "Direction" button on the right (clapperboard icon); each member's avatar marks present, absent or locked.
+- Director bar: its own thin bar in a group chat, under the member bar: the scene tag and who is here as the director
+  sees them, the model chip (opens the shared model palette; "pick a model" until one is picked), the switch, and the
+  button that opens the sheet. Each member's avatar in the member bar marks present, absent or locked.
 - Sheet: 620 px dialog on desktop, full screen on a phone; tabs Scene (type and tag, who is here, lock chip, attention
   per member), Rules, Plan, Log.
 - Group editor: tab "Direction" (default set and defaults); banner and primary button for a new group.
@@ -128,10 +142,13 @@ for long, someone always walks in. Today a group chat cannot be steered that way
 0. **Bench.** Replay real group chats (start from `scripts/sensor-replay.ts` of #236 and #401). Answer key labelled by a
    strong model, spot-checked by the owner. Compare A, B and C on scene tag and on which rule should fire: accuracy,
    tokens, time, on free models; groups of 3-5 present.
-1. **Scene cast + group creation.** 3.1 and 3.6; no model call.
+   Done 2026-11-22 (`RESULTS.md`). Still open: **0b**, the same 12 notes through the app's real prompt assembly
+   (preset, Dashboard insert, World), before phase 2 relies on delivery.
+1. **Scene cast + group creation + the director call and its bar.** 3.1, 3.6, 3.7; scene cast reads `present` from
+   the director when it runs, from the Dashboard otherwise.
 2. **Rules, delivery, log, mark, the rom-com set.**
 3. **Beat plan and the scene boundary** (also for World's bench and deck).
-4. **Other sets, draft from the cards, the model note writer.**
+4. **Other sets, draft from the cards.**
 
 ## 6. Open
 - K and M of the payoff, the 0.85 decay and the floor, the 6-reply boundary wait: first guesses, tuned on the bench and

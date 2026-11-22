@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roleplay chat mock – redesign</title>
+    <style>
+        :root {
+            --background: #fafafa;
+            --foreground: #161616;
+            --card: #ffffff;
+            --popover: #ffffff;
+            --primary: #2eaf5a;
+            --primary-foreground: #fff;
+            --cta: color-mix(in oklch, #2eaf5a, black 25%);
+            --group: #7c4dde;
+            --muted: #f1f1f2;
+            --muted-foreground: #6b6b6b;
+            --accent: #ebebec;
+            --destructive: #d92d20;
+            --border: rgb(0 0 0 / 11%);
+            --ring: #2eaf5a;
+            --radius: 10px;
+            --heading-font: Georgia, 'Times New Roman', serif;
+            --body-font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            --caption: 12px;
+            --body: 14px;
+            --heading: 16px;
+            --title: 20px;
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 24px;
+        }
+
+        html.dark {
+            --background: #141414;
+            --foreground: #e6e6e6;
+            --card: #191919;
+            --popover: #1b1b1b;
+            --primary: #54d17d;
+            --primary-foreground: #0d1f14;
+            --cta: #54d17d;
+            --group: #a58bf5;
+            --muted: #1f1f1f;
+            --muted-foreground: #9d9d9d;
+            --accent: #242424;
+            --destructive: #e5484d;
+            --border: #2b2b2b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--body-font);
+            font-size: var(--body);
+            background: var(--background);
+            color: var(--foreground);
+            line-height: 1.4;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        button {
+            font-family: inherit;
+            font-size: inherit;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: inherit;
+            border-radius: var(--radius);
+            transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--ring);
+            outline-offset: 2px;
+        }
+
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        input, select {
+            font-family: inherit;
+            font-size: var(--body);
+            color: var(--foreground);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 12px;
+            width: 100%;
+            transition: background 0.15s, border-color 0.15s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+        }
+
+        .app-shell {
+            flex: 1;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        /* Fixed mock toolbar */
+        .mock-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 1200;
+            background: var(--popover);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: flex-end;
+            width: 100%;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 8px rgb(0 0 0 / 0.05);
+        }
+
+        .mock-toolbar button {
+            background: var(--accent);
+            padding: 8px 14px;
+            font-size: var(--caption);
+            border: 1px solid transparent;
+            border-radius: 999px;
+            min-height: 36px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .mock-toolbar button.active {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
+        }
+
+        .phone-frame {
+            width: 390px;
+            max-width: 100%;
+            margin: 0 auto;
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            background: var(--background);
+            box-shadow: 0 12px 40px rgb(0 0 0 / 0.18);
+            min-height: 780px;
+        }
+
+        .desktop-layout {
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .screen-container {
+            display: none;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .screen-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Screen 0 */
+        .groups-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .group-tile {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .group-tile h3 {
+            font-family: var(--heading-font);
+            font-size: var(--heading);
+            font-weight: 600;
+        }
+
+        .group-tile .meta {
+            font-size: var(--caption);
+            color: var(--muted-foreground);
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 44px;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--cta);
+            color: var(--primary-foreground);
+            border-color: var(--cta);
+        }
+        .btn-primary:hover { filter: brightness(1.08); }
+        .btn-outline {
+            background: transparent;
+            border-color: var(--border);
+            color: var(--foreground);
+        }
+        .btn-outline:hover { background: var(--accent); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--foreground);
+            border-color: transparent;
+        }
+        .btn-ghost:hover { background: var(--accent); }
+        .btn-tonal {
+            background: var(--accent);
+            color: var(--foreground);
+        }
+        .btn-sm { padding: 6px 12px; min-height: 34px; font-size: var(--caption); }
+
+        /* Dialogs */
+        .dialog-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgb(0 0 0 / 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+            animation: fadeIn 0.2s;
+        }
+
+        .dialog-panel {
+            background: var(--popover);
+            border-radius: var(--radius);
+            max-width: 960px;
+            width: 100%;
+            max-height: 85vh;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgb(0 0 0 / 0.2);
+        }
+
+        .dialog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .dialog-title {
+            font-family: var(--heading-font);
+            font-size: var(--title);
+            font-weight: 600;
+        }
+        .dialog-close {
+            background: transparent;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .dialog-close:hover { background: var(--accent); }
+
+        /* Member picker content */
+        .picker-content {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .chosen-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            min-height: 40px;
+        }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--muted);
+            padding: 4px 4px 4px 8px;
+            border-radius: 999px;
+            font-size: var(--caption);
+            border: 1px solid var(--border);
+        }
+        .chip .avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+            background: var(--group);
+        }
+        .chip button {
+            background: transparent;
+            border: none;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .chip button:hover { background: var(--accent); }
+        .char-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(5, 1fr);
+        }
+        @media (max-width: 900px) { .char-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 500px) { .char-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .char-card {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .char-card.selected {
+            border-color: var(--primary);
+            background: color-mix(in srgb, var(--primary) 8%, var(--card));
+        }
+        .char-card .portrait {
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        .char-card .name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .char-card .tagline {
+            font-size: var(--caption);
+            color: var(--muted-foreground);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .char-card .tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .char-card .badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: var(--primary);
+            color: var(--primary-foreground);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .char-card .star {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            color: #f5b301;
+        }
+        .empty-state {
+            padding: 32px;
+            text-align: center;
+            color: var(--muted-foreground);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius);
+        }
+        .picker-footer {
+            position: sticky;
+            bottom: 0;
+            background: var(--popover);
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tag-filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .tag-chip {
+            background: var(--muted);
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: var(--caption);
+            border: 1px solid var(--border);
+        }
+        .tag-chip.active {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
+        }
+        .segmented {
+            display: inline-flex;
+            background: var(--muted);
+            border-radius: 8px;
+            padding: 2px;
+            gap: 2px;
+        }
+        .segmented button {
+            padding: 6px 12px;
+            font-size: var(--caption);
+            border-radius: 6px;
+            background: transparent;
+        }
+        .segmented button.active {
+            background: var(--card);
+            box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+        }
+
+        /* Screen 2 editor */
+        .group-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .avatar-collage {
+            display: flex;
+            gap: 4px;
+        }
+        .avatar-collage .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--card);
+            margin-left: -8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            background: var(--group);
+        }
+        .banner {
+            background: color-mix(in srgb, var(--primary) 12%, var(--background));
+            border: 1px solid var(--primary);
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .tabs button {
+            padding: 8px 14px;
+            border-radius: 8px 8px 0 0;
+            font-size: var(--body);
+            background: transparent;
+            border-bottom: 2px solid transparent;
+        }
+        .tabs button.active {
+            background: var(--accent);
+            border-bottom-color: var(--primary);
+        }
+        .member-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .member-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: var(--radius);
+        }
+        .slider {
+            flex: 1;
+            accent-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="mock-toolbar" id="mockToolbar">
+        <button id="darkToggle">🌙 Dark</button>
+        <button id="phoneToggle">📱 Phone 390px</button>
+        <button id="resetBtn">↺ Reset</button>
+    </div>
+
+    <div class="app-shell" id="appShell">
+        <!-- Screen 0: Groups -->
+        <div id="screen0" class="screen-container active">
+            <div class="desktop-layout">
+                <h2 style="font-family:var(--heading-font); font-size:var(--title);">Groups</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <p class="meta" style="color:var(--muted-foreground);">2 groups</p>
+                    <button class="btn btn-primary" id="newGroupBtn">New group</button>
+                </div>
+                <div class="groups-grid">
+                    <div class="group-tile">
+                        <h3>After Class</h3>
+                        <div class="meta">5 members · 3 chats</div>
+                        <button class="btn btn-outline btn-sm" data-open-new-chat>New chat</button>
+                    </div>
+                    <div class="group-tile">
+                        <h3>Fantasy Tavern</h3>
+                        <div class="meta">4 members · 0 chats</div>
+                        <button class="btn btn-outline btn-sm" data-open-new-chat>New chat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 2: group editor -->
+        <div id="screen2" class="screen-container">
+            <div class="desktop-layout">
+                <div class="group-header">
+                    <button class="btn btn-ghost btn-sm" id="backToGroups">←</button>
+                    <div class="avatar-collage"><div class="avatar">HM</div><div class="avatar">AK</div><div class="avatar">YT</div><div class="avatar">MI</div><div class="avatar">RS</div></div>
+                    <div>
+                        <h2 style="font-family:var(--heading-font);">After Class</h2>
+                        <div style="display:flex; gap:8px; font-size:var(--caption); color:var(--muted-foreground);"><span>5 members</span><span>0 chats</span></div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-left:auto;" id="startChatBtn">Start chat</button>
+                </div>
+                <div class="banner">
+                    <span>ℹ️</span>
+                    <span style="flex:1;">New group created. Check how it plays, then start the first chat.</span>
+                    <button class="btn btn-ghost btn-sm">Dismiss</button>
+                </div>
+                <div class="tabs" id="editorTabs">
+                    <button data-tab="overview">Overview</button>
+                    <button data-tab="members">Members</button>
+                    <button class="active" data-tab="turns">Turns</button>
+                    <button data-tab="direction">Direction</button>
+                    <button data-tab="lore">Lore</button>
+                    <button data-tab="chats">Chats</button>
+                </div>
+                <div id="tab-content">
+                    <!-- dynamic -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 3a fake chat -->
+        <div id="screen3a" class="screen-container">
+            <div class="desktop-layout">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0;">
+                    <button class="btn btn-ghost" id="backToEditorFromChat">←</button>
+                    <h3>After Class</h3>
+                    <span></span>
+                </div>
+                <div class="empty-state" style="margin-top:40px;">Chat started</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dialogs container -->
+    <div id="dialogRoot"></div>
+
+    <script>
+        (function() {
+            const root = document.documentElement;
+            const appShell = document.getElementById('appShell');
+            const dialogRoot = document.getElementById('dialogRoot');
+            let phoneMode = false;
+            let darkMode = false;
+
+            // Mock data
+            const characters = [
+                {id:'hana', name:'Hana Morimoto', tagline:'Sharp-witted student', tags:['school','romance'], fav:true},
+                {id:'aoi', name:'Aoi Kisaragi', tagline:'Calm and mysterious', tags:['school','mystery']},
+                {id:'yuzu', name:'Yuzu Takane', tagline:'Energetic baker', tags:['comedy','slice of life'], fav:true},
+                {id:'mei', name:'Mei Ishikawa', tagline:'Bookish strategist', tags:['school','fantasy']},
+                {id:'rin', name:'Rin Shiraishi', tagline:'Quiet artist', tags:['romance','slice of life']},
+                {id:'thalia', name:'Captain Thalia', tagline:'Starship commander', tags:['sci-fi','action'], fav:true},
+                {id:'elowen', name:'Elowen Moonbrook', tagline:'Elven druid', tags:['fantasy','adventure']},
+                {id:'cassia', name:'Cassia Dawnpetal', tagline:'Botanist explorer', tags:['fantasy','nature']},
+                {id:'momoka', name:'Momoka', tagline:'Idol trainee', tags:['music','comedy']},
+                {id:'sachiko', name:'Sachiko', tagline:'Older sister type', tags:['school','romance']},
+                {id:'hanabi', name:'Hanabi', tagline:'Pyrotechnic inventor', tags:['sci-fi','comedy'], fav:true},
+                {id:'akane', name:'Akane', tagline:'Fierce athlete', tags:['sports','school']},
+                {id:'himari', name:'Himari', tagline:'Sunny optimist', tags:['slice of life','comedy']},
+                {id:'kumiko', name:'Kumiko', tagline:'Ghost whisperer', tags:['supernatural','horror']},
+                {id:'chihiro', name:'Chihiro', tagline:'Tech genius', tags:['sci-fi','school'], fav:true},
+                {id:'koharu', name:'Koharu', tagline:'Flower shop clerk', tags:['romance','slice of life']},
+                {id:'natsumi', name:'Natsumi', tagline:'Rebellious guitarist', tags:['music','romance']},
+                {id:'vivian', name:'Vivian Stein', tagline:'Alchemist prodigy', tags:['fantasy','science']},
+                {id:'kyomi', name:'Kyomi', tagline:'Fortune teller', tags:['supernatural','mystery']},
+                {id:'saki', name:'Saki Tanaka', tagline:'Class president', tags:['school','leadership']},
+                {id:'vika', name:'Vika Belova', tagline:'Cyborg spy', tags:['sci-fi','action'], fav:true},
+                {id:'lashara', name:'Lashara', tagline:'Desert ranger', tags:['adventure','fantasy']},
+                {id:'chiaia', name:'Chiaia', tagline:'Mage apprentice', tags:['fantasy','school']},
+                {id:'kenshi', name:'Kenshi', tagline:'Swordsman wanderer', tags:['action','adventure']}
+            ];
+
+            let selectedChars = [];
+            let newGroupName = '';
+            let sortBy = 'name';
+            let tagFilters = new Set();
+            let searchQuery = '';
+            let currentTab = 'turns';
+
+            // DOM navigation helpers
+            function showScreen(id) {
+                document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            }
+
+            function openDialog(html, fullScreenOnPhone = false) {
+                closeDialog();
+                const backdrop = document.createElement('div');
+                backdrop.className = 'dialog-backdrop';
+                if (fullScreenOnPhone) backdrop.dataset.fullscreen = 'true';
+                backdrop.innerHTML = `<div class="dialog-panel" role="dialog" aria-modal="true">${html}</div>`;
+                dialogRoot.appendChild(backdrop);
+                backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeDialog(); });
+                if (phoneMode && fullScreenOnPhone) {
+                    backdrop.style.padding = '0';
+                    backdrop.querySelector('.dialog-panel').style.maxWidth = '100%';
+                    backdrop.querySelector('.dialog-panel').style.maxHeight = '100vh';
+                    backdrop.querySelector('.dialog-panel').style.height = '100vh';
+                    backdrop.querySelector('.dialog-panel').style.borderRadius = '0';
+                }
+            }
+
+            function closeDialog() {
+                dialogRoot.innerHTML = '';
+            }
+
+            // Toolbar actions
+            document.getElementById('darkToggle').addEventListener('click', () => {
+                darkMode = !darkMode;
+                root.classList.toggle('dark', darkMode);
+                document.getElementById('darkToggle').textContent = darkMode ? '☀️ Light' : '🌙 Dark';
+            });
+
+            document.getElementById('phoneToggle').addEventListener('click', () => {
+                phoneMode = !phoneMode;
+                appShell.classList.toggle('phone-frame', phoneMode);
+                if (phoneMode) {
+                    appShell.style.maxWidth = '390px';
+                    appShell.style.margin = '0 auto';
+                    appShell.style.padding = '8px';
+                } else {
+                    appShell.style.maxWidth = '';
+                    appShell.style.margin = '';
+                    appShell.style.padding = '20px 16px';
+                }
+                document.getElementById('phoneToggle').textContent = phoneMode ? '🖥 Desktop' : '📱 Phone 390px';
+            });
+
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                selectedChars = [];
+                newGroupName = '';
+                tagFilters.clear();
+                searchQuery = '';
+                showScreen('screen0');
+                closeDialog();
+            });
+
+            // Screen 0: new group opens member picker
+            document.getElementById('newGroupBtn').addEventListener('click', () => {
+                selectedChars = [];
+                newGroupName = '';
+                searchQuery = '';
+                tagFilters.clear();
+                openMemberPicker();
+            });
+
+            document.querySelectorAll('[data-open-new-chat]').forEach(btn => {
+                btn.addEventListener('click', () => openNewChatDialog('After Class'));
+            });
+
+            // Member picker dialog
+            function openMemberPicker() {
+                const html = `
+                    <div class="dialog-header">
+                        <div class="dialog-title">New group</div>
+                        <button class="dialog-close" id="closePicker">✕</button>
+                    </div>
+                    <div class="picker-content">
+                        <div><label>Group name</label><input id="groupNameInput" placeholder="Leave blank: named after the members" value="${newGroupName}" /></div>
+                        <div class="chosen-row" id="chosenRow"></div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <input id="searchInput" placeholder="Search characters" value="${searchQuery}" style="flex:1; min-width:150px;">
+                            <select id="sortSelect" style="width:auto;flex:none;" aria-label="Sort"><option value="name" ${sortBy==='name'?'selected':''}>Name</option><option value="recent" ${sortBy==='recent'?'selected':''}>Recently used</option><option value="chats" ${sortBy==='chats'?'selected':''}>Most chats</option></select>
+                            <div class="segmented" id="filterSeg">
+                                <button data-filter="all" class="active">All</button>
+                                <button data-filter="fav">Favourites</button>
+                                <button data-filter="recent">Recent</button>
+                            </div>
+                        </div>
+                        <div class="tag-filter-row" id="tagFilterRow"></div>
+                        <div class="char-grid" id="charGrid"></div>
+                        <div id="pickerEmpty" class="empty-state" style="display:none;">No character matches '${searchQuery}'<br><button class="btn btn-outline btn-sm" id="clearSearchBtn">Clear search</button></div>
+                    </div>
+                    <div class="picker-footer">
+                        <button class="btn btn-outline" id="cancelPicker">Cancel</button>
+                        <button class="btn btn-primary" id="nextPicker" disabled>Next · Pick at least 2 characters</button>
+                    </div>
+                `;
+                openDialog(html, true);
+                const pickerPanel = dialogRoot.querySelector('.dialog-panel');
+                attachPickerEvents();
+            }
+
+            function attachPickerEvents() {
+                const panel = dialogRoot;
+                panel.querySelector('#closePicker').addEventListener('click', closeDialog);
+                panel.querySelector('#cancelPicker').addEventListener('click', closeDialog);
+                panel.querySelector('#groupNameInput').addEventListener('input', (e) => newGroupName = e.target.value);
+                panel.querySelector('#searchInput').addEventListener('input', (e) => { searchQuery = e.target.value; renderPickerLists(); });
+                panel.querySelector('#sortSelect').addEventListener('change', (e) => { sortBy = e.target.value; renderPickerLists(); });
+                panel.querySelector('#clearSearchBtn')?.addEventListener('click', () => { searchQuery=''; panel.querySelector('#searchInput').value=''; renderPickerLists(); });
+                panel.querySelector('#filterSeg').addEventListener('click', (e) => {
+                    const btn = e.target.closest('button'); if(!btn) return;
+                    panel.querySelectorAll('#filterSeg button').forEach(b=>b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderPickerLists();
+                });
+                const tagRow = panel.querySelector('#tagFilterRow');
+                ['school','fantasy','romance','comedy','sci-fi'].forEach(tag => {
+                    const chip = document.createElement('button');
+                    chip.className = 'tag-chip';
+                    chip.textContent = tag;
+                    if(tagFilters.has(tag)) chip.classList.add('active');
+                    chip.addEventListener('click', () => {
+                        if(tagFilters.has(tag)) tagFilters.delete(tag); else tagFilters.add(tag);
+                        chip.classList.toggle('active');
+                        renderPickerLists();
+                    });
+                    tagRow.appendChild(chip);
+                });
+                renderPickerLists();
+
+                panel.querySelector('#nextPicker').addEventListener('click', () => {
+                    if(selectedChars.length >= 2) {
+                        closeDialog();
+                        openGroupEditor();
+                    }
+                });
+            }
+
+            function renderPickerLists() {
+                const panel = dialogRoot;
+                if(!panel) return;
+                const charGrid = panel.querySelector('#charGrid');
+                const chosenRow = panel.querySelector('#chosenRow');
+                const nextBtn = panel.querySelector('#nextPicker');
+                const emptyState = panel.querySelector('#pickerEmpty');
+
+                chosenRow.innerHTML = selectedChars.map(id => {
+                    const c = characters.find(ch => ch.id===id);
+                    const idx = selectedChars.indexOf(id);
+                    return `<span class="chip"><span class="avatar">${initials(c.name)}</span>${c.name}
+                        <button data-move-left="${id}">←</button><button data-move-right="${id}">→</button>
+                        <button data-remove="${id}">✕</button></span>`;
+                }).join('') || '<span style="color:var(--muted-foreground);">Pick at least 2</span>';
+                chosenRow.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = btn.dataset.moveLeft || btn.dataset.moveRight || btn.dataset.remove;
+                        if(btn.dataset.moveLeft) moveChar(id, -1);
+                        else if(btn.dataset.moveRight) moveChar(id, 1);
+                        else if(btn.dataset.remove) toggleSelect(id);
+                        renderPickerLists();
+                    });
+                });
+
+                let filtered = characters.filter(c => {
+                    if(searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                    if(tagFilters.size && !c.tags.some(t=>tagFilters.has(t))) return false;
+                    const filter = panel.querySelector('#filterSeg button.active')?.dataset.filter;
+                    if(filter==='fav' && !c.fav) return false;
+                    return true;
+                });
+                if(sortBy==='name') filtered.sort((a,b)=>a.name.localeCompare(b.name));
+                else if(sortBy==='recent') filtered.sort((a,b)=>a.name.localeCompare(b.name)); // mock
+
+                charGrid.innerHTML = filtered.map(c => {
+                    const isSel = selectedChars.includes(c.id);
+                    const order = selectedChars.indexOf(c.id)+1;
+                    const gradient = c.tags.includes('sci-fi') ? 'linear-gradient(135deg,#3a8dde,#1d3557)' :
+                                      c.tags.includes('fantasy') ? 'linear-gradient(135deg,#7c4dde,#3a0ca3)' :
+                                      c.tags.includes('romance') ? 'linear-gradient(135deg,#e76f51,#f4a261)' :
+                                      c.tags.includes('comedy') ? 'linear-gradient(135deg,#f9844a,#f9c74f)' :
+                                      'linear-gradient(135deg,#4a4e69,#22223b)';
+                    return `<div class="char-card ${isSel?'selected':''}" data-id="${c.id}">
+                        ${c.fav?'<span class="star">★</span>':''}
+                        ${isSel?`<span class="badge">${order}</span>`:''}
+                        <div class="portrait" style="background:${gradient};">${initials(c.name)}</div>
+                        <div class="name">${c.name}</div>
+                        <div class="tagline">${c.tagline}</div>
+                        <div class="tags">${c.tags.slice(0,2).map(t=>`<span style="font-size:10px; background:var(--muted); padding:2px 6px; border-radius:4px;">${t}</span>`).join('')}</div>
+                    </div>`;
+                }).join('');
+
+                charGrid.querySelectorAll('.char-card').forEach(card => {
+                    card.addEventListener('click', () => toggleSelect(card.dataset.id));
+                });
+
+                emptyState.style.display = filtered.length === 0 ? 'block' : 'none';
+                if(filtered.length===0) emptyState.innerHTML = `No character matches '${searchQuery}'<br><button class="btn btn-outline btn-sm" id="clearSearchBtn">Clear search</button>`;
+                else emptyState.style.display = 'none';
+
+                nextBtn.disabled = selectedChars.length < 2;
+                nextBtn.textContent = selectedChars.length < 2 ? 'Next · Pick at least 2 characters' : `Next · ${selectedChars.length} chosen`;
+            }
+
+            function toggleSelect(id) {
+                if(selectedChars.includes(id)) selectedChars = selectedChars.filter(x=>x!==id);
+                else selectedChars.push(id);
+                renderPickerLists();
+            }
+            function moveChar(id, dir) {
+                const idx = selectedChars.indexOf(id);
+                const newIdx = idx+dir;
+                if(newIdx<0 || newIdx>=selectedChars.length) return;
+                [selectedChars[idx], selectedChars[newIdx]] = [selectedChars[newIdx], selectedChars[idx]];
+            }
+            function initials(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+            // Editor
+            function openGroupEditor() {
+                showScreen('screen2');
+                currentTab = 'turns';
+                renderEditorTab();
+            }
+            document.getElementById('backToGroups').addEventListener('click', ()=>showScreen('screen0'));
+            document.getElementById('startChatBtn').addEventListener('click', ()=>showScreen('screen3a'));
+            document.getElementById('backToEditorFromChat').addEventListener('click', ()=>showScreen('screen2'));
+            document.getElementById('editorTabs').addEventListener('click', (e) => {
+                const btn = e.target.closest('button'); if(!btn) return;
+                document.querySelectorAll('#editorTabs button').forEach(b=>b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTab = btn.dataset.tab;
+                renderEditorTab();
+            });
+
+            function renderEditorTab() {
+                const content = document.getElementById('tab-content');
+                if(currentTab === 'turns') {
+                    content.innerHTML = `
+                        <h3 style="font-family:var(--heading-font); margin-bottom:12px;">Turns</h3>
+                        <p>Generation mode</p><div class="segmented" style="margin-bottom:8px;"><button class="active">One narrator voices everyone</button><button>Each answers in turn</button><button>All cards, one speaker</button></div>
+                        <p style="color:var(--muted-foreground); font-size:var(--caption);">Hint: single narrator stays consistent.</p>
+                        <p style="margin-top:16px;">Who answers</p><div class="segmented"><button class="active">Natural</button><button>In order</button><button>Manual</button></div>
+                        <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
+                            <label><input type="checkbox" checked style="width:auto; margin-right:8px;">Interruptions <span style="color:var(--muted-foreground); font-size:var(--caption);">allow mid-turn replies</span></label>
+                            <label><input type="checkbox" style="width:auto; margin-right:8px;">Own goals <span style="color:var(--muted-foreground); font-size:var(--caption);">characters follow hidden agendas</span></label>
+                        </div>`;
+                } else if(currentTab === 'direction') {
+                    content.innerHTML = `
+                        <h3>Direction</h3>
+                        <label style="display:flex; gap:12px; align-items:center;"><input type="checkbox" checked style="width:auto;"> Direction in new chats
+                        <span style="color:var(--muted-foreground); font-size:var(--caption);">A small director call after each reply reads who is in the scene; absent members wait outside until the story brings them back.</span></label>
+                        <div style="margin-top:16px; display:flex; align-items:center; gap:8px;">
+                            <span>Director model: deepseek-v4-flash</span>
+                            <button class="btn btn-outline btn-sm" id="changeModelBtn">Change</button>
+                            <button class="btn btn-ghost btn-sm" id="simulateNoModel">simulate: no model</button>
+                        </div>`;
+                    document.getElementById('changeModelBtn')?.addEventListener('click', ()=>alert('Model picker mock'));
+                    document.getElementById('simulateNoModel')?.addEventListener('click', (e)=> { e.target.textContent='no model (simulated)'; });
+                } else if(currentTab === 'members') {
+                    content.innerHTML = `
+                        <h3>Members</h3>
+                        <div class="member-list">
+                            ${selectedChars.length? selectedChars.map(id=>{ const c=characters.find(ch=>ch.id===id); return `<div class="member-row"><span>⠿</span><span>${c.name}</span><input type="range" class="slider" min="0" max="100" value="60"><span>60%</span></div>`;}).join('') : '<p>No members</p>'}
+                        </div>`;
+                } else {
+                    content.innerHTML = `<p style="color:var(--muted-foreground);">Placeholder content for ${currentTab} tab.</p>`;
+                }
+            }
+
+            // New chat dialog
+            function openNewChatDialog(groupName) {
+                const html = `
+                    <div class="dialog-header"><div class="dialog-title">New chat with After Class</div><button class="dialog-close" id="closeNewChat">✕</button></div>
+                    <div class="picker-content">
+                        <p>Who answers</p><div class="segmented"><button class="active">Natural</button><button>In order</button><button>Manual</button></div>
+                        <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" checked style="width:auto;"> Direction <span style="color:var(--muted-foreground);">deepseek-v4-flash</span></label>
+                        <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" style="width:auto;"> Start the world first (World DM)</label>
+                    </div>
+                    <div class="picker-footer">
+                        <button class="btn btn-ghost" id="allSettingsLink">All group settings</button>
+                        <div style="display:flex; gap:8px;"><button class="btn btn-outline" id="cancelNewChat">Cancel</button><button class="btn btn-primary" id="startNewChat">Start</button></div>
+                    </div>`;
+                openDialog(html, true);
+                const panel = dialogRoot;
+                panel.querySelector('#closeNewChat').addEventListener('click', closeDialog);
+                panel.querySelector('#cancelNewChat').addEventListener('click', closeDialog);
+                panel.querySelector('#allSettingsLink').addEventListener('click', ()=>{ closeDialog(); openGroupEditor(); });
+                panel.querySelector('#startNewChat').addEventListener('click', ()=>{ closeDialog(); showScreen('screen3a'); });
+            }
+
+            document.addEventListener('keydown', (e) => { if(e.key==='Escape') closeDialog(); });
+
+            // Initialize
+            if (phoneMode) appShell.classList.add('phone-frame');
+        })();
+    </script>
+</body>
+</html>
