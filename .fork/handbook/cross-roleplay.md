@@ -36,7 +36,8 @@ Change X, touch Y:
 - The note texts: `sceneLines`, and the reserve row "direction scene".
 
 Traps:
-- With no lock and `on` not true, the engine behaves exactly as before: no presence limit, every card whole.
+- With no lock and `on` not true, the engine behaves exactly as before: no presence limit, every card whole. The state route then answers `source: "none"`, so the bar and the chips show no marks either (`sceneNow`).
+- The lock works with the switch off and with no model: it is the player's, code only.
 - An empty present list (the player alone) still counts as a known scene: every card is one line, but the turn pool falls back to everyone.
 - The Dashboard fallback matches names by full name or first word only; the director's own matching also uses registry aliases.
 - A report is tied to the reply's swipe: a swipe makes the director read the new text again.

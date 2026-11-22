@@ -1,6 +1,6 @@
 # Direction: who is in a group chat's scene, the director, the lock
 
-Verified at: molfar.vertep-roleplay branch claude/direction-phase1 (engine and plugin parts; the UI owners are added with the UI commits)
+Verified at: molfar.vertep-roleplay branch claude/direction-phase1 (engine, plugin and UI)
 
 ## What it does
 - In a group chat, after each reply, one small director call reads the newest pair of messages and reports the kind of scene and which members are in it. Code maps the names to members and applies the `alone_moment` precedence.
@@ -24,7 +24,15 @@ Verified at: molfar.vertep-roleplay branch claude/direction-phase1 (engine and p
 - roleplay: `plugins/relations/plugin.js` `byAttention`, `GROUP_FOCUS`: a group's Dashboard focuses four, most recently involved first.
 - roleplay: `src/lib/direction.ts` `triggerDirection`, `directionOnForNewChat`, `loadDirection`, `setDirectionChat`, `saveDirectionModel`.
 - roleplay: `src/lib/store.ts` `newChat`: a new group chat starts with Direction on when a model is picked.
-- roleplay: `scripts/direction-bench.ts`: the phase 0 bench (synthetic corpus, variants, delivery, score).
+- roleplay: `scripts/direction-bench.ts`: the phase 0 bench (synthetic corpus, variants, delivery, score); `deliverReal` sends the notes through the real prompt (0b).
+- roleplay: `src/lib/direction-ui.ts` `presenceOf`, `barMode`, `useDirectionState`: what the bar and the member chips show.
+- roleplay: `src/components/chat/director-bar.tsx` `GroupBars`, `DirectorBar`, `DirectorBarView`: the bar under the member bar (scene, model, switch, lock chip, log).
+- roleplay: `src/components/chat/model-palette.tsx` `ModelPalette`, `ModelPaletteGroups`: the chat top bar's model palette, shared with the bar and the group's Direction tab.
+- roleplay: `src/components/chat/group-member-bar.tsx` `PresenceMark`: away and locked marks; the member popover's lock and release.
+- roleplay: `src/components/chat/create-group-dialog.tsx` `CreateGroupDialog` and `src/lib/group-picker.ts`: the wide member picker (search, scope, tags, sort, order).
+- roleplay: `src/components/groups/group-direction.tsx`: the group's Direction tab (`direction: false` opts the group's new chats out).
+- roleplay: `src/components/chat/new-chat-step.tsx`: the Direction switch of a group's new chat (the step always opens for a group).
+- roleplay: `src/lib/store.ts` `createGroup`, `newGroupId`: a new group opens its editor with the first-chat banner, no chat is made.
 
 ## Data
 - `direction/config.json`: `{ v: 1, model }`, one model for every chat; "" = none, the director does not run.
@@ -55,14 +63,15 @@ Verified at: molfar.vertep-roleplay branch claude/direction-phase1 (engine and p
 - The note texts: `sceneLines`, and the reserve row "direction scene".
 
 ## Traps
-- With no lock and `on` not true, the engine behaves exactly as before: no presence limit, every card whole.
+- With no lock and `on` not true, the engine behaves exactly as before: no presence limit, every card whole. The state route then answers `source: "none"`, so the bar and the chips show no marks either (`sceneNow`).
+- The lock works with the switch off and with no model: it is the player's, code only.
 - An empty present list (the player alone) still counts as a known scene: every card is one line, but the turn pool falls back to everyone.
 - The Dashboard fallback matches names by full name or first word only; the director's own matching also uses registry aliases.
 - A report is tied to the reply's swipe: a swipe makes the director read the new text again.
 
 ## Tests that guard it
-- roleplay: `test/rp-direction.test.ts` (plugin), `test/rp-direction-cast.test.ts` (engine), `test/rp-insert-ceiling.test.ts` (group focus of four).
+- roleplay: `test/rp-direction.test.ts` (plugin), `test/rp-direction-cast.test.ts` (engine), `test/rp-direction-ui.test.tsx` (bar states, marks, picker filters), `test/rp-insert-ceiling.test.ts` (group focus of four).
 
 ## Not verified
-- How the bar and the picker behave on a real chat and a real model (UI and live check pending).
+- The bar on a real chat with a real model (the browser check used a mock model and seeded reports).
 - Delivery of the lock and return notes through the full prompt of a real preset (phase 0b).
