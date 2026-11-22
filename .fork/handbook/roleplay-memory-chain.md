@@ -36,7 +36,7 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 - `plugins/litopys/plugin.js` `bookChunks`: turns a chat's record into snapshot chunks, with who knew each fact.
 - `plugins/litopys/plugin.js` `bookSave`: writes a snapshot book; an update disables the older version.
 - `plugins/litopys/plugin.js` `importChat`: writes an imported chat's snapshot into a card's memory.
-- `plugins/litopys/plugin.js` `ownerMemoryFor`: builds a persona's or a world's memory part (the card's own part, `cardMemoryFor`, was removed in #492).
+- `plugins/litopys/plugin.js` `ownerMemoryFor`: builds a persona's or a world's memory part (the card's own part was removed in #492).
 - `plugins/engine/plugin.js` `searchDatabank`: finds passages by words, then reorders them by meaning.
 - `plugins/engine/plugin.js` `chunkVisibleTo`: hides a snapshot passage from a speaker who did not witness it.
 - `plugins/engine/plugin.js` `shelfVectorsFor`: reads a Data Bank file's vectors for one model.

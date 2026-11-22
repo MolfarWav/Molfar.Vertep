@@ -33,6 +33,7 @@ by the owner. In force since 2026-11-14: `CLAUDE.md` (rule and "Done means") and
 | Presets: the file, stock presets and their updates, import, how a reply reads one | `roleplay-presets.md` |
 | Import: cards, chats into memory, a whole library from another app | `roleplay-import.md` |
 | Portraits, sprites and outfits, backgrounds, pictures drawn in play, voice | `roleplay-pictures-sprites.md` |
+| Who is in a group chat's scene, the director call, the lock and return, the group focus | `roleplay-direction.md` |
 | The floating map of a chat's places: layout, roads, a map picture, the chat meta `placeMap` | `roleplay-places-map.md` |
 | Personas, a character's Profile and Soul, the polish and tools plugins | `roleplay-personas-profile.md` |
 | Social Forum: the tick, what a character knows, gossip, polls, the Moderator | `social-forum.md` |

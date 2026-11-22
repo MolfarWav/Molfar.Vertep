@@ -66,7 +66,7 @@ Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at b
 9. A swipe rolls back by reading the snapshot before its target. Later snapshots are dropped with `dropSnapshot` and read again from the last one that stands.
 
 ## What reaches the reply prompt
-- "Relationship dashboard": the scene line, a "Bond with <user>" line (the constellation plus up to two tails) before each block's five feelings, one block per focused character (the speaker, or up to `FULL_FOCUS` (3) in a group or narrator chat), notebook lines, layout, edges, an "Also present" line, open threads (main quests first, with steps) and a closing line. Words only.
+- "Relationship dashboard": the scene line, a "Bond with <user>" line (the constellation plus up to two tails) before each block's five feelings, one block per focused character (the speaker; in a group chat up to `GROUP_FOCUS` (4), the most recently involved first by `byAttention` (#496); in a narrator card chat up to `FULL_FOCUS` (3)), notebook lines, layout, edges, an "Also present" line, open threads (main quests first, with steps) and a closing line. Words only.
 - "Dashboard · journal": `journalBlock` for each focused character whose notebook may show. The thought appears only while fresh (`thoughtTurns`, default 3). People lines are cut to `journal.maxTokens` (40 to 400).
 - "Dashboard · said": a fixed room of `SAID_TOKENS` (120).
 - "Dashboard · note", "reminder" and "fast sensor" appear only with a nudge or fast mode.
