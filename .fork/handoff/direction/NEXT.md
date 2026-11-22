@@ -9,6 +9,12 @@ For the next session. Read `.fork/STATE.md` first, then this file, then `DESIGN.
 - **Phase 1, released in Roleplay 4.149.0** (PR 191, merge `2f8c992c`): plan `PHASE1.md`, approved mock
   `mock-group-create.html`, handbook `../../handbook/roleplay-direction.md`. #294 closed. The owner presses Update.
 
+## Phase 3a BUILT, not released (2026-11-22)
+Beat plan + scene boundary, Roleplay branch `claude/direction-phase3` (commit `2ec173cc`, pushed, no PR). What is built and the UI plan:
+`PHASE3.md`. Next: the owner plays it (or says "Мердж і реліз": bump 4.151.0, tip, CHANGELOG, guide translations of `direction` and
+`world-dm` with the Ukrainian word "момент" for a beat, full suite, PR, merge). Then 3b: World NPCs inside rules and beats (a rule or a
+beat may bring a bench or deck person; a note for someone who is not a group member, no card, judged by World's came / mentioned).
+
 ## Phase 2 RELEASED in 4.150.0 (2026-11-22)
 Roleplay 4.150.0 (PR 192, merged and released 2026-11-22). Plan and what is built:
 `PHASE2.md`. Before a release: refresh the `direction` guide translations (`bun scripts/guide-l10n.ts --stale`, then a cheap model,
