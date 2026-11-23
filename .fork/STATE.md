@@ -9,7 +9,7 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-23 (newest): #477 dialogue colours, the Cyrillic h fix (Roleplay PR 200, branch `claude/voice-name-kh`, commit 058a62a, version 4.154.1; NOT merged or released) and issue tidying
+## 2026-11-23 (newest): #477 dialogue colours, the Cyrillic h fix RELEASED in Roleplay 4.154.1 (owner: "Merge and release"; PR 200, merge `a6f417ed`; no engine release; the owner presses Update; #477 stays open for cause 2) and issue tidying
 - Owner: #477 "does not work", check the last chat. Measured on the laptop's latest chat (book club group, 4 members, Russian, Vertep Medium) by rendering all 43 group replies through the app's own `Markdown` (script in the session scratchpad, chat stays local): 454 quotes, Chihiro 0. Cause: `soundKey` spelled `х` as `kh` then dropped `h`, Latin `h` dropped whole, so `Chihiro`/«Чихиро» never matched (`kiro`/`kikiro`). Fix: `х` -> `h`, `kh` -> `h`, as `xsTranslit` (lorebook) and the registry already do. After: Chihiro 95, base 69 -> 44, ad-hoc colours only for an NPC outside the group.
 - Checked: new test in `rp-dash-dialogue` (fails without the fix), 7 voice test files 110 pass, typecheck clean. Full suite NOT run (engine running on this machine). No guide or handbook page names `dialogue-voices.ts`.
 - Left in #477 for the batch: a name in the narration beats a speaker named by a common noun (`— …, — произносит женщина в очках, … Нацуми …` takes Natsumi's colour).
