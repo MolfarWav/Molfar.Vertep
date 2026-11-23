@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay claude/world-breather (sections: Owners, Data, Flow, What reaches the reply prompt, Traps, Tests: the pause after a big event); Traps e09c2ed; the rest at 91eec33
+Verified at: molfar.vertep-roleplay 234f1599 (main, Roleplay 4.154.0; sections: Owners, Data, Flow, What reaches the reply prompt, Traps, Tests, If you change X: the pause, the anime level, the life block); Traps e09c2ed; the rest at 91eec33
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
