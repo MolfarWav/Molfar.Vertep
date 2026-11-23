@@ -27,6 +27,8 @@ Verified at: molfar.vertep-roleplay claude/world-breather (sections: Owners, Dat
 - `plugins/world/plugin.js`, `rollFate`: one roll; a percent gate, then 2d6 plus a modifier.
 - `plugins/world/plugin.js`, `pauseLeft`: replies left in the pause after a big event, counted from the message in `breath.after`.
 - `plugins/world/plugin.js`, `breatherOf`: the pause length in force, the chat's `breather` over the profile's option (default 4).
+- `plugins/world/plugin.js`, `LEVEL_RULES.anime`: the anime fantasy level (#500); `FIGHT_LEVELS` (antagonist, anime, chaos) are the levels whose events and dice also come in a fight; `LEVEL_OPTIONS` gives a level its own option defaults (anime: `eventByClock` on).
+- `plugins/world/plugin.js`, `lifeBlock`, `lifeTiers`, `LIFE_BY_LEVEL`: what each size of the life die means per level; the profile block `life` (three lines) overrides it, `lifeInsert(roll, block)` uses it.
 - `plugins/world/plugin.js`, `diceOutcome`: maps the total to miss, no but, yes but or full.
 - `plugins/world/plugin.js`, `pushSnap`: stores the core state before a run changes it.
 - `plugins/world/plugin.js`, `reconcile`: undoes runs whose message is gone; resends a lost event.
@@ -80,6 +82,7 @@ Verified at: molfar.vertep-roleplay claude/world-breather (sections: Owners, Dat
 The DM's system prompt is never sent with the reply. Records reach the reply through the world book.
 
 ## If you change X, also touch Y
+- A new level: `LEVELS`, `HARD_LEVELS`, `FIGHT_LEVELS`, `NEW_LEVELS`, `LEVEL_RULES`, `LIFE_BY_LEVEL`, the engine plugin's two level lists (`plugins/engine/plugin.js`, the feature flags and the Prompt board row), the client's `WorldLevel` (`src/lib/world.ts`, `src/lib/carries.ts`), `LEVEL_ICON`/`LEVEL_TONE` (`world-common.tsx`), the lists in `world-controls.tsx`, `world-profiles.tsx`, `world-start.tsx`, the `world.level.<id>` strings, the guide page `world-dm`, and the profile id lists in `test/rp-world.test.ts`.
 - Clock sizes or front fields: `cleanFront`, `applyLevel`, `clockStage`, `docs/DATA-FORMATS.md`.
 - Dice bands or tilts: `DICE_BANDS`, `DICE_TILTS`, `diceOutcome`, `src/lib/world.ts`, `dice-log.tsx`.
 - Record kinds or fields: `KINDS`, `cleanEntity`, `applyReport`, `entryOf`, and `docs/COUPLINGS.md`, "World DM and Dashboard shared ids".

@@ -1,5 +1,5 @@
 # Roleplay UI: shell, sections, navigation, themes, shared pieces, languages
-Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5; the DM link lines (#183: Owners, Sections, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/dm-rail-link-183 (on 1375e09); the carries lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1)
+Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5; the DM link lines (#183: Owners, Sections, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/dm-rail-link-183 (on 1375e09); the carries lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1); the `dice-toss.tsx` line (#501) at branch claude/world-breather
 
 ## What it does
 - The shell (`src/components/shell/app-shell.tsx`) draws an icon rail (desktop) or tab bar (phone), one page (`view`), and an optional drawer (`drawer`).
@@ -79,6 +79,7 @@ All in src/components/chat/; `chat-view.tsx` mounts the screen.
 - `convert-to-group-dialog.tsx`: chat to group.
 - `create-group-dialog.tsx`: create a group.
 - `dice-note.tsx`: dice mark.
+- `dice-toss.tsx`: `DiceToss`, the dice tumbling above the composer while a reply is written (#501); mounted in `chat-view.tsx` with `active={isStreaming}`, shown only where the chat shows its rolls (`diceShow`); `freshRolls` picks the rolls of the reply from the roll log (polled at 0.6, 1.6, 3.5 s after the stream starts).
 - `direction-chips.tsx`: stage directions as chips.
 - `effective-params.tsx`: temperature, output, reasoning.
 - `expanded-editor.tsx`: full-height writing surface.
