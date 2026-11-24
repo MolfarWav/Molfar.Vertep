@@ -211,7 +211,13 @@
     if (d.op === "apps") return { op: "apps" };
     // Home (the launcher): where an app's details and its access settings live (#310)
     if (d.op === "open-home") return { op: "open-home" };
-    if (d.op === "open-app") return typeof d.appId === "string" && SHELL_APP_ID.test(d.appId) ? { op: "open-app", appId: d.appId } : null;
+    if (d.op === "open-app") {
+      if (typeof d.appId !== "string" || !SHELL_APP_ID.test(d.appId)) return null;
+      if (d.view == null) return { op: "open-app", appId: d.appId };
+      // a view to hand the opened app: a short name by the same rule as the names apps declare (a letter first, then
+      // letters, digits, dashes, 32 at most). An app uses it as the short id of work handed over from another app.
+      return typeof d.view === "string" && VIEW_NAME.test(d.view) ? { op: "open-app", appId: d.appId, view: d.view } : null;
+    }
     // Settings > API connections, on one model's panel when a "<provider>/<model>" ref is given; or
     // (0.9.5) one of the few tabs an app may point at
     if (d.op === "open-settings") {

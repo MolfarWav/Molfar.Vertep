@@ -1,11 +1,11 @@
 # Apps: the shell bridge, read access between apps, app notifications
-Verified at: molfar.vertep 9b8c1fc (the storage line in Traps); the rewriter line in Traps at branch claude/engine-batch-460; the peer read pieces at ef211ae; the rest at: molfar.vertep 8310b23 (bridge limit line read at 0d2e559, the build route line at 2c6d4d0)
+Verified at: open-app `view` at branch claude/open-app-view; molfar.vertep 9b8c1fc (the storage line in Traps); the rewriter line in Traps at branch claude/engine-batch-460; the peer read pieces at ef211ae; the rest at: molfar.vertep 8310b23 (bridge limit line read at 0d2e559, the build route line at 2c6d4d0)
 
 ## What it does
 An app runs in a sandboxed frame and calls the shell through `window.molfarShell` (also `chrysalisShell`). The shell's host script accepts a frame message only when its nonce matches the frame's record. Engine requests from a frame are relayed by the shell and checked twice, in the browser and on the server. An app may read declared files of another app only after the user allows it. Shell actions and notifications are for trusted (official) apps only.
 
 ## Owners
-- `client/public/app-bridge.js` `molfarShell`: frame-side API (`openApp`, `apps`, `openHome`, `openSettings`, `locale`, `notify`, `askMolfar`).
+- `client/public/app-bridge.js` `molfarShell`: frame-side API (`openApp(id, view?)`, `apps`, `openHome`, `openSettings`, `locale`, `notify`, `askMolfar`).
 - `client/public/app-bridge-host.js` `shellRequest`: validates shell ops; returns null for every op unless the frame is trusted.
 - `client/public/app-bridge-host.js` `handleShell`: forwards a valid op to `CH.onShellRequest` and replies.
 - `client/public/app-bridge-host.js` `allowedRequest`: browser copy of the engine-request allowlist.
@@ -27,7 +27,7 @@ An app runs in a sandboxed frame and calls the shell through `window.molfarShell
 
 ## Reads and writes
 - Shell ops from a frame, each sent as `{ type: "shell", op }`:
-  - `apps`, `open-app`, `open-home`, `open-settings`, `ask-molfar`: trusted, and the app must be on screen. `open-app` needs an `appId` that passes `SHELL_APP_ID` and is in the launcher list. `ask-molfar` only puts a draft in the composer, at most one per 2 seconds.
+  - `apps`, `open-app`, `open-home`, `open-settings`, `ask-molfar`: trusted, and the app must be on screen. `open-app` needs an `appId` that passes `SHELL_APP_ID` and is in the launcher list; an optional `view` must pass `VIEW_NAME` (the rule for `settingsView` names) or the whole request is refused, and the shell then calls `MolfarBridgeHost.openView` so the opened app hears it through `onView` (held up to a minute while its frame boots). `ask-molfar` only puts a draft in the composer, at most one per 2 seconds.
   - `open-settings`: a tab from an allowed list, or a `<provider>/<model>` ref, not both.
   - `locale`: trusted, no on-screen check.
   - `notify`: trusted, no on-screen check. `count` is an integer from 0 to 999, `title` at most 80 characters, `text` at most 200. Control characters become spaces.
@@ -41,7 +41,7 @@ An app runs in a sandboxed frame and calls the shell through `window.molfarShell
 
 ## Flow
 1. App calls `openApp`:
-   1. `molfarShell.openApp` in `client/public/app-bridge.js` posts `{ type: "shell", op: "open-app", appId }` to the parent.
+   1. `molfarShell.openApp` in `client/public/app-bridge.js` posts `{ type: "shell", op: "open-app", appId[, view] }` to the parent.
    2. The message listener in `client/public/app-bridge-host.js` drops the message unless its nonce matches, then calls `handleShell`.
    3. `shellRequest` returns the op only for a trusted frame with a valid `appId`.
    4. `onShellRequest` in `client/src/App.tsx` refuses unless the app's tab is visible and on screen, then calls `openApp`.
