@@ -1,5 +1,20 @@
 # RPG app, step 1: the core (character sheet) — design
 
+> **Superseded in part, 2026-11-24.** The owner's earlier plan was found outside this repo: `D:\Claude\rpg-issue-123\`
+> (`PLAN.md` rev 2 of 2026-11-11, `TASK-P1.md`, mocks `B-v3` battle, `B-v4-zbory` and `B-v5-scroll` muster and inventory,
+> screenshots `shot-b3/b4/b5.png`). The owner: "follow the plan, it was refined later and settled". Decisions that stand:
+> - Order is the plan's phases: P1 `rules-core` first (pure TypeScript, seeded, tests, simulator), then the app shell and the
+>   screens, battle, Roleplay side, muster (backpack, belt, inspector: the "inventory stub" in B-v4 and B-v5), powers.
+> - Sheet is per story (one chat run), made when a fighter first needs one, with a "save as default into the card" button
+>   (plan, section 9.1). My "per character" idea is dropped. A card write is a Roleplay-side job (the app only reads Roleplay);
+>   until then defaults are kept in the RPG app's own data.
+> - Five stats (owner chose them over the plan's three): `might`, `agility`, `endurance`, `wits`, `spirit`, 1..10, budget
+>   `15 + 3 * level`. In a fight `might` is damage, `agility` is hit chance and flee, `endurance` is HP; `wits` and `spirit`
+>   have no fight effect in P1 (courage for timid allies comes from Soul, `wits` waits for powers and skills).
+> - Levels come in with rules-core (the plan put them in P7; the owner asked for them now): see "Levels" below.
+> - The look is the one in the mocks: dark, red accent, serif headings, mono labels, cyan primary "fight" button, green HP bars,
+>   source marks (sensor, code, card, example).
+
 Issue #486 (what is left of #123). Status 2026-11-24: design only, nothing built, no repository yet.
 Read first: `IDEAS.md` here (old ideas), `.fork/handbook/engine-apps-bridge.md` (how an app reads another app),
 `.fork/handbook/roleplay-entity-registry.md`, Roleplay `docs/SOUL.md`, skill `app-authoring`, skill `ux-review`.
@@ -29,7 +44,19 @@ Out of step 1: combat, the handoff (open the app with a payload, result back), i
 - `note`: why these numbers, one or two lines, from the model (shown to the user, never to a prompt).
 - `courage` 0..100: derived once from Soul (`(confidence + (100 - shyness) + reckless) / 3`, where `reckless` is
   `spectra.cautious_reckless`), else 50. Not a stat; used by allies in step 2.
-- Numbers above are proposals, to be confirmed (open questions 1 and 2).
+- Numbers above were confirmed by the owner on 2026-11-24 (rules ok, sheet per character).
+
+## Levels (owner: "do not forget the levels")
+- `xp` is an integer on the sheet. XP needed to reach level `n`: `50 * n * (n - 1)` (level 2: 100, 3: 300, 4: 600, 5: 1000 ... 10: 4500).
+  Table lives in one place in code (`levels.ts`) so it can be retuned.
+- Level comes from the model at first generation (a veteran card may start at 4), clamped to 1..10 and never higher than the
+  user allows. After that it changes only by "Level up", offered when `xp >= xpFor(level + 1)`. No free typing of the level.
+- A level-up gives `+3` stat points and `+1` skill rank point and raises `hp.max` (formula above). The new points are not
+  assigned for the user: the sheet shows "Free points: N" and the stat rows get a "+" button each (the way the game that inspired
+  it does). Points already spent cannot be taken back except with "Reset to the proposal"; the app keeps the proposal.
+- Step 1 gives XP only by hand (a number field with "+10 / +50 / +100" buttons and a note). Combat will award it in step 2, which
+  is why `xp` exists now. Level cap 10 for now; a cap is a constant, not a promise.
+- Stored: `level`, `xp`, `spent` (stats as the user spent them), so free points = budget(level) - sum(stats) - sum(skill ranks).
 
 ## Code judges, the model proposes
 - Model returns a closed schema (stats, skills, role, currency, note). Code validates it, drops unknown keys, clamps every
