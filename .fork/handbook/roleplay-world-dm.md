@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec33
+Verified at: molfar.vertep-roleplay 151f6d93 (main, Roleplay 4.155.0; sections: Owners, Data, Flow, Traps, Tests, If you change X: the fan-service level, recent events, the shared reaction rule); 234f1599 (main, Roleplay 4.154.0; What reaches the reply prompt, the pause, the anime level, the life block); Traps e09c2ed; the rest at 91eec33
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
@@ -25,6 +25,13 @@ Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec
 - `plugins/world/plugin.js`, `draftRoute`: accepts or discards a draft.
 - `plugins/world/plugin.js`, `llmRequest`: adds the event, dice and "World · here" to the reply.
 - `plugins/world/plugin.js`, `rollFate`: one roll; a percent gate, then 2d6 plus a modifier.
+- `plugins/world/plugin.js`, `pauseLeft`: replies left in the pause after a big event, counted from the message in `breath.after`.
+- `plugins/world/plugin.js`, `breatherOf`: the pause length in force, the chat's `breather` over the profile's option (default 4).
+- `plugins/world/plugin.js`, `LEVEL_RULES.fanservice`: the fan-service comedy level (#506): hard events, not in a fight, Dashboard threads (`THREAD_LEVELS`). Its rules, like anime's and chaos's since #506, name no stock examples: a list anchored small DM models on the same situation every chat.
+- `plugins/world/plugin.js`, `LEVEL_SHARED`: also says an event names what happens, never how the characters take it; `HARD_EVENT` tells the reply to play the reaction from the cards and the bonds (#506). The DM sees carded names only, the reply model sees the cards and the Dashboard.
+- `plugins/world/plugin.js`, `levelInput`: with `recent`, lists the last events the story showed and asks for a different kind (#506).
+- `plugins/world/plugin.js`, `LEVEL_RULES.anime`: the anime fantasy level (#500); `FIGHT_LEVELS` (antagonist, anime, chaos) are the levels whose events and dice also come in a fight; `LEVEL_OPTIONS` gives a level its own option defaults (anime: `eventByClock` on).
+- `plugins/world/plugin.js`, `lifeBlock`, `lifeTiers`, `LIFE_BY_LEVEL`: what each size of the life die means per level; the profile block `life` (three lines) overrides it, `lifeInsert(roll, block)` uses it.
 - `plugins/world/plugin.js`, `diceOutcome`: maps the total to miss, no but, yes but or full.
 - `plugins/world/plugin.js`, `pushSnap`: stores the core state before a run changes it.
 - `plugins/world/plugin.js`, `reconcile`: undoes runs whose message is gone; resends a lost event.
@@ -45,7 +52,7 @@ Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec
 - `src/components/world/world-settings.tsx`, `WorldSettingsDialog`: level, cadence and other settings.
 
 ## Data
-- `world/state/<chatId>.json`: settings, cursors (lastKey, levelKey), `entities` (ids like `n3`), `fronts` (ids `f1`), `event`, `deck` (`[{ id: "e1", text }]`), `carry`, `clockReplies`, `log`, `usage`.
+- `world/state/<chatId>.json`: settings, cursors (lastKey, levelKey), `entities` (ids like `n3`), `fronts` (ids `f1`), `event`, `deck` (`[{ id: "e1", text }]`), `carry`, `clockReplies`, `log`, `usage`, `breath` (`{ after }`, the message the last big event's reply followed; not a core key), `recent` (`[{ text, at }]`, the last 5 events a run answered delivered for, #506; a core key).
 - `world/snaps/<chatId>.json`: up to 8 snapshots `{ upTo, at, head, core }`.
 - `world/dice/<chatId>.json`: the newest 60 rolls.
 - `lorebooks/world-<chatId>.json`: the world book; one entry per record, memo `world:<id>`.
@@ -64,18 +71,21 @@ Verified at: molfar.vertep-roleplay e09c2ed (sections: Traps); the rest at 91eec
 4. On an answer, `pushSnap` saves the core at the message the run reads up to. Then `applyReport` writes records, `applyCarry` runs only with carrySource `dm`, and `applyLevel` runs above the chronicler on full runs.
 5. A front's clock advances in one of two ways. In code mode, `tickClocks` rolls a d6 per active front every clockEvery replies: 1-2 nothing, 3-4 one segment, 5-6 one segment and stirred. The model's tick ops are ignored there. In model mode, `applyLevel` applies each tick, clamped to minus 2 through plus 2.
 6. An event is dealt. With the deck option on, `applyLevel` takes the card the model names and removes it from the deck; otherwise the model's text is used. Nothing is dealt in a quiet scene or during catch-up.
-7. On the next send, next or swipe reply, `llmRequest` marks the event sent, records the message it follows in `after`, and adds it. A later run reads the delivered flag: true clears the event; false is retried once, then dropped.
+7. On the next send, next or swipe reply, `llmRequest` marks the event sent, records the message it follows in `after`, and adds it. A later run reads the delivered flag: true clears the event and adds it to `recent` (last 5); false is retried once, then dropped and not remembered.
 8. On a swipe or a deleted reply, the store calls `rollbackWorld`, which posts to /world/rollback. `settle` calls `reconcile`; `firstGone` finds the snapshot and `undoFrom` restores CORE_KEYS. An event whose carrier reply is gone becomes due again.
 9. On a swipe, `llmRequest` runs settle again before it builds the event.
+10. The pause after a big event: sending a hard event, or a major life roll, sets `breath` to the message the reply follows. While `pauseLeft` is above 0, a hard event stays pending and a major life roll is logged `held: "pause"`; the DM run's input says the pause is on. A swipe of the carrying reply drops the mark first.
 
 ## What reaches the reply prompt
 `llmRequest` appends parts to the last user message:
 - "World · here": the scene's place, its things, and who wears and carries what. Added at every level, and with the DM off.
-- "World DM": the pending event. Above chronicler, with insert on, on send, next or swipe, and not in combat unless the level is antagonist or chaos.
+- "World DM": the pending event. Above chronicler, with insert on, on send, next or swipe, and not in combat unless the level is antagonist, anime or chaos.
 - "Dice": a 2d6 FATE line, when the gate passes. "Pace" and "Life" are the other two rolls.
+- During the pause after a big event, a hard "World DM" event and a major "Life" are held back; soft news, smaller life rolls, Dice, Pace and cast notes go on.
 The DM's system prompt is never sent with the reply. Records reach the reply through the world book.
 
 ## If you change X, also touch Y
+- A new level: `LEVELS`, `HARD_LEVELS`, `FIGHT_LEVELS`, `THREAD_LEVELS`, `NEW_LEVELS`, `LEVEL_RULES`, `LIFE_BY_LEVEL`, the engine plugin's two level lists (`plugins/engine/plugin.js`, the feature flags and the Prompt board row), the client's `WorldLevel` (`src/lib/world.ts`, `src/lib/carries.ts`), `LEVEL_ICON`/`LEVEL_TONE` (`world-common.tsx`), the lists in `world-controls.tsx`, `world-profiles.tsx`, `world-start.tsx`, the `world.level.<id>` strings, the guide page `world-dm`, and the profile id lists in `test/rp-world.test.ts`.
 - Clock sizes or front fields: `cleanFront`, `applyLevel`, `clockStage`, `docs/DATA-FORMATS.md`.
 - Dice bands or tilts: `DICE_BANDS`, `DICE_TILTS`, `diceOutcome`, `src/lib/world.ts`, `dice-log.tsx`.
 - Record kinds or fields: `KINDS`, `cleanEntity`, `applyReport`, `entryOf`, and `docs/COUPLINGS.md`, "World DM and Dashboard shared ids".
@@ -90,6 +100,8 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - A deck card is used up only when an event is set. A catch-up run leaves the deck alone.
 - `undoFrom` keeps records the player edited after the snapshot, so a deleted reply does not undo hand edits.
 - A chat with no state file counts as on at chronicler; only level `off` in a state file keeps it off.
+- `breath` is not in `CORE_KEYS`: a rollback does not restore it. It is checked against the chat's messages instead, so a deleted carrier frees the pause, and a swipe of the carrier clears it in `llmRequest`.
+- A held hard event keeps `state.event` pending, and a pending event also keeps people from coming back (`planEntrance` waits while an event waits).
 
 ## Tests that guard it
 - `test/rp-world.test.ts`: tickClocks, clockStep, clockStage, rollFate, diceOutcome, llmRequest, applyLevel.
@@ -97,6 +109,9 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - `test/rp-world-travel.test.ts`: the two travel routes (prompts, cleaning, no call without input).
 - `test/rp-world-start.test.ts`: Start steps, draft accept, applyLevel, applyReport.
 - `test/rp-world-stage3.test.ts`: deck cards.
+- `test/rp-world-fanservice.test.ts`: the fan-service level (no stock gags, waits out a fight), the shared reaction line on every level, `recent` (delivered only, last 5, DM input line, cleaning).
+- `test/rp-world-anime.test.ts`: the anime level and the life block per level.
+- `test/rp-world-breather.test.ts`: pauseLeft, breatherOf, the hook holding a hard event and a major life roll, the swipe, the settings, the DM input line.
 - `test/rp-world-ids.test.ts`, `test/rp-registry-bridges.test.ts`: applyReport and applyLevel with the registry.
 - `test/rp-tools.test.ts`: rollDice.
 

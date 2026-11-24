@@ -33,7 +33,14 @@ Change X, touch Y:
 - The file shape: `cleanState` in the plugin and `directionScene` in the engine (two readers).
 - The scene's priority (lock, director, Dashboard): `sceneNow` and `directionScene` together.
 - A group's Dashboard focus: `GROUP_FOCUS` in relations and `DASHBOARD_FOCUS` in the engine's `hookInsertTable`.
-- The note texts: `sceneLines`, and the reserve row "direction scene".
+- The note texts: `sceneLines`, `ruleNote`, and the reserve row "direction scene".
+- A rule's shape or a set's numbers: `SETS`, `activeRules`, `cleanRules`, the Rules tab of the sheet, the guide page `direction`.
+- A beat's shape or `when` kinds: `cleanBeat`/`cleanWhen`, `beatCondition`, `beatStatuses`, `planRoute`, the Plan tab, the guide page `direction`, DATA-FORMATS.
+- The scene boundary: `sceneOf` `moved` (World) and `dashboardScene` (Direction) read the same Dashboard fields in two places; the director's `sceneNew` is read by World's `sceneBoundary` from the state file.
+- World people: the record shape World writes (`entities`: `id`, `kind`, `name`, `aliases`, `text`, `status`, `noReturn`) is read by `worldPeople`; a change to those fields in World's `cleanEntity` needs the reader updated. The director's `others` is read in `parseReport`, `inputFor`, `runRoute`, `judgeNext`.
+- A set or a rule: `SETS` (rules, `tags` from `EXTRA_TAGS`, `templates`), the rule's `when` tags must be offered in that set (`test/rp-direction-sets.test.ts` checks it), the client's composed rule sentences and the `dir.set.*`, `dir.rulename.*`, `dir.tag.*` strings.
+- A new scene kind: `EXTRA_TAGS`, `EXTRA_TAG_WORDS`, the client's `DIRECTION_TAGS` and `dir.tag.*`.
+- The queued note: `cleanNext` in the plugin and `directionScene` in the engine (it counts `next.who` as present).
 
 Traps:
 - With no lock and `on` not true, the engine behaves exactly as before: no presence limit, every card whole. The state route then answers `source: "none"`, so the bar and the chips show no marks either (`sceneNow`).
@@ -41,6 +48,19 @@ Traps:
 - An empty present list (the player alone) still counts as a known scene: every card is one line, but the turn pool falls back to everyone.
 - The Dashboard fallback matches names by full name or first word only; the director's own matching also uses registry aliases.
 - A report is tied to the reply's swipe: a swipe makes the director read the new text again.
+- A rule is decided once per reported reply and the dice are seeded by chat, rule and reply key: asking again gives the same roll, a swiped reply (new key) rolls again.
+- The engine counts a queued member as present at assembly, before `llmRequest` knows the note yields to World: in that rare reply the card is whole for someone who does not enter. A swipe of the carrier is not counted by `directionScene` (same as the return note).
+- No rule fires without a director report for the newest reply: a failed director call means no rules that turn.
+- "Steamy romance" is named by what its rules do (privacy, interruptions, tension); like every set it never fires in an explicit Dashboard scene (`decideRules` and `decideBeat` hold there).
+- A wider tag list costs the director a few tokens and may cost accuracy on the base kinds (not measured); a free model may stay on the base list.
+- The draft is whatever the director's model writes: a weak model gives generic beats, and `cleanDraft` only repairs the shape (kinds, names, repeats), not the quality.
+- A World person has no card in a group chat: the note carries one sentence from the record and the writing model invents the rest. The engine's `directionScene` knows nothing of them (nothing counts as "present" for them), so they are never in the roster; "came" comes only from the director's `others`.
+- A free director model may ignore the extra `others` line: the result is then `mentioned` (the name is in the text) at best, `missed` otherwise. A name the director writes differently from the record (another alias) is not matched.
+- World is not told that Direction brought someone: its own bench gap and silence still follow the Dashboard.
+- A beat's `place` is a case-insensitive substring of the Dashboard's place text (the sensor's own wording), not a registry place: a beat that names a place the sensor words differently never fires by itself (Fire now still works).
+- A due beat waits only while the boundary is KNOWN not to have changed. Its `dueKey` is the reply it became due on, so a swipe of that reply restarts the wait.
+- World's hold is not in its log, only in the cast status (`castWait` is the one trace).
+- Not built yet (phase 2 on purpose): place, time and warmth conditions for rules; the `leave`, `spotlight` and `event` actions; a firing limit; rules written from scratch; other sets. World's NPCs inside rules and beats are phase 3b.
 
 
 ## From `roleplay-entity-registry.md`
@@ -84,14 +104,6 @@ Traps:
 
 
 ## From `roleplay-import.md`
-
-Change X, touch Y:
-- Card fields (`normalizeCard`): also `writeCardWithBook`, the export side `buildCardPng` in `src/lib/png-card.ts`, and the "Card and lorebook formats" entry in `docs/COUPLINGS.md`.
-- PNG reading: two copies, `extractCharaFromPng` and `cardFromPngBase64`. They differ on iTXt.
-- Picture caps: `EMOTION_BUDGET` in `src/lib/card-import.ts` and `EXPRESSIONS_BUDGET`, `MAX_EMOTION`, `MAX_AVATAR` in the plugin.
-- Asset URL shape: `ASSET_URL` in the plugin must match `storeImageAsset` in `src/lib/engine.ts`.
-- Folder names: `COLLECTION_DIRS`, `ROOT_FILES`, the phase list, and the `taken` paths in `uid`.
-- Chat memory shape: `sources` entries written by `importChat`, read by `previewImport`.
 
 Traps:
 - The browser PNG reader ignores iTXt. Direct import of such a card fails. The plugin's iTXt handling applies only inside zips.
@@ -185,7 +197,7 @@ Traps:
 - DATA-FORMATS says a chat-scoped file reaches "up to 3 links back". The code walks up to 40 (`CHAIN_WALK_MAX`, `RECALL_CHAIN_MAX`), and COUPLINGS says 40. Treat the DATA-FORMATS line as stale.
 - The CONTINUES sentence repeats in every near part, about 130 tokens each. At the default `linkBudget` of 800, a chain of four or more chats leaves the oldest near chat no room (COUPLINGS).
 - A snapshot book matches names by spelling. "Sin" does not match "Sina Rose", and a nickname does not match at all (COUPLINGS).
-- The profile plugin has no memory code. Character memory from imports is `importChat` in litopys.
+- The profile plugin has no memory code. A persona's and a world's memory from imports is `importChat` in litopys.
 - Making a link archives the earlier chat without asking, unless `archiveOnContinue` is off.
 - Vectors of another model are ignored, and a file of another model is replaced as a whole.
 
@@ -309,6 +321,27 @@ Traps:
 - Inspector labels rely on exact text; a part a hook edited shows as unlabelled.
 
 
+## From `roleplay-rpg-handoff.md`
+
+Change X, touch Y:
+- The contract (fields of the encounter or the result): the RPG repo's `src/contract/index.ts`, its two example files, the copies in `test/fixtures/rpg-contract/`, `buildEncounter`, `cleanResult`, and Roleplay's `docs/DATA-FORMATS.md`. Bump the contract's minor version for an added field; a removed or renamed one is a new major.
+- The id rule: the engine's `VIEW_NAME`, the RPG app's `ID_RULE` and the plugin's `ENC`.
+- `openApp` or the shell op: the engine's `shellRequest`, `molfarShell`, `onShellRequest`, `test/security.test.ts` and `test/app-bridge-view.test.ts`.
+- What the Dashboard shows as present (`present`, `personIds`): `gatherParty`.
+- A new composer fill kind: `ComposerFill`, the composer's offer toast, both languages of its text.
+
+Traps:
+- The shell op is for official apps only and only from the app on screen. A copy of Roleplay or of the RPG app that is not official gets "not allowed for this app": the Fight window then says the fight is saved.
+- The id is a view name (lower case, a letter first, 32 at most). A different id shape is refused by the shell, silently dropped by an old engine.
+- `reads` is a grant the user gives on Home, per app and per pattern. Without it `GET /rpg/results` answers `state: "closed"` and the RPG app cannot read the outbox.
+- The party is the newest snapshot's `present`, not the chat's cards: a character the Dashboard does not show is not in the fight. The persona is always the hero and always first.
+- The RPG app's repository must hold a `data/` folder: without it the engine refuses every write of the app ("path resolves outside app data dir").
+- The first open of an app builds it and the shell may make its frame again, so the id handed over by `openApp` can be lost; the RPG app then offers the waiting fight in a banner (the fallback is tested).
+- A foe that the Dashboard also lists as present is a party member: the model's opponents are only added by the player's window, never taken from `present` (a test keeps a "Goblin" in `present` as a member, on purpose).
+- Results are not applied to the story: injuries stay in the result and the RPG app. Rollback by swipe (plan section 5.4) is not built; the result is tied to a chat, not to a message.
+- `cleanResult` and the RPG app's `parseResult` are two copies; the fixtures are what keep them alike.
+
+
 ## From `roleplay-ui-shell.md`
 
 Change X, touch Y:
@@ -334,6 +367,7 @@ Traps:
 ## From `roleplay-world-dm.md`
 
 Change X, touch Y:
+- A new level: `LEVELS`, `HARD_LEVELS`, `FIGHT_LEVELS`, `THREAD_LEVELS`, `NEW_LEVELS`, `LEVEL_RULES`, `LIFE_BY_LEVEL`, the engine plugin's two level lists (`plugins/engine/plugin.js`, the feature flags and the Prompt board row), the client's `WorldLevel` (`src/lib/world.ts`, `src/lib/carries.ts`), `LEVEL_ICON`/`LEVEL_TONE` (`world-common.tsx`), the lists in `world-controls.tsx`, `world-profiles.tsx`, `world-start.tsx`, the `world.level.<id>` strings, the guide page `world-dm`, and the profile id lists in `test/rp-world.test.ts`.
 - Clock sizes or front fields: `cleanFront`, `applyLevel`, `clockStage`, `docs/DATA-FORMATS.md`.
 - Dice bands or tilts: `DICE_BANDS`, `DICE_TILTS`, `diceOutcome`, `src/lib/world.ts`, `dice-log.tsx`.
 - Record kinds or fields: `KINDS`, `cleanEntity`, `applyReport`, `entryOf`, and `docs/COUPLINGS.md`, "World DM and Dashboard shared ids".
@@ -348,3 +382,5 @@ Traps:
 - A deck card is used up only when an event is set. A catch-up run leaves the deck alone.
 - `undoFrom` keeps records the player edited after the snapshot, so a deleted reply does not undo hand edits.
 - A chat with no state file counts as on at chronicler; only level `off` in a state file keeps it off.
+- `breath` is not in `CORE_KEYS`: a rollback does not restore it. It is checked against the chat's messages instead, so a deleted carrier frees the pause, and a swipe of the carrier clears it in `llmRequest`.
+- A held hard event keeps `state.event` pending, and a pending event also keeps people from coming back (`planEntrance` waits while an event waits).

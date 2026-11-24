@@ -1,6 +1,6 @@
 # Memory across chats: the chain, the archive, the Data Bank, snapshot books, and vectors
 
-Verified at: molfar.vertep-roleplay 91eec33
+Verified at: molfar.vertep-roleplay 91eec33; the memory import lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1)
 
 ## What it does
 
@@ -35,7 +35,7 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 - `plugins/litopys/plugin.js` `llmRequest`: calls `verbatimFor` before a reply.
 - `plugins/litopys/plugin.js` `bookChunks`: turns a chat's record into snapshot chunks, with who knew each fact.
 - `plugins/litopys/plugin.js` `bookSave`: writes a snapshot book; an update disables the older version.
-- `plugins/litopys/plugin.js` `importChat`: writes an imported chat's snapshot into a card's memory.
+- `plugins/litopys/plugin.js` `importChat`: writes an imported chat's snapshot into a persona's or a world's memory (a card has none).
 - `plugins/litopys/plugin.js` `ownerMemoryFor`: builds a persona's or a world's memory part (the card's own part was removed in #492).
 - `plugins/engine/plugin.js` `searchDatabank`: finds passages by words, then reorders them by meaning.
 - `plugins/engine/plugin.js` `chunkVisibleTo`: hides a snapshot passage from a speaker who did not witness it.
@@ -86,7 +86,7 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 - DATA-FORMATS says a chat-scoped file reaches "up to 3 links back". The code walks up to 40 (`CHAIN_WALK_MAX`, `RECALL_CHAIN_MAX`), and COUPLINGS says 40. Treat the DATA-FORMATS line as stale.
 - The CONTINUES sentence repeats in every near part, about 130 tokens each. At the default `linkBudget` of 800, a chain of four or more chats leaves the oldest near chat no room (COUPLINGS).
 - A snapshot book matches names by spelling. "Sin" does not match "Sina Rose", and a nickname does not match at all (COUPLINGS).
-- The profile plugin has no memory code. Character memory from imports is `importChat` in litopys.
+- The profile plugin has no memory code. A persona's and a world's memory from imports is `importChat` in litopys.
 - Making a link archives the earlier chat without asking, unless `archiveOnContinue` is off.
 - Vectors of another model are ignored, and a file of another model is replaced as a whole.
 

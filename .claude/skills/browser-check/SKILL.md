@@ -84,3 +84,7 @@ It seeds six places itself and runs in one session (a second `openRp` wipes the 
 
 Map levels and "Draw a map" (#473, #475) have their own script, `placemap-levels-check.mjs` (about 45 checks, on a FRESH engine): maps, scale, places on a map, a map of a place, travel by scale, the draw window with `POST /v1/images` faked in the page (a picture stored in the engine), the light theme and a 390 px phone; screenshots `pml-*.png`.
 
+## A fight from a chat to the RPG app and back (issue #486)
+`rpg-handoff-check.mjs` plays the whole round trip with the real shell: the Fight button in a Roleplay chat, opponents from the fake model, the
+encounter file, the RPG app opening on the muster, a fight to the end, the result file, and the result card back in Roleplay. The setup (the
+engine branch with `openApp(id, view)`, both apps, the "official" records and the two read grants) is in the script's header. Run it on a fresh engine.
