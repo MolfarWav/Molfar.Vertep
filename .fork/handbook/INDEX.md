@@ -41,6 +41,7 @@ by the owner. In force since 2026-11-14: `CLAUDE.md` (rule and "Done means") and
 | Social clubs, chatter and stories | `social-clubs-chatter-stories.md` |
 | Social journal: posts, expired stories filed in a journal | `social-journal.md` |
 | Social city: places, homes, who is where by rules | `social-city.md` |
+| A fight from a chat in the optional RPG app, the encounter and result files, the shell hand-over of an id | `roleplay-rpg-handoff.md` |
 | Every trap and every "change X, touch Y" of one repo on one page | `cross-engine.md`, `cross-roleplay.md`, `cross-social.md` |
 
 Verified at: batches 1 and 2 at engine `8310b23`, Roleplay `91eec33`, Social `7be1624`; batch 3 at
