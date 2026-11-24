@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay 151f6d93 (main, Roleplay 4.155.0; sections: Owners, Data, Flow, Traps, Tests, If you change X: the fan-service level, recent events, the shared reaction rule); 234f1599 (main, Roleplay 4.154.0; What reaches the reply prompt, the pause, the anime level, the life block); Traps e09c2ed; the rest at 91eec33
+Verified at: molfar.vertep-roleplay branch claude/place-ref-514 (2a590939, Traps: the place ref); molfar.vertep-roleplay 151f6d93 (main, Roleplay 4.155.0; sections: Owners, Data, Flow, Traps, Tests, If you change X: the fan-service level, recent events, the shared reaction rule); 234f1599 (main, Roleplay 4.154.0; What reaches the reply prompt, the pause, the anime level, the life block); Traps e09c2ed; the rest at 91eec33
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
@@ -101,6 +101,7 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - `undoFrom` keeps records the player edited after the snapshot, so a deleted reply does not undo hand edits.
 - A chat with no state file counts as on at chronicler; only level `off` in a state file keeps it off.
 - `breath` is not in `CORE_KEYS`: a rollback does not restore it. It is checked against the chat's messages instead, so a deleted carrier frees the pause, and a swipe of the carrier clears it in `llmRequest`.
+- A DM `ref` on a place record is not trusted when the record is a twin of another place record by name or alias (`placeTwin`): it is dropped and the record stays unlinked. A second record can take an id only as a spot of the record that holds it (`spotPair`, #514). Chats linked wrongly before this are not repaired by code.
 - A held hard event keeps `state.event` pending, and a pending event also keeps people from coming back (`planEntrance` waits while an event waits).
 
 ## Tests that guard it
@@ -113,6 +114,7 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - `test/rp-world-anime.test.ts`: the anime level and the life block per level.
 - `test/rp-world-breather.test.ts`: pauseLeft, breatherOf, the hook holding a hard event and a major life roll, the swipe, the settings, the DM input line.
 - `test/rp-world-ids.test.ts`, `test/rp-registry-bridges.test.ts`: applyReport and applyLevel with the registry.
+- `test/rp-world-place-ref.test.ts`: the twin rule, a spot sharing the id, `trackedThings` offering a part of the scene's place.
 - `test/rp-tools.test.ts`: rollDice.
 
 ## Not verified
