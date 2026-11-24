@@ -9,7 +9,12 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-24 (newest): #507 Help articles drift: WIP on Roleplay branch `claude/help-drift` (17cfc6ad), NOT released, paused by the owner ("поки стоп")
+## 2026-11-24 (newest): RPG app (#486), step 1 design written, nothing built
+- Owner: "починаємо" on the RPG app; chose step 1 (the core: character sheet) and a separate repository (`MolfarWav/Molfar.Vertep-RPG`, not created yet). Design in `.fork/handoff/rpg-layer/STEP1-CORE.md` (rules, data, reads, UI plan, tests), branch `claude/rpg-app-core`.
+- Found in the sweep: Soul has no courage number (derive from `traits` and `spectra`); the status block into the Dashboard is a separate step 1b and its blocker (agents plugin and Dashboard routes) was last checked 2026-10-27, recheck first.
+- Waiting for the owner: five questions at the end of the design file (stats and budget, sheet per character or per chat, the look, repo creation, courage). No repository, no code, no issue comment yet.
+
+## 2026-11-24: #507 Help articles drift: WIP on Roleplay branch `claude/help-drift` (17cfc6ad), NOT released, paused by the owner ("поки стоп")
 - Done: `--fix-lines`, then every vanished quote checked against code by a subagent and reviewed by me: rewritten kb.memory (card stories gone since #492; now "Memory across chats" of a persona or saved world, room 100-1500 tokens, Memory size is a Litopys setting), kb.carries (Portrait row, "Growth blocks in this chat"), kb.forge-cards (new source "What is already noted about how the character changed"), kb.world-tabs (Look at the world opens at once; So far tiles), kb.gallery-dialog (uk labels); quotes only for the rest; kb.new-chat and kb.group-turns shortened. Old tip `new.memory` fixed (en, uk "Звички"). New `test/rp-help-sources.test.ts` (quotes still in files, whitespace-insensitive like the validator; limits, uk x1.25). Rule added to Roleplay AGENTS.md (in the branch) and engine CLAUDE.md (guide rule names the Help articles).
 - Checked: validator 0 errors, 10 warnings (long uk sentences); rp-help-sources + rp-guide 34 pass. NOT run: typecheck after the last tip edit (string-only), full suite.
 - Left: kb.forge-cards does not list all cards (the growth card, code.script, write.state were never in it); articles whose quotes survive may still be wrong (only a read-through finds them). Then: version 4.155.2, CHANGELOG, PR, merge, close #507 with "How it was solved".
