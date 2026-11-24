@@ -9,10 +9,11 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-25 (newest): #514 place ref fix in Roleplay (branch pushed, PR open, not merged, not released)
+## 2026-11-25 (newest): #514 place ref fix in Roleplay, released as 4.155.2 (owner: "мердж і реліз")
 - Cause found in the owner's last chat from its saved files: the World DM wrote a second record of the destroyed hall and its ref took the forest's registry id, so `here` and the map pin stood on the hall and the camp was never reached. Chat data repaired by hand (backups in the session scratchpad); no engine change.
 - Roleplay (fork repo, branch `claude/place-ref-514`, 2a590939): a place ref on a twin record (shared name or alias) is dropped; a spot of the linked place may share its id; `trackedThings` offers a linked place again when its text has two levels. Tests `test/rp-world-place-ref.test.ts` (9, fail without the fix); typecheck green; full run: 3 fail, two are on clean main too (generated-block checks, line endings on Windows), one groups test passes alone.
-- Not done: not checked with a real DM model (the raw DM answer of the bad run is not kept), the version is not bumped (CHANGELOG Unreleased only), other chats with the same link not searched, no UI to see or undo a place link.
+- Released: Roleplay PR #204 merged to `main` (c1e9d54f), manifest and `APP_VERSION` 4.155.2, CHANGELOG renamed. Roleplay updates follow the head of `main` (no tags), and the unreleased RPG hand-over (#486, PR #203) was already in `main`, so the owner chose to revert it in the same PR: the Fight button, plugin `rpg`, guide page `rpg`, the `reads` grant in the manifest and `test/rp-rpg-handoff.test.ts` are out of `main` until the RPG app is in the Store. To bring it back: `git checkout a8300fa2 -- <the files the revert removed>` in the Roleplay repo (a plain re-merge does nothing, the commits are already in the history), put the CHANGELOG entry back, bump the version. The engine branch `claude/open-app-view` is not affected.
+- Not done: not checked with a real DM model (the raw DM answer of the bad run is not kept), other chats with the same link not searched, no UI to see or undo a place link, the sensor still writes the place in English while the story is in Russian.
 
 ## 2026-11-24: RPG app (#486): repository created, P1 rules library built (not merged, no PR)
 - The owner's real plan is outside the repo: `D:\Claude
