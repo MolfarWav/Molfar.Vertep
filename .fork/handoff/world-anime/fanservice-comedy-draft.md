@@ -1,6 +1,6 @@
 # World DM profile draft: "Fan-service comedy" (situational ecchi comedy)
 
-Status: BUILT as a level on Roleplay branch claude/world-fanservice (75b86a7f, 4.155.0, not released, not played on a live model); the texts below are the third pass. Idea from the owner, 2026-11-24:
+Status: RELEASED as a level in Roleplay 4.155.0 (PR 201, merge 151f6d93; not played on a live model); the texts below are the third pass. Idea from the owner, 2026-11-24:
 a comic DM that leans toward situation comedy and awkward moments (a trip into a bad pose, a door that
 opens on someone in the shower, a gust of wind), "a little lewd, a little fun". A profile of its own next to
 "Anime fantasy" (#500), not a sub-genre switch inside it.
