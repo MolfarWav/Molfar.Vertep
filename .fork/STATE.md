@@ -9,7 +9,11 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-23 (newest): #477 dialogue colours, the Cyrillic h fix RELEASED in Roleplay 4.154.1 (owner: "Merge and release"; PR 200, merge `a6f417ed`; no engine release; the owner presses Update; #477 stays open for cause 2) and issue tidying
+## 2026-11-24 (newest): idea for a fan-service comedy World DM profile, drafted and filed as #506 (nothing built)
+- Owner: a DM profile of comic situations and awkward moments (shower door, trip, gust of wind), "a little lewd, a little fun"; clarified: not a sub-genre of Anime fantasy, a set of rules for the DM prompt, a profile of its own. Draft: `.fork/handoff/world-anime/fanservice-comedy-draft.md` (level block, life block, event tone, options; ladder set-up > build-up > pay-off; fan-service beats only for adult characters). Past sweep: #500 (anime level, closed) is the model; its Direction ideas were not built.
+- Not built, not tested on a live model. Waiting on the owner: built-in level like #500 or a pasted player profile, name and icon, fights or not.
+
+## 2026-11-23: #477 dialogue colours, the Cyrillic h fix RELEASED in Roleplay 4.154.1 (owner: "Merge and release"; PR 200, merge `a6f417ed`; no engine release; the owner presses Update; #477 stays open for cause 2) and issue tidying
 - Owner: #477 "does not work", check the last chat. Measured on the laptop's latest chat (book club group, 4 members, Russian, Vertep Medium) by rendering all 43 group replies through the app's own `Markdown` (script in the session scratchpad, chat stays local): 454 quotes, Chihiro 0. Cause: `soundKey` spelled `х` as `kh` then dropped `h`, Latin `h` dropped whole, so `Chihiro`/«Чихиро» never matched (`kiro`/`kikiro`). Fix: `х` -> `h`, `kh` -> `h`, as `xsTranslit` (lorebook) and the registry already do. After: Chihiro 95, base 69 -> 44, ad-hoc colours only for an NPC outside the group.
 - Checked: new test in `rp-dash-dialogue` (fails without the fix), 7 voice test files 110 pass, typecheck clean. Full suite NOT run (engine running on this machine). No guide or handbook page names `dialogue-voices.ts`.
 - Left in #477 for the batch: a name in the narration beats a speaker named by a common noun (`— …, — произносит женщина в очках, … Нацуми …` takes Natsumi's colour).
