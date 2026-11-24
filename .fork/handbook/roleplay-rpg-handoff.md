@@ -1,5 +1,5 @@
 # RPG hand-over: a fight from a chat to the optional RPG app, and the result back
-Verified at: molfar.vertep-roleplay 54c5ee26 (branch claude/rpg-handoff, not merged); engine 0fda32c (branch claude/open-app-view, not merged); the RPG app at Molfar.Vertep-RPG da083a1 (not checked by the script).
+Verified at: molfar.vertep-roleplay a8300fa2 (branch claude/rpg-handoff, not merged); engine 0fda32c (branch claude/open-app-view, not merged); the RPG app at Molfar.Vertep-RPG bfcf24a (not checked by the script).
 
 ## What it does
 A **Fight** button in the chat header gathers the party, lets a model propose opponents from the scene, and writes an *encounter* file into Roleplay's own data. It then opens the RPG app on it with `openApp('rpg', id)`. The RPG app plays the fight with code (rules, dice, injuries) and writes a *result* file into its own data; it opens Roleplay on the same id, and a card in the chat shows the result and offers its summary as a stage direction. Neither app writes into the other's data. Contract version 0.1; the docs and example files are in the RPG repo (`docs/contract`), copies in `test/fixtures/rpg-contract/`.
@@ -52,17 +52,20 @@ Only the summary, and only when the player puts it in the composer and sends it,
 - The id is a view name (lower case, a letter first, 32 at most). A different id shape is refused by the shell, silently dropped by an old engine.
 - `reads` is a grant the user gives on Home, per app and per pattern. Without it `GET /rpg/results` answers `state: "closed"` and the RPG app cannot read the outbox.
 - The party is the newest snapshot's `present`, not the chat's cards: a character the Dashboard does not show is not in the fight. The persona is always the hero and always first.
+- The RPG app's repository must hold a `data/` folder: without it the engine refuses every write of the app ("path resolves outside app data dir").
+- The first open of an app builds it and the shell may make its frame again, so the id handed over by `openApp` can be lost; the RPG app then offers the waiting fight in a banner (the fallback is tested).
 - A foe that the Dashboard also lists as present is a party member: the model's opponents are only added by the player's window, never taken from `present` (a test keeps a "Goblin" in `present` as a member, on purpose).
 - Results are not applied to the story: injuries stay in the result and the RPG app. Rollback by swipe (plan section 5.4) is not built; the result is tied to a chat, not to a message.
 - `cleanResult` and the RPG app's `parseResult` are two copies; the fixtures are what keep them alike.
 
 ## Tests that guard it
+- The whole round trip in a throwaway engine with the real shell: `.claude/skills/browser-check/rpg-handoff-check.mjs` (run 2026-11-24: all checks passed, no console errors). It found four bugs that the unit tests did not: no `data/` folder in the RPG repo, the reply role `char` (not `assistant`), a load race in the RPG app's sheet list, and a flash in the result card.
 - Roleplay `test/rp-rpg-handoff.test.ts`: the id, opponents, the model's answer, the party, the encounter against the example file, the outbox, the two-phase foes route, the result and its note, results per chat and seen.
 - Engine `test/security.test.ts` (the shell op list and refusals) and `test/app-bridge-view.test.ts` (the frame sends the view).
 - RPG repo `test/contract.test.ts`, `test/encounters-plugin.test.ts`: the same example files, the result builder, the peer reads.
 
 ## Not verified
-- A real engine run of the whole round trip: the shell hand-over, the peer grants, `onShellView` in Roleplay. Each side was tested with a fake host and the RPG app in a design preview.
-- The Fight window and the result card in a browser (Roleplay's own UI was only type-checked and covered by the plugin tests).
+- A real phone, and a real model for the opponents (the check uses the fake model with fenced JSON).
+- The Roleplay guide page `rpg` in the other languages, and the Help article for the Fight button.
 - That `present` in the newest snapshot is the right list when the newest message has no snapshot yet (the party then comes from the last message that has one).
 - Whether a free small model returns the foes JSON reliably (the route falls back to a plain error).

@@ -335,6 +335,8 @@ Traps:
 - The id is a view name (lower case, a letter first, 32 at most). A different id shape is refused by the shell, silently dropped by an old engine.
 - `reads` is a grant the user gives on Home, per app and per pattern. Without it `GET /rpg/results` answers `state: "closed"` and the RPG app cannot read the outbox.
 - The party is the newest snapshot's `present`, not the chat's cards: a character the Dashboard does not show is not in the fight. The persona is always the hero and always first.
+- The RPG app's repository must hold a `data/` folder: without it the engine refuses every write of the app ("path resolves outside app data dir").
+- The first open of an app builds it and the shell may make its frame again, so the id handed over by `openApp` can be lost; the RPG app then offers the waiting fight in a banner (the fallback is tested).
 - A foe that the Dashboard also lists as present is a party member: the model's opponents are only added by the player's window, never taken from `present` (a test keeps a "Goblin" in `present` as a member, on purpose).
 - Results are not applied to the story: injuries stay in the result and the RPG app. Rollback by swipe (plan section 5.4) is not built; the result is tied to a chat, not to a message.
 - `cleanResult` and the RPG app's `parseResult` are two copies; the fixtures are what keep them alike.
