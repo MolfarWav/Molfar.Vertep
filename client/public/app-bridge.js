@@ -173,8 +173,14 @@
     askMolfar: function (text) { return shellCall("ask-molfar", { text: String(text) }); },
     /** The user's installed apps: [{ id, name }]. */
     apps: function () { return shellCall("apps", {}); },
-    /** Switch the shell to another installed app's tab. */
-    openApp: function (id) { return shellCall("open-app", { appId: String(id) }); },
+    /** Switch the shell to another installed app's tab. With `view` (a short name: a letter first, then letters, digits and
+     *  dashes, 32 at most) the opened app hears it through onView, also when it was not running yet. An engine older than
+     *  this refuses nothing: it opens the app and drops the view. */
+    openApp: function (id, view) {
+      var p = { appId: String(id) };
+      if (view != null) p.view = String(view);
+      return shellCall("open-app", p);
+    },
     /** Open the shell's Settings on the connections, on one model's settings when given "<provider>/<model>". */
     openSettings: function (model) { return shellCall("open-settings", model ? { model: String(model) } : {}); },
     /** Open the shell's Settings on one tab: "api", "models", "memory" or "backup". */

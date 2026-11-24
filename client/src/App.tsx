@@ -424,6 +424,8 @@ function Shell(props: { theme: ThemeControl }) {
       if (req.op === "open-app") {
         if (!apps.some((a) => a.id === req.appId)) throw new Error("no such app")
         now.openApp(req.appId)
+        // a short name the opened app hears through onView (the same hand-over the Settings entries use)
+        if (req.view) window.MolfarBridgeHost?.openView?.(req.appId, req.view)
         return null
       }
       if (req.op === "open-home") {

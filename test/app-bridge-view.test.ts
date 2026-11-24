@@ -103,7 +103,8 @@ describe("the host hands a view to an app", () => {
 describe("the frame passes a view to the app", () => {
   function makeFrame() {
     const listeners: Listener[] = [];
-    const parent = { postMessage: () => undefined };
+    const sent: unknown[] = [];
+    const parent = { postMessage: (m: unknown) => { sent.push(m); } };
     const win: Record<string, any> = {
       parent,
       addEventListener: (t: string, fn: Listener) => { if (t === "message") listeners.push(fn); },
@@ -125,7 +126,7 @@ describe("the frame passes a view to the app", () => {
         }),
       ),
     );
-    return { win, hear: (data: unknown) => listeners.forEach((l) => l({ source: parent, data })) };
+    return { win, sent, hear: (data: unknown) => listeners.forEach((l) => l({ source: parent, data })) };
   }
   const init = { __molfar: 1, type: "init", nonce: "n", storage: { local: {}, session: {} }, theme: { id: "dark", scheme: "dark", vars: null } };
 
@@ -158,5 +159,16 @@ describe("the frame passes a view to the app", () => {
     off();
     f.hear({ __molfar: 1, type: "open-view", view: "settings" });
     expect(seen).toEqual([]);
+  });
+
+  it("openApp sends the view along only when one is given", () => {
+    const f = makeFrame();
+    f.hear(init);
+    void f.win.molfarShell.openApp("rpg", "enc-k3x9a2").catch(() => undefined);
+    void f.win.molfarShell.openApp("roleplay").catch(() => undefined);
+    const shell = f.sent.filter((m) => (m as { type?: string }).type === "shell") as { op: string; appId: string; view?: string }[];
+    expect(shell[0]).toMatchObject({ op: "open-app", appId: "rpg", view: "enc-k3x9a2" });
+    expect(shell[1]).toMatchObject({ op: "open-app", appId: "roleplay" });
+    expect(shell[1] && "view" in shell[1]).toBe(false);
   });
 });
