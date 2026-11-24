@@ -9,7 +9,12 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-24 (newest): RPG app (#486): repository created, P1 rules library built (not merged, no PR)
+## 2026-11-25 (newest): #514 place ref fix in Roleplay (branch pushed, PR open, not merged, not released)
+- Cause found in the owner's last chat from its saved files: the World DM wrote a second record of the destroyed hall and its ref took the forest's registry id, so `here` and the map pin stood on the hall and the camp was never reached. Chat data repaired by hand (backups in the session scratchpad); no engine change.
+- Roleplay (fork repo, branch `claude/place-ref-514`, 2a590939): a place ref on a twin record (shared name or alias) is dropped; a spot of the linked place may share its id; `trackedThings` offers a linked place again when its text has two levels. Tests `test/rp-world-place-ref.test.ts` (9, fail without the fix); typecheck green; full run: 3 fail, two are on clean main too (generated-block checks, line endings on Windows), one groups test passes alone.
+- Not done: not checked with a real DM model (the raw DM answer of the bad run is not kept), the version is not bumped (CHANGELOG Unreleased only), other chats with the same link not searched, no UI to see or undo a place link.
+
+## 2026-11-24: RPG app (#486): repository created, P1 rules library built (not merged, no PR)
 - The owner's real plan is outside the repo: `D:\Claude
 pg-issue-123\` (`PLAN.md` rev 2, `TASK-P1.md`, mocks B-v3 battle, B-v4 and B-v5 muster and inventory, look: dark, red accent, serif headings). Owner: "follow the plan, it was refined later". Decisions in `.fork/handoff/rpg-layer/STEP1-CORE.md` (top box): plan's phases; sheet per story with a default into the card (card write is a Roleplay job, later); five stats `might agility endurance wits spirit`, budget `15 + 3 * level`; levels now (XP `50*n*(n-1)`, +3 stat points and +1 skill rank per level-up, spent by the user).
 - Created public repo `MolfarWav/Molfar.Vertep-RPG` (AGPL-3.0), local `D:\Claude\Molfar.Vertep-RPG`, branch `claude/rules-core` pushed (f17c3c3): `src/rules/` (rng, tuning, types, sheet and levels, injuries, resolve, defeat, ai), 33 tests (replay, simultaneous round, guard, backpack and belt, one power, injuries, healing, defeat steps, property test of 2000 battles), `scripts/sim.ts`, `docs/BALANCE.md`. typecheck and tests green; biome printed nothing.

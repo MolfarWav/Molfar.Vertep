@@ -1,6 +1,6 @@
 # Entity registry: one id per person, thing and place in a chat
 
-Verified at: molfar.vertep-roleplay 91eec33
+Verified at: molfar.vertep-roleplay 91eec33; the ref and spot rules below at branch claude/place-ref-514 (2a590939)
 
 ## What it does
 
@@ -78,12 +78,15 @@ Still keyed by name: the Dashboard `notebook` and `personIds` keys, World `holde
 - `t#` is a Dashboard thread and a thing is `o#`. Older files are renamed on load. Some test titles still say `t#`, for example test/rp-world-ids.test.ts line 41.
 - A Dashboard rename does not change registry names. A stale name in `personIds` is looked up again and dropped if it no longer resolves.
 
+- A World place record that shares a name or alias with another place record (not dormant) that is not linked to the id loses its `ref` (`placeTwin` in `linkToRef`); names in two alphabets cannot be compared by words, and a wrong ref puts the record's names on the tracker's entity (#514). A spot (`size: spot`, `inside` naming the record that holds the id) may take the same id (`spotPair`); `placeRecordOf` then prefers the spot. `trackedThings` lists a linked place id again when its text has two levels and place records not linked to it exist.
+
 ## Tests that guard it
 
 - test/rp-entity-registry.test.ts: `regTranslit`, `resolveName`, `regLearn`, and the copy check through `outOfDate`.
 - test/rp-lore-cross-script.test.ts: lorebook matching agrees with `regTranslit` for the same words.
 - test/rp-registry-bridges.test.ts: World DM and Litopys against the registry.
 - test/rp-world-ids.test.ts: World records linked through `regIds`.
+- test/rp-world-place-ref.test.ts: a twin loses its ref, a spot shares the place's id, the DM is told about a part of the scene's place (#514).
 - test/rp-dash-registry.test.ts: Dashboard names, merges, repairs of older registries, and chats that continue another.
 - test/rp-dash-merge-ui.test.tsx: the merge UI.
 - test/rp-dash-voices.test.ts: voice colours.
