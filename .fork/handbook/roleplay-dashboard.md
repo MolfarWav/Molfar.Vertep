@@ -1,5 +1,5 @@
 # Dashboard: the sensor pass, relations, the character journal, the clock
-Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at branch claude/dashboard-demand-461 (2f9a08e); rest 1f0a99f; event table and stage at c603c31
+Verified at: molfar.vertep-roleplay e55282b5 (latch, secret.happens); earlier: molfar.vertep-roleplay 92638da (parts); the Threads rules line at branch claude/dashboard-demand-461 (2f9a08e); rest 1f0a99f; event table and stage at c603c31
 
 ## What it does
 - After a reply, a sensor model call reads the new messages and returns one JSON report: present people, clock, scene, events, each character's mood, condition, outfit, holding and goal, what each learned, what was said or promised, threads (quests), journal lines and edges between people.
@@ -12,6 +12,7 @@ Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at b
 - `plugins/relations/plugin.js` `sensorSystem`: builds the sensor's system prompt from prompt text, event vocabulary and output shape.
 - `plugins/relations/plugin.js` `OUTPUT_SHAPE`: the JSON shape the sensor is asked for; `OUTPUT_SHAPE_NO_JOURNAL` is derived from it.
 - `plugins/relations/plugin.js` `askSensor`: sends the sensor call (model from `sensorModel`, else the chat model; temperature 0.2).
+- `plugins/relations/plugin.js` `watchedHappenings`, `watchText`: for a chat whose books hold secret entries with `secret.happens`, one section is added to the sensor's system prompt (at most 8 entries, 160 characters each, ids not yet marked); `applySensor` keeps the ids the report names in `happened` on the snapshot, and the engine lets those in the scene learn the entry. No section and no cost for a chat without such entries; not in fast mode.
 - `plugins/relations/plugin.js` `parseSensorText`: reads the JSON, tolerates a code fence, keeps a cut-off reply's complete fields as `__partial`.
 - `plugins/relations/plugin.js` `runUpdate`: runs the passes (rating, sensor, one retry on rate limit, commit).
 - `plugins/relations/plugin.js` `readUpdate`: the `/dashboard/update` route; between passes it returns `__llmPending` with a stash.

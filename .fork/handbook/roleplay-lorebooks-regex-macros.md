@@ -1,5 +1,5 @@
 # Lorebooks, regex scripts and macros
-Verified at: molfar.vertep-roleplay c54eca7e (the Macros section, nested reader, #516); molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
+Verified at: molfar.vertep-roleplay e55282b5 (latch, secret.happens); earlier: molfar.vertep-roleplay c54eca7e (the Macros section, nested reader, #516); molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
 
 ## What it does
 Lorebook entries enter the prompt by keys, by constant status, or by a vector match over a threshold. One server function runs the scan, budget and placement. Regex scripts rewrite text on save, on edit, in the prompt, or only for display. Macros are expanded on the server. The browser shows why each entry fired and runs a keyword test through the same scanner.
@@ -11,7 +11,9 @@ Lorebook entries enter the prompt by keys, by constant status, or by a vector ma
 - `plugins/engine/plugin.js` `wiVectorHits`: which vectorized entries the scan vector lets in.
 - `plugins/engine/plugin.js` `wiBudgetChars`: the character budget from the preset.
 - `plugins/engine/plugin.js` `wiFilterInclusionGroups`: one winner per group.
-- `plugins/engine/plugin.js` `secretOf`, `secretView`, `loreKnowers`, `presenceOfLine`, `loreContext`, `cardNameSet`, route `lore-known`: secret entries (#416).
+- `plugins/engine/plugin.js` `secretOf`, `secretView`, `loreKnowers`, `presenceOfLine`, `happenedOfLine`, `loreContext`, `cardNameSet`, route `lore-known`: secret entries (#416), and the ones that open on a happening (`secret.happens`).
+- `plugins/engine/plugin.js` `activateWorldInfo` `latchOf`, `windowEnding`, `stayLive`: "stays on" entries (`latch`).
+- `plugins/relations/plugin.js` `watchedHappenings`, `watchText`: the sensor's watch list for `secret.happens`.
 - `plugins/engine/plugin.js` `semanticEmbedWork`: which vectors still need embedding.
 - `plugins/engine/plugin.js` `worldBookOf`: the chat's own world book.
 - `plugins/engine/plugin.js` `recordFired`: writes the "what fired" log.
@@ -35,7 +37,7 @@ Fields the scan reads (book shape in `docs/DATA-FORMATS.md`, "Lorebooks"):
 - `keys`, `secondaryKeys`, `selectiveLogic`, `keysRegex`. A key written as `/pattern/flags` is a pattern.
 - `status`: `normal`, `constant` or `vectorized`. The `constant` boolean is a legacy mirror.
 - `content`, `enabled`, `order` (default 100), `position`, `depth`, `role`.
-- `probability`, `group`, `groupWeight`, `groupPrioritize`, `groupOverride`, `sticky`, `cooldown`, `delay`, `delayUntilRecursion`, `nonRecursable`, `preventFurtherRecursion`, `ignoreBudget`, `matchSources`, the character and trigger filters, and `secret` (`{knownBy, cover, reveal}`, #416).
+- `probability`, `group`, `groupWeight`, `groupPrioritize`, `groupOverride`, `sticky`, `cooldown`, `delay`, `delayUntilRecursion`, `nonRecursable`, `preventFurtherRecursion`, `ignoreBudget`, `matchSources`, the character and trigger filters, `latch`, and `secret` (`{knownBy, cover, reveal, happens}`, #416).
 - Book: `settings` (`scanDepth`, `contextPercent`, `budgetCap`, `minActivations`, `maxRecursion`, `recursiveScan`, `includeNames`, `insertionStrategy`) and `vectorized` (`topK`, `thresholdMode`, `scoreThreshold`).
 
 ## The scan, step by step
@@ -55,7 +57,9 @@ Fields the scan reads (book shape in `docs/DATA-FORMATS.md`, "Lorebooks"):
 14. Budget: entries sort by strategy rank, then `order` descending. An entry that does not fit in the room left goes to `skipped` and costs nothing, so a shorter one after it can still fire (#397; it used to stop at the first overflow); `ignoreBudget` entries are always in and still spend.
 15. Placement: admitted entries sort by rank, then `order` ascending. `WI_POSITIONS` maps `position` to a result list; `at_depth` goes to `depth`.
 
-Secret entries: each item gets `secretV` once per scan (known: content; cover; marked: content plus a "[Secret: only A knows...]" line for several voices). `contentOf` feeds the prompt, the budget and recursion. Knowers come from the chat each scan: `knownBy`, a `reveal` word in a message (taught to its author and the Dashboard's `present`), `lore-known/<chat>.json` by hand.
+Stays on (`latch: true`): before the key path, `latchOf` replays the windows the entry's own scan depth would have seen at each earlier message (`windowEnding`, oldest first, the newest message left out) and takes the first that `matchEntry` accepts as `since`. An entry that has one counts as sticky for the scan (`stayLive`: it skips the chance roll, the cooldown, the recursion delays and `nonRecursable`, and wins its inclusion group), with `why = { via: "latch", since, key }`. Nothing is stored, so a swipe or an edit that removes the message ends it; the cost is one pass of matches per latch entry per scan, and none for a book without any.
+
+Secret entries: each item gets `secretV` once per scan (known: content; cover; marked: content plus a "[Secret: only A knows...]" line for several voices). `contentOf` feeds the prompt, the budget and recursion. Knowers come from the chat each scan: `knownBy`, a `reveal` word in a message (taught to its author and the Dashboard's `present`), `lore-known/<chat>.json` by hand, and `happened` (the Dashboard snapshots of the line whose `happened` names the entry teach everyone in their `present`; `happenedOfLine`).
 
 ## Regex scripts
 - Storage: one file per script at `regex/<id>.json`, read by `loadRegexScripts` (engine, Litopys and the Dashboard sensor each in one `host.fs.readMany` call when the engine has it, one `fs.read` per file on an older engine; #432). Scope: `global`, `preset`, `chat` or `character`. Placements: `user_input`, `ai_output`, `slash`, `wi`, `reasoning`.
@@ -86,6 +90,8 @@ Secret entries: each item gets `secretV` once per scan (known: content; cover; m
 - Macros: `expandMacros` and `subMacros` in `WORKER_SRC`.
 
 ## Traps
+- `latch` needs keys: a constant entry is always on and a vector-only entry has no key to hit. A key that hit only through a failed probability roll still sets it. The replay is per scan and not cached across scans.
+- `secret.happens` is judged by the sensor model; it does nothing in fast mode (the report comes with the story reply and its shape is fixed) or with the Dashboard off.
 - `used` grows for every entry, including skipped ones. After the first skip, every later entry is skipped too, even a short one that fits.
 - Constant entries are not exempt from `probability` or the budget.
 - A failed probability roll holds an entry for the whole reply. `delay` compares with the total message count.
