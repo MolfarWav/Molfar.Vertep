@@ -18,8 +18,9 @@ become xml groups, and the card goes through the app's markers.
   - `SOLA_NAME`: the preset name;
   - `SOLA_NO_DESK=1`: leave out Sola's Desk;
   - `SOLA_CUE=1`: add the experimental cue card for the helpers.
-- `sola_desk.py`, `sola_leakfix.py`, `sola_cue.py`: parts the port runs (Sola's Desk; her asides kept out of the
-  helpers' story view, see #85; the cue card).
+- `sola_desk.py`, `sola_leakfix.py`, `sola_length.py`, `sola_cue.py`: parts the port runs (Sola's Desk; her asides kept out
+  of the helpers' story view, see #85; reply length: a capped planning sheet and length targets that do not shrink, Roleplay
+  4.160.1; the cue card).
 - `verify.py <out.json> N`: N random sets of switches and app features. It compares the SillyTavern reference with the
   engine's own `sectionCondPasses` and `expandIfBlocks` (through `vsim.mjs`). It must print `mismatches 0`.
 - `fullsim.mjs <out.json> <out.txt>`: full `expandMacros` with group wraps for the default picks. Leftover braces must be 0.

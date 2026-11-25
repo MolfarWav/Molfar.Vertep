@@ -227,6 +227,7 @@ if not __import__('os').environ.get('SOLA_NO_DESK'):
     exec(open(__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)), 'sola_desk.py'), encoding='utf-8').read())
 _here = __import__('os').path.dirname(__import__('os').path.abspath(__file__))
 exec(open(__import__('os').path.join(_here, 'sola_leakfix.py'), encoding='utf-8').read())
+exec(open(__import__('os').path.join(_here, 'sola_length.py'), encoding='utf-8').read())
 if __import__('os').environ.get('SOLA_CUE'):
     exec(open(__import__('os').path.join(_here, 'sola_cue.py'), encoding='utf-8').read())
 
