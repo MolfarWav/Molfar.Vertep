@@ -9,6 +9,14 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
+## 2026-11-25 (newest): #520 World DM reads the story, not the blocks a preset hides, on Roleplay branch `claude/storyview-world-meanwhile-520` (pushed, c2a90f1b; no PR, not released)
+- Bug: since #85 the sensor and Litopys run the chat's prompt-only deleting regex scripts (`storyView`) before they read a reply; World DM read `m.text` raw, so a preset's notebook, chatterbox or HUD (Sola port) was read as story.
+- Fix (`plugins/world/plugin.js`): third copy of `storyView` (plugins cannot import each other; the scripts are read on the first call, so a run that reads no text does no file reads) and `storyMsgs`. Used in the three places that feed the DM text: `updateRoute` (`unread`, so the fair cap and the "nothing new" check see the visible text; the prompt, `fullRecordIds`), `since` (event check), `tidyBook` (new optional `view`; a thing named only in a hidden block counts as not named). No 20000-character cut, unlike the sensor's copy: it would drop the tail of a long reply before `cutMiddle`.
+- Meanwhile: nothing to fix. `gatherInput` takes the scene from the Dashboard snapshots (already seen through `storyView`) and reads no message text; `readChat` there only feeds the cadence.
+- Not done: `namedIn` (the cast's "is this person named in the message", only where a message has no Dashboard snapshot) still reads raw text. Guide: one sentence in `world-dm.md` (English only, translations stale until a release). Help articles say nothing about what the DM reads.
+- Checked: `test/rp-issue-520.test.ts` (8: helper scopes and exclusions, lazy read, `storyMsgs`, the whole `/world/update` run with and without the scripts, tidy-up with and without a view), the 39 World/#85/direction files (627 pass), guide tests, typecheck, biome. Not checked: a real chat with the Sola preset and a model.
+- Handbook: `roleplay-world-dm.md` Traps line added.
+
 ## 2026-11-25: #449 Meanwhile read on the owner's real play, repeats fixed, RELEASED in Roleplay 4.156.1 (owner: "PR і реліз"; PR 206, merge `a721dcd7`; no engine release, the owner presses Update; the Meanwhile guide page re-translated in 13 locales, one sentence)
 - Owner: continue #449; first a test with a real model (the laptop already holds his play), then #450 before S2/S3 "but check first what is there".
 - Read the laptop's Meanwhile state (3 chats, nanogpt deepseek-v4-flash, own play): 16 passes in the main chat cost $0.003 in total (about $0.0002 a pass, 1.1-1.5k input tokens); about half the passes answered an empty list (6 output tokens), the rest gave exactly 3 events; nothing dropped by the checks, none with effects or witnesses, almost all `secret`.

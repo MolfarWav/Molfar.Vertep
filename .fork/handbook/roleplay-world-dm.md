@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay branch claude/place-ref-514 (2a590939, Traps: the place ref); molfar.vertep-roleplay 151f6d93 (main, Roleplay 4.155.0; sections: Owners, Data, Flow, Traps, Tests, If you change X: the fan-service level, recent events, the shared reaction rule); 234f1599 (main, Roleplay 4.154.0; What reaches the reply prompt, the pause, the anime level, the life block); Traps e09c2ed; the rest at 91eec33
+Verified at: molfar.vertep-roleplay branch claude/storyview-world-meanwhile-520 (c2a90f1b, Traps: the story view); molfar.vertep-roleplay branch claude/place-ref-514 (2a590939, Traps: the place ref); molfar.vertep-roleplay 151f6d93 (main, Roleplay 4.155.0; sections: Owners, Data, Flow, Traps, Tests, If you change X: the fan-service level, recent events, the shared reaction rule); 234f1599 (main, Roleplay 4.154.0; What reaches the reply prompt, the pause, the anime level, the life block); Traps e09c2ed; the rest at 91eec33
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
@@ -102,6 +102,7 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - A chat with no state file counts as on at chronicler; only level `off` in a state file keeps it off.
 - `breath` is not in `CORE_KEYS`: a rollback does not restore it. It is checked against the chat's messages instead, so a deleted carrier frees the pause, and a swipe of the carrier clears it in `llmRequest`.
 - A DM `ref` on a place record is not trusted when the record is a twin of another place record by name or alias (`placeTwin`): it is dropped and the record stays unlinked. A second record can take an id only as a spot of the record that holds it (`spotPair`, #514). Chats linked wrongly before this are not repaired by code.
+- The DM never reads a stored message raw (#520): `updateRoute` passes `unread` and `since` through `storyMsgs(storyView(...))`, and `tidyBook` takes an optional `view`. `storyView` deletes only what the chat's prompt-only regex scripts delete (no macros, no depth limits, no replacements), the same code as in `plugins/relations` and `plugins/litopys`; change one copy, change all three. `namedIn` (the cast) still reads raw text. A new place that feeds a message to a model must go through the view.
 - A held hard event keeps `state.event` pending, and a pending event also keeps people from coming back (`planEntrance` waits while an event waits).
 
 ## Tests that guard it
