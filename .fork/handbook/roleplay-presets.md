@@ -1,5 +1,5 @@
 # Presets: the format, the prompt board, the stock presets, import and shaping
-Verified at: molfar.vertep-roleplay 607147f
+Verified at: molfar.vertep-roleplay c54eca7e (the macro rewrite line, #516); the rest at: molfar.vertep-roleplay 607147f
 
 ## What it does
 A preset is the prompt around a chat plus its sampler settings, stored as `data/presets/<id>.json` in the SillyTavern prompt-list shape with a `studio` bag holding the editor's full copy. `presetToEngine` writes the file from the editor's type. When a reply is built, `assemble` turns the chat's preset, variable picks and prompt board switches into messages, depth injections and sampler parameters.
@@ -47,6 +47,7 @@ A preset is the prompt around a chat plus its sampler settings, stored as `data/
 - Missing fields come from a base preset: the one open in the editor, else the first editable one.
 - The import gets a new id, `readOnly: false` and a unique name ("Name (2)"). Its regex scripts get scope `preset` and the new id.
 - The report has buckets `came`, `approx` and `dropped`, plus a source tag. Each line is text under `presetReport.<id>`.
+- `rewriteMacros` (`src/lib/preset-report.ts`) drops `{{noop}}` and turns `{{setglobalvar}}` and its family into the chat-variable macros. SillyTavern's variable shorthand (`{{.x = v}}`, `{{#if .x}}`) stays as written since #516 (the engine runs it); before, the assignments were removed and the report had a `localVars` line. `scanMacros` lists the macros the app does not expand (`SUPPORTED_MACROS`).
 - Diff: `PresetDiffDialog` compares the open preset with another preset in memory, not with files. Sections match by name.
 - Export (`presetExport`) drops `readOnly`, `isDefault` and `folderId` from the `studio` bag.
 

@@ -1,5 +1,5 @@
 # Lorebooks, regex scripts and macros
-Verified at: molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
+Verified at: molfar.vertep-roleplay c54eca7e (the Macros section, nested reader, #516); molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
 
 ## What it does
 Lorebook entries enter the prompt by keys, by constant status, or by a vector match over a threshold. One server function runs the scan, budget and placement. Regex scripts rewrite text on save, on edit, in the prompt, or only for display. Macros are expanded on the server. The browser shows why each entry fired and runs a keyword test through the same scanner.
@@ -18,7 +18,7 @@ Lorebook entries enter the prompt by keys, by constant status, or by a vector ma
 - `plugins/engine/plugin.js` `chatBookReport`: `GET /fired-books`, the chat's books against that log (never fired) and against the entry vectors.
 - `plugins/engine/plugin.js` `runRegexScripts`: scope, placement, stage and depth gates.
 - `plugins/engine/plugin.js` `applyRegexScript`: the replacement, with size guards.
-- `plugins/engine/plugin.js` `expandMacros`: macro replacement; `expandIfBlocks` handles `{{#if}}`.
+- `plugins/engine/plugin.js` `expandMacros`: macro replacement; `expandFlat` runs the flat passes, `expandNested` the tree reader (#516); `expandIfBlocks` handles `{{#if}}` in the flat passes.
 - `plugins/engine/plugin.js` `"wi-status"` route: the status view. `"wi-test"` route: the keyword test (dry run).
 - `src/lib/engine.ts` `lorebookToEngine`: app book to engine book; `fetchWIStatus` and `wiTest` call the routes.
 - `src/lib/safe-regex.ts` `runRegexSafe`: runs a user pattern in a worker with a timeout.
@@ -69,7 +69,7 @@ Secret entries: each item gets `secretV` once per scan (known: content; cover; m
 - Flags: an empty `flags` string means no `g`, the first match only, on both paths (`applyRegexScript`, the Worker). `regexImport` keeps the slash form's flags exactly (`/(?:)/` gives `""`; it used to give `g`, which put the Voyage preset's stylesheet script at every position of every reply, #442). A script with no `flags` field, and a bare pattern without slashes, stay global. `plugins/litopys` and `plugins/relations` still read an empty flags string as `g` when they compile prompt-stripping patterns.
 
 ## Macros
-`expandMacros` does the replacement, after `expandIfBlocks` handles `{{#if}}`. `macroLookup` resolves operand names.
+`expandMacros` picks one of two readers. A text with a macro inside a macro, a `{{#setvar::name}}…{{/setvar}}` block or `{{#if::…}}` (`needsNestedMacros`) goes to `expandNested`: `macroTokens` and `macroNodes` build a tree, `evalMacroNodes` runs it left to right, inner macros first. A setvar stores its value already expanded, a branch not taken runs nothing, and every other macro goes through `expandFlat` once its inner macros are resolved. A SillyTavern-form `{{#if}}` (after `::` or built from macros, `ifCondition`) tests the expanded value and keeps its text as written; the app's own form goes to `evalIfCondition` and eats one newline at each end, as before. The tree reader also runs SillyTavern's newer forms: `shorthandMacro` (`{{.x}}`, `{{.x = v}}`, `++`, `+=`, `==`, `||`, `??`…, `$x` the same chat variables), `{{#if .x}}`, and `{{if …}}` without `#` (a `trim` node: `trimScoped` trims and dedents what it shows) with its inline form `{{if cond::content}}`; the ST-form test is `stTrue` (falsy: empty, false, 0, off). `expandMacros` first turns `<USER>`, `<BOT>`, `<CHAR>` into `{{user}}`/`{{char}}`, and `expandFlat` reads the global-variable macros as chat ones; flat `addvar` shows nothing. Any other text goes to `expandFlat`: `expandIfBlocks` handles `{{#if}}` first, then one pass per macro kind, so every setvar of the text runs before any getvar. `macroLookup` resolves operand names.
 - Identity: `{{user}}`, `{{char}}`, `{{persona}}`, `{{description}}`, `{{personality}}`, `{{scenario}}`.
 - Time: `{{time}}`, `{{isotime}}`, `{{date}}`, `{{isodate}}`, `{{weekday}}`.
 - Messages: `{{lastMessage}}`, `{{lastUserMessage}}`, `{{lastCharMessage}}`, `{{idle_duration}}`, `{{summary}}` (always empty), `{{words}}`, `{{limit}}`.
@@ -93,11 +93,13 @@ Secret entries: each item gets `secretV` once per scan (known: content; cover; m
 - The server regex path has no time limit, only the 20000-character cut and the result cap. Only the browser Worker times out.
 - The server cuts input to 20000 characters and returns only that cut text, so the rest is lost from a replaced message.
 - Keys read the saved text, so a save-stage script changes what the scan sees. A display-only script does not.
+- The two macro readers order differently: `{{getvar::x}}{{setvar::x::1}}` gives `1` in the flat passes and empty in the tree reader (SillyTavern's answer). One nested macro anywhere in a text switches the whole text to the tree reader.
 
 ## Tests that guard it
 - `test/rp-lore-scan.test.ts`, `test/rp-lore-cross-script.test.ts`, `test/rp-wi-vectors.test.ts`
 - `test/rp-lore-filters.test.ts`, `test/rp-lore-folders.test.tsx`, `test/rp-lore-export.test.ts`, `test/lore-entry.test.ts`, `test/ui-lore-entry.test.tsx`
-- `test/rp-regex.test.ts`, `test/rp-safe-regex.test.ts`, `test/rp-preset-choices.test.ts`
+- `test/rp-regex.test.ts`, `test/rp-safe-regex.test.ts`, `test/rp-preset-choices.test.ts`, `test/rp-st-nested-macros.test.ts`
+- Against SillyTavern itself: `.fork/bench/st-presets/` (SillyBunny's macro engine run headless on a folder of presets; not a test, needs the owner's files).
 
 ## Not verified
 - The Cyrillic three-letter rule and `phraseMatch`.
