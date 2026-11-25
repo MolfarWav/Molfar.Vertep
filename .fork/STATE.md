@@ -9,7 +9,7 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-25: #449 Meanwhile read on the owner's real play, repeats fixed on Roleplay branch `claude/meanwhile-repeats-449` (e3bb9539, pushed, no PR, not released)
+## 2026-11-25: #449 Meanwhile read on the owner's real play, repeats fixed, RELEASED in Roleplay 4.156.1 (owner: "PR і реліз"; PR 206, merge `a721dcd7`; no engine release, the owner presses Update; the Meanwhile guide page re-translated in 13 locales, one sentence)
 - Owner: continue #449; first a test with a real model (the laptop already holds his play), then #450 before S2/S3 "but check first what is there".
 - Read the laptop's Meanwhile state (3 chats, nanogpt deepseek-v4-flash, own play): 16 passes in the main chat cost $0.003 in total (about $0.0002 a pass, 1.1-1.5k input tokens); about half the passes answered an empty list (6 output tokens), the rest gave exactly 3 events; nothing dropped by the checks, none with effects or witnesses, almost all `secret`.
 - Found: the model repeats itself. 21 events, 11 are the same moment of the same person again (m4 = m1 reworded, m7 = m4, m16 = m13 = m19 word for word) though the prompt lists the last 6 events and says do not repeat. The old check only compared `what` inside one batch.
