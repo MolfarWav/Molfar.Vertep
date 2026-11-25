@@ -9,7 +9,11 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-25 (newest): built-in Sola reply length: RELEASED in Roleplay 4.160.1 (owner: "перевіряй і гадаю можна постити"; PR 212, merge `53a38944`)
+## 2026-11-26 (newest): #526 saved setups of a preset's Choices: RELEASED in Roleplay 4.161.0 (owner: "Run it now"; PR 213, merge `36e63dd4`)
+- What: the chat's Preset panel has "Saved setups" above the choices (save under a name, Update on the same name, Load, star = new chats start there, rename, delete with confirm, search from 6); the new-chat step has "Load a saved setup". Owner's picks: per preset, Choices only, old default becomes a setup, setups travel with Export/Import. Storage and route: handbook `roleplay-presets.md` "Saved setups".
+- Checked: `rp-preset-setups` (6), related suites 301 pass, typecheck, biome clean on new files; browser-check 14 checks, 1280 dark and 390 light (no sideways scroll, 40 px buttons, no console errors). The first in-browser build took 236 s (the owner's engine was busy); leftover Playwright Chrome processes from timed-out runs were stopped. Not checked: Export/Import in the browser (unit-tested only).
+
+## 2026-11-25: built-in Sola reply length: RELEASED in Roleplay 4.160.1 (owner: "перевіряй і гадаю можна постити"; PR 212, merge `53a38944`)
 - Measured in the owner's chats (Gemma 4 31B): Sola wrote ~250 story words whatever the length pick, Vertep Medium 600-850 with the same model; same total output, Sola's sheet took 500-700 words. Fix in `.fork/tools/st-to-vertep/sola_length.py`: sheet capped (200, Lightning 120), SHAPE names the target and beats, long targets get 2-3 movements, the 400-500/700-900/1500-2000 picks no longer shrink for a short user message and fill by depth (Vertep Medium's wording); Rapid Fire and Adaptive unchanged. Owner's chat after the fix: 265, 540, 615, 674 words, sheet ~230.
 - The owner's three imported Sola copies in the laptop workspace were updated in place on request (ids, names, samplers and picks kept; regex scripts of the two older copies replaced by the leak-fixed set); backup in the session scratchpad.
 
