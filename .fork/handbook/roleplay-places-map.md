@@ -1,5 +1,5 @@
 # Roleplay places map: the floating map of a chat's places
-Verified at: hide places at molfar.vertep-roleplay claude/map-hide-places-504 (4f2debe2, browser check 2026-11-25, not merged); place ref rule at molfar.vertep-roleplay claude/place-ref-514 (2a590939); molfar.vertep-roleplay and molfar.vertep (engine part), branches `claude/map-levels-473` (levels and "Draw a map", #473 and #475, not merged: browser check 2026-11-20 with a faked image model), the older steps on `claude/map-454` (merged, Roleplay 4.140.0, engine 1.19.0)
+Verified at: hide places at molfar.vertep-roleplay main 3ac06d78 (Roleplay 4.157.0, browser check 2026-11-25); place ref rule at molfar.vertep-roleplay claude/place-ref-514 (2a590939); molfar.vertep-roleplay and molfar.vertep (engine part), branches `claude/map-levels-473` (levels and "Draw a map", #473 and #475, not merged: browser check 2026-11-20 with a faked image model), the older steps on `claude/map-454` (merged, Roleplay 4.140.0, engine 1.19.0)
 
 ## What it does
 - A round chip over the chat opens a floating window with a board of the chat's World place records: painted icons, names, dashed roads between places the story moved between, the place the story is in marked.
