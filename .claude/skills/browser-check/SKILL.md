@@ -84,6 +84,8 @@ It seeds six places itself and runs in one session (a second `openRp` wipes the 
 
 Map levels and "Draw a map" (#473, #475) have their own script, `placemap-levels-check.mjs` (about 45 checks, on a FRESH engine): maps, scale, places on a map, a map of a place, travel by scale, the draw window with `POST /v1/images` faked in the page (a picture stored in the engine), the light theme and a 390 px phone; screenshots `pml-*.png`.
 
+Hiding places (the owner's request, 2026-11-25): `placemap-hide-check.mjs` (21 checks, FRESH engine: the card's "Hide from all maps" and Undo, a reload, the gear's "Hide places..." list, a whole place with its rooms, everything hidden, a 390 px phone) and `group-mute-check.mjs` (#504, 9 checks: a group seeded by file and `PUT /groups/<id>`, the Members tab's "Mute" label, tooltip, muted mark and the all-muted warning, 390 px).
+
 ## A fight from a chat to the RPG app and back (issue #486)
 `rpg-handoff-check.mjs` plays the whole round trip with the real shell: the Fight button in a Roleplay chat, opponents from the fake model, the
 encounter file, the RPG app opening on the muster, a fight to the end, the result file, and the result card back in Roleplay. The setup (the
