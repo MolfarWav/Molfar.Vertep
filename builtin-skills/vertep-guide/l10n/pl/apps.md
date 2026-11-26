@@ -1,4 +1,4 @@
-<!-- source: 307dd6e4bc8d -->
+<!-- source: 9d4c677df24e -->
 # Aplikacje
 
 Jak znajdować, dodawać, aktualizować i usuwać aplikacje. Aplikacje to rzeczy, których faktycznie używasz: Roleplay jest tą główną.
@@ -16,9 +16,11 @@ Pasek narzędzi oferuje:
 - „Podziel”: Molfar po lewej, aplikacja na żywo po prawej.
 - „Pełny ekran”: aplikacja we własnej karcie przeglądarki, którą możesz zainstalować jak aplikację.
 - „Wtyczki”: wtyczki aplikacji i ich uprawnienia; importuj więcej z gita.
-- „Przebuduj”: natychmiast przebudowuje aplikację.
+- „Przebuduj”: natychmiast przebudowuje aplikację. Gdy trwa budowanie, przycisk zmienia się w „Budowanie…” z zegarem (na przykład 1:23) i nie można go nacisnąć ponownie; nad aplikacją pojawia się cienka linia mówiąca, co jest budowane („Pakowanie pakietów…” lub „Budowanie kodu aplikacji…”), z tym samym zegarem. Pierwsze budowanie może potrwać kilka minut, na telefonie dłużej: nie zamykaj strony.
 
-Na telefonie te trzy znajdują się w menu konta.
+Na telefonie te trzy znajdują się w menu konta, a pozycja „Przebuduj” pokazuje ten sam zegar „Budowanie…”.
+
+Po aktualizacji aplikacji jest ona budowana ponownie przy następnym otwarciu, ale tylko zmienione pliki (a pakiety tylko wtedy, gdy się zmieniły), więc zwykle jest to szybkie. Ustawienia > Programista pokazuje każdą aplikację i jej budowę: „Zbudowana i aktualna”, „Zbudowana wcześniej. Zbuduje się ponownie przy otwarciu”, „Jeszcze nie zbudowana. Zbuduje się przy otwarciu”, „Budowanie nie powiodło się” albo „Budowanie…” z zegarem, dopóki trwa budowanie.
 
 ## Gdy aplikacja chce czytać inną aplikację
 

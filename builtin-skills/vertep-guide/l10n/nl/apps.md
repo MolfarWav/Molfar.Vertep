@@ -1,4 +1,4 @@
-<!-- source: 307dd6e4bc8d -->
+<!-- source: 9d4c677df24e -->
 # Apps
 
 Hoe je apps vindt, toevoegt, bijwerkt en verwijdert. Apps zijn de dingen die je echt gebruikt: Roleplay is de belangrijkste.
@@ -16,9 +16,11 @@ De werkbalk biedt:
 - "Splitsen": Molfar links, de app live rechts.
 - "Volledig scherm": de app in zijn eigen browsertabblad, dat je als een app kunt installeren.
 - "Plug-ins": de plug-ins van de app en hun rechten; importeer er meer vanuit git.
-- "Opnieuw bouwen": bouwt de app nu opnieuw.
+- "Opnieuw bouwen": bouwt de app nu opnieuw. Terwijl er een build loopt, verandert de knop in "Wordt gebouwd…" met een klok (bijvoorbeeld 1:23) en kun je er niet nog eens op drukken; boven de app staat een dunne regel die zegt wat er wordt gebouwd ("Pakketten worden gebundeld…" of "App-code wordt gebouwd…"), met dezelfde klok. Een eerste build kan een paar minuten duren, op een telefoon langer: laat de pagina open staan.
 
-Op een telefoon staan deze drie in het accountmenu.
+Op een telefoon staan deze drie in het accountmenu, en het item "Opnieuw bouwen" toont dezelfde klok "Wordt gebouwd…".
+
+Na een app-update wordt de app de volgende keer dat je hem opent opnieuw gebouwd, maar alleen de gewijzigde bestanden (en de pakketten alleen als die gewijzigd zijn), dus meestal gaat dat snel. Instellingen > Ontwikkelaar toont elke app met zijn build: "Gebouwd en actueel", "Eerder gebouwd. Wordt opnieuw gebouwd wanneer je hem opent", "Nog niet gebouwd. Wordt gebouwd wanneer je hem opent", "Build mislukt", of "Wordt gebouwd…" met de klok zolang er een loopt.
 
 ## Wanneer een app een andere app wil lezen
 

@@ -1,4 +1,4 @@
-<!-- source: 307dd6e4bc8d -->
+<!-- source: 9d4c677df24e -->
 # Apps
 
 Comment trouver, ajouter, mettre à jour et supprimer des apps. Les apps sont ce que vous utilisez réellement : Roleplay est la principale.
@@ -16,9 +16,11 @@ La barre d’outils propose :
 - « Scinder » : Molfar à gauche, l’app en direct à droite.
 - « Plein écran » : l’app dans son propre onglet de navigateur, que vous pouvez installer comme une app.
 - « Plugins » : les plugins de l’app et leurs permissions ; importez-en d’autres depuis git.
-- « Recompiler » : recompile l’app immédiatement.
+- « Recompiler » : recompile l’app immédiatement. Pendant une compilation, le bouton devient «Compilation… » avec une horloge (par exemple 1:23) et ne peut pas être pressé de nouveau ; une fine ligne au-dessus de l’app indique ce qui est en cours de compilation («Regroupement des paquets… » ou «Compilation du code de l'app… »), avec la même horloge. Une première compilation peut prendre quelques minutes, plus sur un téléphone : gardez la page ouverte.
 
-Sur un téléphone, ces trois boutons se trouvent dans le menu du compte.
+Sur un téléphone, ces trois boutons se trouvent dans le menu du compte, et l’entrée «Recompiler » affiche la même horloge «Compilation… ».
+
+Après la mise à jour d’une app, elle est recompilée à sa prochaine ouverture, mais seulement les fichiers modifiés (et les paquets seulement s’ils ont changé), donc c’est en général rapide. Paramètres > Développeur liste chaque app avec sa compilation : «Compilée et à jour », «Compilée auparavant. Elle se recompile à l'ouverture », «Pas encore compilée. Elle se compile à l'ouverture », «Échec de la compilation » ou «Compilation… » avec l’horloge pendant qu’une compilation tourne.
 
 ## Quand une app veut lire une autre app
 

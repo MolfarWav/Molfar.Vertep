@@ -17,7 +17,7 @@ The toolbar offers:
 - "Plugins": the app's plugins and their permissions; import more from git.
 - "Rebuild": rebuilds the app right now. While a build runs, the button turns into "Building…" with a clock (for example 1:23) and cannot be pressed again; the app shows a thin line above it saying what is being built ("Bundling packages…" or "Building app code…") with the same clock. A first build can take a few minutes, longer on a phone: keep the page open.
 
-On a phone these four sit in the account menu, and the Rebuild entry shows the same "Building…" clock.
+On a phone these three sit in the account menu, and the Rebuild entry shows the same "Building…" clock.
 
 After an app update the app builds again the next time you open it, but only the files that changed (and only the packages if they changed), so it is usually quick. Settings > Developer lists every app with its build: "Built and up to date", "Built earlier. It rebuilds when you open it", "Not built yet. It builds when you open it", "Build failed", or "Building…" with the clock while one runs.
 
