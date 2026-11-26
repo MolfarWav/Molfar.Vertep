@@ -36,6 +36,9 @@ declare global {
     errors?: Array<{ text: string; file?: string; line?: number; column?: number; lineText?: string }>;
     /** on an error: false when no build of the app ever finished */
     built?: boolean;
+    /** while building: when this build started (ms since the epoch) and which part it is on */
+    since?: number;
+    step?: "app" | "packages";
   }
 }
 

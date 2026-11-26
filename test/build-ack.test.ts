@@ -87,6 +87,17 @@ describe("build ack", () => {
     expect(await (await call("POST", "/v1/apps/w/build/ack", { holder: "holder1234", rev })).json()).toEqual({ acked: false });
   });
 
+  it("a build that died in the page is reported, once in a while, and an app frame cannot report one (#524)", async () => {
+    const { app, token, call } = await setup();
+    expect((await call("POST", "/v1/apps/w/build/report", {})).status).toBe(400);
+    expect((await call("POST", "/v1/apps/nope/build/report", { message: "x" })).status).toBe(404);
+    expect(await (await call("POST", "/v1/apps/w/build/report", { message: "full build stopped in the page: the build took longer than 30 minutes and was stopped", ms: 1_800_000 })).json()).toEqual({ logged: true });
+    // a second report inside ten seconds is dropped, so a failing loop cannot flood the log
+    expect(await (await call("POST", "/v1/apps/w/build/report", { message: "again" })).json()).toEqual({ logged: false });
+    const relayed = await app.request("/v1/apps/w/build/report", { method: "POST", headers: { authorization: `Bearer ${token}`, "x-chrysalis-app": "w", "content-type": "application/json" }, body: JSON.stringify({ message: "x" }) });
+    expect(relayed.status).toBe(403);
+  });
+
   it("an app frame cannot reach it through the bridge relay", async () => {
     const { app, token } = await setup();
     const r = await app.request("/v1/apps/w/build/ack", { method: "POST", headers: { authorization: `Bearer ${token}`, "x-chrysalis-app": "w", "content-type": "application/json" }, body: "{}" });

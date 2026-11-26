@@ -82,6 +82,8 @@ Traps:
 - `t#` is a Dashboard thread and a thing is `o#`. Older files are renamed on load. Some test titles still say `t#`, for example test/rp-world-ids.test.ts line 41.
 - A Dashboard rename does not change registry names. A stale name in `personIds` is looked up again and dropped if it no longer resolves.
 
+- A World place record that shares a name or alias with another place record (not dormant) that is not linked to the id loses its `ref` (`placeTwin` in `linkToRef`); names in two alphabets cannot be compared by words, and a wrong ref puts the record's names on the tracker's entity (#514). A spot (`size: spot`, `inside` naming the record that holds the id) may take the same id (`spotPair`); `placeRecordOf` then prefers the spot. `trackedThings` lists a linked place id again when its text has two levels and place records not linked to it exist.
+
 
 ## From `roleplay-forge-agents.md`
 
@@ -180,6 +182,7 @@ Traps:
 - The server regex path has no time limit, only the 20000-character cut and the result cap. Only the browser Worker times out.
 - The server cuts input to 20000 characters and returns only that cut text, so the rest is lost from a replaced message.
 - Keys read the saved text, so a save-stage script changes what the scan sees. A display-only script does not.
+- The two macro readers order differently: `{{getvar::x}}{{setvar::x::1}}` gives `1` in the flat passes and empty in the tree reader (SillyTavern's answer). One nested macro anywhere in a text switches the whole text to the tree reader.
 
 
 ## From `roleplay-memory-chain.md`
@@ -262,6 +265,7 @@ Traps:
 - Positions are saved from an effect that runs on each records or scene read; `layoutMap` returns `added` only for nodes without a position, or it would write forever.
 - The window's drag and resize use pointer capture and a `buttons === 0` guard: an app frame does not always hear a button released outside it.
 - A page reload takes about 8 s before the chip shows (the World state call comes after the app boots).
+- A World record that took the wrong registry id (the DM's `ref` on a second record of an old place) pins `here` and `placeMap.at` to it for the whole chat; since #514 a twin record's ref is dropped, and a spot of the place may share the id. The data of a chat hit before is not repaired by code.
 - A road needs the scene's place to resolve to a World place record (`hereOf` in `plugins/world/plugin.js`: by registry id or by the words of the name). The Dashboard's place line is free text: when it names somewhere the book has no record of, `here` is null, `placeMap.at` is never set and no road is ever drawn (the owner's first real chat: 4 places, no `at`, no roads). The map says so in a line under the header (`place-map-scene`). The tracker only sees moves while the chat is open; it does not read the story's past.
 - A rename on the map is a label in `placeMap.labels`, by record id: the record's name is never changed there, because the book, the Dashboard, spots' `inside` and things' `place` go by that name and travel by a tap will go by the record. `MapNode.name` is the label or the record name, `bookName` the record's, `names` all of them (the icon's kind is read from them).
 - Travel does not move the Dashboard clock by code: the direction names the minutes, the reply narrates them and the sensor's reading of the reply moves the clock (as Skip time does), so a swipe takes it back. The first trip's street is invented by the reply and is not read back: the player types it into the road name if they want it kept.
@@ -383,4 +387,5 @@ Traps:
 - `undoFrom` keeps records the player edited after the snapshot, so a deleted reply does not undo hand edits.
 - A chat with no state file counts as on at chronicler; only level `off` in a state file keeps it off.
 - `breath` is not in `CORE_KEYS`: a rollback does not restore it. It is checked against the chat's messages instead, so a deleted carrier frees the pause, and a swipe of the carrier clears it in `llmRequest`.
+- A DM `ref` on a place record is not trusted when the record is a twin of another place record by name or alias (`placeTwin`): it is dropped and the record stays unlinked. A second record can take an id only as a spot of the record that holds it (`spotPair`, #514). Chats linked wrongly before this are not repaired by code.
 - A held hard event keeps `state.event` pending, and a pending event also keeps people from coming back (`planEntrance` waits while an event waits).

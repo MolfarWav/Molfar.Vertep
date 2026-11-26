@@ -5226,7 +5226,12 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     // granting from it left that plugin with no permissions at all
     grantBundledPlugins(p, id, incoming, source.git);
     dropStaging();
-    discardDir(path.join(info.dir, "dist"), warnDiscard, stagingRoot);
+    // dist stays (#523). Its status carries the old source revision, so the app
+    // counts as needing a build, and the build that follows resumes from the
+    // saved module graph and reuses the packages bundle (/build/resume); it
+    // falls back to a full build by itself when package.json, a lock file,
+    // index.html or public/ changed. Deleting it made every first build after an
+    // update a cold one (3 to 10 minutes on a phone).
     const warnings: string[] = [];
     // installed over the old packages: if the install fails, the app keeps
     // the ones it had instead of none
@@ -5715,6 +5720,25 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     const acked = ackUnchangedBuild(a.dir, body.rev);
     if (acked) log.info(`[build] ${u.username}/${a.id} nothing to rebuild${describeBuild(body.stats)}`);
     return c.json({ acked });
+  });
+
+  // A build that died inside the page (watchdog stop, the esbuild frame never
+  // starting, the output not landing) is known only to that page. The page tells
+  // the engine so the log keeps a line (#524). Display data: capped, one line,
+  // at most one per app every 10 s, and it changes nothing.
+  const buildReportAt = new Map<string, number>();
+  app.post("/v1/apps/:id/build/report", async (c) => {
+    const a = buildableApp(c);
+    if (!a) return c.json({ error: "app not found" }, 404);
+    const body = await c.req.json<{ message?: unknown; ms?: unknown }>().catch(() => ({}) as { message?: unknown; ms?: unknown });
+    if (typeof body.message !== "string" || !body.message.trim()) return c.json({ error: "message required" }, 400);
+    const key = buildKey(c.get("user"), a.id);
+    const now = Date.now();
+    if (now - (buildReportAt.get(key) ?? 0) < 10_000) return c.json({ logged: false });
+    buildReportAt.set(key, now);
+    const ms = typeof body.ms === "number" && Number.isFinite(body.ms) && body.ms >= 0 ? Math.round(body.ms) : 0;
+    log.warn(`[build] ${key} did not finish: ${body.message.replace(/\s+/g, " ").trim().slice(0, 300)}${ms >= 1000 ? ` (${Math.round(ms / 1000)} s after it started)` : ""}`);
+    return c.json({ logged: true });
   });
 
   // Can the next build start from the last build's saved module graph (#181)?
