@@ -85,7 +85,7 @@ Text to speech has three modes: None, browser voices, or the engine's speech end
 - Picture modes: `IMAGE_PROMPT_MODES` in `plugins/engine/plugin.js` and `IMAGE_MODES` in `src/lib/image-gen.ts`.
 - Picture tool text: `handleTool` and `IMAGE_TAGS_DESCRIPTION` in `plugins/tools/plugin.js`.
 - Portrait text: `portraitRoute` in `plugins/profile/plugin.js` and `portraitPrompt` in `src/lib/portrait-draw.ts`.
-- Any call that sends a picture: `images: [img]` in `fillRoute` and `structureRoute` (`plugins/profile/plugin.js`), and the warning in `structure-draft.tsx`.
+- Any call that sends a picture: `images: [img]` in `fillRoute` and `structureRoute` (`plugins/profile/plugin.js`), and `useFillEmpty` in `structure-draft.tsx`, which sends the portrait only with the Appearance fields (the warning there is for a portrait file that could not be read).
 
 ## Traps
 - A sprite with no URL is an empty slot. `spritePool` leaves it out.
