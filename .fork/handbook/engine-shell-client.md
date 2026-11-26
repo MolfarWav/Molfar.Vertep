@@ -21,7 +21,8 @@ The shell is the signed-in browser page in `client/src`. It shows a tab strip (t
 - `client/src/local-embeddings.tsx` `LocalEmbeddings`: download and check of the local embedding model.
 - `client/src/updates-panel.tsx` `UpdatesDialog`: app and engine update list; a row with `noSource` ("file" or "local") says why the app has no update.
 - `client/src/App.tsx` `BuildErrors`: the build-failed card over an app; its wording follows `built` from the builder status (false: no build ever finished).
-- `client/src/App.tsx` `BuildBar`, `buildText`: the thin "Building… 1:23" line above an open app while a build runs, and the clock in the toolbar and phone-menu Rebuild; state from `client/src/build-state.ts` (`setAppBuild`, `useAppBuild`, `useBuildingApps`). Settings > Developer (`DeveloperTab`) reads the same store plus `GET /v1/apps/:id/build` (#524).
+- `client/src/App.tsx` `BuildBar`, `buildText`: the thin "Building… 1:23" line above an open app while a build runs, and the clock in the toolbar and phone-menu Rebuild; state from `client/src/build-state.ts` (`setAppBuild`, `useAppBuild`, `useBuildingApps`).
+- `client/src/settings.tsx` `DeveloperTab`: Settings > Developer; reads the same store plus `GET /v1/apps/:id/build` (#524).
 - `client/src/app-update.tsx` `useAppUpdate`: per-app update state behind `AppUpdateBanner`.
 - `client/src/app-reads.tsx` `AppReadsPanel`: the reads an app asked for, answered via `useAppReads`.
 - `client/src/app-notices.tsx` `useAppNotices`: messages from apps shown as `AppToasts`, at most three at a time.

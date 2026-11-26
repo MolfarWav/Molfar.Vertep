@@ -36,6 +36,9 @@ Change X, touch Y:
 - `parseReads` or the `reads` manifest shape: also `validateAppManifest` in `src/apps/manager.ts`, `peerMounts`, and `test/app-reads.test.ts`.
 - `userPaths` in `src/paths.ts`: also `readGrants` and `writeGrants` in `src/apps/reads.ts`.
 - `GET /v1/apps/:id/build` answers `built` (dist/index.html exists); `src/builder/browser/host.ts` puts it on an error status so the shell and the standalone page can say "nothing to show yet" instead of "last good build" when no build ever finished (#337).
+- `POST /v1/apps/:id/build/report` (shell only, like the other `/build/*` routes): a build that died inside the page (watchdog stop, saving failed) says so and the engine logs `[build] <user>/<app> did not finish: ...`, one line per app per 10 s (#524). `host.ts` `report`.
+- The builder status carries `since` (when the build started) and `step` (`app` or `packages`, from `BuilderEnv.phase` that `DevSession.full` calls); `client/src/build-state.ts` keeps it per app for the toolbar, the phone menu and Settings > Developer.
+- An app update keeps `dist/` (#523): the status keeps the old source revision, so the next open resumes from `dev/graph.json` (only changed files, packages bundle kept when `depsKey` matches). An open page does the same on `app_changed` with `updated` (`AppBuild.rebuild(why, true)`); only a graph that cannot be used (package or lock change, `index.html`, `public/`) becomes a full build.
 - The delete and rename routes in `buildApp`: keep calling `forgetGrants`, `forgetPeer` and `moveGrants`.
 
 Traps:
