@@ -21,6 +21,11 @@ ORDER, toggle, pick_of, pick_val = meta['ORDER'], meta['toggle'], meta['pick_of'
 REQUIRED, MARKERS, ENABLED0, SECSRC, picks = set(meta['REQUIRED']), set(meta['MARKERS']), meta['ENABLED0'], meta['SECSRC'], meta['picks']
 CARD = {'personaDescription', 'charDescription', 'charPersonality', 'dialogueExamples'}
 var_by_name = {v['name']: v for v in preset['studio']['variables']}
+# sections the port writes for the engine directly (the Story language note) are not in the SillyTavern text: leave them out
+POST = set(meta.get('POST', []))
+_vp = json.loads(json.dumps(preset))
+_vp['studio']['sections'] = [x for x in _vp['studio']['sections'] if x['id'] not in POST]
+json.dump(_vp, open(OUT + '.verify.json', 'w', encoding='utf-8'), ensure_ascii=False)
 
 
 def reference(cfg):
@@ -73,7 +78,7 @@ for k in range(N):
     cfgs.append({'on': on, 'stored': stored, 'secon': {s: on[p] for s, p in SECSRC.items()}, 'feat': feat})
 
 json.dump(cfgs, open('cfgs.json', 'w', encoding='utf-8'))
-res = subprocess.run(['bun', 'vsim.mjs', OUT, 'cfgs.json', 'sim_out.json'], capture_output=True, text=True, encoding='utf-8')
+res = subprocess.run(['bun', 'vsim.mjs', OUT + '.verify.json', 'cfgs.json', 'sim_out.json'], capture_output=True, text=True, encoding='utf-8')
 if res.returncode:
     print(res.stdout, res.stderr); sys.exit(1)
 sims = json.load(open('sim_out.json', encoding='utf-8'))

@@ -56,6 +56,9 @@ DROP = [
     "[PICK 1: ↑] Simple Headers 🪧", "Zero HTML 😭",
     # the old "do not enable" tail: its markers move into the Oath, the rest is unused
     "━🚫DO NOT ENABLE BELOW THIS LINE🚫", "NSFW Prompt", "Enhance Definitions",
+    # a switch that wrote a fixed "Spanish" line and had no place to type a language (#534); replaced by the Story language
+    # choice, added after the compile (see sola_length.py)
+    "Language Selector 🌐",
 ]
 dropped = set()
 for n in DROP:
@@ -233,6 +236,7 @@ if __import__('os').environ.get('SOLA_CUE'):
 
 # ------------------------------------------------------------------ 3. classify
 REQUIRED = {pid_of(n) for n in ("━🧠 00. SOLA'S MIND", "⚜️ Oath", BP, "🗝️ Sola’s Secret Drawer", "🕯️ SOLA'S MIND PALACE (CoT)")}
+REQUIRED.add(NOTE_ID)   # the reply note is not a switch: the length pick (Adaptive, Off) turns it off
 for i, _ in ORDER:
     if (P[i].get('name') or '').startswith('━'):
         REQUIRED.add(i)
@@ -557,6 +561,24 @@ for i, en in ORDER:
                           'defaultValue': 'true' if ENABLED0.get(i) else 'false', 'question': hint(i)})
 
 # ------------------------------------------------------------------ 8. utility prompts, studio, regexes
+# the reply note goes in the chat at depth 0, like Vertep Medium's "This reply" (the compiler writes every section relative)
+for _s in sections:
+    if _s['name'] == NOTE_NAME:
+        _s.update({'position': 'in-chat', 'depth': 0, 'injectionTriggers': ['normal', 'continue', 'swipe', 'regenerate']})
+        _s.pop('groupId', None)
+        _s['groupId'] = None
+assert any(_s['name'] == NOTE_NAME for _s in sections), 'reply note was not emitted'
+# the Story language choice (and the text box for "Other") sits right after Reply length; its note goes in the chat at
+# depth 0 as well. These are written for the engine directly, not compiled from the SillyTavern text, so verify.py leaves
+# them out of its comparison (meta POST).
+POST = []
+_k = [n for n, _v in enumerate(variables) if _v['name'] == 'length']
+assert len(_k) == 1, 'no length variable'
+variables[_k[0] + 1:_k[0] + 1] = copy.deepcopy(LANG_VARS)
+for _name, _content, _note in LANG_SECTIONS:
+    _s = add_section(_name, _content, note=_note)
+    _s.update({'position': 'in-chat', 'depth': 0, 'injectionTriggers': ['normal', 'continue', 'swipe', 'regenerate'], 'groupId': None})
+    POST.append(_s['id'])
 studio = copy.deepcopy(base['studio'])
 up = dict(studio.get('utilityPrompts') or {})
 if 'groupNudge' in up:
@@ -720,6 +742,6 @@ print('sections', len(sections), 'groups', [g['name'] for g in groups.values()])
 print('choices', [(v['name'], len(v['choices'])) for v in variables if v['type'] == 'choice'])
 print('toggles', len(toggle), sorted(toggle.values()))
 json.dump({'ORDER': ORDER, 'toggle': toggle, 'pick_of': pick_of, 'pick_val': pick_val, 'REQUIRED': sorted(REQUIRED),
-           'MARKERS': sorted(MARKERS), 'ENABLED0': ENABLED0, 'SECSRC': SECSRC, 'picks': picks},
+           'MARKERS': sorted(MARKERS), 'ENABLED0': ENABLED0, 'SECSRC': SECSRC, 'picks': picks, 'POST': POST},
           open(OUT + '.meta.json', 'w', encoding='utf-8'), ensure_ascii=False)
 json.dump({i: P[i].get('content') or '' for i, _ in ORDER}, open(OUT + '.src.json', 'w', encoding='utf-8'), ensure_ascii=False)
