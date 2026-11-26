@@ -3,6 +3,7 @@
 // (all pi-ai providers, logos, search), name it, paste the key; or define a
 // custom OpenAI-compatible / Anthropic endpoint. Keys never leave the server.
 import { useEffect, useRef, useState, type ReactNode } from "react"
+import { elapsedOf, useBuildingApps, useNow } from "./build-state"
 import { Dialog } from "./ui/dialog"
 import { cn } from "./ui/cn"
 import { useResource } from "./use-resource"
@@ -2862,26 +2863,35 @@ type AppBuildInfo = {
 
 /** Live editing: apps are built in this browser, in a sandboxed builder
  *  frame, and edits land as hot updates with no page reload. Nothing to
- *  switch on; this pane reports each app's last build. */
+ *  switch on; this pane reports each app's build: built, changed since,
+ *  failed, or running now with its clock (#524). */
 function DeveloperTab() {
   const [apps, setApps] = useState<Array<{ id: string; name?: string }>>([])
   const [state, setState] = useState<Record<string, AppBuildInfo>>({})
   const [loaded, setLoaded] = useState(false)
   const [err, setErr] = useState("")
+  const running = useBuildingApps()
+  const anyRunning = Object.keys(running).length > 0
+  const now = useNow(anyRunning)
 
+  const refresh = async (list: Array<{ id: string; name?: string }>) => {
+    const entries = await Promise.all(
+      list.map(async (a) => {
+        const s = await api<AppBuildInfo>("GET", `/v1/apps/${encodeURIComponent(a.id)}/build`)
+        return [a.id, s] as const
+      }),
+    )
+    setState(Object.fromEntries(entries))
+  }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: loads once when the pane opens
   useEffect(() => {
     void (async () => {
       try {
         const l = await api<{ apps?: Array<{ id: string; name?: string }> }>("GET", "/v1/launch")
         const list = l.apps ?? []
-        const entries = await Promise.all(
-          list.map(async (a) => {
-            const s = await api<AppBuildInfo>("GET", `/v1/apps/${encodeURIComponent(a.id)}/build`)
-            return [a.id, s] as const
-          }),
-        )
+        await refresh(list)
         setApps(list)
-        setState(Object.fromEntries(entries))
       } catch (e) {
         setErr((e as Error).message ?? String(e))
       }
@@ -2889,15 +2899,26 @@ function DeveloperTab() {
     })()
   }, [])
 
-  const describe = (b: AppBuildInfo | undefined): { text: string; tone: "ok" | "bad" | "idle" } => {
+  // a build that ends while this pane is open changes what it should say
+  const runningKey = Object.keys(running).sort().join(",")
+  const prevRunning = useRef("")
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the set of running builds changes
+  useEffect(() => {
+    if (prevRunning.current && prevRunning.current !== runningKey && apps.length) void refresh(apps).catch(() => undefined)
+    prevRunning.current = runningKey
+  }, [runningKey])
+
+  const describe = (id: string, b: AppBuildInfo | undefined): { text: string; tone: "ok" | "bad" | "idle" | "busy" } => {
+    const live = running[id]
+    if (live) return { text: `${tr("Building…")} ${elapsedOf(live, now)}`.trim(), tone: "busy" }
     if (!b || !b.buildable) return { text: tr("No page to build"), tone: "idle" }
-    if (!b.status) return { text: tr("Builds when you open it"), tone: "idle" }
+    if (!b.status) return { text: tr("Not built yet. It builds when you open it"), tone: "idle" }
     if (!b.status.ok) {
       const e = b.status.errors[0]
       return { text: tr("Build failed") + (e ? `: ${e.file ?? ""}${e.line ? `:${e.line}` : ""} ${e.text}` : ""), tone: "bad" }
     }
-    const when = b.needsBuild ? " " + tr("(changed since, rebuilds on open)") : ""
-    return { text: (b.status.mode === "development" ? tr("Live: edits apply in place") : tr("Production build")) + when, tone: "ok" }
+    if (b.needsBuild) return { text: tr("Built earlier. It rebuilds when you open it"), tone: "idle" }
+    return { text: b.status.mode === "development" ? tr("Built and up to date") : tr("Production build"), tone: "ok" }
   }
 
   return (
@@ -2905,14 +2926,14 @@ function DeveloperTab() {
       <div className="flex flex-col gap-4 pb-4">
         <section className="flex flex-col gap-2">
           {loaded ? <>{apps.map((a) => {
-                const d = describe(state[a.id])
+                const d = describe(a.id, state[a.id])
                 return (
                   <div key={a.id} className="flex items-center gap-3 rounded-lg border border-line px-3 py-2 text-13">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{a.name || a.id}</span>
-                      <span className={cn("block truncate text-11", d.tone === "bad" ? "text-danger" : "text-ink-faint")}>{d.text}</span>
+                      <span className={cn("block truncate text-12", d.tone === "bad" ? "text-danger" : d.tone === "busy" ? "text-ink-muted" : "text-ink-faint")}>{d.text}</span>
                     </span>
-                    <span className={cn("size-2 shrink-0 rounded-full", { "bg-success": d.tone === "ok", "bg-danger": d.tone === "bad", "bg-ink-faint": d.tone === "idle" })} />
+                    {d.tone === "busy" ? <span className="size-3 shrink-0 animate-spin rounded-full border-2 border-line border-t-ink-muted" aria-hidden="true" /> : <span className={cn("size-2 shrink-0 rounded-full", { "bg-success": d.tone === "ok", "bg-danger": d.tone === "bad", "bg-ink-faint": d.tone === "idle" })} />}
                   </div>
                 )
               })}

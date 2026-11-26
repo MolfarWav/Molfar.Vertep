@@ -26,6 +26,7 @@ import { NOTICE_KINDS, type NoticeKind } from "./notice-rules"
 import { askPermissionOnce, askPermissionOnFirstGesture, closeNotices, showNotice } from "./notice"
 import { GUIDE_MENU_EVENT, GUIDE_STORE_EVENT, openHelp } from "./guide/events"
 import { GuidePlace, useGuidePlace } from "./guide/place"
+import { elapsedOf, isBuilding, setAppBuild, useAppBuild, useNow, type AppBuildEntry } from "./build-state"
 import { DEFAULT_THEME, THEME_KEY, applyStoredTheme, applyTheme, isBuiltinTheme, storedThemeId, themeSwatch, type ShellTheme } from "./theme"
 
 type Tab = { id: string; kind: "agent" | "app" | "new"; name: string }
@@ -842,6 +843,10 @@ function UserMenu(props: {
   const installWay = useInstallWay()
   const [avatarOk, setAvatarOk] = useState(true)
   const app = props.app
+  // the open app's build, so the Rebuild entry says "Building… 1:23" instead of looking idle (#524)
+  const appBuild = useAppBuild(app?.id ?? "")
+  const appBuilding = isBuilding(appBuild)
+  const buildNow = useNow(appBuilding && open)
   const btnRef = useRef<HTMLButtonElement>(null)
   const [pos, setPos] = useState<{ top: string; right: string } | null>(null)
   const place = () => {
@@ -937,14 +942,15 @@ function UserMenu(props: {
                 </button>
                 <button
                   role="menuitem"
-                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 transition-colors hover:bg-hover"
+                  disabled={appBuilding}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-13 transition-colors hover:bg-hover disabled:cursor-default disabled:opacity-100 disabled:hover:bg-transparent"
                   onClick={() => {
                     setOpen(false)
                     void window.MolfarBuilder?.rebuild(app.id).catch(() => undefined)
                   }}
                 >
-                  <Icon name="rebuild" size="small" />
-                  {tr("Rebuild")}
+                  {appBuilding ? <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-line border-t-ink-muted" aria-hidden="true" /> : <Icon name="rebuild" size="small" />}
+                  {appBuilding ? <span className="text-ink-muted">{tr("Building…")} {elapsedOf(appBuild, buildNow)}</span> : tr("Rebuild")}
                 </button>
               </div> : null}
             <div className="truncate px-2 py-1.5 text-11 text-ink-muted">{tr("signed in as {username}", { username: props.username })}</div>
@@ -1079,6 +1085,8 @@ function AppCanvas(props: {
 }) {
   const frameRef = useRef<HTMLIFrameElement>(null)
   const [build, setBuild] = useState<AppBuildStatus>({ phase: "checking" })
+  const building = build.phase === "building" || build.phase === "checking"
+  const buildNow = useNow(build.phase === "building" || build.phase === "waiting")
   const [loaded, setLoaded] = useState(false)
   const [hideErrors, setHideErrors] = useState(false)
   // the dev runtime's own failures (missing import, throw on load) surface
@@ -1140,6 +1148,7 @@ function AppCanvas(props: {
         props.tab.id,
         (s) => {
           setBuild(s)
+          setAppBuild(props.tab.id, s)
           if (s.phase !== "error") setHideErrors(false)
         },
         (why) => {
@@ -1158,6 +1167,7 @@ function AppCanvas(props: {
     return () => {
       alive = false
       w?.dispose()
+      setAppBuild(props.tab.id, null)
       window.removeEventListener("message", onMessage)
       frame.removeEventListener("load", onFrameLoad)
       if (readyTimer !== undefined) window.clearTimeout(readyTimer)
@@ -1203,11 +1213,11 @@ function AppCanvas(props: {
           <button
             className={BAR_BUTTON}
             title={tr("Rebuild this app now")}
-            disabled={build.phase === "building" || build.phase === "checking"}
+            disabled={building}
             onClick={() => void window.MolfarBuilder?.rebuild(props.tab.id).catch(() => undefined)}
           >
-            <Icon name="rebuild" size="small" />
-            <span className="max-lg:hidden">{build.phase === "building" || build.phase === "checking" ? tr("Building…") : tr("Rebuild")}</span>
+            {building ? <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-line border-t-ink-muted" aria-hidden="true" /> : <Icon name="rebuild" size="small" />}
+            <span className="max-lg:hidden">{building ? `${tr("Building…")} ${elapsedOf({ phase: build.phase, since: build.since }, buildNow)}`.trim() : tr("Rebuild")}</span>
           </button>
         </>,
         props.actionsSlot,
@@ -1225,6 +1235,7 @@ function AppCanvas(props: {
       ) : null}
       {/* the app is its OWN page served by the engine — the client is a dumb
           renderer and never bakes app looks into itself (SPEC-v2) */}
+      {loaded && (build.phase === "building" || build.phase === "waiting") ? <BuildBar status={build} now={buildNow} /> : null}
       <div className="relative flex min-h-0 flex-1 flex-col">
         <iframe
           ref={frameRef}
@@ -1233,13 +1244,32 @@ function AppCanvas(props: {
           className="min-h-0 w-full flex-1 border-0 bg-transparent"
         />
         {!loaded ? (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-base text-13 text-ink-muted">
+          <div role="status" className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-base px-6 text-center text-13 text-ink-muted">
             <span className="size-4 animate-spin rounded-full border-2 border-line border-t-ink-muted" aria-hidden="true" />
-            {build.phase === "building" ? tr("Building the app…") : build.phase === "waiting" ? (build.message ?? tr("Waiting for the build…")) : tr("Opening…")}
+            {build.phase === "building" ? buildText(build, buildNow) : build.phase === "waiting" ? (build.message ?? tr("Waiting for the build…")) : tr("Opening…")}
+            {build.phase === "building" && build.since && buildNow - build.since > 15_000 ? <span className="max-w-xs text-12 text-ink-faint">{tr("This can take a few minutes, longer on a phone. Keep this page open.")}</span> : null}
           </div>
         ) : null}
         {build.phase === "error" && !hideErrors ? <BuildErrors status={build} onClose={() => setHideErrors(true)} onAskAgent={(text) => props.onAskAgent(agentErrorPrompt(props.tab.name, props.tab.id, text))} /> : null}
       </div>
+    </div>
+  )
+}
+
+/** "Building the app… 1:23", or the part it is on ("Bundling packages… 1:23"). */
+function buildText(s: AppBuildStatus, now: number): string {
+  const part = s.step === "packages" ? tr("Bundling packages…") : s.step === "app" ? tr("Building app code…") : tr("Building the app…")
+  const clock = elapsedOf({ phase: s.phase, since: s.since } as AppBuildEntry, now)
+  return clock ? `${part} ${clock}` : part
+}
+
+/** A build running while the app is on screen (a Rebuild press, an update): one thin line above the app, so a phone never shows a silent app. */
+function BuildBar(props: { status: AppBuildStatus; now: number }) {
+  const waiting = props.status.phase === "waiting"
+  return (
+    <div role="status" className="flex shrink-0 items-center gap-2 border-b border-line bg-panel px-3 py-1.5 text-12 text-ink-muted">
+      <span className="size-3.5 shrink-0 animate-spin rounded-full border-2 border-line border-t-ink-muted" aria-hidden="true" />
+      <span className="min-w-0 truncate">{waiting ? (props.status.message ?? tr("Waiting for the build…")) : buildText(props.status, props.now)}</span>
     </div>
   )
 }

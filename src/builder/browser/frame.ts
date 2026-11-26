@@ -37,6 +37,7 @@ const transport = (ops: FsOp[]): Promise<FsResult[]> =>
 const env: BuilderEnv = {
   esbuild: esbuild as unknown as BuilderEnv["esbuild"],
   tailwindSheets: { "index.css": indexCss, "theme.css": themeCss, "preflight.css": preflightCss, "utilities.css": utilitiesCss },
+  phase: (name) => post({ t: "phase", name }),
   // app code (a Tailwind plugin) runs here and only here: this frame can
   // reach nothing but the files of the app it is building
   evalCjs: (code: string) => {

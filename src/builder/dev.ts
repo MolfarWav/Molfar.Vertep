@@ -456,6 +456,7 @@ export class DevSession {
       }
       this.entryIds.push(roots[roots.length - 1]!.id);
     }
+    this.ctx.env.phase?.("app");
     await this.process(roots);
     const key = await this.depsKey();
     const prior = this.meta;
@@ -474,6 +475,7 @@ export class DevSession {
       depsCss = prior.depsCss;
       keep.push(depsJs, ...(depsCss ? [depsCss] : []));
     } else {
+      this.ctx.env.phase?.("packages");
       const deps = await this.buildDeps();
       depsJs = deps.js;
       depsCss = deps.css;

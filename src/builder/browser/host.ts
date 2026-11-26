@@ -28,6 +28,9 @@ export interface BuildStatus {
   errors?: BuildMessage[];
   /** on an error: false when no build of the app has ever finished (nothing to fall back to) */
   built?: boolean;
+  /** while building: when this build started (ms since the epoch), and which part it is on (#524) */
+  since?: number;
+  step?: "app" | "packages";
 }
 
 /** What a build did, sent with its output so the engine's log shows it. */
@@ -122,6 +125,8 @@ class BuilderFrame {
   /** How long the frame's last build took, and whether it continued from a saved module graph. */
   lastMs = 0;
   lastResumed = false;
+  /** The part of a full build the frame says it is on. */
+  onPhase: ((name: "app" | "packages") => void) | null = null;
   /** When the frame last did something (a file read, any message): the build watchdog reads it. */
   private lastActivity = Date.now();
 
@@ -159,7 +164,7 @@ class BuilderFrame {
     });
     this.onMessage = (e: MessageEvent) => {
       if (e.source !== this.iframe.contentWindow) return;
-      const d = e.data as { __molfarBuilder?: number; t?: string; rid?: unknown; ops?: unknown; id?: unknown; output?: unknown; error?: unknown; text?: unknown; ms?: unknown; resumed?: unknown };
+      const d = e.data as { __molfarBuilder?: number; t?: string; rid?: unknown; ops?: unknown; id?: unknown; output?: unknown; error?: unknown; text?: unknown; ms?: unknown; resumed?: unknown; name?: unknown };
       if (!d || d.__molfarBuilder !== 1) return;
       this.lastActivity = Date.now();
       // the frame page is up: its start-up limit is met (downloading esbuild.wasm is not counted in it)
@@ -169,7 +174,9 @@ class BuilderFrame {
       }
       else if (d.t === "ready") readyOk();
       else if (d.t === "fatal") readyFail(new Error(String(d.error)));
-      else if (d.t === "log") console.warn(`[builder:${appId}]`, String(d.text).slice(0, 4000));
+      else if (d.t === "phase") {
+        if (d.name === "app" || d.name === "packages") this.onPhase?.(d.name);
+      } else if (d.t === "log") console.warn(`[builder:${appId}]`, String(d.text).slice(0, 4000));
       else if (d.t === "fs" && typeof d.rid === "number" && Array.isArray(d.ops)) void this.relay(d.rid, d.ops);
       else if (d.t === "result" && typeof d.id === "number" && d.output && typeof d.output === "object") {
         this.lastMs = typeof d.ms === "number" ? Math.round(d.ms) : 0;
@@ -301,9 +308,11 @@ class AppBuild {
       } else if (type === "app_changed" && payload.updated === true) {
         // an update replaced the app's sources on disk. Without a rebuild the
         // open page keeps serving the version it was loaded with, which reads
-        // as "the update did nothing". Full, not update: the new version may
-        // add, remove or rewire files no change event ever named.
-        void this.rebuild("the app was updated");
+        // as "the update did nothing". The build starts from the saved module
+        // graph when it is still good (#523): the engine lists every file that
+        // differs by content, so added, removed and rewired files are named
+        // too; when the graph cannot be used it is a full build as before.
+        void this.rebuild("the app was updated", true);
       } else if (type === "app_built" && payload.kind === "full" && payload.holder !== this.holder) {
         for (const w of this.watchers) w.onReload("another open tab or device rebuilt the app");
       }
@@ -362,7 +371,7 @@ class AppBuild {
 
   /** Build the current sources now, even when dist looks current. The user's
    *  Rebuild button and the agent's build requests both land here. */
-  async rebuild(why = "a rebuild was requested"): Promise<void> {
+  async rebuild(why = "a rebuild was requested", fromGraph = false): Promise<void> {
     if (this.disposed) return;
     this.fullWhy = why;
     let rev = "";
@@ -376,6 +385,16 @@ class AppBuild {
       if (this.leaseRefused()) return;
       if (!this.disposed) this.status({ phase: "waiting", message: "Another open tab is building this app" });
       return;
+    }
+    if (fromGraph) {
+      const r = await this.resume();
+      if (r) {
+        // an empty list still runs the update: the builder answers "unchanged" and the engine takes the new revision
+        this.resumed = r;
+        for (const p of r.changed) this.changed.add(p);
+        await this.kick("update", rev);
+        return;
+      }
     }
     await this.kick("full", rev);
   }
@@ -473,6 +492,23 @@ class AppBuild {
     }
   }
 
+  /** When the build now running began; the shell shows it as a clock. */
+  private buildSince = 0;
+
+  private newFrame(prior: unknown): BuilderFrame {
+    const f = new BuilderFrame(this.appId, prior);
+    f.onPhase = (step) => {
+      // only a build the shell already shows: a quiet hot update never raises the bar
+      if (this.lastStatus.phase === "building") this.status({ ...this.lastStatus, step });
+    };
+    return f;
+  }
+
+  /** A build that failed or was stopped inside this page leaves no trace on the engine otherwise (#524). */
+  private report(message: string): void {
+    void api(`${this.base()}/report`, { method: "POST", body: JSON.stringify({ holder: this.holder, message: message.slice(0, 500), ms: this.buildSince ? Date.now() - this.buildSince : 0 }) }).catch(() => undefined);
+  }
+
   /** The engine's saved module graph for the last build and the files that differ from it, or null when a full build is due. */
   private async resume(): Promise<{ graph: unknown; changed: string[] } | null> {
     try {
@@ -488,7 +524,7 @@ class AppBuild {
   private idle(st: ServerStatus): void {
     this.status(st.status?.errors?.length ? { phase: "error", errors: st.status.errors } : { phase: "ready" });
     if (this.running) return;
-    this.frame = new BuilderFrame(this.appId, st.dev);
+    this.frame = this.newFrame(st.dev);
     this.sessionDeps = depsOf(st.dev);
     // warm the session in the background so the first edit is quick: from
     // the saved module graph when there is one (no module is built), else
@@ -593,7 +629,7 @@ class AppBuild {
           /* start fresh */
         }
       }
-      this.frame = new BuilderFrame(this.appId, prior);
+      this.frame = this.newFrame(prior);
       this.sessionDeps = depsOf(prior);
       // a session with no modules in memory starts from the saved module
       // graph (found when the app opened, or asked for now) and rebuilds the
@@ -607,13 +643,15 @@ class AppBuild {
       }
     }
     this.resumed = null;
-    if (kind === "full") this.status({ phase: "building", message: "Building the app" });
+    this.buildSince = Date.now();
+    if (kind === "full") this.status({ phase: "building", message: "Building the app", since: this.buildSince });
     let output: Record<string, unknown>;
     try {
       output = await this.frame.build(kind, changed, graph);
     } catch (e) {
       this.frame = null;
       this.status({ phase: "error", message: String((e as Error).message) });
+      this.report(`${kind} build stopped in the page: ${String((e as Error).message)}`);
       return;
     }
     const stats: BuildStats = { kind, resumed: this.frame.lastResumed, changed: changed.length, ms: this.frame.lastMs };
@@ -655,6 +693,7 @@ class AppBuild {
         return;
       }
       this.status(ours ? { phase: "error", message: `saving the build failed: ${(e as Error).message}` } : { phase: "ready" });
+      if (ours) this.report(`saving the build failed in the page: ${(e as Error).message}`);
       return;
     }
     this.retried = false;

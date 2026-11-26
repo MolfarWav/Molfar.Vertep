@@ -21,6 +21,8 @@ export interface BuilderEnv {
   evalCjs?: (code: string) => unknown;
   /** React Refresh transform (Babel) for dev-mode modules. */
   refresh?: (code: string, file: string) => string;
+  /** A full build tells which part it is on, so the shell can say so (#524). */
+  phase?: (name: "app" | "packages") => void;
 }
 
 /** JS and CSS targets: what Tailwind v4 itself supports, so its output

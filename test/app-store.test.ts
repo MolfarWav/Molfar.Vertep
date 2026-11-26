@@ -444,6 +444,20 @@ describe("installing from the store", () => {
     expect(grantsOf()[`${id}__api`]).toEqual(["routes", "network"]);
   }, 60_000);
 
+  it("keeps the app's build across an update, so the first build after it resumes instead of starting cold (#523)", async () => {
+    const url = await publish("kept", { name: "Kept", version: "1.0.0", kind: "app" });
+    const id = await importApp(url);
+    const p = userPaths(dataDir, "alice");
+    const dist = path.join(p.apps, id, "dist");
+    fs.mkdirSync(path.join(dist, "dev"), { recursive: true });
+    for (const f of ["index.html", ".molfar-build.json", "dev/graph.json", "dev/meta.json", "dev/deps-abc.js"]) fs.writeFileSync(path.join(dist, f), "x");
+
+    await republish("kept", (work) => fs.writeFileSync(path.join(work, "README.md"), "new\n"));
+    const applied = (await (await call(`/v1/apps/${id}/update`, { method: "POST", body: "{}" })).json()) as { status: string };
+    expect(applied.status).toBe("applied");
+    for (const f of ["index.html", ".molfar-build.json", "dev/graph.json", "dev/meta.json", "dev/deps-abc.js"]) expect(fs.existsSync(path.join(dist, f))).toBe(true);
+  }, 60_000);
+
   it("asks before a community update points a networked plugin at a new host", async () => {
     const url = await publish("feed", { name: "Feed", version: "1.0.0", kind: "app" }, "someone");
     const manifestFile = (work: string) => path.join(work, "plugins", "api", "manifest.json");
