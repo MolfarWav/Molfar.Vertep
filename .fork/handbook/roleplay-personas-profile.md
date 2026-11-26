@@ -1,6 +1,6 @@
 # Personas, the character Profile and Soul, and the small plugins (profile, polish, tools)
 
-Verified at: molfar.vertep-roleplay 607147f (the Personas section and the Lorebooks tab at branch claude/personas-import-463, 4ac7ac0); Fill empty, the Models panel and the Profile tab actions (#528 to #530) at branch claude/profile-fill-528-530, 26e9569 (PR 214, not merged yet)
+Verified at: molfar.vertep-roleplay 607147f (the Personas section and the Lorebooks tab at branch claude/personas-import-463, 4ac7ac0); Fill empty, the Models panel and the Profile tab actions (#528 to #530) at branch claude/profile-fill-528-530, 8368f3f (Roleplay 4.162.0, PR 214 merged)
 
 ## What it does
 - A persona is the user's side of a chat, stored as `data/personas/<id>.json`; its description reaches the prompt in a knowledge frame.
