@@ -1,4 +1,4 @@
-<!-- source: 307dd6e4bc8d -->
+<!-- source: 9d4c677df24e -->
 # Apps
 
 Como encontrar, adicionar, atualizar e remover apps. Apps são as coisas que você realmente usa: o Roleplay é o principal.
@@ -16,9 +16,11 @@ A barra de ferramentas oferece:
 - "Dividir": Molfar à esquerda, o app ao vivo à direita.
 - "Tela cheia": o app em sua própria aba do navegador, que você pode instalar como um app.
 - "Plugins": os plugins do app e suas permissões; importe mais do git.
-- "Recompilar": recompila o app agora mesmo.
+- "Recompilar": recompila o app agora mesmo. Enquanto uma compilação roda, o botão vira "Compilando…" com um relógio (por exemplo 1:23) e não pode ser pressionado de novo; acima do app aparece uma linha fina dizendo o que está sendo compilado ("Empacotando os pacotes…" ou "Compilando o código do app…"), com o mesmo relógio. A primeira compilação pode levar alguns minutos, mais no celular: mantenha a página aberta.
 
-No celular, esses três ficam no menu da conta.
+No celular, esses três ficam no menu da conta, e a entrada "Recompilar" mostra o mesmo relógio "Compilando…".
+
+Depois de atualizar um app, ele é compilado de novo na próxima vez que você o abrir, mas só os arquivos que mudaram (e os pacotes só se mudaram), então costuma ser rápido. Configurações > Desenvolvedor lista cada app com sua compilação: "Compilado e atualizado", "Compilado antes. Recompila quando você o abre", "Ainda não compilado. Compila quando você o abre", "Falha na compilação" ou "Compilando…" com o relógio enquanto uma roda.
 
 ## Quando um app quer ler outro app
 

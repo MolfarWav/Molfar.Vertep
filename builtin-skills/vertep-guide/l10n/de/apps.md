@@ -1,4 +1,4 @@
-<!-- source: 307dd6e4bc8d -->
+<!-- source: 9d4c677df24e -->
 # Apps
 
 So findest, fügst, aktualisierst und entfernst du Apps. Apps sind das, was du tatsächlich nutzt: Roleplay ist die wichtigste.
@@ -16,9 +16,11 @@ Die Werkzeugleiste bietet:
 - „Teilen“: links Molfar, rechts die App live.
 - „Vollbild“: die App in einem eigenen Browser-Tab, den du wie eine App installieren kannst.
 - „Plugins“: die Plugins der App und ihre Rechte; weitere aus Git importieren.
-- „Neu bauen“: baut die App sofort neu.
+- „Neu bauen“: baut die App sofort neu. Solange ein Build läuft, wird die Schaltfläche zu „Wird gebaut…“ mit einer Uhr (zum Beispiel 1:23) und lässt sich nicht erneut drücken; über der App steht eine dünne Zeile, die sagt, was gerade gebaut wird („Pakete werden gebündelt…“ oder „App-Code wird gebaut…“), mit derselben Uhr. Der erste Build kann einige Minuten dauern, auf dem Handy länger: Lass die Seite geöffnet.
 
-Auf dem Handy liegen diese drei im Kontomenü.
+Auf dem Handy liegen diese drei im Kontomenü, und der Eintrag „Neu bauen“ zeigt dieselbe Uhr „Wird gebaut…“.
+
+Nach einem App-Update wird die App beim nächsten Öffnen neu gebaut, aber nur die geänderten Dateien (und die Pakete nur, wenn sie sich geändert haben), deshalb geht es meist schnell. Einstellungen > Entwickler listet jede App mit ihrem Build: „Gebaut und aktuell“, „Früher gebaut. Wird beim Öffnen neu gebaut“, „Noch nicht gebaut. Wird beim Öffnen gebaut“, „Build fehlgeschlagen“ oder „Wird gebaut…“ mit der Uhr, solange einer läuft.
 
 ## Wenn eine App eine andere App lesen möchte
 

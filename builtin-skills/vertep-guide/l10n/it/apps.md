@@ -1,4 +1,4 @@
-<!-- source: 307dd6e4bc8d -->
+<!-- source: 9d4c677df24e -->
 # App
 
 Come trovare, aggiungere, aggiornare e rimuovere le app. Le app sono ciò che usi davvero: Roleplay è quella principale.
@@ -16,9 +16,11 @@ La barra degli strumenti offre:
 - "Dividi": Molfar a sinistra, l'app dal vivo a destra.
 - "Schermo intero": l'app nella propria scheda del browser, che puoi installare come un'app.
 - "Plugin": i plugin dell'app e i loro permessi; importane altri da git.
-- "Ricompila": ricompila l'app adesso.
+- "Ricompila": ricompila l'app adesso. Mentre una compilazione è in corso, il pulsante diventa "Compilazione…" con un orologio (per esempio 1:23) e non si può premere di nuovo; sopra l'app compare una riga sottile che dice cosa si sta compilando ("Raggruppamento dei pacchetti…" o "Compilazione del codice dell'app…"), con lo stesso orologio. La prima compilazione può richiedere alcuni minuti, di più su un telefono: tieni aperta la pagina.
 
-Su un telefono questi tre si trovano nel menu account.
+Su un telefono questi tre si trovano nel menu account, e la voce "Ricompila" mostra lo stesso orologio "Compilazione…".
+
+Dopo l'aggiornamento di un'app, questa viene compilata di nuovo alla prossima apertura, ma solo i file cambiati (e i pacchetti solo se sono cambiati), quindi di solito è rapido. Impostazioni > Sviluppatore elenca ogni app con la sua compilazione: "Compilata e aggiornata", "Compilata in precedenza. Si ricompila quando la apri", "Non ancora compilata. Si compila quando la apri", "Compilazione non riuscita" oppure "Compilazione…" con l'orologio mentre una è in corso.
 
 ## Quando un'app vuole leggere un'altra app
 

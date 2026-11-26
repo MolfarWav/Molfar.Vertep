@@ -1,4 +1,4 @@
-<!-- source: 307dd6e4bc8d -->
+<!-- source: 9d4c677df24e -->
 # Uygulamalar
 
 Uygulamaları nasıl bulacağın, ekleyeceğin, güncelleyeceğin ve kaldıracağın. Uygulamalar gerçekten kullandığın şeylerdir: Bunlardan en önemlisi Roleplay'dir.
@@ -16,9 +16,11 @@ Araç çubuğu şunları sunar:
 - "Böl": Solda Molfar, sağda canlı uygulama.
 - "Tam ekran": Uygulama kendi tarayıcı sekmesinde; bunu bir uygulama gibi kurabilirsin.
 - "Eklentiler": Uygulamanın eklentileri ve izinleri; git'ten daha fazlasını içe aktar.
-- "Yeniden derle": Uygulamayı hemen yeniden derler.
+- "Yeniden derle": Uygulamayı hemen yeniden derler. Bir derleme sürerken düğme saatli "Derleniyor…" olur (örneğin 1:23) ve tekrar basılamaz; uygulamanın üstünde neyin derlendiğini söyleyen ince bir satır ("Paketler birleştiriliyor…" veya "Uygulama kodu derleniyor…") aynı saatle görünür. İlk derleme birkaç dakika sürebilir, telefonda daha uzun: sayfayı açık tut.
 
-Telefonda bu üçü hesap menüsünde bulunur.
+Telefonda bu üçü hesap menüsünde bulunur ve "Yeniden derle" girişi aynı "Derleniyor…" saatini gösterir.
+
+Bir uygulama güncellendikten sonra, bir sonraki açışında yeniden derlenir, ama yalnızca değişen dosyalar (paketler de yalnızca değiştiyse), bu yüzden genellikle hızlıdır. Ayarlar > Geliştirici her uygulamayı derlemesiyle listeler: "Derlendi ve güncel", "Daha önce derlendi. Açtığında yeniden derlenir", "Henüz derlenmedi. Açtığında derlenir", "Derleme başarısız" veya bir derleme sürerken saatli "Derleniyor…".
 
 ## Bir uygulama başka bir uygulamayı okumak istediğinde
 
