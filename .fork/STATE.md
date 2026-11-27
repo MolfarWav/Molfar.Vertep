@@ -10,6 +10,7 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
 ## 2026-11-28: RELEASED engine 1.21.2 (#535 catch-up, #537 sync groups a long chat's parts) with Roleplay 4.164.0 (PRs 217-220, release PR 221, merge `04612059`) (owner: "все зливаємо закриваємо і публікуємо")
+- Engine PR #538 merged (`3a7bc3c`), tag `v1.21.2` pushed 2026-11-27 22:2x UTC, the Release workflow started; #535 and #537 closed with How it was solved (#539 closed earlier). Not checked yet: the release page lists the archives.
 - Released without the planned phone check and two-device sync with a long chat (owner's call); watch Discord for reports on long chats and sync. Roleplay guide translations of `index` (Saved setups, stale since 4.161.0) and `litopys` (door B) refreshed in 13 locales by hand-inserted sentences, stamped; `guide-l10n --stale` empty.
 - Engine checks for the release: typecheck, `sync` and `builder-resume` tests (47), `build:client`, handbook cross pages rebuilt; the full suite was run for #535 earlier (37 known Windows failures, same as main).
 - #535 (reporter heltonteixeira): an edit made while a page's `/v1/ws` socket was down never reached it; the next edit built only its own file from a session holding the old copy of the missed one, and the engine stamped the graph with disk hashes, so `needsBuild` false, `app_check` OK, only Rebuild helped.
