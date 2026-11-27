@@ -83,6 +83,18 @@ describe("three-way plan", () => {
     expect(g[0]).toMatchObject({ app: "roleplay", label: "chats/c1", files: ["w/apps/roleplay/data/chats/c1.jsonl", "w/apps/roleplay/data/chats/c1.meta.json"] });
   });
 
+  it("groups a long chat's parts with the chat they belong to (#537)", () => {
+    const d = "w/apps/roleplay/data/chats/";
+    const g = groupConflicts([`${d}c1.jsonl`, `${d}c1.meta.json`, `${d}c1.parts/3.jsonl`, `${d}c1.parts/index.json`, `${d}c2.parts/1.jsonl`, `${d}c10.jsonl`]);
+    expect(g.map((x) => [x.id, x.label, x.files.length])).toEqual([
+      [`${d}c1`, "chats/c1", 4],
+      [`${d}c2`, "chats/c2", 1],
+      [`${d}c10`, "chats/c10", 1],
+    ]);
+    // a folder that only ends in "parts" is no chat's
+    expect(groupConflicts(["w/notes/body-parts/a.md"]).map((x) => x.id)).toEqual(["w/notes/body-parts/a"]);
+  });
+
   it("refuses paths that leave the workspace or touch git and keys", () => {
     for (const bad of ["w/../x", "w/.git/config", "w/a/.git/hooks/x", "p/auth.json", "p/mcp.json", "w/apps/x/node_modules/a.js", "w/apps/x/dist/i.html", "w/C:/x", "w/a\\..\\b", "w//x", "x/y", "w/nul", "w/apps/x/con.txt"]) {
       expect(syncPathOk(bad)).toBe(false);

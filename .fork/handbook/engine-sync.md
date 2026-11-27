@@ -1,6 +1,6 @@
 # Sync between a user's devices
 
-Verified at: molfar.vertep 32fc4f6 (the embeddings line on branch claude/embed-setting-device-431)
+Verified at: molfar.vertep db72c64 (the `x.parts/` grouping on branch claude/build-catchup-535)
 
 ## What it does
 - Compares a user's workspace files by SHA-256 hash against one shared store: a Google Drive folder or a local folder.
@@ -13,7 +13,7 @@ Verified at: molfar.vertep 32fc4f6 (the embeddings line on branch claude/embed-s
 - `src/sync/manifest.ts` `plan`: sorts each path into up, down, conflicts or agreed.
 - `src/sync/manifest.ts` `inScope`: applies the agent, media and secrets switches.
 - `src/sync/manifest.ts` `syncPathOk`: checks each path of a remote manifest; one bad path refuses the pull.
-- `src/sync/manifest.ts` `groupConflicts`: merges a chat's files (`x.jsonl`, `x.meta.json`) into one choice.
+- `src/sync/manifest.ts` `groupConflicts`: merges a chat's files (`x.jsonl`, `x.meta.json`, and every file in `x.parts/`, where Roleplay keeps a long chat's older messages, #537) into one choice.
 - `src/sync/engine.ts` `check`: computes what a push and a pull would do, with no writes.
 - `src/sync/engine.ts` `push`: uploads blobs, then the manifest, then `head.json` last.
 - `src/sync/engine.ts` `pull`: stages downloads, checks hashes, then writes; throws `ConflictError` before any write.

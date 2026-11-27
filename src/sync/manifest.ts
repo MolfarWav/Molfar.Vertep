@@ -216,17 +216,22 @@ export interface ConflictGroup {
 }
 
 /** One chat is `x.jsonl` + `x.meta.json`: group files by their path without
- *  extensions so the user answers once per thing, not per file. */
+ *  extensions so the user answers once per thing, not per file. A file in a
+ *  folder `x.parts/` belongs to `x` too: a long Roleplay chat keeps its older
+ *  messages there (Molfar.Vertep#537), and answering for one part apart from
+ *  the rest of its chat would leave the chat's meta out of step with its parts. */
 export function groupConflicts(keys: string[]): ConflictGroup[] {
   const groups = new Map<string, ConflictGroup>();
   for (const k of keys) {
     let stem = k;
     if (k.startsWith("w/")) {
       const rel = k.slice(2);
-      const slash = rel.lastIndexOf("/");
-      const name = rel.slice(slash + 1);
+      const inParts = /^(.*\/)?([^/]+)\.parts\/[^/]+$/.exec(rel);
+      const at = inParts ? `${inParts[1] ?? ""}${inParts[2]}` : rel;
+      const slash = at.lastIndexOf("/");
+      const name = at.slice(slash + 1);
       const dot = name.indexOf(".", 1);
-      stem = `w/${rel.slice(0, slash + 1)}${dot > 0 ? name.slice(0, dot) : name}`;
+      stem = `w/${at.slice(0, slash + 1)}${dot > 0 ? name.slice(0, dot) : name}`;
     }
     let g = groups.get(stem);
     if (!g) {
