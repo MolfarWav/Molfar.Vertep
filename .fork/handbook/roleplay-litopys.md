@@ -1,5 +1,5 @@
 # Litopys: story memory, who knows what, and the What fired record
-Verified at: molfar.vertep-roleplay efead2b (sections: Owners, Data, Who knows what, Tests); Owners also 4e0989b; the rest at 91eec33; the habits line (#270) at molfar.vertep-roleplay branch claude/habits-card-lines-270 (on f9b9ed69); the Consolidate lines (#488: When a model is called, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/fold-488 (on b429128)
+Verified at: molfar.vertep-roleplay efead2b (sections: Owners, Data, Who knows what, Tests); Owners also 4e0989b; the rest at 91eec33; the habits line (#270) at molfar.vertep-roleplay branch claude/habits-card-lines-270 (on f9b9ed69); the Consolidate lines (#488: When a model is called, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/fold-488 (on b429128); the passage index lines (#539: Owners, Data, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/recall-parts-539 (on 462cd9a7, PR 219)
 
 ## What it does
 - Litopys keeps one record per chat: chapters (one per closed scene), arcs (older chapters merged), and facts, each with the people who know it. A background worker writes it; the reply hook only reads it.
@@ -18,7 +18,7 @@ Verified at: molfar.vertep-roleplay efead2b (sections: Owners, Data, Who knows w
 - `plugins/litopys/plugin.js` `buildInsert`: the story record for a reply (full, or ranked inside the budget).
 - `plugins/litopys/plugin.js` `buildBackstory`, `backstoryPart`, `farPart`, `turnsFor`: earlier chats, near and far tier, turning points.
 - `plugins/litopys/plugin.js` `farDigest`: condensed digest of one finished chat.
-- `plugins/litopys/plugin.js` `verbatimFor`, `recallCandidates`, `recallBuild`, `recallSave`: word-for-word passages and their index.
+- `plugins/litopys/plugin.js` `verbatimFor`, `recallCandidates`, `recallBuild`, `recallSave`, `recallPassages`: word-for-word passages and their index; `loadRecallVectors`, `wantRecallVectors`, `kickRecallWant`, `finishRecallBatch`: door B's passage vectors.
 - `plugins/litopys/plugin.js` `witnessed`, `castKnowledgeFor`, `soleVoice`: who knows what.
 - `plugins/litopys/plugin.js` `liveLies`, `moveLies`, `endBeliefs`: lies and the belief facts they become.
 - `plugins/litopys/plugin.js` `suspectsOf`, `KNOWING_RULE`, op `knows` in `applyWorkerResult`: suspects and secrets on facts (#416).
@@ -35,7 +35,8 @@ Per chat unless noted.
 - `litopys/chats/<id>.json`: the record. `chapters[]`: `id`, `from`, `to`, `label`, `text` (at most 1500 characters), `cast`, optional `views`, `marked`. `facts[]`: `id`, `text`, `subject`, `knownBy` (`"all"`, names or group tokens), `type` (event, trait, change, relation, world, plan, belief), `weight` (everyday, important, key), `pinned`, `status` (`active` or `retired`), `src`, `origin`, `at`, `updatedAt`. A belief adds `holder`, `lie`, `prov`. Optional `suspectedBy` (never a knower) and `secret: true` (#416). `turns[]`: `id`, `text`, `chapterId`, `cast`, `knownBy`, `origin`, optional `untrue`, `believers`, `liar`.
 - `litopys/far/<id>.json`: digest `{v, chatId, rev, units, facts, turns}`.
 - `.cache/litopys/vectors/<id>.json`: `{id: {hash, vector, m?}}`.
-- `litopys/recall/<id>.json` (index: `p` = word stem to chunk numbers, `n`, `title`, `rev`) and `<id>.t.json` (chunks: `t`, `a`, `b`, `c` cast, `k` chapter).
+- `litopys/recall/<id>.json` (index v3: `p` = word stem to chunk numbers, `n`, `z`, `title`, `rev`, `sig`, `built`) and `<id>.q.json` (`built`, chunks: `a`, `b`, `o`, `e`, `h` hash, `c` cast, `k` chapter; no text: a picked chunk is read from the chat). A v2 index has `<id>.t.json` (chunks with `t`) until the tick rebuilds it.
+- `.cache/litopys/recall-vectors/<id>.json`: passage vectors by chunk hash (door B's order inside a chapter).
 - `litopys/insert/<id>.json`: `used`, `tokens`, `facts`, `chapters`, `cut`, optional `trace`, `causes`, `backstory`, `verbatim`.
 - `litopys/fired/<id>.json`: `{v: 1, since, replies, facts, chapters, far?, verbatim?, last: {op, at, keys}}`; each map holds `{n, at}` per id.
 - `litopys/config.json` (not per chat): only user changes. Defaults in `DEFAULT_CONFIG`: `budget` 800, `budgetMode` `auto`, `linkBudget` 800, `verbatimBudget` 400, `farShare` 18, `turnsShown` 12, `remoteNote` and `suspects` true. The insert file adds `remote: {notes}`.
@@ -68,7 +69,7 @@ Per chat unless noted.
 - Budget rule: `budgetModeOf`. `docs/COUPLINGS.md` says the engine's `hookInsertBreakdown` must match; that copy was not read.
 - Insert file fields: `traceRoute`, `carriesRoute`, `causeRecord`, and the engine readers listed in `docs/COUPLINGS.md`.
 - What fired: `recordLitFired`, `firedRoute`, `src/lib/fired-load.ts`. The engine keeps its own counter, shown beside this one.
-- Passage index format: `recallSave`, `recallBuild`, `recallCandidates`, `verbatimFor`; bump `RECALL_V`.
+- Passage index format: `recallSave`, `recallBuild`, `recallCut`, `recallPassages`, `recallCandidates`, `verbatimFor`; bump `RECALL_V`. A change to how a chunk is cut (`recallPieces`, `recallLine`) changes every chunk's text: bump `RECALL_V` too, or every passage fails its hash until the rebuild.
 - Embedding model: `vectorOf`, `vectorGaps`, `currentEmbedModel`, `noteScanModel`. Vectors of another model are not used. This device's model is read only from `.cache/litopys/embed-status.json`, never from the synced `litopys/insert/` trace (it carries the model of whichever device replied last; #419).
 - Lies and beliefs: `liveLies`, `endBeliefs`, `moveLies`, and the believers copy in the Dashboard plugin.
 - Consolidate's rules: `CONSOLIDATE_PROMPT`, `CONSOLIDATE_FOLD`, `foldable` and the two code guards must agree (a merged or rewritten text over `CONSOLIDATE_TEXT_MAX` is dropped in `parseConsolidateReply`; a merge not shorter than its parts is skipped in `addConsolidateProposals`); the hint `lit.set.autoConsolidateHint` and the guide page `litopys` name the trigger.
@@ -82,6 +83,7 @@ Per chat unless noted.
 - `recordLitFired` does nothing unless the reply had a trace, a far part or passages.
 - `verbatimFor` needs three or more word stems in the scan window; a chat with no link gets no passages.
 - The passage index refreshes on the tick only when `cfg.verbatim === true`.
+- A chunk never crosses a closed part (`chatOrigin(m).n`), so a reply reads one part; the chat store's part layout and `chatOrigin` must stay as they are.
 - `factRecency` (#50) ranks a fact up for having been sent in earlier prompts (`markUsed`). It does nothing while the whole record fits the budget; under a tight budget it keeps the facts that were repeated most (#488).
 - Before #488 a merged sentence over 300 characters was cut and stored mid-word; `looksCut` finds them and a pass can rewrite them (not every pass does).
 - Retirement wording is fragile with a small build model: the 4.145.0 rule (retire a plan a later fact shows done) made it retire things people did or said; the prompt now asks for a rewrite in the past tense and keeps retire for pure duplicates and facts proven false (replay numbers in the Roleplay CHANGELOG).
@@ -89,7 +91,7 @@ Per chat unless noted.
 ## Tests that guard it
 Names confirmed in `test/`. Coverage claims come from `docs/COUPLINGS.md`; test bodies were not read.
 - `test/rp-litopys-far-turns.test.ts`, `test/rp-chat-links.test.ts`, `test/rp-litopys-causes.test.ts`, `test/rp-litopys-recency.test.ts`, `test/rp-litopys-budget.test.ts`
-- `test/rp-memory-trace.test.ts`, `test/rp-fired-lit.test.ts`, `test/rp-fired-log.test.ts`, `test/rp-verbatim.test.ts`, `test/rp-fired-verbatim.test.tsx`
+- `test/rp-memory-trace.test.ts`, `test/rp-fired-lit.test.ts`, `test/rp-fired-log.test.ts`, `test/rp-verbatim.test.ts`, `test/rp-verbatim-parts.test.ts`, `test/rp-fired-verbatim.test.tsx`
 - `test/rp-knowledge-invariants.test.ts` (remote notes, suspects, the worker's `knows` op, invariants)
 - `test/rp-litopys-consolidate.test.ts`, `test/rp-litopys-wave1.test.ts` (automatic Consolidate), `test/rp-litopys-beliefs.test.ts`, `test/rp-litopys-risky.test.ts`, `test/rp-trace-belief.test.tsx`, `test/rp-presence-cut.test.ts`, `test/rp-studio.test.ts`
 
