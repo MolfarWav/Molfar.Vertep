@@ -1,5 +1,5 @@
 # Roleplay UI: shell, sections, navigation, themes, shared pieces, languages
-Verified at: molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5; the DM link lines (#183: Owners, Sections, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/dm-rail-link-183 (on 1375e09); the carries lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1); the `dice-toss.tsx` line (#501) at molfar.vertep-roleplay 234f1599 (Roleplay 4.154.0)
+Verified at: molfar.vertep-roleplay 0f759ef3 for the chat notices line (branch claude/growth-cue-450); molfar.vertep-roleplay 56bf594; the Settings switch `showPlaceMap` and the `placeMap.*` strings at molfar.vertep-roleplay c0e95cb (branch claude/map-454); the Backstage lines (#448: What it does, Owners, If you change X) at molfar.vertep-roleplay 1885bc5; the DM link lines (#183: Owners, Sections, If you change X, Traps, Tests) at molfar.vertep-roleplay branch claude/dm-rail-link-183 (on 1375e09); the carries lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1); the `dice-toss.tsx` line (#501) at molfar.vertep-roleplay 234f1599 (Roleplay 4.154.0)
 
 ## What it does
 - The shell (`src/components/shell/app-shell.tsx`) draws an icon rail (desktop) or tab bar (phone), one page (`view`), and an optional drawer (`drawer`).
@@ -183,6 +183,7 @@ Files in src/components/ui/ (38):
 - `sheet.tsx`: Sheet, `sheetClasses`.
 - `slider.tsx`: Slider.
 - `sonner.tsx`: Toaster.
+- The chat's coloured notices (#420, #450): `src/lib/proposal-toasts.tsx` `checkChatProposals` (chat open, 6 s after a reply, every minute) reads portrait blocks, habits and quest proposals and toasts each kind once (`proposal-core.ts`, seen list in `attention.ts`). It also calls `checkGrowthCues` (`src/lib/growth-cue.tsx`, pure part `growth-cue-core.ts`): a blue notice "The story may have changed X" with Update portrait (the hand button's call) when Litopys has a new turning point, a Dashboard relation class moved, or a pivotal event came (once in 8 replies). It asks no model itself. Its memory of what was told lives in localStorage `rp.growthcue.<chatId>` (this browser only); the first look at a chat only fills it. A group's cue goes to the member whose card name matches, a one-card chat to its card. A missed notice has no Inbox row.
 - `switch.tsx`: Switch.
 - `tabs.tsx`: Tabs.
 - `textarea.tsx`: Textarea.
