@@ -82,7 +82,7 @@ import { ensureLookWatcher, stopLookWatcher } from "./look-watch.js";
 import { assertPublicHost } from "../net-guard.js";
 import { listShellThemes } from "../themes.js";
 import { installApp, hasPackages, healPackages, installMissingPackages, packagesBusy } from "../apps/packages.js";
-import { ackUnchangedBuild, appFsOps, checkOutput, leaseHolder, MAX_BATCH_OPS, readBuildStatus, readDevMeta, resumePlan, sourceRev, takeLease, writeClientErrors, writeClientLogs, writeOutput } from "../builder/server.js";
+import { ackUnchangedBuild, appFsOps, checkOutput, cleanChanged, leaseHolder, MAX_BATCH_OPS, readBuildStatus, readDevMeta, resumePlan, sourceRev, takeLease, writeClientErrors, writeClientLogs, writeOutput } from "../builder/server.js";
 import { builderAsset, builderFrameCsp, builderVersion } from "../builder/assets.js";
 import type { FsOp } from "../builder/fs.js";
 import { parseGuideState } from "../guide-state.js";
@@ -5673,7 +5673,7 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
       c.header("connection", "close");
       return c.json({ error: capped.error }, 413);
     }
-    let body: { holder?: unknown; rev?: unknown; builder?: unknown; output?: unknown; stats?: unknown };
+    let body: { holder?: unknown; rev?: unknown; builder?: unknown; output?: unknown; stats?: unknown; changed?: unknown };
     try {
       body = JSON.parse(new TextDecoder().decode(capped.bytes)) as typeof body;
     } catch {
@@ -5688,7 +5688,9 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     // which step a phone build dies at is otherwise invisible: no access log
     log.info(`[build] ${u.username}/${a.id} output ${Math.round(capped.bytes.length / 1024)} KB, ${out.ok ? "ok" : "failed"}, ${out.hot ? "hot update" : "full build: open pages reload"}${describeBuild(body.stats)}`);
     try {
-      writeOutput(c.get("paths").apps, a.id, out, rev, builder);
+      // an update on a live builder session names the files it read again
+      // (#535); the engine stamps only those as built
+      writeOutput(c.get("paths").apps, a.id, out, rev, builder, cleanChanged(body.changed));
     } catch (e) {
       log.warn(`[build] ${u.username}/${a.id} writing the output failed: ${(e as Error).message}`);
       return c.json({ error: `writing the build failed: ${(e as Error).message}` }, 500);
@@ -5713,11 +5715,11 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
   app.post("/v1/apps/:id/build/ack", async (c) => {
     const a = buildableApp(c);
     if (!a) return c.json({ error: "app not found" }, 404);
-    const body = await c.req.json<{ holder?: unknown; rev?: unknown; stats?: unknown }>().catch(() => ({}) as { holder?: unknown; rev?: unknown; stats?: unknown });
+    const body = await c.req.json<{ holder?: unknown; rev?: unknown; stats?: unknown; changed?: unknown }>().catch(() => ({}) as { holder?: unknown; rev?: unknown; stats?: unknown; changed?: unknown });
     const u = c.get("user");
     if (typeof body.holder !== "string" || leaseHolder(buildKey(u, a.id)) !== body.holder) return c.json({ error: "another tab is building this app" }, 409);
     if (typeof body.rev !== "string" || body.rev !== sourceRev(a.dir)) return c.json({ error: "the sources changed since this build" }, 409);
-    const acked = ackUnchangedBuild(a.dir, body.rev);
+    const acked = ackUnchangedBuild(a.dir, body.rev, cleanChanged(body.changed));
     if (acked) log.info(`[build] ${u.username}/${a.id} nothing to rebuild${describeBuild(body.stats)}`);
     return c.json({ acked });
   });
@@ -5750,7 +5752,9 @@ export function buildApp(deps: AppDeps): Hono<AppEnv> {
     if (!a) return c.json({ error: "app not found" }, 404);
     if (!fs.existsSync(path.join(a.dir, "index.html"))) return c.json({ ok: false, why: "no index.html" }, 200, { "cache-control": "no-store" });
     const plan = resumePlan(a.dir, await builderVersion());
-    return c.json(plan.ok ? { ok: true, changed: plan.changed, graph: plan.graph } : { ok: false, why: plan.why }, 200, { "cache-control": "no-store" });
+    // ?graph=0: a live builder session asks only for the list of files that differ (#535)
+    const withGraph = c.req.query("graph") !== "0";
+    return c.json(plan.ok ? { ok: true, changed: plan.changed, ...(withGraph ? { graph: plan.graph } : {}) } : { ok: false, why: plan.why }, 200, { "cache-control": "no-store" });
   });
 
   app.post("/v1/apps/:id/install", async (c) => {

@@ -145,7 +145,7 @@ Change X, touch Y:
 - Budget rule: `budgetModeOf`. `docs/COUPLINGS.md` says the engine's `hookInsertBreakdown` must match; that copy was not read.
 - Insert file fields: `traceRoute`, `carriesRoute`, `causeRecord`, and the engine readers listed in `docs/COUPLINGS.md`.
 - What fired: `recordLitFired`, `firedRoute`, `src/lib/fired-load.ts`. The engine keeps its own counter, shown beside this one.
-- Passage index format: `recallSave`, `recallBuild`, `recallCandidates`, `verbatimFor`; bump `RECALL_V`.
+- Passage index format: `recallSave`, `recallBuild`, `recallCut`, `recallPassages`, `recallCandidates`, `verbatimFor`; bump `RECALL_V`. A change to how a chunk is cut (`recallPieces`, `recallLine`) changes every chunk's text: bump `RECALL_V` too, or every passage fails its hash until the rebuild.
 - Embedding model: `vectorOf`, `vectorGaps`, `currentEmbedModel`, `noteScanModel`. Vectors of another model are not used. This device's model is read only from `.cache/litopys/embed-status.json`, never from the synced `litopys/insert/` trace (it carries the model of whichever device replied last; #419).
 - Lies and beliefs: `liveLies`, `endBeliefs`, `moveLies`, and the believers copy in the Dashboard plugin.
 - Consolidate's rules: `CONSOLIDATE_PROMPT`, `CONSOLIDATE_FOLD`, `foldable` and the two code guards must agree (a merged or rewritten text over `CONSOLIDATE_TEXT_MAX` is dropped in `parseConsolidateReply`; a merge not shorter than its parts is skipped in `addConsolidateProposals`); the hint `lit.set.autoConsolidateHint` and the guide page `litopys` name the trigger.
@@ -159,6 +159,7 @@ Traps:
 - `recordLitFired` does nothing unless the reply had a trace, a far part or passages.
 - `verbatimFor` needs three or more word stems in the scan window; a chat with no link gets no passages.
 - The passage index refreshes on the tick only when `cfg.verbatim === true`.
+- A chunk never crosses a closed part (`chatOrigin(m).n`), so a reply reads one part; the chat store's part layout and `chatOrigin` must stay as they are.
 - `factRecency` (#50) ranks a fact up for having been sent in earlier prompts (`markUsed`). It does nothing while the whole record fits the budget; under a tight budget it keeps the facts that were repeated most (#488).
 - Before #488 a merged sentence over 300 characters was cut and stored mid-word; `looksCut` finds them and a pass can rewrite them (not every pass does).
 - Retirement wording is fragile with a small build model: the 4.145.0 rule (retire a plan a later fact shows done) made it retire things people did or said; the prompt now asks for a rewrite in the past tense and keeps retire for pure duplicates and facts proven false (replay numbers in the Roleplay CHANGELOG).
@@ -237,7 +238,7 @@ Change X, touch Y:
 - Picture modes: `IMAGE_PROMPT_MODES` in `plugins/engine/plugin.js` and `IMAGE_MODES` in `src/lib/image-gen.ts`.
 - Picture tool text: `handleTool` and `IMAGE_TAGS_DESCRIPTION` in `plugins/tools/plugin.js`.
 - Portrait text: `portraitRoute` in `plugins/profile/plugin.js` and `portraitPrompt` in `src/lib/portrait-draw.ts`.
-- Any call that sends a picture: `images: [img]` in `fillRoute` and `structureRoute` (`plugins/profile/plugin.js`), and the warning in `structure-draft.tsx`.
+- Any call that sends a picture: `images: [img]` in `fillRoute` and `structureRoute` (`plugins/profile/plugin.js`), and `useFillEmpty` in `structure-draft.tsx`, which sends the portrait only with the Appearance fields (the warning there is for a portrait file that could not be read).
 
 Traps:
 - A sprite with no URL is an empty slot. `spritePool` leaves it out.
@@ -388,4 +389,5 @@ Traps:
 - A chat with no state file counts as on at chronicler; only level `off` in a state file keeps it off.
 - `breath` is not in `CORE_KEYS`: a rollback does not restore it. It is checked against the chat's messages instead, so a deleted carrier frees the pause, and a swipe of the carrier clears it in `llmRequest`.
 - A DM `ref` on a place record is not trusted when the record is a twin of another place record by name or alias (`placeTwin`): it is dropped and the record stays unlinked. A second record can take an id only as a spot of the record that holds it (`spotPair`, #514). Chats linked wrongly before this are not repaired by code.
+- The DM never reads a stored message raw (#520): `updateRoute` passes `unread` and `since` through `storyMsgs(storyView(...))`, and `tidyBook` takes an optional `view`. `storyView` deletes only what the chat's prompt-only regex scripts delete (no macros, no depth limits, no replacements), the same code as in `plugins/relations` and `plugins/litopys`; change one copy, change all three. `namedIn` (the cast) still reads raw text. A new place that feeds a message to a model must go through the view.
 - A held hard event keeps `state.event` pending, and a pending event also keeps people from coming back (`planEntrance` waits while an event waits).

@@ -319,11 +319,68 @@ export function sourceHashes(appDir: string, reads: ReadonlySet<string> = buildR
   return out;
 }
 
+/**
+ * What an update build on a live builder session read again: the paths it
+ * was told changed. The session keeps every other file as it read it for an
+ * earlier build, so only these may take their hash from disk (#535).
+ * `prev` is the hashes of the build dist held before (null: none recorded).
+ */
+export interface FreshInputs {
+  changed: readonly string[];
+  prev: Record<string, string> | null;
+}
+
+/** The longest list of changed paths an update may name; a longer one is not believed. */
+export const MAX_CHANGED_PATHS = 5000;
+
+/** The changed-paths list a page sent with an update's output or ack, or
+ *  undefined when it sent none or one that cannot be trusted (an older page
+ *  sends none: the sources on disk are then taken, as before #535). */
+export function cleanChanged(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw) || raw.length > MAX_CHANGED_PATHS) return undefined;
+  const out: string[] = [];
+  for (const p of raw) {
+    if (typeof p !== "string" || !p || p.length > 400) return undefined;
+    out.push(p);
+  }
+  return out;
+}
+
+/** The hashes an update build stands for: the files it read again (the
+ *  changed paths, or anything under a changed directory) at their hash now,
+ *  every other file at the hash the previous build recorded. A file that is
+ *  new since then and was not named is left out, so the next open names it
+ *  as changed: the session may hold a stale "no such file" for it. */
+function partialHashes(now: Record<string, string>, changedPaths: readonly string[], prev: Record<string, string>): Record<string, string> {
+  const changed = new Set(changedPaths);
+  const under = changedPaths.map((p) => `${p}/`);
+  const hit = (p: string) => changed.has(p) || under.some((d) => p.startsWith(d));
+  const out: Record<string, string> = {};
+  for (const [p, h] of Object.entries(prev)) if (!hit(p)) out[p] = h;
+  for (const [p, h] of Object.entries(now)) if (hit(p)) out[p] = h;
+  return out;
+}
+
+function sameHashes(a: Record<string, string>, b: Record<string, string>): boolean {
+  const ka = Object.keys(a);
+  return ka.length === Object.keys(b).length && ka.every((k) => a[k] === b[k]);
+}
+
+/** A graph stamped for a build, and whether that build is behind the
+ *  sources on disk: an update that did not read again a file which changed
+ *  since the build before (#535). Its status must then not claim the
+ *  current revision, or nothing would ever build that file. */
+interface Stamped {
+  text: string;
+  behind: boolean;
+}
+
 /** Record the source hashes in a graph about to be written, when the sources
  *  still are what the build started from (`rev` was taken before it ran). A
  *  source edited while the build ran leaves them null: the next open then
- *  builds everything, which is always right. */
-function stampGraph(appDir: string, rev: string, text: string): string {
+ *  builds everything, which is always right. With `fresh` (an update on a
+ *  live session) only the files it read again take their hash from disk. */
+function stampGraph(appDir: string, rev: string, text: string, fresh?: FreshInputs): Stamped {
   try {
     const g = JSON.parse(text) as GraphFile;
     const reads = docReadsOf(g);
@@ -331,23 +388,37 @@ function stampGraph(appDir: string, rev: string, text: string): string {
     // the revision was taken with the previous build's reads: it still
     // stands for these sources if it matches with either set of reads
     const settled = revOf(appDir, buildReads(appDir)) === rev || revOf(appDir, reads) === rev;
-    g.files = settled ? files : null;
+    // no hashes recorded before (the last build raced an edit): what the
+    // session holds is unknown, so the sources on disk are taken as before
+    const built = settled && fresh?.prev ? partialHashes(files, fresh.changed, fresh.prev) : files;
+    g.files = settled ? built : null;
     g.install = installMarker(appDir);
-    return JSON.stringify(g);
+    return { text: JSON.stringify(g), behind: settled && !sameHashes(built, files) };
   } catch {
-    return text;
+    return { text, behind: false };
   }
 }
 
+/** The status revision of a build that is behind its sources: never equal
+ *  to `sourceRev`, so the engine answers "needs a build" and the next open
+ *  rebuilds what was missed (from the saved graph: only those files). */
+export const behindRev = (rev: string): string => `${rev}~behind`;
+
 /** The graph on disk takes the sources as they are now: an unchanged build
- *  was acknowledged for them (`rev` matched), so they are what it read. */
-function restampGraph(appDir: string): void {
+ *  was acknowledged for them (`rev` matched). With `changed`, only those
+ *  were looked at again; the rest keep the hashes they had. True when the
+ *  acknowledged build is behind the sources (see Stamped). */
+function restampGraph(appDir: string, changed?: readonly string[]): boolean {
   const file = path.join(appDir, "dist", GRAPH);
   try {
     const text = fs.readFileSync(file, "utf8");
-    fs.writeFileSync(file, stampGraph(appDir, sourceRev(appDir), text));
+    const prev = changed ? ((JSON.parse(text) as GraphFile).files ?? null) : null;
+    const st = stampGraph(appDir, sourceRev(appDir), text, changed ? { changed, prev } : undefined);
+    fs.writeFileSync(file, st.text);
+    return st.behind;
   } catch {
     /* no graph: the next open builds everything */
+    return false;
   }
 }
 
@@ -662,15 +733,16 @@ function writeStatus(distDir: string, out: BuilderOutput, rev: string, builder?:
  * Only a good development build whose files are all present is carried
  * forward; anything else still builds. False when it was not recorded.
  */
-export function ackUnchangedBuild(appDir: string, rev: string): boolean {
+export function ackUnchangedBuild(appDir: string, rev: string, changed?: readonly string[]): boolean {
   const status = readBuildStatus(appDir);
   if (!status?.ok || status.errors.length || status.mode !== "development") return false;
   if (!fs.existsSync(path.join(appDir, "dist", "index.html")) || !readDevMeta(appDir)) return false;
   if (status.rev === rev) return true;
-  fs.writeFileSync(path.join(appDir, "dist", STATUS), JSON.stringify({ ...status, rev, at: Date.now() }));
   // the module graph's file hashes follow, or the next open would find this
-  // same edit again and rebuild for it
-  restampGraph(appDir);
+  // same edit again and rebuild for it; only the files the builder looked at
+  // again, when it says which (#535)
+  const behind = restampGraph(appDir, changed);
+  fs.writeFileSync(path.join(appDir, "dist", STATUS), JSON.stringify({ ...status, rev: behind ? behindRev(rev) : rev, at: Date.now() }));
   readsCache.clear();
   return true;
 }
@@ -680,23 +752,37 @@ export function ackUnchangedBuild(appDir: string, rev: string): boolean {
  * beside dist and swapped in; a hot update is written in place. A failed
  * build leaves dist alone and records its errors.
  */
-export function writeOutput(appsDir: string, id: string, out: BuilderOutput, rev: string, builder?: string): void {
+export function writeOutput(appsDir: string, id: string, out: BuilderOutput, rev: string, builder?: string, changed?: readonly string[]): void {
   try {
-    writeOutputNow(appsDir, id, out, rev, builder);
+    writeOutputNow(appsDir, id, out, rev, builder, changed);
   } finally {
     // what the build read (the graph) may have changed with it
     readsCache.clear();
   }
 }
 
-function writeOutputNow(appsDir: string, id: string, out: BuilderOutput, rev: string, builder?: string): void {
+function writeOutputNow(appsDir: string, id: string, out: BuilderOutput, rev: string, builder?: string, changed?: readonly string[]): void {
   const root = appRoot(appsDir, id);
   const dist = path.join(root, "dist");
   const prior = readBuildStatus(root);
   // the module graph carries the source hashes of this build, taken here
-  // from the sources the build started on
+  // from the sources the build started on. An update on a live session read
+  // again only the files it was told changed (`changed`): the others keep the
+  // hashes of the build before, so an edit the page never heard of (#535)
+  // still counts as unbuilt
   if (out.ok && out.mode === "development") {
-    out = { ...out, files: out.files.map((f) => (f.path === GRAPH ? { ...f, contents: stampGraph(root, rev, f.contents) } : f)) };
+    const fresh = changed ? { changed, prev: readGraphRaw(root)?.files ?? null } : undefined;
+    let behind = false;
+    out = {
+      ...out,
+      files: out.files.map((f) => {
+        if (f.path !== GRAPH) return f;
+        const st = stampGraph(root, rev, f.contents, fresh);
+        behind = st.behind;
+        return { ...f, contents: st.text };
+      }),
+    };
+    if (behind) rev = behindRev(rev);
   }
   if (!out.ok) {
     writeStatus(dist, out, rev, builder, prior);

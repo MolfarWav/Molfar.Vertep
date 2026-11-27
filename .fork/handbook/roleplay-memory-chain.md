@@ -1,6 +1,6 @@
 # Memory across chats: the chain, the archive, the Data Bank, snapshot books, and vectors
 
-Verified at: molfar.vertep-roleplay 91eec33; the memory import lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1)
+Verified at: molfar.vertep-roleplay 91eec33; the memory import lines (#495) at molfar.vertep-roleplay a3a2d043 (main, Roleplay 4.153.1); the passage index v3 and door B's passage vectors (#539) at molfar.vertep-roleplay branch claude/recall-parts-539 (on 462cd9a7, PR 219)
 
 ## What it does
 
@@ -11,8 +11,8 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 - **Chain.** One `{ from, at }` link per chat in `litopys/links.json`. Made by POST `/litopys/links`. Setting: `archiveOnContinue` (default on) also archives the earlier chat.
 - **Archive.** `archived: true` in `chats/<id>.meta.json`. Plugin: engine. Refuses transcript writes with 409.
 - **Backstory.** Nearest 3 chats whole, older ones condensed. Plugin: litopys. Cache: `litopys/far/<id>.json`. Settings: `linkBudget` (800), `farShare` (18 percent), `turnsShown`, the Dashboard's "start clean".
-- **Word-for-word passages.** Plugin: litopys. Files: `litopys/recall/<id>.json` and `<id>.t.json`. Settings: `verbatim` (on), `verbatimBudget` (400, range 150 to 1200), board key `plugin:verbatim`.
-- **Meaning tier (door B).** Setting: `verbatimMeaning` (off). Picks which chapter to search; adds no text.
+- **Word-for-word passages.** Plugin: litopys. Files: `litopys/recall/<id>.json` (rare words) and `<id>.q.json` (where each passage lies); the text is read from the chat itself. Settings: `verbatim` (on), `verbatimBudget` (400, range 150 to 1200), board key `plugin:verbatim`.
+- **Meaning tier (door B).** Setting: `verbatimMeaning` (off). Picks which chapter to search; adds no text. Inside that chapter, passage vectors (`.cache/litopys/recall-vectors/<id>.json`, asked for only when the chapter is opened) order the passages that share a word.
 - **Data Bank.** `databank/<id>.json`, searched by words. Plugin: engine. Setting: feature `databank`.
 - **Snapshot books.** Data Bank files with `kind: "snapshot"`, written by litopys. No setting; the user saves one.
 - **Data Bank vectors.** `.cache/databank-vectors/<fileId>.json`. Setting: `autoEmbed` (on), or a click.
@@ -28,9 +28,12 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 - `plugins/litopys/plugin.js` `saveChatFile`: deletes the far digest on every save of a chat's record.
 - `plugins/litopys/plugin.js` `recallChain`: lists the earlier chats, up to 40.
 - `plugins/litopys/plugin.js` `recallBuild`: cuts a chat into passages and marks the rare words.
-- `plugins/litopys/plugin.js` `recallIndexChat`: writes a chat's passage index.
+- `plugins/litopys/plugin.js` `recallIndexChat`: writes a chat's passage index (marker first, so a build that runs out of time is not retried every tick).
+- `plugins/litopys/plugin.js` `recallPassages`: reads a picked passage's text from the chat through the chat store (one part), checked by its hash.
+- `plugins/litopys/plugin.js` `recallRefresh`: the tick's rebuild, one chat a tick, on a new record `rev`, a changed `sig` (part revs, tail size) or an older version.
 - `plugins/litopys/plugin.js` `recallCandidates`: keeps passages with two or more rare shared words that chance does not explain.
 - `plugins/litopys/plugin.js` `meaningRegions`: picks chapters by vector when door B is on.
+- `plugins/litopys/plugin.js` `wantRecallVectors`, `kickRecallWant`, `finishRecallBatch`: the vectors of an opened chapter's passages (request `litopys/embed-want/rv_<id>.json`, engine key `lit_rv_<id>`).
 - `plugins/litopys/plugin.js` `verbatimFor`: builds the "word for word" block.
 - `plugins/litopys/plugin.js` `llmRequest`: calls `verbatimFor` before a reply.
 - `plugins/litopys/plugin.js` `bookChunks`: turns a chat's record into snapshot chunks, with who knew each fact.
@@ -51,7 +54,8 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 
 - `litopys/links.json`: `{ v, links: { <chatId>: { from, at } } }`. Links to missing chats are dropped on read.
 - `litopys/far/<id>.json`: `{ v, chatId, rev, units, facts, turns }`. Dropped by `saveChatFile`.
-- `litopys/recall/<id>.json`: passage index (`p`: rare stem to chunk numbers). `<id>.t.json`: passage texts with `t`, `a`, `b`, `c` (cast), `k` (chapter).
+- `litopys/recall/<id>.json`: passage index v3 (`p`: rare stem to chunk numbers; `rev`, `sig`, `z`, `built`). `<id>.q.json`: `{ built, q }`, per chunk `a`, `b` (first and last message), `o`, `e` (pieces of a long message), `h` (text hash), `c` (cast), `k` (chapter); no text. A v2 index's `<id>.t.json` (the texts) is read until the tick rebuilds it. `<id>.none.json`: nothing to index for that `rev` and `sig` (or a build in progress, `trying`).
+- `.cache/litopys/recall-vectors/<id>.json`: `{ <chunk hash>: { vector, m } }`, split into `.pN.json` like the chapter vectors.
 - `databank/<id>.json`: `chunks[]` with `i` and `text`. A snapshot adds `kind`, `scope: "chat"`, `scopeChatIds` (at most 24), `source`, and chunks of kind chapter, arc or fact with `cast` or `knownBy` (DATA-FORMATS, "Snapshot books").
 - `.cache/litopys/vectors/<chatId>.json`: `{ id: { hash, vector, m? } }`, split into `.pN.json` past about 2 MB.
 - `.cache/databank-vectors/<fileId>.json`: `{ v: 1, m, dim, chunks: { "<i>": [numbers] } }`, one model per file.
@@ -68,7 +72,7 @@ A Canvas link makes a chat continue an earlier chat of the same story. The link 
 ## Flow
 
 1. A chat is archived and a new one continues the story. The user links the new chat to the old (`linkRoute`). The old chat's meta gets `archived: true` unless `archiveOnContinue` is off, and its passage index is built at once. The next reply runs `buildBackstory`, which reads the nearest 3 chats whole and condenses older ones through `farDigest`.
-2. A reply in a late chat pulls a passage from an early chat. `llmRequest` calls `verbatimFor` when `verbatim` is on and the chat has a link. `recallChain` lists the earlier chats, and `recallCandidates` keeps chunks with at least two rare shared stems. `witnessed` drops a chunk whose cast did not see the scene. Up to 2 excerpts fit in `verbatimBudget`, under a sentence saying that facts and later events win.
+2. A reply in a late chat pulls a passage from an early chat. `llmRequest` calls `verbatimFor` when `verbatim` is on and the chat has a link. `recallChain` lists the earlier chats, and `recallCandidates` keeps chunks with at least two rare shared stems. `witnessed` drops a chunk whose cast did not see the scene. The chunk's text is read from the chat (`recallPassages`): it never crosses a closed part, so this reads one part, and a chunk whose hash no longer matches is skipped. Up to 2 excerpts fit in `verbatimBudget`, under a sentence saying that facts and later events win.
 3. A document is added to the Data Bank. The engine writes `databank/<id>.json` through the `/databank` branch of `handleRoute`. Each reply, `assemble` calls `searchDatabank` with the chat's chain. It keeps chunks scoring 2.0 or more and returns the top 3. If vectors exist, passages whose meaning is close to the scene gain up to 2.5 times their score. A passage the words did not find is never added.
 
 ## If you change X, also touch Y
