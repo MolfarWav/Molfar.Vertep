@@ -145,7 +145,7 @@ Change X, touch Y:
 - Budget rule: `budgetModeOf`. `docs/COUPLINGS.md` says the engine's `hookInsertBreakdown` must match; that copy was not read.
 - Insert file fields: `traceRoute`, `carriesRoute`, `causeRecord`, and the engine readers listed in `docs/COUPLINGS.md`.
 - What fired: `recordLitFired`, `firedRoute`, `src/lib/fired-load.ts`. The engine keeps its own counter, shown beside this one.
-- Passage index format: `recallSave`, `recallBuild`, `recallCandidates`, `verbatimFor`; bump `RECALL_V`.
+- Passage index format: `recallSave`, `recallBuild`, `recallCut`, `recallPassages`, `recallCandidates`, `verbatimFor`; bump `RECALL_V`. A change to how a chunk is cut (`recallPieces`, `recallLine`) changes every chunk's text: bump `RECALL_V` too, or every passage fails its hash until the rebuild.
 - Embedding model: `vectorOf`, `vectorGaps`, `currentEmbedModel`, `noteScanModel`. Vectors of another model are not used. This device's model is read only from `.cache/litopys/embed-status.json`, never from the synced `litopys/insert/` trace (it carries the model of whichever device replied last; #419).
 - Lies and beliefs: `liveLies`, `endBeliefs`, `moveLies`, and the believers copy in the Dashboard plugin.
 - Consolidate's rules: `CONSOLIDATE_PROMPT`, `CONSOLIDATE_FOLD`, `foldable` and the two code guards must agree (a merged or rewritten text over `CONSOLIDATE_TEXT_MAX` is dropped in `parseConsolidateReply`; a merge not shorter than its parts is skipped in `addConsolidateProposals`); the hint `lit.set.autoConsolidateHint` and the guide page `litopys` name the trigger.
@@ -159,6 +159,7 @@ Traps:
 - `recordLitFired` does nothing unless the reply had a trace, a far part or passages.
 - `verbatimFor` needs three or more word stems in the scan window; a chat with no link gets no passages.
 - The passage index refreshes on the tick only when `cfg.verbatim === true`.
+- A chunk never crosses a closed part (`chatOrigin(m).n`), so a reply reads one part; the chat store's part layout and `chatOrigin` must stay as they are.
 - `factRecency` (#50) ranks a fact up for having been sent in earlier prompts (`markUsed`). It does nothing while the whole record fits the budget; under a tight budget it keeps the facts that were repeated most (#488).
 - Before #488 a merged sentence over 300 characters was cut and stored mid-word; `looksCut` finds them and a pass can rewrite them (not every pass does).
 - Retirement wording is fragile with a small build model: the 4.145.0 rule (retire a plan a later fact shows done) made it retire things people did or said; the prompt now asks for a rewrite in the past tense and keeps retire for pure duplicates and facts proven false (replay numbers in the Roleplay CHANGELOG).
