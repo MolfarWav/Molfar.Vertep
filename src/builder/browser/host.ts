@@ -95,12 +95,25 @@ const api = (path: string, init?: RequestInit) =>
 // ---------- engine event stream (one per page) ----------
 type BusListener = (type: string, payload: Record<string, unknown>) => void;
 const busListeners = new Set<BusListener>();
+/** Called when the page may have missed events: the socket came back after a
+ *  drop, or the page became visible again (#535). The engine sends an event
+ *  only to the sockets connected at that moment, so an edit made while this
+ *  page was asleep in the background never arrives here. */
+const resyncListeners = new Set<() => void>();
+const resync = () => {
+  for (const l of resyncListeners) l();
+};
 let bus: WebSocket | null = null;
 function ensureBus(): void {
   if (bus) return;
+  let dropped = false;
   const open = () => {
     const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/v1/ws`);
     bus = ws;
+    ws.onopen = () => {
+      if (dropped) resync();
+      dropped = false;
+    };
     ws.onmessage = (ev) => {
       try {
         const f = JSON.parse(String(ev.data)) as { type?: string; payload?: Record<string, unknown> };
@@ -109,9 +122,17 @@ function ensureBus(): void {
         /* not ours */
       }
     };
-    ws.onclose = () => setTimeout(open, 1500);
+    ws.onclose = () => {
+      dropped = true;
+      setTimeout(open, 1500);
+    };
   };
   open();
+  // a phone may keep a socket that looks open through a long sleep: coming
+  // back to the page checks too
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") resync();
+  });
 }
 
 class BuilderFrame {
@@ -295,6 +316,8 @@ class AppBuild {
   private fullWhy = "the built files did not match the sources when the app opened";
   private renew: ReturnType<typeof setInterval> | undefined;
   private listener: BusListener;
+  private onResync: () => void;
+  private catching = false;
   private lastStatus: BuildStatus = { phase: "checking" };
   watchers = new Set<Watcher>();
   ready: Promise<void>;
@@ -318,8 +341,29 @@ class AppBuild {
       }
     };
     busListeners.add(this.listener);
+    this.onResync = () => void this.catchUp();
+    resyncListeners.add(this.onResync);
     ensureBus();
     this.ready = this.start();
+  }
+
+  /** The page may have missed source edits (its socket was down, or it slept in the background): ask the engine
+   *  and build what differs from the last build (#535). The update merges the engine's list of those files. */
+  private async catchUp(): Promise<void> {
+    if (this.disposed || this.catching) return;
+    this.catching = true;
+    try {
+      await this.ready;
+      if (this.disposed) return;
+      const st = (await api(this.base())) as ServerStatus;
+      // a package install that ends sends its own build_needed
+      if (this.disposed || !st.buildable || !st.needsBuild || st.installing) return;
+      await this.kick("update", st.rev);
+    } catch {
+      /* the next reconnect or visit asks again */
+    } finally {
+      this.catching = false;
+    }
   }
 
   /** Does a finished build exist? From the engine's last answer; true once one lands. */
@@ -426,7 +470,7 @@ class AppBuild {
         const r = st.installing ? null : await this.resume();
         if (r && r.changed.length === 0) {
           // an edit nothing builds from (a doc, a touch): dist is current
-          if (await this.ack(st.rev, { kind: "ack", resumed: true, changed: 0, ms: 0 })) {
+          if (await this.ack(st.rev, { kind: "ack", resumed: true, changed: 0, ms: 0 }, [])) {
             this.idle(st);
             return;
           }
@@ -482,9 +526,10 @@ class AppBuild {
   }
 
   /** dist is current for the sources at `rev` although they changed: tell the engine. */
-  private async ack(rev: string, stats: BuildStats): Promise<boolean> {
+  private async ack(rev: string, stats: BuildStats, changed?: string[]): Promise<boolean> {
     try {
-      const r = (await api(`${this.base()}/ack`, { method: "POST", body: JSON.stringify({ holder: this.holder, rev, stats }) })) as { acked?: boolean };
+      // `changed`: the files the builder looked at again; the engine records only those as built (#535)
+      const r = (await api(`${this.base()}/ack`, { method: "POST", body: JSON.stringify({ holder: this.holder, rev, stats, ...(changed ? { changed } : {}) }) })) as { acked?: boolean };
       return r.acked === true;
     } catch {
       /* a change landed since, or the lease moved: its own build follows */
@@ -510,9 +555,10 @@ class AppBuild {
   }
 
   /** The engine's saved module graph for the last build and the files that differ from it, or null when a full build is due. */
-  private async resume(): Promise<{ graph: unknown; changed: string[] } | null> {
+  private async resume(withGraph = true): Promise<{ graph: unknown; changed: string[] } | null> {
     try {
-      const r = (await api(`${this.base()}/resume`)) as { ok?: boolean; graph?: unknown; changed?: unknown };
+      // a live session needs only the list: the graph of a large app is big for a phone to fetch on every edit
+      const r = (await api(`${this.base()}/resume${withGraph ? "" : "?graph=0"}`)) as { ok?: boolean; graph?: unknown; changed?: unknown };
       if (r.ok !== true || !Array.isArray(r.changed)) return null;
       return { graph: r.graph, changed: r.changed.filter((p): p is string => typeof p === "string") };
     } catch {
@@ -618,6 +664,7 @@ class AppBuild {
       }
     }
     let graph: unknown;
+    const live = !!this.frame && !this.frame.dead;
     if (!this.frame || this.frame.dead) {
       // a new builder continues from what dist holds (its dev sequence)
       let prior: unknown = null;
@@ -631,15 +678,19 @@ class AppBuild {
       }
       this.frame = this.newFrame(prior);
       this.sessionDeps = depsOf(prior);
-      // a session with no modules in memory starts from the saved module
+    }
+    const frame = this.frame;
+    if (kind === "update") {
+      // A session with no modules in memory starts from the saved module
       // graph (found when the app opened, or asked for now) and rebuilds the
-      // files that differ from it, instead of building every module first
-      if (kind === "update") {
-        const r = this.resumed ?? (await this.resume());
-        if (r) {
-          graph = r.graph;
-          changed = [...new Set([...changed, ...r.changed])];
-        }
+      // files that differ from it, instead of building every module first.
+      // A live session also takes that list: the events name only the edits
+      // this page heard of, and one made while its socket was down would
+      // otherwise stay out of every later build (#535).
+      const r = this.resumed ?? (await this.resume(!live));
+      if (r) {
+        if (!live) graph = r.graph;
+        changed = [...new Set([...changed, ...r.changed])];
       }
     }
     this.resumed = null;
@@ -647,14 +698,17 @@ class AppBuild {
     if (kind === "full") this.status({ phase: "building", message: "Building the app", since: this.buildSince });
     let output: Record<string, unknown>;
     try {
-      output = await this.frame.build(kind, changed, graph);
+      output = await frame.build(kind, changed, graph);
     } catch (e) {
       this.frame = null;
       this.status({ phase: "error", message: String((e as Error).message) });
       this.report(`${kind} build stopped in the page: ${String((e as Error).message)}`);
       return;
     }
-    const stats: BuildStats = { kind, resumed: this.frame.lastResumed, changed: changed.length, ms: this.frame.lastMs };
+    const stats: BuildStats = { kind, resumed: frame.lastResumed, changed: changed.length, ms: frame.lastMs };
+    // a session that held modules from before (live, or restored from the saved graph) read again only `changed`:
+    // the engine records only those as built (#535). A fresh session read everything, as a full build does.
+    const partial = kind === "update" && (live || frame.lastResumed) ? changed : undefined;
     if (output.unchanged) {
       const errors = (output.errors as BuildMessage[] | undefined) ?? [];
       this.status(errors.length ? { phase: "error", errors } : { phase: "ready" });
@@ -663,7 +717,7 @@ class AppBuild {
       // reloads the app for nothing. Never for a result with errors.
       if (!errors.length) {
         try {
-          await this.ack(rev, stats);
+          await this.ack(rev, stats, partial);
         } catch {
           /* a change landed since, or the lease moved: its own build follows */
         }
@@ -671,7 +725,7 @@ class AppBuild {
       return;
     }
     try {
-      await api(`${this.base()}/output`, { method: "PUT", body: JSON.stringify({ holder: this.holder, rev, builder: VERSION, output, stats }) });
+      await api(`${this.base()}/output`, { method: "PUT", body: JSON.stringify({ holder: this.holder, rev, builder: VERSION, output, stats, ...(partial ? { changed: partial } : {}) }) });
     } catch (e) {
       // the output never landed, but the session in the frame already advanced
       // (seq, maybe a new snapshot): keeping it would make the next upload
@@ -741,6 +795,7 @@ class AppBuild {
     if (this.disposed) return;
     this.disposed = true;
     busListeners.delete(this.listener);
+    resyncListeners.delete(this.onResync);
     clearInterval(this.renew);
     this.frame?.dispose();
     this.releaseLease();

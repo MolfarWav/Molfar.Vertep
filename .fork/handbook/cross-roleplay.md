@@ -237,7 +237,7 @@ Change X, touch Y:
 - Picture modes: `IMAGE_PROMPT_MODES` in `plugins/engine/plugin.js` and `IMAGE_MODES` in `src/lib/image-gen.ts`.
 - Picture tool text: `handleTool` and `IMAGE_TAGS_DESCRIPTION` in `plugins/tools/plugin.js`.
 - Portrait text: `portraitRoute` in `plugins/profile/plugin.js` and `portraitPrompt` in `src/lib/portrait-draw.ts`.
-- Any call that sends a picture: `images: [img]` in `fillRoute` and `structureRoute` (`plugins/profile/plugin.js`), and the warning in `structure-draft.tsx`.
+- Any call that sends a picture: `images: [img]` in `fillRoute` and `structureRoute` (`plugins/profile/plugin.js`), and `useFillEmpty` in `structure-draft.tsx`, which sends the portrait only with the Appearance fields (the warning there is for a portrait file that could not be read).
 
 Traps:
 - A sprite with no URL is an empty slot. `spritePool` leaves it out.
@@ -388,4 +388,5 @@ Traps:
 - A chat with no state file counts as on at chronicler; only level `off` in a state file keeps it off.
 - `breath` is not in `CORE_KEYS`: a rollback does not restore it. It is checked against the chat's messages instead, so a deleted carrier frees the pause, and a swipe of the carrier clears it in `llmRequest`.
 - A DM `ref` on a place record is not trusted when the record is a twin of another place record by name or alias (`placeTwin`): it is dropped and the record stays unlinked. A second record can take an id only as a spot of the record that holds it (`spotPair`, #514). Chats linked wrongly before this are not repaired by code.
+- The DM never reads a stored message raw (#520): `updateRoute` passes `unread` and `since` through `storyMsgs(storyView(...))`, and `tidyBook` takes an optional `view`. `storyView` deletes only what the chat's prompt-only regex scripts delete (no macros, no depth limits, no replacements), the same code as in `plugins/relations` and `plugins/litopys`; change one copy, change all three. `namedIn` (the cast) still reads raw text. A new place that feeds a message to a model must go through the view.
 - A held hard event keeps `state.event` pending, and a pending event also keeps people from coming back (`planEntrance` waits while an event waits).

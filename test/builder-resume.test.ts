@@ -9,7 +9,7 @@ import path from "node:path";
 import * as esbuild from "esbuild";
 import { createContext } from "../src/builder/context.js";
 import { DevSession, type DevOutput } from "../src/builder/dev.js";
-import { ackUnchangedBuild, appFsOps, buildReads, checkOutput, installMarker, isBuildSource, readDevMeta, resumePlan, sourceRev, writeOutput } from "../src/builder/server.js";
+import { ackUnchangedBuild, appFsOps, buildReads, checkOutput, cleanChanged, installMarker, isBuildSource, readDevMeta, resumePlan, sourceRev, writeOutput } from "../src/builder/server.js";
 
 let dir = "";
 beforeEach(() => {
@@ -350,4 +350,110 @@ describe("open after a source change continues from the saved module graph", () 
     }
     throw new Error("never folded");
   }, 120_000);
+});
+
+describe("an edit the open page never heard of is not recorded as built (#535)", () => {
+  const status = (app: ReturnType<typeof setup>) => JSON.parse(app.distText(".molfar-build.json")) as { rev: string };
+  /** a page that stays open: one live session, outputs land with the paths it was told */
+  async function livePage(app: ReturnType<typeof setup>) {
+    const dev = await app.session();
+    const land = (out: DevOutput, rev: string, changed?: string[]) => {
+      const checked = checkOutput(out);
+      if (typeof checked === "string") throw new Error(checked);
+      writeOutput(app.appsDir, "a", checked, rev, BUILDER, changed);
+    };
+    land(await dev.full(), sourceRev(app.appDir));
+    return { dev, land };
+  }
+
+  it("an update told only of B does not stamp A's missed edit: the status says behind and the next open rebuilds A", async () => {
+    const app = setup(base);
+    const { dev, land } = await livePage(app);
+    expect(status(app).rev).toBe(sourceRev(app.appDir));
+    await app.tick();
+    app.write("src/a.ts", 'export const a = "A_MISSED";\n'); // the page's socket was down
+    await app.tick();
+    app.write("src/b.ts", 'export const b = "B_TWO";\n');
+    const rev = sourceRev(app.appDir);
+    const out = await dev.update(["src/b.ts"]);
+    land(out, rev, ["src/b.ts"]);
+    // the update built B only, from a session that still holds the old A
+    expect(app.pageCode()).toContain("B_TWO");
+    expect(app.pageCode()).not.toContain("A_MISSED");
+    // so the engine does not call it current: GET /build answers needsBuild, app_check does not trust it
+    expect(status(app).rev).not.toBe(sourceRev(app.appDir));
+    expect(resumePlan(app.appDir, BUILDER)).toMatchObject({ ok: true, changed: ["src/a.ts"] });
+    // the next open rebuilds A from the saved graph, and then all is current
+    const r = await app.open();
+    expect(r.path).toBe("update");
+    expect(r.changed).toEqual(["src/a.ts"]);
+    for (const needle of ["A_MISSED", "B_TWO"]) expect(app.pageCode()).toContain(needle);
+    expect(status(app).rev).toBe(sourceRev(app.appDir));
+    expect((await app.open()).path).toBe("none");
+  }, 30_000);
+
+  it("an update told of every changed file is current, as before", async () => {
+    const app = setup(base);
+    const { dev, land } = await livePage(app);
+    await app.tick();
+    app.write("src/a.ts", 'export const a = "A_TWO";\n');
+    app.write("src/b.ts", 'export const b = "B_TWO";\n');
+    const rev = sourceRev(app.appDir);
+    // what the page sends now: the event paths plus the engine's list of files that differ
+    const changed = [...new Set(["src/b.ts", ...(resumePlan(app.appDir, BUILDER) as { changed: string[] }).changed])];
+    land(await dev.update(changed), rev, changed);
+    expect(status(app).rev).toBe(sourceRev(app.appDir));
+    expect(resumePlan(app.appDir, BUILDER)).toMatchObject({ ok: true, changed: [] });
+    for (const needle of ["A_TWO", "B_TWO"]) expect(app.pageCode()).toContain(needle);
+  }, 30_000);
+
+  it("a removed directory named by its own path counts the files under it as read", async () => {
+    const app = setup({ ...base, "src/lib/x.ts": "export {};\n" });
+    const { dev, land } = await livePage(app);
+    await app.tick();
+    app.rm("src/lib");
+    const rev = sourceRev(app.appDir);
+    // nothing imports it: the builder answers "unchanged" and the page acknowledges
+    const out = await dev.update(["src/lib"]);
+    if (out.unchanged) expect(ackUnchangedBuild(app.appDir, rev, ["src/lib"])).toBe(true);
+    else land(out, rev, ["src/lib"]);
+    expect(status(app).rev).toBe(sourceRev(app.appDir));
+    expect(resumePlan(app.appDir, BUILDER)).toMatchObject({ ok: true, changed: [] });
+  }, 30_000);
+
+  it("an unchanged update acknowledged for B only leaves A's missed edit to the next open", async () => {
+    const app = setup(base);
+    const { dev } = await livePage(app);
+    await app.tick();
+    app.write("src/a.ts", 'export const a = "A_MISSED";\n');
+    await app.tick();
+    app.write("src/b.ts", 'export const b = "B_ONE"; // a comment\n');
+    const out = await dev.update(["src/b.ts"]);
+    expect(out.unchanged).toBe(true);
+    const rev = sourceRev(app.appDir);
+    expect(ackUnchangedBuild(app.appDir, rev, ["src/b.ts"])).toBe(true);
+    expect(status(app).rev).not.toBe(rev);
+    expect(resumePlan(app.appDir, BUILDER)).toMatchObject({ ok: true, changed: ["src/a.ts"] });
+    const r = await app.open();
+    expect(r.changed).toEqual(["src/a.ts"]);
+    expect(app.pageCode()).toContain("A_MISSED");
+  }, 30_000);
+
+  it("an output or ack with no list (a page from before #535) stamps the sources on disk, as before", async () => {
+    const app = setup(base);
+    const { dev, land } = await livePage(app);
+    await app.tick();
+    app.write("src/a.ts", 'export const a = "A_MISSED";\n');
+    await app.tick();
+    app.write("src/b.ts", 'export const b = "B_TWO";\n');
+    const rev = sourceRev(app.appDir);
+    land(await dev.update(["src/b.ts"]), rev);
+    expect(status(app).rev).toBe(rev);
+  }, 30_000);
+
+  it("cleanChanged takes a list of path strings and nothing else", () => {
+    expect(cleanChanged(["src/a.ts", "src/lib"])).toEqual(["src/a.ts", "src/lib"]);
+    expect(cleanChanged([])).toEqual([]);
+    for (const bad of [undefined, null, "src/a.ts", [1], [""], ["x".repeat(401)], Array(5001).fill("a")]) expect(cleanChanged(bad)).toBeUndefined();
+  });
 });
