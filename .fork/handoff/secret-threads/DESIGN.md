@@ -171,9 +171,9 @@ summary, how often a thread's event is left unmarked, whether hints read as one 
 
 ## Built (2026-11-28), and where it differs from the plan above
 
-- Roleplay branch `claude/secret-threads-545` (`d8d67bd4`), not merged, not released.
+- Released in Roleplay 4.167.0 (PR 228, merge `0a859c66`).
 - The run summary is dropped only for a run that added or finished a thread (not for every run of a chat with threads).
 - The DM input does not say how long a thread has been untouched.
 - The profile blocks and the hint wording are not editable.
 - #543 had no "used in the insert" flag to change in the Library; with Arcs off the arc card says "Not sent: arcs are off" and loses "Merge again".
-- Not done: the bench on free models (question 7); the Arcs switch was not screenshotted at 390 px.
+- The bench (question 7) is in `BENCH.md`; it led to tighter rules (`c1c434a5`). The Arcs switch was not screenshotted at 390 px.
