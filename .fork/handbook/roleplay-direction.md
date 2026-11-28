@@ -1,6 +1,6 @@
 # Direction: who is in a group chat's scene, the director, the lock
 
-Verified at: molfar.vertep-roleplay branch claude/direction-phase4 (phase 4: nine genre sets, beat templates, a draft of a plan from the cards; 3b released in 4.152.0; 4 not yet merged)
+Verified at: molfar.vertep-roleplay branch claude/secret-threads-545 (d8d67bd4: World reads the queued note for its secret hint, #545); molfar.vertep-roleplay branch claude/direction-phase4 (phase 4: nine genre sets, beat templates, a draft of a plan from the cards; 3b released in 4.152.0; 4 not yet merged)
 
 ## What it does
 - In a group chat, after each reply, one small director call reads the newest pair of messages and reports the kind of scene and which members are in it. Code maps the names to members and applies the `alone_moment` precedence.
@@ -99,6 +99,7 @@ Verified at: molfar.vertep-roleplay branch claude/direction-phase4 (phase 4: nin
 - A set or a rule: `SETS` (rules, `tags` from `EXTRA_TAGS`, `templates`), the rule's `when` tags must be offered in that set (`test/rp-direction-sets.test.ts` checks it), the client's composed rule sentences and the `dir.set.*`, `dir.rulename.*`, `dir.tag.*` strings.
 - A new scene kind: `EXTRA_TAGS`, `EXTRA_TAG_WORDS`, the client's `DIRECTION_TAGS` and `dir.tag.*`.
 - The queued note: `cleanNext` in the plugin and `directionScene` in the engine (it counts `next.who` as present).
+- `plugins/world` `directionQueued` repeats `dueAfter` over `next.after` to hold its secret hint for a reply that carries a beat or rule note (#545).
 
 ## Traps
 - With no lock and `on` not true, the engine behaves exactly as before: no presence limit, every card whole. The state route then answers `source: "none"`, so the bar and the chips show no marks either (`sceneNow`).

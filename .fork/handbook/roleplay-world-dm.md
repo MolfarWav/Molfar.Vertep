@@ -1,5 +1,5 @@
 # World DM: the plugin that builds a world from the story and moves it during play
-Verified at: molfar.vertep-roleplay 0b560454 (main, Roleplay 4.156.2; Traps: the story view); molfar.vertep-roleplay branch claude/place-ref-514 (2a590939, Traps: the place ref); molfar.vertep-roleplay 151f6d93 (main, Roleplay 4.155.0; sections: Owners, Data, Flow, Traps, Tests, If you change X: the fan-service level, recent events, the shared reaction rule); 234f1599 (main, Roleplay 4.154.0; What reaches the reply prompt, the pause, the anime level, the life block); Traps e09c2ed; the rest at 91eec33
+Verified at: molfar.vertep-roleplay branch claude/secret-threads-545 (d8d67bd4: secret threads #545 and thread age #544: Owners, Data, Flow, What reaches the reply prompt, Traps, Tests); molfar.vertep-roleplay 0b560454 (main, Roleplay 4.156.2; Traps: the story view); molfar.vertep-roleplay branch claude/place-ref-514 (2a590939, Traps: the place ref); molfar.vertep-roleplay 151f6d93 (main, Roleplay 4.155.0; sections: Owners, Data, Flow, Traps, Tests, If you change X: the fan-service level, recent events, the shared reaction rule); 234f1599 (main, Roleplay 4.154.0; What reaches the reply prompt, the pause, the anime level, the life block); Traps e09c2ed; the rest at 91eec33
 
 ## What it does
 - After a reply, a DM model reads the new part of the story and returns small JSON. Code turns it into the chat's world book: one record per person, place, group, thing or fact that matters beyond the scene.
@@ -40,6 +40,9 @@ Verified at: molfar.vertep-roleplay 0b560454 (main, Roleplay 4.156.2; Traps: the
 - `plugins/world/plugin.js`, `undoFrom`: restores the core keys and keeps the player's own edits.
 - `plugins/world/plugin.js`, `rollbackRoute`: POST /world/rollback, which calls settle.
 - `plugins/world/plugin.js`, `systemFor`: builds the DM system prompt from profile blocks and level rules.
+- `plugins/world/plugin.js`, `applySecrets`, `secretRules`, `secretInput`, `sendSecretHint`, `secretsRoute`, `secretStatus`, `keepPlayerSecrets`: secret threads (#545): the DM ops, the prompt parts, the timed hint, the spoiler route, the spoiler-free status, player edits kept by a rollback.
+- `plugins/world/plugin.js`, `dashThreads`: open quests with "(open for N turns)" (#544).
+- `src/components/world/world-secrets.tsx`, `SecretsCard`: the card, the spoiler, the log.
 - `plugins/world/plugin.js`, `sweepCandidates`: lists places and things the book lacks.
 - `plugins/tools/plugin.js`, `rollDice`: the roll_dice tool a model may call; separate from World's dice (two kinds on purpose; `docs/COUPLINGS.md`, "Two kinds of dice": roll_dice is unseeded and read by the model, World's check is seeded, rolled by code, and re-rolls on a swipe; the roll log is not rewound).
 - `plugins/world/plugin.js`, `deckRoute` answers `short: true, min: 8` when fewer than `DECK_MIN` cards came back; the cards are kept either way (Roleplay branch `claude/handbook-findings`, 9fab294). `DECK_MIN` is a request in the prompt, not a limit.
@@ -54,7 +57,8 @@ Verified at: molfar.vertep-roleplay 0b560454 (main, Roleplay 4.156.2; Traps: the
 ## Data
 - `world/state/<chatId>.json`: settings, cursors (lastKey, levelKey), `entities` (ids like `n3`), `fronts` (ids `f1`), `event`, `deck` (`[{ id: "e1", text }]`), `carry`, `clockReplies`, `log`, `usage`, `breath` (`{ after }`, the message the last big event's reply followed; not a core key), `recent` (`[{ text, at }]`, the last 5 events a run answered delivered for, #506; a core key).
 - `world/snaps/<chatId>.json`: up to 8 snapshots `{ upTo, at, head, core }`.
-- `world/dice/<chatId>.json`: the newest 60 rolls.
+- `world/dice/<chatId>.json`: the newest 60 rolls (also `kind: "secret"` rows, with no content).
+- In the state file, secret threads (#545): `secrets`, `secretOrigins`, `secretMark`, `secretLog`, `secretNext`, `secretGone`; settings `secrets`, `hintEvery`, `secretShow` (`docs/DATA-FORMATS.md`). Their text leaves the plugin only through `GET /world/secrets`.
 - `lorebooks/world-<chatId>.json`: the world book; one entry per record, memo `world:<id>`.
 - `world/config.json`, `world/profiles/`, `world/recipes/`, `world/library/`: see `docs/DATA-FORMATS.md`, "World DM".
 
@@ -74,6 +78,7 @@ Verified at: molfar.vertep-roleplay 0b560454 (main, Roleplay 4.156.2; Traps: the
 7. On the next send, next or swipe reply, `llmRequest` marks the event sent, records the message it follows in `after`, and adds it. A later run reads the delivered flag: true clears the event and adds it to `recent` (last 5); false is retried once, then dropped and not remembered.
 8. On a swipe or a deleted reply, the store calls `rollbackWorld`, which posts to /world/rollback. `settle` calls `reconcile`; `firstGone` finds the snapshot and `undoFrom` restores CORE_KEYS. An event whose carrier reply is gone becomes due again.
 9. On a swipe, `llmRequest` runs settle again before it builds the event.
+9b. Secret threads (levels above chronicler, `settings.secrets` > 0): the DM run adds and updates them with no extra call; `applyLevel` lets at most one event in three carry `secret: <id>`, past the deck, and drops one that is not allowed. `sendSecretHint` adds a hint every `hintEvery` replies (the `pauseLeft` clock), held behind a DM event, a returning person, a life intrusion, a queued Direction note or a fight.
 10. The pause after a big event: sending a hard event, or a major life roll, sets `breath` to the message the reply follows. While `pauseLeft` is above 0, a hard event stays pending and a major life roll is logged `held: "pause"`; the DM run's input says the pause is on. A swipe of the carrying reply drops the mark first.
 
 ## What reaches the reply prompt
@@ -81,6 +86,7 @@ Verified at: molfar.vertep-roleplay 0b560454 (main, Roleplay 4.156.2; Traps: the
 - "World · here": the scene's place, its things, and who wears and carries what. Added at every level, and with the DM off.
 - "World DM": the pending event. Above chronicler, with insert on, on send, next or swipe, and not in combat unless the level is antagonist, anime or chaos.
 - "Dice": a 2d6 FATE line, when the gate passes. "Pace" and "Life" are the other two rolls.
+- "World DM · secret hint": one quiet detail of a secret thread; never the thread itself.
 - During the pause after a big event, a hard "World DM" event and a major "Life" are held back; soft news, smaller life rolls, Dice, Pace and cast notes go on.
 The DM's system prompt is never sent with the reply. Records reach the reply through the world book.
 
@@ -105,7 +111,11 @@ The DM's system prompt is never sent with the reply. Records reach the reply thr
 - The DM never reads a stored message raw (#520): `updateRoute` passes `unread` and `since` through `storyMsgs(storyView(...))`, and `tidyBook` takes an optional `view`. `storyView` deletes only what the chat's prompt-only regex scripts delete (no macros, no depth limits, no replacements), the same code as in `plugins/relations` and `plugins/litopys`; change one copy, change all three. `namedIn` (the cast) still reads raw text. A new place that feeds a message to a model must go through the view.
 - A held hard event keeps `state.event` pending, and a pending event also keeps people from coming back (`planEntrance` waits while an event waits).
 
+- A secret thread can still leak where code cannot see it: the model may write it into a record (prompt rule only), and a thread event it does not mark is not counted. The run summary is dropped when a thread was added or finished, and the raw text of a bad DM reply is not kept for a chat with threads.
+- Turning threads off keeps them in the state file; nothing is sent.
+
 ## Tests that guard it
+- `test/rp-world-secrets.test.ts`: off changes nothing, add and limit, one in three, deck untouched, timer, holds, swipe, rollback, player edits, no text in the state view.
 - `test/rp-world.test.ts`: tickClocks, clockStep, clockStage, rollFate, diceOutcome, llmRequest, applyLevel.
 - `test/rp-world-rollback.test.ts`: reconcile, firstGone, eventLost, the rollback route.
 - `test/rp-world-travel.test.ts`: the two travel routes (prompts, cleaning, no call without input).

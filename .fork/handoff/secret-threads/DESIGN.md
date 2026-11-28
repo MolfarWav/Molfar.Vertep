@@ -168,3 +168,12 @@ summary, how often a thread's event is left unmarked, whether hints read as one 
 3. Hints are also held by a returning person and by a Life intrusion, not only by a DM event.
 4. The hint's wording is fixed (not an editable profile block) in the first version.
 5. #543: switch on by default; mode Off stops sending existing arcs.
+
+## Built (2026-11-28), and where it differs from the plan above
+
+- Roleplay branch `claude/secret-threads-545` (`d8d67bd4`), not merged, not released.
+- The run summary is dropped only for a run that added or finished a thread (not for every run of a chat with threads).
+- The DM input does not say how long a thread has been untouched.
+- The profile blocks and the hint wording are not editable.
+- #543 had no "used in the insert" flag to change in the Library; with Arcs off the arc card says "Not sent: arcs are off" and loses "Merge again".
+- Not done: the bench on free models (question 7); the Arcs switch was not screenshotted at 390 px.

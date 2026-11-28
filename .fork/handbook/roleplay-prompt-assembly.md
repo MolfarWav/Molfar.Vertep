@@ -1,6 +1,6 @@
 # Prompt assembly for a Roleplay reply, and the prompt inspector
 
-Verified at: molfar.vertep-roleplay efead2b (Order, step 6); the rest at 4.127.0 (branch claude/cache-keepalive-112), molfar.vertep 4004846 + cache branch
+Verified at: molfar.vertep-roleplay branch claude/secret-threads-545 (d8d67bd4: the World DM secret hint part #545); molfar.vertep-roleplay efead2b (Order, step 6); the rest at 4.127.0 (branch claude/cache-keepalive-112), molfar.vertep 4004846 + cache branch
 
 ## What it does
 - The engine plugin's `assemble` builds a reply's messages from the preset, card, persona, lorebooks, regex, macros and history. It also returns `sources`, which records where each part came from.
@@ -39,7 +39,7 @@ Verified at: molfar.vertep-roleplay efead2b (Order, step 6); the rest at 4.127.0
 3. Chat history: visible turns minus those Litopys holds. Each turn gets regex, then macros, then a name prefix if the names setting asks. Depth injections are spliced in from the newest turn.
 4. Preset sections after the history marker, then post-history instructions.
 5. Squash of consecutive system messages if `studio.squashSystemMessages` is set. The assistant prefill goes last.
-6. Sibling hooks run after assembly, lower priority first. Inside the history Litopys swaps runs a speaker missed for one line (presence cut) and adds a line after each player message of a remote scene (#415). Litopys memory and story go after the leading system block; Litopys tail parts and Dashboard parts go just before the newest non-system message; World, Direction (lock and return notes) and agent text is appended to the newest user message.
+6. Sibling hooks run after assembly, lower priority first. Inside the history Litopys swaps runs a speaker missed for one line (presence cut) and adds a line after each player message of a remote scene (#415). Litopys memory and story go after the leading system block; Litopys tail parts and Dashboard parts go just before the newest non-system message; World (also "World DM · secret hint", #545, reserve row "world secret"), Direction (lock and return notes) and agent text is appended to the newest user message.
 
 ## How other plugins add parts (the hook)
 - `llmRequest(ctx, host)` answers only for `ctx.key === "reply"` and returns a patch with `messages` and optionally `promptSources`.
