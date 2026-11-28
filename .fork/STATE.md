@@ -9,6 +9,9 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
+## 2026-11-28: design for #545 secret threads, #544 thread age, #543 chapters before arcs (no code)
+- `.fork/handoff/secret-threads/DESIGN.md`: UI plan and technical design, read at Roleplay 4.166.0. Waits for the owner's ok. #545 decisions are in the issue's comments. From a review of neko-agent and rp-core (nothing else worth taking). Not built, not benched.
+
 ## 2026-11-28: #542 a hand-written growth block for one story: RELEASED in Roleplay 4.166.0 (PR 224 merge `9f0342f3`, release PR 225 merge `e0a4764a`; owner: "Зливай і реліз"); #542 closed
 - With a chat picked, Add a block asks Only "<chat>" (default) / Every chat of <card>; with All chats the form says every chat. `add` takes `scope: "story"` + `chatId` of this card (400 otherwise), stores `from` like an agent block. Tests (plugin, UI) pass, typecheck; browser 9 checks (file on disk, other chat not sent it, Every chat = card-wide, 390 px), screenshots looked at. Release: `memory` translations refreshed in 13 languages; the model also touched unrelated paragraphs (it swapped translated button names to English in uk, rewrote one zh paragraph), so only the two paragraphs that changed in English were taken and the rest restored word for word; stamped, `--stale` empty; guide/help/i18n tests 64 pass.
 
