@@ -1,6 +1,6 @@
 # Personas, the character Profile and Soul, and the small plugins (profile, polish, tools)
 
-Verified at: molfar.vertep-roleplay 607147f (the Personas section and the Lorebooks tab at branch claude/personas-import-463, 4ac7ac0); Fill empty, the Models panel and the Profile tab actions (#528 to #530) at branch claude/profile-fill-528-530, 8368f3f (Roleplay 4.162.0, PR 214 merged)
+Verified at: molfar.vertep-roleplay 607147f (the Personas section and the Lorebooks tab at branch claude/personas-import-463, 4ac7ac0); Fill empty, the Models panel and the Profile tab actions (#528 to #530) at branch claude/profile-fill-528-530, 8368f3f (Roleplay 4.162.0, PR 214 merged); the Soul rating model (#505) at 22071cf2
 
 ## What it does
 - A persona is the user's side of a chat, stored as `data/personas/<id>.json`; its description reaches the prompt in a knowledge frame.
@@ -49,6 +49,7 @@ Verified at: molfar.vertep-roleplay 607147f (the Personas section and the Lorebo
 - Filled by Structure it (`/profile/structure`, which reads long cards in parts) and Fill empty (`/profile/fill`, which fills only empty fields). The model comes from the request, then `characters/<id>/card-tasks.json`, then `ui.cardTasks.model`, then the Dashboard sensor model, then the app default.
 - The portrait goes only with the `appearance` fields (#528). `useFillEmpty` makes a text call (every other field, the card's task model, no picture) and an Appearance call (the portrait, the card's picture model, that model's own limits); the second names the first draft with `mergeAt` and `fillRoute` joins them (`models` lists both). The picture model is `visionModel` in `card-tasks.json` (`none`, `settings` or a ref; a persona keeps it in `cardTasks`); the old browser key `rp.profile.visionModel` is read only while a card has none. Read from picture reads with the Vision model even when the choice is `none`.
 - A card longer than `limits.inputChars` (#529): `cardTextFor` sends pieces by the fields asked (Personality text first for lists, behaviors, goals, trauma, sexuality; Description first for the rest; both in turn for a mixed request), and the draft has `read: { used, total }`. Structure it still reads every part.
+- The Soul rating runs on `soulModel` in `plugins/relations/plugin.js`: the card's `card-tasks.json` model, `ui.cardTasks.model`, the Dashboard sensor model, the chat's model, the app default. `POST /dashboard/soul/rate` takes `taskModel` over that chain (#505). In the Soul tab (`soul-tab.tsx`, given the editor's `useCardTasks`) "Choose another model" writes the pick where the model in force is set: `ui.cardTasks.model` when that runs, else the card's own (`saveModel`, written at once); never the sensor model.
 - Read by the prompt, presets and exports through the compiled text. The talkativeness guess reads that text when the card has no talkativeness value or the unset 0.5.
 - The Soul is read by the Dashboard (`src/lib/soul.ts`) and by Letters (`hasSouls`). No Dashboard component was found reading the profile fields.
 
@@ -94,5 +95,5 @@ Verified at: molfar.vertep-roleplay 607147f (the Personas section and the Lorebo
 - The needs, preferences and braveness fields: no match in `src` or `plugins`.
 - That the questionnaire has exactly five questions: `docs/DATA-FORMATS.md` says five; I did not count `QUESTIONS`.
 - Which component draws tool results in the chat: I confirmed the `tools` field, not the renderer.
-- The internals of the relations plugin's soul rating: I confirmed only the `soul/rate` route name.
+- The internals of the relations plugin's soul rating beyond its model chain: not read.
 - The test suite was not run for the original page; #528 to #530 ran 179 related tests, typecheck and a browser check on the mock model (a real model that reads pictures and a real long card on a small window were not tried).

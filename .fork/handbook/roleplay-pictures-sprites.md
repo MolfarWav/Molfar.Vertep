@@ -1,5 +1,5 @@
 # Pictures in Roleplay: portraits, sprites and outfits, backgrounds, scene pictures, voice
-Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite windows (#456) on branch claude/sprite-windows-456 (not merged yet); the map's use of the stage helpers at molfar.vertep-roleplay c0e95cb (branch claude/map-454)
+Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite windows (#456) on branch claude/sprite-windows-456 (not merged yet); the map's use of the stage helpers at molfar.vertep-roleplay c0e95cb (branch claude/map-454); Portraits (#541) at 22071cf2
 
 ## What it does
 - A card has one portrait (its avatar) and an optional set of sprites: small pictures per emotion, sorted by outfit and, for a Narrator card, by voice.
@@ -34,7 +34,7 @@ Verified at: molfar.vertep-roleplay 607147f; Backgrounds at 89fedb8; Sprite wind
 - A portrait is the card's `avatar`. A card with no avatar, or the default avatar image, needs one. A lazy card is never redrawn. Groups are skipped.
 - Drawing takes two steps. The profile plugin writes one description, as tags or prose depending on the picked model (`portraitPrompt`). The image is then drawn from it (`drawPrompt`).
 - Bulk drawing runs one card at a time. A failed card is listed with its reason and the run goes on.
-- The caller stores the returned URL.
+- A card keeps its portrait only as a data URL: the characters route drops a served `/v1/assets` link. Every path that puts a stored picture on a card goes through `imageAsDataUrl` in `src/lib/engine.ts` (512 px): the editor's "Use as portrait" and the gallery's "Set as avatar" (`usePicture` in `character-editor.tsx`), and bulk drawing (`drawCardPortraits`, #541). The Gallery keeps the link; a persona's avatar may be a link.
 - Lookup for a name, last wins: persona, character cards, the chat's own cards, then the user's own portrait from Litopys.
 
 ## Sprites and outfits

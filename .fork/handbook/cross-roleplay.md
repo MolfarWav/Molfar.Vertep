@@ -94,7 +94,7 @@ Change X, touch Y:
 - An error code: `docs/DATA-FORMATS.md` and the `ag.issue.<CODE>` keys read by `src/lib/agent-issues.ts`.
 - A recipe: its file in `.skills/agent-craft/references/`, then the recipe sync script.
 - `expandNames`: five plugins carry a copy (see `docs/COUPLINGS.md`).
-- Where a growth block acts: `growthReach` in the plugin and its mirror `growthReach` in `src/components/character/memory-api.ts` (the dialog and the Carries row read it); the Memory tab (`memory-growth.tsx`, `memory-growth-where.tsx`), the chat's `carries-growth.tsx`, and the guide page `memory`.
+- Where a growth block acts: `growthReach` in the plugin and its mirror `growthReach` in `src/components/character/memory-api.ts` (the dialog and the Carries row read it); the Memory tab (`memory-growth.tsx` with its Chat picker, which filters by the mirror and reuses `src/components/canvas/chat-picker.tsx` with `allLabel`/`onAll`/`note`; `memory-growth-where.tsx`), the chat's `carries-growth.tsx`, and the guide page `memory`.
 
 Traps:
 - A hand edit between the markers is overwritten by the next sync, and the generated-block test fails.

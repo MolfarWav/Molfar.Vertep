@@ -1,5 +1,5 @@
 # Dashboard: the sensor pass, relations, the character journal, the clock
-Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at branch claude/dashboard-demand-461 (2f9a08e); rest 1f0a99f; event table and stage at c603c31
+Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at branch claude/dashboard-demand-461 (2f9a08e); rest 1f0a99f; event table and stage at c603c31; whose-deed rules and the past-prompt note at molfar.vertep-roleplay 22071cf2 (branch claude/batch-541-505-394)
 
 ## What it does
 - After a reply, a sensor model call reads the new messages and returns one JSON report: present people, clock, scene, events, each character's mood, condition, outfit, holding and goal, what each learned, what was said or promised, threads (quests), journal lines and edges between people.
@@ -53,6 +53,7 @@ Verified at: molfar.vertep-roleplay 92638da (parts); the Threads rules line at b
 - Code: stats, clock, snapshot keys, stale snapshots, journal and said caps, insert text, trimming and budget.
 - The model supplies words and ids only. Stat values come from `applyTurn`.
 - The event table (`EVENT_ROWS`, 88 rows since #394) has a closeness `level` per row (0 anyone, 1 warm, 2 close, 3 intimate). `applyTurn` works the pair's stage out from the five numbers (`stageOf`) and scales the good effects of a row with a level (`stageFactor`: x1.5 ahead of the stage, x0.5 below; harm, level 0, a cold bond and the pulses never). A user row in `dashboard/events.json` may carry `level`; without one a changed default keeps its own. Pinned by `test/rp-dash-stage.test.ts`.
+- Whose deed an event is (#394): `applyTurn` counts only events whose `from` is empty or `user`, so a character's betrayal changes no numbers even when the sensor names it. The sensor prompt says so (`EVENT_DEEDS_RULE`), and that the user's character's admitted or discovered wrongs are those wrongs (`EVENT_ADMITTED_RULE`: before it, a confessed affair was booked as `told_truth` and raised trust). Seen on real sensor models 2026-11-28 with made-up scenes: DeepSeek V4.1 Flash followed it, GLM 5.3 Flash still answers `other` to a confession in about two runs of three.
 
 ## Flow
 1. The reply ends. The UI posts `/dashboard/update`. `readUpdate` calls `runUpdate`, which calls `planUpdate`.
