@@ -1,5 +1,5 @@
 # Forge agents: custom agents built on the Canvas and run during play
-Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dashboard); growth lines (#450) at claude/growth-scope-450 261e7bfc; rest 91eec33
+Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dashboard); growth lines (#450) at claude/growth-scope-450 261e7bfc, the v3 binding, per-chat agent input and the Memory tab's Chat picker (#540) at claude/growth-chat-540 e3dd7026; rest 91eec33
 
 ## What it does
 - An agent is one Canvas file of kind `agent`, saved as `data/agents/<id>.vertep-agent.json`. Its cards are wired together on the Agents board. The file is data, not code.
@@ -60,7 +60,7 @@ Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dash
 - `data/agents/runs/<chatId>.json`: `{ v, runs }`, newest 100.
 - `data/agents/inserts/<chatId>.json`: `{ v, items }`, hints for the next reply.
 - `dashboard/agent/<chatId>.json`: ledger of Dashboard writes, for undo.
-- `characters/<cardId>/growth.json`: the card's portrait ("How they changed", #396, #450), written only here (`readGrowth`, `growthRoute`, `applyGrowthWrites`). A block from an agent has `scope: "story"` and `from.chatId`; `chats` (user added) and `skip` (off here); no scope = every chat. `growthReach` says why a block acts in a chat; `growthPart` and `insertCeiling` send only those. Shape: `docs/DATA-FORMATS.md`.
+- `characters/<cardId>/growth.json`: the card's portrait ("How they changed", #396, #450), written only here (`readGrowth`, `growthRoute`, `applyGrowthWrites`). A block from an agent has `scope: "story"` and `from.chatId`; `chats` (user added) and `skip` (off here); no scope = every chat. `growthReach` says why a block acts in a chat; `growthPart` and `insertCeiling` send only those, and the agent's Input `growth`, the hand button's "already written" list and the "already there" check see only those too (`growthTextOf(fsx, cardId, chatId)`, #540). A file older than v3 binds an agent's unscoped block to its chat on read when that chat exists (`readGrowth`); a v3 file is never bound again, since "every chat" removes `scope`. Shape: `docs/DATA-FORMATS.md`.
 
 ## Flow
 1. Build: the Forge's Agents board edits the cards, starting from a recipe in `AGENT_RECIPES` or a blank agent. It checks the file as it changes and saves a draft.
@@ -84,7 +84,7 @@ Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dash
 - An error code: `docs/DATA-FORMATS.md` and the `ag.issue.<CODE>` keys read by `src/lib/agent-issues.ts`.
 - A recipe: its file in `.skills/agent-craft/references/`, then the recipe sync script.
 - `expandNames`: five plugins carry a copy (see `docs/COUPLINGS.md`).
-- Where a growth block acts: `growthReach` in the plugin and its mirror `growthReach` in `src/components/character/memory-api.ts` (the dialog and the Carries row read it); the Memory tab (`memory-growth.tsx`, `memory-growth-where.tsx`), the chat's `carries-growth.tsx`, and the guide page `memory`.
+- Where a growth block acts: `growthReach` in the plugin and its mirror `growthReach` in `src/components/character/memory-api.ts` (the dialog and the Carries row read it); the Memory tab (`memory-growth.tsx` with its Chat picker, which filters by the mirror and reuses `src/components/canvas/chat-picker.tsx` with `allLabel`/`onAll`/`note`; `memory-growth-where.tsx`), the chat's `carries-growth.tsx`, and the guide page `memory`.
 
 ## Traps
 - A hand edit between the markers is overwritten by the next sync, and the generated-block test fails.
