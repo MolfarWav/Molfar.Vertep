@@ -9,7 +9,11 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
-## 2026-11-28: #547 lorebook conditions built, NOT released (Roleplay branch `claude/lore-conditions-547`, commit `e2796362`)
+## 2026-11-28: RELEASED Roleplay 4.168.0, #547 lorebook conditions and #550 (PR 229, merge `c5de4bca`; no engine release, the owner presses Update)
+- #550 was filed from partial code reading and was largely wrong: a whole backup restore reads `_studio.native` and was lossless except speaker filters naming old card ids (fixed with `_studio._filterNames`). Also fixed: a single book file from the zip, card books. `test/rp-lore-backup-roundtrip.test.ts`. Full run 5420 pass, the same 3 fail. Guide `memory` translated in 13 locales. Both issues closed with How it was solved.
+- Open: a real sensor and World DM with scene conditions; the workspace card skill copies (task below). The notes of this work are on engine branch `claude/lore-conditions-547`, not yet in engine main.
+
+### As built before the release
 - Built: `moreKeys` (up to 4 more key blocks) and `sceneFilter` (place with rooms counting as the building, who is present, time of day, weather), editor, keyword test scene, "What fired" reasons, exports, en+uk strings, guide `memory`, skills, DATA-FORMATS, COUPLINGS. Owner's choices are in the issue comment. Issue proposed scene conditions inside "Only when": they went into their own fold "Only in this scene" (the fold would have had eleven rows).
 - Checked: typecheck; full Roleplay `bun test` 5400 pass, 3 fail (agents generated block and forge recipes fail on clean main too; `openCard` passes alone), related tests 398 pass after the last edits; browser on a throwaway engine with the mock model (desktop dark, 390 px light, keyword test, "What fired" in a real chat with a hand-written Dashboard snapshot).
 - Not checked: a real Dashboard sensor and World DM writing the place; guide translations are stale (`memory`); the workspace card skill copies (task `.fork/handoff/lore-conditions/workspace-agent-task.md`). Not done: PR, release (owner's word). Branch `claude/secret-threads-545` also touches `plugins/engine`, `i18n.ts`, `DATA-FORMATS.md`, `CHANGELOG.md`: expect small conflicts.

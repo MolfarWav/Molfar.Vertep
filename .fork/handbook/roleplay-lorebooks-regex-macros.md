@@ -1,5 +1,5 @@
 # Lorebooks, regex scripts and macros
-Verified at: molfar.vertep-roleplay e2796362 (key blocks and scene conditions, #547); molfar.vertep-roleplay c54eca7e (the Macros section, nested reader, #516); molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
+Verified at: molfar.vertep-roleplay c5de4bca (export and import of entry fields, #550); molfar.vertep-roleplay e2796362 (key blocks and scene conditions, #547); molfar.vertep-roleplay c54eca7e (the Macros section, nested reader, #516); molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
 
 ## What it does
 Lorebook entries enter the prompt by keys, by constant status, or by a vector match over a threshold. One server function runs the scan, budget and placement. Regex scripts rewrite text on save, on edit, in the prompt, or only for display. Macros are expanded on the server. The browser shows why each entry fired and runs a keyword test through the same scanner.
@@ -80,7 +80,7 @@ Secret entries: each item gets `secretV` once per scan (known: content; cover; m
 - Where replaced: `applyRegexScript` (find, replacement and trim strings), `assemble` (prompt parts and lore text, after `rxWI`), transcript and greeting paths, and `saveMacros` on save. The browser Worker's `subMacros` handles only `{{user}}` and `{{char}}`.
 
 ## If you change X, also touch Y
-- A lorebook field: `docs/DATA-FORMATS.md` ("Lorebooks"), `src/lib/types.ts`, `lorebookToEngine`, `normalizeBook` (`docs/COUPLINGS.md`).
+- A lorebook field: `docs/DATA-FORMATS.md` ("Lorebooks"), `src/lib/types.ts`, `lorebookToEngine`, `normalizeBook` (`docs/COUPLINGS.md`), and for a card book `lorebookToCharacterBook` with `embeddedBookToWorld` (a `molfar_*` extension). `test/rp-lore-backup-roundtrip.test.ts` takes a new field in its `FULL` entry. A backup restore reads `_studio.native`; ids of cards inside entries are repointed by `_studio._filterNames` (#550).
 - The Dashboard snapshot's `clock` or `present`, or a World place record's `inside`: the scene conditions read them (`sceneOfSnapshot` copies the place lookup of `plugins/world` `placeRecordOf`; `WI_BANDS` copies `BAND_WORDS`).
 - Scan rules: `activateWorldInfo` and its `dryRun` guards, the labels in `blockedText`, and the `recordFired` shape (`docs/DATA-FORMATS.md`, "What fired").
 - `chatBookReport` builds the "never" key as `recordFired` writes it (`<bookId>:<uid ?? title>`). The log keeps 300 entries, so a full log (`capped`) only hints at "never".
