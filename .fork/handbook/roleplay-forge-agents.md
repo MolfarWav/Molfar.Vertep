@@ -1,5 +1,5 @@
 # Forge agents: custom agents built on the Canvas and run during play
-Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dashboard); growth lines (#450) at claude/growth-scope-450 261e7bfc, the v3 binding, per-chat agent input and the Memory tab's Chat picker (#540) at claude/growth-chat-540 e3dd7026; rest 91eec33
+Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dashboard); growth lines (#450) at claude/growth-scope-450 261e7bfc, the v3 binding, per-chat agent input and the Memory tab's Chat picker (#540) at claude/growth-chat-540 e3dd7026, the user's story block (#542) at claude/growth-hand-542; rest 91eec33
 
 ## What it does
 - An agent is one Canvas file of kind `agent`, saved as `data/agents/<id>.vertep-agent.json`. Its cards are wired together on the Agents board. The file is data, not code.
@@ -60,7 +60,7 @@ Verified at: molfar.vertep-roleplay c603c31 (Card types: Input and Write to Dash
 - `data/agents/runs/<chatId>.json`: `{ v, runs }`, newest 100.
 - `data/agents/inserts/<chatId>.json`: `{ v, items }`, hints for the next reply.
 - `dashboard/agent/<chatId>.json`: ledger of Dashboard writes, for undo.
-- `characters/<cardId>/growth.json`: the card's portrait ("How they changed", #396, #450), written only here (`readGrowth`, `growthRoute`, `applyGrowthWrites`). A block from an agent has `scope: "story"` and `from.chatId`; `chats` (user added) and `skip` (off here); no scope = every chat. `growthReach` says why a block acts in a chat; `growthPart` and `insertCeiling` send only those, and the agent's Input `growth`, the hand button's "already written" list and the "already there" check see only those too (`growthTextOf(fsx, cardId, chatId)`, #540). A file older than v3 binds an agent's unscoped block to its chat on read when that chat exists (`readGrowth`); a v3 file is never bound again, since "every chat" removes `scope`. Shape: `docs/DATA-FORMATS.md`.
+- `characters/<cardId>/growth.json`: the card's portrait ("How they changed", #396, #450), written only here (`readGrowth`, `growthRoute`, `applyGrowthWrites`). A block from an agent has `scope: "story"` and `from.chatId`; `chats` (user added) and `skip` (off here); no scope = every chat. `growthReach` says why a block acts in a chat; `growthPart` and `insertCeiling` send only those, and the agent's Input `growth`, the hand button's "already written" list and the "already there" check see only those too (`growthTextOf(fsx, cardId, chatId)`, #540). A user's block is card-wide unless `add` gets `scope: "story"` with a `chatId` of this card (#542: the Memory tab's form with a chat picked), which gives it `from` like an agent's. A file older than v3 binds an agent's unscoped block to its chat on read when that chat exists (`readGrowth`); a v3 file is never bound again, since "every chat" removes `scope`. Shape: `docs/DATA-FORMATS.md`.
 
 ## Flow
 1. Build: the Forge's Agents board edits the cards, starting from a recipe in `AGENT_RECIPES` or a blank agent. It checks the file as it changes and saves a draft.

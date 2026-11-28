@@ -9,6 +9,9 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
+## 2026-11-28: #542 a hand-written growth block for one story: Roleplay PR 224 open (branch `claude/growth-hand-542`), NOT merged or released (owner: "542 давай робимо", picked "a choice in the form")
+- With a chat picked, Add a block asks Only "<chat>" (default) / Every chat of <card>; with All chats the form says every chat. `add` takes `scope: "story"` + `chatId` of this card (400 otherwise), stores `from` like an agent block. Tests (plugin, UI) pass, typecheck; browser 9 checks (file on disk, other chat not sent it, Every chat = card-wide, 390 px), screenshots looked at. Guide translations of `memory` stale again: refresh at the release.
+
 ## 2026-11-28: #540 How they changed per chat: RELEASED in Roleplay 4.165.0 (PR 222 merge `0ca18f8a`, release PR 223 merge `5cc9e503`; owner: "Зливай і реліз"); #540 closed, the hand-written block question moved to #542
 - Owner's ask: control the number of growth blocks per chat (one card, several chats, different changes), and check that earlier changes do not reach a new chat with the same name. Owner picked: a chat picker (not a per-chat cap), bind old agent blocks to their chat, issue + build now.
 - Found: the prompt never mixed chats (chat id `uid("c")`, title plays no part; on the laptop Kaede Fuji has 3 chats all titled "Kaede Fuji" and each gets only its own blocks). Leaks: the agent's Input `growth` and the hand button's "already written" list held the card's newest 20 blocks of every chat; agent blocks from before 4.148.0 had no scope and acted in every chat (laptop: Reina Shirogane 2, "Your Autistic Rizz..." 6, one chat each, so nothing visible yet).
