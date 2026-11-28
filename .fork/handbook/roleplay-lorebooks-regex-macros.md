@@ -1,5 +1,5 @@
 # Lorebooks, regex scripts and macros
-Verified at: molfar.vertep-roleplay c54eca7e (the Macros section, nested reader, #516); molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
+Verified at: molfar.vertep-roleplay e2796362 (key blocks and scene conditions, #547); molfar.vertep-roleplay c54eca7e (the Macros section, nested reader, #516); molfar.vertep-roleplay 4.147.0 (the Regex scripts storage line); earlier: molfar.vertep-roleplay 611d00a (the flags and cap lines); the rest at: molfar.vertep-roleplay efead2b (sections: Owners, Lorebook entry, The scan, secret entries); Owners, Traps also 4e0989b; the rest at 56bf594; scan step 14 (budget) at c603c31
 
 ## What it does
 Lorebook entries enter the prompt by keys, by constant status, or by a vector match over a threshold. One server function runs the scan, budget and placement. Regex scripts rewrite text on save, on edit, in the prompt, or only for display. Macros are expanded on the server. The browser shows why each entry fired and runs a keyword test through the same scanner.
@@ -7,6 +7,8 @@ Lorebook entries enter the prompt by keys, by constant status, or by a vector ma
 ## Owners
 - `plugins/engine/plugin.js` `activateWorldInfo`: the scan, from books in scope to placement.
 - `plugins/engine/plugin.js` `wiEntryMatch`: primary and secondary keys and selective logic for one entry.
+- `plugins/engine/plugin.js` `wiKeyBlocks`, `wiSceneFilter`, `snapshotOfLine`, `sceneOfSnapshot`, `wiSceneStop`, `sceneContext`: extra key blocks and conditions on the scene (#547).
+- `src/lib/lore-conditions.ts` and `src/components/lore/entry-conditions.tsx`: the same caps and shapes in the app, and the editor blocks.
 - `plugins/engine/plugin.js` `keyMatchDirect`: whole-word, regex, Cyrillic word-form and case rules.
 - `plugins/engine/plugin.js` `wiVectorHits`: which vectorized entries the scan vector lets in.
 - `plugins/engine/plugin.js` `wiBudgetChars`: the character budget from the preset.
@@ -35,7 +37,7 @@ Fields the scan reads (book shape in `docs/DATA-FORMATS.md`, "Lorebooks"):
 - `keys`, `secondaryKeys`, `selectiveLogic`, `keysRegex`. A key written as `/pattern/flags` is a pattern.
 - `status`: `normal`, `constant` or `vectorized`. The `constant` boolean is a legacy mirror.
 - `content`, `enabled`, `order` (default 100), `position`, `depth`, `role`.
-- `probability`, `group`, `groupWeight`, `groupPrioritize`, `groupOverride`, `sticky`, `cooldown`, `delay`, `delayUntilRecursion`, `nonRecursable`, `preventFurtherRecursion`, `ignoreBudget`, `matchSources`, the character and trigger filters, and `secret` (`{knownBy, cover, reveal}`, #416).
+- `probability`, `group`, `groupWeight`, `groupPrioritize`, `groupOverride`, `sticky`, `cooldown`, `delay`, `delayUntilRecursion`, `nonRecursable`, `preventFurtherRecursion`, `ignoreBudget`, `matchSources`, the character and trigger filters, and `secret` (`{knownBy, cover, reveal}`, #416), `moreKeys` (up to 4 `{logic, keys}` blocks; all blocks must hold) and `sceneFilter` (`places`, `present`, `times`, `weather`, each list "any of", all filled lists must hold; #547).
 - Book: `settings` (`scanDepth`, `contextPercent`, `budgetCap`, `minActivations`, `maxRecursion`, `recursiveScan`, `includeNames`, `insertionStrategy`) and `vectorized` (`topK`, `thresholdMode`, `scoreThreshold`).
 
 ## The scan, step by step
@@ -45,7 +47,7 @@ Fields the scan reads (book shape in `docs/DATA-FORMATS.md`, "Lorebooks"):
 4. Scanned text: the last `scanDepth` messages that are not system and not hidden (`windowOf`). `includeNames` adds "Name: ". The pending user text and the author's note (when `includeInWIScan` is set) join in `assemble`.
 5. Entries sort by `order` per book. Disabled entries drop out. Each gets the id `bookId#uid`.
 6. `wiVectorHits`: with 4 or more vectors the threshold is the mean plus the larger of 2 standard deviations and 0.10, never below 0.25. A smaller pool uses 0.55. `thresholdMode: "fixed"` uses `scoreThreshold`. At most `topK` (default 10) per book.
-7. Holds, per entry: trigger and speaker filters (`filterOut`), a secret the one speaker does not know with no cover (reason `secret`), `delay`, `cooldown`, `delayUntilRecursion`, `nonRecursable`. Held entries go to `blocked` with a reason.
+7. Holds, per entry: trigger, speaker and scene filters (`filterOut`; the scene is read once per scan and only when an entry asks, reasons `place`, `present`, `time`, `weather`), a secret the one speaker does not know with no cover (reason `secret`), `delay`, `cooldown`, `delayUntilRecursion`, `nonRecursable`. Held entries go to `blocked` with a reason.
 8. A vector hit skips primary keys, and only secondary keys still decide. Otherwise `matchEntry` runs `wiEntryMatch` on the window, plus any `matchSources` text.
 9. Probability is rolled once per entry per activation (`rolledOut`). Dry runs never roll. Sticky entries skip the roll.
 10. After each pass, `wiFilterInclusionGroups` keeps one winner per group.
@@ -79,6 +81,7 @@ Secret entries: each item gets `secretV` once per scan (known: content; cover; m
 
 ## If you change X, also touch Y
 - A lorebook field: `docs/DATA-FORMATS.md` ("Lorebooks"), `src/lib/types.ts`, `lorebookToEngine`, `normalizeBook` (`docs/COUPLINGS.md`).
+- The Dashboard snapshot's `clock` or `present`, or a World place record's `inside`: the scene conditions read them (`sceneOfSnapshot` copies the place lookup of `plugins/world` `placeRecordOf`; `WI_BANDS` copies `BAND_WORDS`).
 - Scan rules: `activateWorldInfo` and its `dryRun` guards, the labels in `blockedText`, and the `recordFired` shape (`docs/DATA-FORMATS.md`, "What fired").
 - `chatBookReport` builds the "never" key as `recordFired` writes it (`<bookId>:<uid ?? title>`). The log keeps 300 entries, so a full log (`capped`) only hints at "never".
 - Vectors: keep the cache local (`.cache/lorebooks`) and the model tag `m`. Embed calls must send `kinds` (`docs/COUPLINGS.md`).
@@ -88,6 +91,7 @@ Secret entries: each item gets `secretV` once per scan (known: content; cover; m
 ## Traps
 - `used` grows for every entry, including skipped ones. After the first skip, every later entry is skipped too, even a short one that fits.
 - Constant entries are not exempt from `probability` or the budget.
+- A scene condition reads the last reply's snapshot: the message that moves the scene gets the new place's entries one reply later. With the Dashboard switched off, old snapshots still answer.
 - A failed probability roll holds an entry for the whole reply. `delay` compares with the total message count.
 - Keys are not macro-expanded: `matchEntry` and `keyMatchDirect` never call `expandMacros`. `docs/ARCHITECTURE.md` says `keyMatch()` already has `expandMacros`, which the code does not show.
 - The server regex path has no time limit, only the 20000-character cut and the result cap. Only the browser Worker times out.
@@ -96,7 +100,7 @@ Secret entries: each item gets `secretV` once per scan (known: content; cover; m
 - The two macro readers order differently: `{{getvar::x}}{{setvar::x::1}}` gives `1` in the flat passes and empty in the tree reader (SillyTavern's answer). One nested macro anywhere in a text switches the whole text to the tree reader.
 
 ## Tests that guard it
-- `test/rp-lore-scan.test.ts`, `test/rp-lore-cross-script.test.ts`, `test/rp-wi-vectors.test.ts`
+- `test/rp-lore-conditions.test.ts`, `test/rp-lore-conditions-app.test.ts`, `test/rp-lore-scan.test.ts`, `test/rp-lore-cross-script.test.ts`, `test/rp-wi-vectors.test.ts`
 - `test/rp-lore-filters.test.ts`, `test/rp-lore-folders.test.tsx`, `test/rp-lore-export.test.ts`, `test/lore-entry.test.ts`, `test/ui-lore-entry.test.tsx`
 - `test/rp-regex.test.ts`, `test/rp-safe-regex.test.ts`, `test/rp-preset-choices.test.ts`, `test/rp-st-nested-macros.test.ts`
 - Against SillyTavern itself: `.fork/bench/st-presets/` (SillyBunny's macro engine run headless on a folder of presets; not a test, needs the owner's files).

@@ -9,6 +9,12 @@ This file is the short, current one (cut from 488 KB on 2026-11-14). Sections ol
 `STATE, "SOME SECTION"` may point into the archive: `grep -ri "SOME SECTION" .fork/state-archive`.
 When this file passes about 60 KB again, move the sections older than a week the same way.
 
+## 2026-11-28: #547 lorebook conditions built, NOT released (Roleplay branch `claude/lore-conditions-547`, commit `e2796362`)
+- Built: `moreKeys` (up to 4 more key blocks) and `sceneFilter` (place with rooms counting as the building, who is present, time of day, weather), editor, keyword test scene, "What fired" reasons, exports, en+uk strings, guide `memory`, skills, DATA-FORMATS, COUPLINGS. Owner's choices are in the issue comment. Issue proposed scene conditions inside "Only when": they went into their own fold "Only in this scene" (the fold would have had eleven rows).
+- Checked: typecheck; full Roleplay `bun test` 5400 pass, 3 fail (agents generated block and forge recipes fail on clean main too; `openCard` passes alone), related tests 398 pass after the last edits; browser on a throwaway engine with the mock model (desktop dark, 390 px light, keyword test, "What fired" in a real chat with a hand-written Dashboard snapshot).
+- Not checked: a real Dashboard sensor and World DM writing the place; guide translations are stale (`memory`); the workspace card skill copies (task `.fork/handoff/lore-conditions/workspace-agent-task.md`). Not done: PR, release (owner's word). Branch `claude/secret-threads-545` also touches `plugins/engine`, `i18n.ts`, `DATA-FORMATS.md`, `CHANGELOG.md`: expect small conflicts.
+- Seen on the way: the Roleplay backup zip drops `characterFilter`, `tagFilter`, `triggerFilters`, `secret` and `latch` of lorebook entries (filed as a bug).
+
 ## 2026-11-28: RELEASED engine 1.21.2 (#535 catch-up, #537 sync groups a long chat's parts) with Roleplay 4.164.0 (PRs 217-220, release PR 221, merge `04612059`) (owner: "все зливаємо закриваємо і публікуємо")
 - Released without the planned phone check and two-device sync with a long chat (owner's call); watch Discord for reports on long chats and sync. Roleplay guide translations of `index` (Saved setups, stale since 4.161.0) and `litopys` (door B) refreshed in 13 locales by hand-inserted sentences, stamped; `guide-l10n --stale` empty.
 - Engine checks for the release: typecheck, `sync` and `builder-resume` tests (47), `build:client`, handbook cross pages rebuilt; the full suite was run for #535 earlier (37 known Windows failures, same as main).
