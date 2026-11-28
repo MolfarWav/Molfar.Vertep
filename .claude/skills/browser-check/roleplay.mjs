@@ -106,23 +106,21 @@ export async function uploadAgent(page, app, file, id, { version } = {}) {
   return card
 }
 
-/** Allow an agent: on its card either an Allow button (older builds) or "Review permissions · N", which opens a dialog with "Allow all" (and "Done").
- *  A fresh install opens that dialog by itself, so it may be open already. Does nothing when the agent is already allowed. */
+/** Allow an agent. Its card has "Review permissions · N" (it stays there after allowing), which opens a dialog with "Allow all" and
+ *  "Done"; a fresh install opens that dialog by itself. A card still waits while it shows the "N of M allowed" count.
+ *  Does nothing when the agent is already allowed. */
 export async function allowAgent(page, app, id) {
   const card = app.getByTestId(`agent-card-${id}`)
-  const review = card.getByRole("button", { name: /^Review permissions/ })
-  const allowAll = app.getByRole("button", { name: /^Allow all$/ })
-  const open = await allowAll.isVisible().catch(() => false)
-  if (open || (await review.isVisible().catch(() => false))) {
-    if (!open) await review.click()
-    await allowAll.click()
-    await app.getByRole("button", { name: /^Done$/ }).click().catch(() => {})
-    await review.waitFor({ state: "detached", timeout: 15000 })
-    await page.waitForTimeout(500)
-    return
+  const waiting = card.getByTestId("agent-perm-count")
+  const allowAll = app.getByTestId("agent-perm-all")
+  if (!(await allowAll.isVisible().catch(() => false))) {
+    if (!(await waiting.isVisible().catch(() => false))) return
+    await card.getByTestId(`agent-perm-open-${id}`).click()
   }
-  const btn = card.getByRole("button", { name: "Allow" })
-  if (await btn.isVisible().catch(() => false)) { await btn.click(); await btn.waitFor({ state: "detached", timeout: 15000 }); await page.waitForTimeout(500) }
+  await allowAll.click()
+  await app.getByRole("button", { name: /^Done$/ }).click()
+  await waiting.waitFor({ state: "detached", timeout: 15000 })
+  await page.waitForTimeout(500)
 }
 
 /** Close the top sheet. Escape does not close the Agents sheet (its X does), so the X is pressed when `app` is given; Escape otherwise. */

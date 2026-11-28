@@ -66,11 +66,11 @@ await startChat(page, app)
 await check("install", "an agent file is installed from the Agents sheet and waits for Allow", async () => {
   await openAgentSheet(page, app)
   const card = await uploadAgent(page, app, files.v1, "echo-board")
-  const waits = card.getByRole("button", { name: /^(Allow$|Review permissions)/ })
-  yes((await waits.first().isVisible().catch(() => false)) || (await app.getByRole("button", { name: /^Allow all$/ }).isVisible().catch(() => false)), "neither Allow nor Review permissions on a fresh agent")
+  const waits = card.getByTestId("agent-perm-count")
+  yes(await waits.isVisible().catch(() => false), "a fresh agent does not wait for its permissions")
   await snap(page, "01-sheet-review-light")
   await allowAgent(page, app, "echo-board")
-  yes(!(await card.getByRole("button", { name: /^(Allow$|Review permissions)/ }).first().isVisible().catch(() => false)), "Allow or Review permissions stays after allowing")
+  yes(!(await waits.isVisible().catch(() => false)), "the agent still waits after allowing")
   await snap(page, "02-sheet-allowed-light")
   await closeSheet(page, app)
   await addAgentToChat(page, app, "Echo board")
@@ -97,15 +97,19 @@ await check("hostile", "hostile text from a model is escaped and the frame is se
   await frame.waitFor({ timeout: 15000 })
   eq(await frame.getAttribute("sandbox"), "", "the sandbox attribute (empty = every right off)")
   const doc = (await frame.getAttribute("srcdoc")) ?? ""
-  yes(doc.includes("&lt;script&gt;"), "the script tag is not escaped in the frame's document")
-  yes(!/<(script|img|iframe|link|a)\b/i.test(doc), "a live tag from the model reached the frame's document")
-  yes(doc.includes("{{said}}"), "the model's {{said}} was expanded instead of printed")
   yes(doc.includes("default-src 'none'"), "the frame has no Content-Security-Policy")
+  // bind mode: the model's markup is cleaned (allow-list), so what is left of the hostile text is plain text
+  const body = doc.slice(doc.indexOf("</style>") + "</style>".length)
+  const tags = body.match(/<[^>]*>/g) ?? []
+  yes(!tags.some((t) => /^<\/?(script|img|iframe|link|a|style|meta|base|object|embed|form)\b/i.test(t)), `a live tag from the model reached the frame's document (${tags.join(" ")})`)
+  yes(!tags.some((t) => /\son\w+\s*=|\s(href|src|xlink:href)\s*=|javascript:|url\(|@import/i.test(t)), `a tag kept a handler or a link (${tags.join(" ")})`)
+  yes(!doc.includes("__pwned=1") && !doc.includes("evil.invalid"), "script or style content was not dropped")
+  yes(body.includes("{{said}}"), "the model's {{said}} was expanded instead of printed")
   const evil = requests.filter((u) => u.includes("evil.invalid"))
   eq(evil.length, 0, `requests to the hostile host (${evil.join(", ")})`)
   for (const where of [page, app]) eq(await where.evaluate(() => window.__pwned ?? null), null, "window.__pwned")
   const visible = await page.frames().find((f) => f.url() === "about:srcdoc")?.evaluate(() => document.body.innerText).catch(() => null)
-  if (visible != null) yes(visible.includes("<script>"), "the frame does not show the script text as plain text")
+  if (visible != null) yes(visible.includes("click"), "the frame does not show what is left as plain text")
   await snap(page, "04-panel-hostile-light")
   return `${requests.length} requests seen, none to the hostile host${visible == null ? "; frame text not readable" : ""}`
 })
@@ -116,10 +120,11 @@ await check("update", "an update with a new permission waits for Allow and the a
   const card = await uploadAgent(page, app, files.v2, "echo-board", { version: "1.1.0" })
   const upd = app.getByTestId("agent-update")
   await upd.waitFor({ timeout: 15000 })
-  const newTag = await app.getByTestId("agent-need-new").count()
-  yes(newTag >= 1, "the update view marks no new permission")
-  yes((await upd.innerText()).toLowerCase().includes("last message"), "the new permission (the player's last message) is not named")
+  const fresh = app.locator('[data-testid^="agent-perm-row-"]', { hasText: /New$/ })
+  await fresh.first().waitFor({ timeout: 15000 })
+  yes((await fresh.first().innerText()).toLowerCase().includes("last message"), "the new permission (the player's last message) is not named")
   await snap(page, "05-update-view-light")
+  await app.getByRole("button", { name: /^Done$/ }).click()
   await closeSheet(page, app)
   await mockLog({ reset: true })
   await sendAndWait(page, app, "Does it run?", { match: "FORGE-ECHO", calls: 1, timeout: 8000 })
@@ -127,7 +132,10 @@ await check("update", "an update with a new permission waits for Allow and the a
   await openAgentSheet(page, app)
   await allowAgent(page, app, "echo-board")
   await closeSheet(page, app)
+  await page.waitForTimeout(4000)
+  eq((await mockLog()).filter((r) => r.match === "FORGE-ECHO").length, 0, "agent calls made by allowing alone")
   await sendAndWait(page, app, "Now it should", { match: "FORGE-ECHO" })
+  await page.waitForTimeout(2000)
   eq((await mockLog()).filter((r) => r.match === "FORGE-ECHO").length, 1, "agent calls after Allow")
 })
 
@@ -168,7 +176,9 @@ await check("contrast", "no text in the light theme is nearly invisible", async 
   // text whose colour is within 2.2:1 of what is behind it, on the page now (the Forge's sets tab)
   const bad = await app.evaluate(() => {
     const lum = (c) => { const [r, g, b] = c.map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }); return 0.2126 * r + 0.7152 * g + 0.0722 * b }
-    const rgba = (s) => (s.match(/[\d.]+/g) ?? [0, 0, 0, 0]).map(Number)
+    // the theme's colours come as oklch/color-mix too: let a canvas turn any of them into r, g, b, a
+    const ctx = Object.assign(document.createElement("canvas"), { width: 1, height: 1 }).getContext("2d", { willReadFrequently: true })
+    const rgba = (s) => { ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = s; ctx.fillRect(0, 0, 1, 1); const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data; return [r, g, b, a / 255] }
     const backOf = (el) => { for (let e = el; e; e = e.parentElement) { const c = rgba(getComputedStyle(e).backgroundColor); if ((c[3] ?? 1) > 0.9) return c } return [255, 255, 255] }
     const out = []
     for (const el of document.querySelectorAll("body *")) {
